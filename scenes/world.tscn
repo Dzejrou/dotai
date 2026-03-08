@@ -25,7 +25,4 @@ texture = ExtResource("2_qx8h3")
 [node name="RockCollision" type="CollisionShape2D" parent="Rock"]
 shape = SubResource("RectangleShape2D_z8t4t")
 
-[node name="Skeleton" parent="." instance=ExtResource("3_3w8xk")]
-position = Vector2(300, 110)
-
-[node name="GameOver" parent="." instance=ExtResource("4_jk0bq")]
+	[node name="GameOver" parent="." instance=ExtResource("4_jk0bq")]

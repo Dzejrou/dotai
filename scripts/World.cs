@@ -80,6 +80,7 @@ public partial class World : Node2D
             spawnPosition = _player.GlobalPosition + SkeletonSpawnOffset;
 
         skeleton.GlobalPosition = spawnPosition;
+        skeleton.ZIndex = -1;
         AddChild(skeleton);
     }
 
