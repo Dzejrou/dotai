@@ -36,6 +36,9 @@ public partial class Player : CharacterBody2D
     [Export]
     public int HealthRegenerationAmount { get; set; } = 1;
 
+    [Export]
+    public float HealthRegenerationDelayAfterDamage { get; set; } = 5.0f;
+
     private int _health;
     private bool _isDead;
     private AnimatedSprite2D _animatedSprite;
@@ -46,6 +49,7 @@ public partial class Player : CharacterBody2D
     private float _attackCooldownTimer;
     private bool _isAttacking;
     private float _healthRegenTimer;
+    private float _healthRegenDelayTimer;
 
     public override void _Ready()
     {
@@ -65,6 +69,7 @@ public partial class Player : CharacterBody2D
         if (_isDead)
             return;
 
+        HandleHealthRegenerationDelay((float)delta);
         HandleHealthRegeneration((float)delta);
 
         var direction = Vector2.Zero;
@@ -153,6 +158,7 @@ public partial class Player : CharacterBody2D
 
         ShowFloatingDamageNumber(damage);
         UpdateHealthLabel();
+        _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
         GD.Print($"Player health: {_health}");
 
         if (_health <= 0)
@@ -298,6 +304,7 @@ public partial class Player : CharacterBody2D
         {
             var missingHealth = MaxHealth - _health;
             var recovered = Math.Clamp(HealthRegenerationAmount, 1, missingHealth);
+            ShowFloatingHealingNumber(recovered);
             _health += recovered;
             UpdateHealthLabel();
         }
@@ -309,6 +316,16 @@ public partial class Player : CharacterBody2D
             _healthRegenTimer = interval;
     }
 
+    private void HandleHealthRegenerationDelay(float delta)
+    {
+        if (_healthRegenDelayTimer <= 0.0f)
+            return;
+
+        _healthRegenDelayTimer -= delta;
+        _healthRegenDelayTimer = Math.Max(0.0f, _healthRegenDelayTimer);
+        _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
+    }
+
     private void UpdateHealthLabel()
     {
         if (_healthLabel != null)
@@ -317,6 +334,19 @@ public partial class Player : CharacterBody2D
 
     private void ShowFloatingDamageNumber(int amount)
     {
+        ShowFloatingNumber(amount.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
+    }
+
+    private void ShowFloatingHealingNumber(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        ShowFloatingNumber($"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+    }
+
+    private void ShowFloatingNumber(string text, Color color)
+    {
         var popup = new Node2D
         {
             GlobalPosition = GlobalPosition + new Vector2(0, -16.0f)
@@ -324,8 +354,8 @@ public partial class Player : CharacterBody2D
 
         var label = new Label
         {
-            Text = amount.ToString(),
-            Modulate = new Color(1.0f, 0.0f, 0.0f, 1.0f),
+            Text = text,
+            Modulate = color,
             ZIndex = 4
         };
         label.AddThemeFontSizeOverride("font_size", 20);
