@@ -373,7 +373,11 @@ public partial class Player : CharacterBody2D
             .SetTrans(Tween.TransitionType.Quad)
             .SetEase(Tween.EaseType.Out);
         tween.Parallel().TweenProperty(label, "modulate:a", 0.0f, 0.6f);
-        tween.Finished += () => popup.QueueFree();
+        tween.Finished += () =>
+        {
+            if (GodotObject.IsInstanceValid(popup))
+                popup.QueueFree();
+        };
     }
 
     private SpriteFrames BuildSpriteFrames()
