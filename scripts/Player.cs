@@ -113,7 +113,9 @@ public partial class Player : CharacterBody2D
 
         direction = direction.Normalized();
         _lastDirection = GetDirectionName(direction);
-        Velocity = direction * Speed;
+        var isSprinting = Input.IsKeyPressed(Key.Shift);
+        var moveSpeed = isSprinting ? Speed * 2.0f : Speed;
+        Velocity = direction * moveSpeed;
         MoveAndSlide();
 
         var animationName = $"walk_{_lastDirection}";
