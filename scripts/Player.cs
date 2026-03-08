@@ -14,6 +14,9 @@ public partial class Player : CharacterBody2D
     [Signal]
     public delegate void PlayerDiedEventHandler();
 
+    [Signal]
+    public delegate void HealthChangedEventHandler(int health, int maxHealth);
+
     [Export]
     public float Speed { get; set; } = 140.0f;
 
@@ -47,7 +50,6 @@ public partial class Player : CharacterBody2D
     private int _health;
     private bool _isDead;
     private AnimatedSprite2D _animatedSprite;
-    private Label _healthLabel;
     private string _lastDirection = "south";
     private readonly RandomNumberGenerator _random = new();
     private readonly HashSet<Node> _hitThisAttack = new();
@@ -55,6 +57,8 @@ public partial class Player : CharacterBody2D
     private bool _isAttacking;
     private float _healthRegenTimer;
     private float _healthRegenDelayTimer;
+
+    public int CurrentHealth => _health;
 
     public override void _Ready()
     {
@@ -65,8 +69,7 @@ public partial class Player : CharacterBody2D
         _animatedSprite.Play();
         _animatedSprite.AnimationFinished += OnAnimationFinished;
 
-        _healthLabel = CreateHealthLabel();
-        UpdateHealthLabel();
+        EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -164,15 +167,14 @@ public partial class Player : CharacterBody2D
         _health = Math.Max(0, _health - damage);
 
         ShowFloatingDamageNumber(damage);
-        UpdateHealthLabel();
+        EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
-        GD.Print($"Player health: {_health}");
+        GD.Print($"Player health: {_health}/{MaxHealth} (took {damage})");
 
         if (_health <= 0)
         {
             _isDead = true;
             EmitSignal(SignalName.PlayerDied);
-            UpdateHealthLabel();
             QueueFree();
         }
     }
@@ -271,30 +273,6 @@ public partial class Player : CharacterBody2D
         };
     }
 
-    private Label CreateHealthLabel()
-    {
-        var hudCanvas = new CanvasLayer
-        {
-            Name = "PlayerHUD",
-            Layer = 100
-        };
-        AddChild(hudCanvas);
-
-        var label = new Label
-        {
-            Name = "HealthLabel",
-            Text = "0/0",
-            Modulate = new Color(1.0f, 1.0f, 1.0f, 1.0f)
-        };
-        label.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
-        label.OffsetLeft = 8.0f;
-        label.OffsetTop = 8.0f;
-        label.AddThemeFontSizeOverride("font_size", 18);
-        hudCanvas.AddChild(label);
-
-        return label;
-    }
-
     private void HandleHealthRegeneration(float delta)
     {
         if (_health >= MaxHealth)
@@ -313,7 +291,7 @@ public partial class Player : CharacterBody2D
             var recovered = Math.Clamp(HealthRegenerationAmount, 1, missingHealth);
             ShowFloatingHealingNumber(recovered);
             _health += recovered;
-            UpdateHealthLabel();
+            EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
         }
 
         var interval = Math.Max(HealthRegenerationInterval, 0.0f);
@@ -331,12 +309,6 @@ public partial class Player : CharacterBody2D
         _healthRegenDelayTimer -= delta;
         _healthRegenDelayTimer = Math.Max(0.0f, _healthRegenDelayTimer);
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
-    }
-
-    private void UpdateHealthLabel()
-    {
-        if (_healthLabel != null)
-            _healthLabel.Text = $"{_health}/{MaxHealth}";
     }
 
     private void ShowFloatingDamageNumber(int amount)
