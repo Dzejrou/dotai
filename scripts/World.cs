@@ -8,6 +8,9 @@ public partial class World : Node2D
     public PackedScene SkeletonScene { get; set; }
 
     [Export]
+    public PackedScene OgreScene { get; set; }
+
+    [Export]
     public NodePath PlayerPath { get; set; } = new NodePath("Player");
 
     [Export]
@@ -42,16 +45,31 @@ public partial class World : Node2D
 
     public override void _PhysicsProcess(double delta)
     {
+        if (_gameOverActive)
+            return;
+
         if (_spawnCooldown > 0.0f)
             _spawnCooldown -= (float)delta;
 
-        if (!Input.IsKeyPressed(Key.P) || SkeletonScene == null)
-            return;
-
+        var attemptedSpawn = false;
         if (_spawnCooldown > 0.0f)
             return;
 
-        SpawnSkeleton();
+        if (Input.IsKeyPressed(Key.P) && SkeletonScene != null)
+        {
+            SpawnSkeleton();
+            attemptedSpawn = true;
+        }
+
+        if (Input.IsKeyPressed(Key.O) && OgreScene != null)
+        {
+            SpawnOgre();
+            attemptedSpawn = true;
+        }
+
+        if (!attemptedSpawn)
+            return;
+
         _spawnCooldown = Mathf.Max(0.0f, SkeletonSpawnCooldown);
     }
 
@@ -82,6 +100,24 @@ public partial class World : Node2D
         skeleton.GlobalPosition = spawnPosition;
         skeleton.ZIndex = -1;
         AddChild(skeleton);
+    }
+
+    private void SpawnOgre()
+    {
+        if (OgreScene == null)
+            return;
+
+        var ogre = OgreScene.Instantiate<Ogre>();
+        if (ogre == null)
+            return;
+
+        var spawnPosition = GlobalPosition;
+        if (_player != null && _player.IsInsideTree())
+            spawnPosition = _player.GlobalPosition + SkeletonSpawnOffset;
+
+        ogre.GlobalPosition = spawnPosition;
+        ogre.ZIndex = -1;
+        AddChild(ogre);
     }
 
     private void OnPlayerDied()

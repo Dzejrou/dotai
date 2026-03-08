@@ -3,50 +3,64 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Skeleton : CharacterBody2D, IEnemyTarget
+public partial class Ogre : CharacterBody2D, IEnemyTarget
 {
     [Export]
-    public float Speed { get; set; } = 52.0f;
+    public float Speed { get; set; } = 64.0f;
 
     [Export]
     public float AttackRange { get; set; } = 18.0f;
 
     [Export]
-    public float AttackCooldown { get; set; } = 1.1f;
+    public float AttackCooldown { get; set; } = 1.2f;
+
+    [Export]
+    public int MaxHealth { get; set; } = 40;
+
+    [Export]
+    public int MinAttackDamage { get; set; } = 1;
+
+    [Export]
+    public int MaxAttackDamage { get; set; } = 4;
+
+    [Export]
+    public float HealthRegenerationInterval { get; set; } = 5.0f;
+
+    [Export]
+    public int HealthRegenerationAmount { get; set; } = 1;
+
+    [Export]
+    public bool DisableCollisionOnDeath { get; set; } = true;
 
     [Export]
     public NodePath PlayerPath { get; set; } = new NodePath("../Player");
 
     [Export]
-    public StringName AttackAnimation { get; set; } = "cross-punch";
-
-    [Export]
     public StringName DeathAnimation { get; set; } = "falling-back-death";
-
-    [Export]
-    public int Health { get; set; } = 24;
-
-    [Export]
-    public bool DisableCollisionOnDeath { get; set; } = true;
 
     private AnimatedSprite2D _animatedSprite;
     private CollisionShape2D _collisionShape;
     private Player _player;
     private RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
-    private bool _attacking;
-    private string _lastDirection = "south";
+    private float _healthRegenTimer;
     private int _currentHealth;
     private bool _isDead;
+    private string _lastDirection = "south";
 
     public override void _Ready()
     {
-        _currentHealth = Math.Max(1, Health);
+        _currentHealth = Math.Max(1, MaxHealth);
         _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
         _collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
         _animatedSprite.SpriteFrames = BuildSpriteFrames();
-        _animatedSprite.Animation = "walk_south";
-        _animatedSprite.Play();
+
+        if (_animatedSprite.SpriteFrames.HasAnimation("walk_south"))
+        {
+            _animatedSprite.Animation = "walk_south";
+            _animatedSprite.Play();
+        }
+
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup("enemies");
 
@@ -56,9 +70,10 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
             _player = GetParent()?.GetNodeOrNull<Player>("Player");
 
         if (_player == null)
-            GD.PrintErr("Skeleton could not find Player node.");
+            GD.PrintErr("Ogre could not find Player node.");
 
         _randomNumberGenerator.Randomize();
+        _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -66,7 +81,9 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         if (_isDead)
             return;
 
-        if (!IsInstanceValid(_player) || _player == null || !_player.IsInsideTree())
+        HandleHealthRegeneration((float)delta);
+
+        if (_player == null || !IsInstanceValid(_player) || !_player.IsInsideTree())
         {
             _player = null;
             Velocity = Vector2.Zero;
@@ -77,16 +94,11 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         if (_attackCooldownTimer > 0.0f)
             _attackCooldownTimer -= (float)delta;
 
-        if (_attacking)
+        var toPlayer = _player.GlobalPosition - GlobalPosition;
+        if (toPlayer.Length() <= AttackRange)
         {
             Velocity = Vector2.Zero;
-            return;
-        }
-
-        var toPlayer = _player.GlobalPosition - GlobalPosition;
-        if (toPlayer.Length() <= AttackRange && _attackCooldownTimer <= 0.0f)
-        {
-            StartAttack();
+            TryAttackPlayer();
             return;
         }
 
@@ -99,7 +111,7 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
 
         _lastDirection = GetDirectionName(toPlayer);
         var walkAnimation = $"walk_{_lastDirection}";
-        if (_animatedSprite.Animation != walkAnimation)
+        if (_animatedSprite.SpriteFrames != null && _animatedSprite.SpriteFrames.HasAnimation(walkAnimation))
             _animatedSprite.Play(walkAnimation);
 
         Velocity = toPlayer.Normalized() * Speed;
@@ -112,7 +124,7 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
             return;
 
         _currentHealth = Math.Max(0, _currentHealth - Math.Max(1, amount));
-        GD.Print($"Skeleton {Name} health: {_currentHealth}/{Health}");
+
         if (_currentHealth <= 0)
         {
             _isDead = true;
@@ -120,44 +132,43 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         }
     }
 
-    private void StartAttack()
+    private void TryAttackPlayer()
     {
-        if (_player == null || !_player.IsInsideTree())
-        {
-            _player = null;
+        if (_attackCooldownTimer > 0.0f || _player == null || _isDead)
             return;
-        }
 
-        _attacking = true;
         _attackCooldownTimer = AttackCooldown;
 
-        var attackAnimation = $"{AttackAnimation}_{_lastDirection}";
-        if (_animatedSprite.SpriteFrames != null &&
-            _animatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
+        var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
+        var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
+        _player.ApplyDamage(damage);
+    }
+
+    private void HandleHealthRegeneration(float delta)
+    {
+        _healthRegenTimer -= delta;
+        if (_healthRegenTimer > 0.0f)
+            return;
+
+        if (_currentHealth >= MaxHealth)
         {
-            _attacking = false;
-            _player.ApplyDamage(_randomNumberGenerator.RandiRange(1, 5));
+            _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
             return;
         }
 
-        if (_player.GlobalPosition != Vector2.Zero)
-            _lastDirection = GetDirectionName(_player.GlobalPosition - GlobalPosition);
+        var missing = MaxHealth - _currentHealth;
+        var healAmount = Math.Min(Math.Max(HealthRegenerationAmount, 1), missing);
+        if (healAmount <= 0)
+            return;
 
-        _animatedSprite.Play(attackAnimation);
-
-        var damage = _randomNumberGenerator.RandiRange(1, 5);
-        _player.ApplyDamage(damage);
+        _currentHealth += healAmount;
+        ShowFloatingHealingNumber(healAmount);
+        _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
     private void OnAnimationFinished()
     {
         var animationName = _animatedSprite.Animation.ToString();
-
-        if (animationName.StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
-        {
-            _attacking = false;
-            return;
-        }
 
         if (!animationName.StartsWith(DeathAnimation.ToString(), StringComparison.Ordinal))
             return;
@@ -183,41 +194,36 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
 
         foreach (var direction in directions)
         {
-            AddAnimationFrames(spriteFrames, $"walk_{direction}", "walk", direction);
-            AddAnimationFrames(spriteFrames, $"{AttackAnimation}_{direction}", "cross-punch", direction);
-            AddAnimationFrames(spriteFrames, $"{DeathAnimation}_{direction}", DeathAnimation.ToString(), direction);
+            AddAnimationFrames(spriteFrames, $"walk_{direction}", "walk", direction, true);
+            AddAnimationFrames(spriteFrames, $"{DeathAnimation}_{direction}", "falling-back-death", direction, false);
         }
 
         return spriteFrames;
     }
 
-    private void AddAnimationFrames(SpriteFrames spriteFrames, string animationName, string assetFolder, string direction)
+    private void AddAnimationFrames(SpriteFrames spriteFrames, string animationName, string assetFolder, string direction, bool loops)
     {
-        if (!FileExistsForFrame(assetFolder, direction, 0))
-            return;
-
         spriteFrames.AddAnimation(animationName);
-        spriteFrames.SetAnimationLoop(animationName, animationName.StartsWith("walk_", StringComparison.Ordinal));
+        spriteFrames.SetAnimationLoop(animationName, loops);
         var frameLoaded = 0;
 
         var frame = 0;
         while (frame <= 999)
         {
-            var resourcePath = $"res://assets/skeleton/animations/{assetFolder}/{direction}/frame_{frame:000}.png";
-            var absolutePath = ProjectSettings.GlobalizePath(resourcePath);
+            var path = $"res://assets/ogre/animations/{assetFolder}/{direction}/frame_{frame:000}.png";
+            var absolutePath = ProjectSettings.GlobalizePath(path);
             if (!FileAccess.FileExists(absolutePath))
                 break;
 
             var image = Image.LoadFromFile(absolutePath);
             if (image == null)
             {
-                GD.PrintErr($"Skeleton failed to load frame image at '{resourcePath}'.");
+                GD.PrintErr($"Ogre failed to load frame image at '{path}'.");
                 frame++;
                 continue;
             }
 
             var texture = ImageTexture.CreateFromImage(image);
-
             if (texture != null)
             {
                 spriteFrames.AddFrame(animationName, texture);
@@ -229,14 +235,13 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
 
         if (frameLoaded == 0)
         {
-            GD.PrintErr(
-                $"Skeleton animation '{animationName}' has no frames at assets/skeleton/animations/{assetFolder}/{direction}/");
+            GD.PrintErr($"Ogre animation '{animationName}' has no frames at assets/ogre/animations/{assetFolder}/{direction}/");
+            spriteFrames.RemoveAnimation(animationName);
         }
     }
 
     private void StartDeath()
     {
-        _attacking = false;
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
 
@@ -245,6 +250,7 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
 
         var deathAnimation = $"{DeathAnimation}_{_lastDirection}";
         if (_animatedSprite.SpriteFrames != null &&
+            _animatedSprite.SpriteFrames.HasAnimation(deathAnimation) &&
             _animatedSprite.SpriteFrames.GetFrameCount(deathAnimation) > 0)
         {
             _animatedSprite.Play(deathAnimation);
@@ -255,10 +261,42 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         SetPhysicsProcess(false);
     }
 
-    private bool FileExistsForFrame(string assetFolder, string direction, int frame)
+    private void ShowFloatingHealingNumber(int amount)
     {
-        var resourcePath = $"res://assets/skeleton/animations/{assetFolder}/{direction}/frame_{frame:000}.png";
-        var absolutePath = ProjectSettings.GlobalizePath(resourcePath);
-        return FileAccess.FileExists(absolutePath);
+        if (amount <= 0)
+            return;
+
+        var popup = new Node2D
+        {
+            GlobalPosition = GlobalPosition + new Vector2(0, -16.0f)
+        };
+
+        var label = new Label
+        {
+            Text = $"+{amount}",
+            Modulate = new Color(0.0f, 1.0f, 0.0f, 1.0f),
+            ZIndex = 4
+        };
+        label.AddThemeFontSizeOverride("font_size", 20);
+        popup.AddChild(label);
+
+        var parent = GetTree().CurrentScene ?? GetParent();
+        if (parent == null)
+            return;
+
+        parent.AddChild(popup);
+
+        var tween = GetTree().CreateTween();
+        var targetY = popup.GlobalPosition + new Vector2(0.0f, -18.0f);
+        tween.TweenProperty(popup, "global_position", targetY, 0.6f)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(label, "modulate:a", 0.0f, 0.6f);
+        tween.Finished += () =>
+        {
+            if (GodotObject.IsInstanceValid(popup))
+                popup.QueueFree();
+        };
     }
+
 }

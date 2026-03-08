@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_k6v4i"]
 [ext_resource type="Texture2D" path="res://assets/world/rock.png" id="2_qx8h3"]
 [ext_resource type="PackedScene" path="res://scenes/skeleton.tscn" id="3_3w8xk"]
 [ext_resource type="PackedScene" path="res://scenes/game_over.tscn" id="4_jk0bq"]
+[ext_resource type="PackedScene" path="res://scenes/ogre.tscn" id="5_ogre"]
 [ext_resource type="Script" path="res://scripts/World.cs" id="5_qx7qz"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_z8t4t"]
@@ -12,6 +13,7 @@ size = Vector2(54, 38)
 [node name="World" type="Node2D"]
 script = ExtResource("5_qx7qz")
 SkeletonScene = ExtResource("3_3w8xk")
+OgreScene = ExtResource("5_ogre")
 
 [node name="Player" parent="." instance=ExtResource("1_k6v4i")]
 position = Vector2(120, 120)
@@ -25,4 +27,4 @@ texture = ExtResource("2_qx8h3")
 [node name="RockCollision" type="CollisionShape2D" parent="Rock"]
 shape = SubResource("RectangleShape2D_z8t4t")
 
-	[node name="GameOver" parent="." instance=ExtResource("4_jk0bq")]
+[node name="GameOver" parent="." instance=ExtResource("4_jk0bq")]
