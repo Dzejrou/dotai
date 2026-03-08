@@ -11,6 +11,10 @@ MaxAttackDamage = 20
 MinAttackDamage = 4
 HealthRegenerationAmount = 2
 
+[node name="Camera2D" type="Camera2D" parent="." unique_id=122948576]
+current = true
+position = Vector2(0, 0)
+
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=630505674]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=994826957]

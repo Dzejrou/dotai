@@ -123,7 +123,9 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
         if (_isDead)
             return;
 
-        _currentHealth = Math.Max(0, _currentHealth - Math.Max(1, amount));
+        var damage = Math.Max(1, amount);
+        _currentHealth = Math.Max(0, _currentHealth - damage);
+        GD.Print($"Ogre health: {_currentHealth}/{MaxHealth} (took {damage})");
 
         if (_currentHealth <= 0)
         {

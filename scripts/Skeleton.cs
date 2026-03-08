@@ -111,8 +111,9 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         if (_isDead)
             return;
 
-        _currentHealth = Math.Max(0, _currentHealth - Math.Max(1, amount));
-        GD.Print($"Skeleton {Name} health: {_currentHealth}/{Health}");
+        var damage = Math.Max(1, amount);
+        _currentHealth = Math.Max(0, _currentHealth - damage);
+        GD.Print($"Skeleton health: {_currentHealth}/{Health} (took {damage})");
         if (_currentHealth <= 0)
         {
             _isDead = true;
