@@ -3,6 +3,11 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
+public interface IEnemyTarget
+{
+    void ApplyDamage(int amount);
+}
+
 [GlobalClass]
 public partial class Player : CharacterBody2D
 {
@@ -182,32 +187,32 @@ public partial class Player : CharacterBody2D
 
         foreach (var node in GetTree().GetNodesInGroup("enemies"))
         {
-            if (_hitThisAttack.Contains(node) || node is not Skeleton enemy)
+            if (_hitThisAttack.Contains(node) || node is not IEnemyTarget enemyTarget)
                 continue;
 
-            if (!IsInstanceValid(enemy) || !enemy.IsInsideTree())
+            if (!IsInstanceValid(node) || node is not Node2D enemyNode || !enemyNode.IsInsideTree())
                 continue;
 
-            var toEnemy = enemy.GlobalPosition - GlobalPosition;
+            var toEnemy = enemyNode.GlobalPosition - GlobalPosition;
             if (toEnemy.Length() > AttackRange)
                 continue;
 
             if (toEnemy == Vector2.Zero)
             {
-                ApplyDamageToEnemy(enemy);
+                ApplyDamageToEnemy(node, enemyTarget);
                 continue;
             }
 
             if (facingVector.Dot(toEnemy.Normalized()) < minimumDot)
                 continue;
 
-            ApplyDamageToEnemy(enemy);
+            ApplyDamageToEnemy(node, enemyTarget);
         }
     }
 
-    private void ApplyDamageToEnemy(Skeleton enemy)
+    private void ApplyDamageToEnemy(Node node, IEnemyTarget enemy)
     {
-        if (enemy == null || !_hitThisAttack.Add(enemy))
+        if (enemy == null || !_hitThisAttack.Add(node))
             return;
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
@@ -226,22 +231,22 @@ public partial class Player : CharacterBody2D
             _lastDirection = GetDirectionName(toEnemy);
     }
 
-    private Skeleton FindClosestEnemy()
+    private Node2D FindClosestEnemy()
     {
-        Skeleton closest = null;
+        Node2D closest = null;
         var closestDistance = float.MaxValue;
 
         foreach (var node in GetTree().GetNodesInGroup("enemies"))
         {
-            if (node is not Skeleton enemy || !IsInstanceValid(enemy) || !enemy.IsInsideTree())
+            if (node is not IEnemyTarget || node is not Node2D enemyNode || !IsInstanceValid(node) || !enemyNode.IsInsideTree())
                 continue;
 
-            var distance = (enemy.GlobalPosition - GlobalPosition).Length();
+            var distance = (enemyNode.GlobalPosition - GlobalPosition).Length();
             if (distance >= closestDistance)
                 continue;
 
             closestDistance = distance;
-            closest = enemy;
+            closest = enemyNode;
         }
 
         return closest;

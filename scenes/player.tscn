@@ -1,16 +1,18 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://7r3kh3tx2max"]
 
-[ext_resource type="Script" path="res://scripts/Player.cs" id="1_t1u7h"]
+[ext_resource type="Script" uid="uid://dvutl3mkyi0ph" path="res://scripts/Player.cs" id="1_t1u7h"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
 
-[node name="Player" type="CharacterBody2D"]
+[node name="Player" type="CharacterBody2D" unique_id=320937566]
 script = ExtResource("1_t1u7h")
+MaxAttackDamage = 20
+MinAttackDamage = 4
+HealthRegenerationAmount = 2
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, 0)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=630505674]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=994826957]
 position = Vector2(0, 6)
 shape = SubResource("RectangleShape2D_8r2s6")
