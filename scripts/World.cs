@@ -23,6 +23,7 @@ public partial class World : Node2D
     private bool _gameOverActive;
     private Player _player;
     private float _spawnCooldown;
+    private bool _restartingFromGameOver;
 
     public override void _Ready()
     {
@@ -36,6 +37,7 @@ public partial class World : Node2D
 
         _gameOverRoot.Visible = false;
         _gameOverRoot.ProcessMode = ProcessModeEnum.Always;
+        ProcessMode = ProcessModeEnum.Always;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -51,6 +53,17 @@ public partial class World : Node2D
 
         SpawnSkeleton();
         _spawnCooldown = Mathf.Max(0.0f, SkeletonSpawnCooldown);
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (!_gameOverActive || _restartingFromGameOver)
+            return;
+
+        if (@event is InputEventKey keyEvent && keyEvent.Pressed)
+        {
+            RestartFromGameOver();
+        }
     }
 
     private void SpawnSkeleton()
@@ -82,5 +95,12 @@ public partial class World : Node2D
             return;
 
         _gameOverRoot.Visible = true;
+    }
+
+    private void RestartFromGameOver()
+    {
+        _restartingFromGameOver = true;
+        GetTree().Paused = false;
+        GetTree().ReloadCurrentScene();
     }
 }
