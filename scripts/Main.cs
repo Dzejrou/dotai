@@ -23,6 +23,7 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        ProcessMode = ProcessModeEnum.Always;
         _world = GetNodeOrNull<World>(WorldPath);
         if (_world != null)
         {
