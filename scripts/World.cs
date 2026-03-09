@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 [GlobalClass]
 public partial class World : Node2D
@@ -40,17 +39,6 @@ public partial class World : Node2D
         {
             _player.Disconnect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
         }
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        if (_isGameOver)
-            return;
-    }
-
-    public override void _Input(InputEvent @event)
-    {
-        // Input handling for restart is now handled by Main.
     }
 
     private void OnPlayerDied()
