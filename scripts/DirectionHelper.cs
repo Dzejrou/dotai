@@ -1,7 +1,15 @@
 using Godot;
+using System.Collections.Generic;
 
 public static class DirectionHelper
 {
+    private static readonly string[] CardinalDirections = { "south", "east", "north", "west" };
+
+    public static IReadOnlyList<string> GetCardinalDirections()
+    {
+        return CardinalDirections;
+    }
+
     public static string GetDirectionName(Vector2 direction)
     {
         if (Mathf.Abs(direction.X) > Mathf.Abs(direction.Y))
