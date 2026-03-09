@@ -1,0 +1,77 @@
+using Godot;
+
+using System;
+
+public abstract partial class EnemyBase : CharacterBody2D
+{
+    [Export]
+    public NodePath PlayerPath { get; set; } = new NodePath("../Player");
+
+    [Export]
+    public StringName DeathAnimation { get; set; } = "falling-back-death";
+
+    [Export]
+    public bool DisableCollisionOnDeath { get; set; } = true;
+
+    protected AnimatedSprite2D AnimatedSprite { get; private set; }
+    protected CollisionShape2D CollisionShape { get; private set; }
+    protected Player Player { get; private set; }
+    protected string LastDirection { get; set; } = "south";
+
+    protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
+    {
+        AnimatedSprite = animatedSprite;
+        CollisionShape = collisionShape;
+        AddToGroup("enemies");
+
+        if (!PlayerPath.IsEmpty && HasNode(PlayerPath))
+            Player = GetNode<Player>(PlayerPath);
+        else
+            Player = GetParent()?.GetNodeOrNull<Player>("Player");
+
+        if (Player == null)
+            GD.PrintErr($"{enemyName} could not find Player node.");
+    }
+
+    protected void ClearPlayer()
+    {
+        Player = null;
+    }
+
+    public void SetPlayer(Player player)
+    {
+        Player = player;
+    }
+
+    protected bool TryFinalizeDeathAnimation()
+    {
+        var animationName = AnimatedSprite.Animation.ToString();
+        if (!animationName.StartsWith(DeathAnimation.ToString(), StringComparison.Ordinal))
+            return false;
+
+        var finalFrame = Math.Max(0, AnimatedSprite.SpriteFrames.GetFrameCount(animationName) - 1);
+        AnimatedSprite.Stop();
+        AnimatedSprite.SetFrame(finalFrame);
+        SetPhysicsProcess(false);
+        return true;
+    }
+
+    protected bool TryPlayDeathAnimation()
+    {
+        if (DisableCollisionOnDeath && CollisionShape != null)
+            CollisionShape.Disabled = true;
+
+        var deathAnimation = $"{DeathAnimation}_{LastDirection}";
+        if (AnimatedSprite.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(deathAnimation) &&
+            AnimatedSprite.SpriteFrames.GetFrameCount(deathAnimation) > 0)
+        {
+            AnimatedSprite.Play(deathAnimation);
+            return true;
+        }
+
+        AnimatedSprite.Stop();
+        SetPhysicsProcess(false);
+        return false;
+    }
+}

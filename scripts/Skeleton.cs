@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Skeleton : CharacterBody2D, IEnemyTarget
+public partial class Skeleton : EnemyBase, IEnemyTarget
 {
     [Export]
     public float Speed { get; set; } = 52.0f;
@@ -15,48 +15,28 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
     public float AttackCooldown { get; set; } = 1.1f;
 
     [Export]
-    public NodePath PlayerPath { get; set; } = new NodePath("../Player");
-
-    [Export]
     public StringName AttackAnimation { get; set; } = "cross-punch";
-
-    [Export]
-    public StringName DeathAnimation { get; set; } = "falling-back-death";
 
     [Export]
     public int Health { get; set; } = 24;
 
-    [Export]
-    public bool DisableCollisionOnDeath { get; set; } = true;
-
-    private AnimatedSprite2D _animatedSprite;
-    private CollisionShape2D _collisionShape;
-    private Player _player;
     private RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
     private bool _attacking;
-    private string _lastDirection = "south";
     private int _currentHealth;
     private bool _isDead;
 
     public override void _Ready()
     {
         _currentHealth = Math.Max(1, Health);
-        _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
-        _collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
-        _animatedSprite.SpriteFrames = BuildSpriteFrames();
-        _animatedSprite.Animation = "walk_south";
-        _animatedSprite.Play();
-        _animatedSprite.AnimationFinished += OnAnimationFinished;
-        AddToGroup("enemies");
-
-        if (!PlayerPath.IsEmpty && HasNode(PlayerPath))
-            _player = GetNode<Player>(PlayerPath);
-        else
-            _player = GetParent()?.GetNodeOrNull<Player>("Player");
-
-        if (_player == null)
-            GD.PrintErr("Skeleton could not find Player node.");
+        InitializeEnemy(
+            GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
+            GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
+            "Skeleton");
+        AnimatedSprite.SpriteFrames = BuildSpriteFrames();
+        AnimatedSprite.Animation = "walk_south";
+        AnimatedSprite.Play();
+        AnimatedSprite.AnimationFinished += OnAnimationFinished;
 
         _randomNumberGenerator.Randomize();
     }
@@ -66,11 +46,11 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         if (_isDead)
             return;
 
-        if (!IsInstanceValid(_player) || _player == null || !_player.IsInsideTree())
+        if (!IsInstanceValid(Player) || Player == null || !Player.IsInsideTree())
         {
-            _player = null;
+            ClearPlayer();
             Velocity = Vector2.Zero;
-            _animatedSprite.Stop();
+            AnimatedSprite.Stop();
             return;
         }
 
@@ -83,7 +63,7 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
             return;
         }
 
-        var toPlayer = _player.GlobalPosition - GlobalPosition;
+        var toPlayer = Player.GlobalPosition - GlobalPosition;
         if (toPlayer.Length() <= AttackRange && _attackCooldownTimer <= 0.0f)
         {
             StartAttack();
@@ -93,14 +73,14 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         if (toPlayer == Vector2.Zero)
         {
             Velocity = Vector2.Zero;
-            _animatedSprite.Stop();
+            AnimatedSprite.Stop();
             return;
         }
 
-        _lastDirection = GetDirectionName(toPlayer);
-        var walkAnimation = $"walk_{_lastDirection}";
-        if (_animatedSprite.Animation != walkAnimation)
-            _animatedSprite.Play(walkAnimation);
+        LastDirection = DirectionHelper.GetDirectionName(toPlayer);
+        var walkAnimation = $"walk_{LastDirection}";
+        if (AnimatedSprite.Animation != walkAnimation)
+            AnimatedSprite.Play(walkAnimation);
 
         Velocity = toPlayer.Normalized() * Speed;
         MoveAndSlide();
@@ -124,36 +104,36 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
 
     private void StartAttack()
     {
-        if (_player == null || !_player.IsInsideTree())
+        if (Player == null || !Player.IsInsideTree())
         {
-            _player = null;
+            ClearPlayer();
             return;
         }
 
         _attacking = true;
         _attackCooldownTimer = AttackCooldown;
 
-        var attackAnimation = $"{AttackAnimation}_{_lastDirection}";
-        if (_animatedSprite.SpriteFrames != null &&
-            _animatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
+        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
+        if (AnimatedSprite.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
         {
             _attacking = false;
-            _player.ApplyDamage(_randomNumberGenerator.RandiRange(1, 5));
+            Player.ApplyDamage(_randomNumberGenerator.RandiRange(1, 5));
             return;
         }
 
-        if (_player.GlobalPosition != Vector2.Zero)
-            _lastDirection = GetDirectionName(_player.GlobalPosition - GlobalPosition);
+        if (Player.GlobalPosition != Vector2.Zero)
+            LastDirection = DirectionHelper.GetDirectionName(Player.GlobalPosition - GlobalPosition);
 
-        _animatedSprite.Play(attackAnimation);
+        AnimatedSprite.Play(attackAnimation);
 
         var damage = _randomNumberGenerator.RandiRange(1, 5);
-        _player.ApplyDamage(damage);
+        Player.ApplyDamage(damage);
     }
 
     private void OnAnimationFinished()
     {
-        var animationName = _animatedSprite.Animation.ToString();
+        var animationName = AnimatedSprite.Animation.ToString();
 
         if (animationName.StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
         {
@@ -161,21 +141,7 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
             return;
         }
 
-        if (!animationName.StartsWith(DeathAnimation.ToString(), StringComparison.Ordinal))
-            return;
-
-        var finalFrame = Math.Max(0, _animatedSprite.SpriteFrames.GetFrameCount(animationName) - 1);
-        _animatedSprite.Stop();
-        _animatedSprite.SetFrame(finalFrame);
-        SetPhysicsProcess(false);
-    }
-
-    private static string GetDirectionName(Vector2 direction)
-    {
-        if (Mathf.Abs(direction.X) > Mathf.Abs(direction.Y))
-            return direction.X > 0.0f ? "east" : "west";
-
-        return direction.Y > 0.0f ? "south" : "north";
+        TryFinalizeDeathAnimation();
     }
 
     private SpriteFrames BuildSpriteFrames()
@@ -220,19 +186,7 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
 
-        if (DisableCollisionOnDeath && _collisionShape != null)
-            _collisionShape.Disabled = true;
-
-        var deathAnimation = $"{DeathAnimation}_{_lastDirection}";
-        if (_animatedSprite.SpriteFrames != null &&
-            _animatedSprite.SpriteFrames.GetFrameCount(deathAnimation) > 0)
-        {
-            _animatedSprite.Play(deathAnimation);
-            return;
-        }
-
-        _animatedSprite.Stop();
-        SetPhysicsProcess(false);
+        TryPlayDeathAnimation();
     }
 
 }
