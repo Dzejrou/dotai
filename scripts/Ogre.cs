@@ -268,37 +268,7 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
         if (amount <= 0)
             return;
 
-        var popup = new Node2D
-        {
-            GlobalPosition = GlobalPosition + new Vector2(0, -16.0f)
-        };
-
-        var label = new Label
-        {
-            Text = $"+{amount}",
-            Modulate = new Color(0.0f, 1.0f, 0.0f, 1.0f),
-            ZIndex = 4
-        };
-        label.AddThemeFontSizeOverride("font_size", 20);
-        popup.AddChild(label);
-
-        var parent = GetTree().CurrentScene ?? GetParent();
-        if (parent == null)
-            return;
-
-        parent.AddChild(popup);
-
-        var tween = GetTree().CreateTween();
-        var targetY = popup.GlobalPosition + new Vector2(0.0f, -18.0f);
-        tween.TweenProperty(popup, "global_position", targetY, 0.6f)
-            .SetTrans(Tween.TransitionType.Quad)
-            .SetEase(Tween.EaseType.Out);
-        tween.Parallel().TweenProperty(label, "modulate:a", 0.0f, 0.6f);
-        tween.Finished += () =>
-        {
-            if (GodotObject.IsInstanceValid(popup))
-                popup.QueueFree();
-        };
+        FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
     }
 
 }

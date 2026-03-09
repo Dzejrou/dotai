@@ -113,6 +113,7 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
 
         var damage = Math.Max(1, amount);
         _currentHealth = Math.Max(0, _currentHealth - damage);
+        FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
         GD.Print($"Skeleton health: {_currentHealth}/{Health} (took {damage})");
         if (_currentHealth <= 0)
         {
