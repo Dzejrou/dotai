@@ -15,6 +15,9 @@ public partial class Ogre : EnemyBase, IEnemyTarget
     public float AttackCooldown { get; set; } = 1.2f;
 
     [Export]
+    public StringName AttackAnimation { get; set; } = "cross-punch";
+
+    [Export]
     public int MaxHealth { get; set; } = 40;
 
     [Export]
@@ -34,6 +37,7 @@ public partial class Ogre : EnemyBase, IEnemyTarget
     private float _healthRegenTimer;
     private int _currentHealth;
     private bool _isDead;
+    private bool _attacking;
     public override void _Ready()
     {
         _currentHealth = Math.Max(1, MaxHealth);
@@ -72,6 +76,12 @@ public partial class Ogre : EnemyBase, IEnemyTarget
 
         if (_attackCooldownTimer > 0.0f)
             _attackCooldownTimer -= (float)delta;
+
+        if (_attacking)
+        {
+            Velocity = Vector2.Zero;
+            return;
+        }
 
         var toPlayer = Player.GlobalPosition - GlobalPosition;
         if (toPlayer.Length() <= AttackRange)
@@ -119,6 +129,19 @@ public partial class Ogre : EnemyBase, IEnemyTarget
             return;
 
         _attackCooldownTimer = AttackCooldown;
+        _attacking = true;
+
+        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
+        if (AnimatedSprite.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(attackAnimation) &&
+            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) > 0)
+        {
+            AnimatedSprite.Play(attackAnimation);
+        }
+        else
+        {
+            _attacking = false;
+        }
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
         var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
@@ -149,6 +172,12 @@ public partial class Ogre : EnemyBase, IEnemyTarget
 
     private void OnAnimationFinished()
     {
+        if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
+        {
+            _attacking = false;
+            return;
+        }
+
         TryFinalizeDeathAnimation();
     }
 
@@ -171,6 +200,15 @@ public partial class Ogre : EnemyBase, IEnemyTarget
                 $"{DeathAnimation}_{direction}",
                 "assets/ogre/animations",
                 "falling-back-death",
+                direction,
+                false,
+                "Ogre",
+                true);
+            RuntimeSpriteLoader.AddAnimationFrames(
+                spriteFrames,
+                $"{AttackAnimation}_{direction}",
+                "assets/ogre/animations",
+                "cross-punch",
                 direction,
                 false,
                 "Ogre",
