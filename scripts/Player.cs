@@ -326,53 +326,26 @@ public partial class Player : CharacterBody2D
 
         foreach (var direction in directions)
         {
-            AddAnimationFrames(spriteFrames, $"walk_{direction}", "walk", direction, true);
-            AddAnimationFrames(spriteFrames, $"slash_{direction}", "slash", direction, false);
+            RuntimeSpriteLoader.AddAnimationFrames(
+                spriteFrames,
+                $"walk_{direction}",
+                "assets/player/animations",
+                "walk",
+                direction,
+                true,
+                "Player",
+                false);
+            RuntimeSpriteLoader.AddAnimationFrames(
+                spriteFrames,
+                $"slash_{direction}",
+                "assets/player/animations",
+                "slash",
+                direction,
+                false,
+                "Player",
+                false);
         }
 
         return spriteFrames;
-    }
-
-    private void AddAnimationFrames(
-        SpriteFrames spriteFrames,
-        string animationName,
-        string assetFolder,
-        string direction,
-        bool loops)
-    {
-        spriteFrames.AddAnimation(animationName);
-        spriteFrames.SetAnimationLoop(animationName, loops);
-        var frameLoaded = 0;
-
-        var frame = 0;
-        while (frame <= 999)
-        {
-            var path = $"res://assets/player/animations/{assetFolder}/{direction}/frame_{frame:000}.png";
-            var absolutePath = ProjectSettings.GlobalizePath(path);
-            if (!FileAccess.FileExists(absolutePath))
-                break;
-
-            var image = Image.LoadFromFile(absolutePath);
-            if (image == null)
-            {
-                GD.PrintErr($"Player failed to load frame image at '{path}'.");
-                frame++;
-                continue;
-            }
-
-            var texture = ImageTexture.CreateFromImage(image);
-            if (texture != null)
-            {
-                spriteFrames.AddFrame(animationName, texture);
-                frameLoaded++;
-            }
-
-            frame++;
-        }
-
-        if (frameLoaded == 0)
-        {
-            GD.PrintErr($"Player animation '{animationName}' has no frames at assets/player/animations/{assetFolder}/{direction}/");
-        }
     }
 }

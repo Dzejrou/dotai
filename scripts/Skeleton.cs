@@ -185,55 +185,33 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
 
         foreach (var direction in directions)
         {
-            AddAnimationFrames(spriteFrames, $"walk_{direction}", "walk", direction);
-            AddAnimationFrames(spriteFrames, $"{AttackAnimation}_{direction}", "cross-punch", direction);
-            AddAnimationFrames(spriteFrames, $"{DeathAnimation}_{direction}", DeathAnimation.ToString(), direction);
+            AddWalkAndAttackAndDeathFrames(spriteFrames, direction);
         }
 
         return spriteFrames;
     }
 
-    private void AddAnimationFrames(SpriteFrames spriteFrames, string animationName, string assetFolder, string direction)
+    private void AddWalkAndAttackAndDeathFrames(SpriteFrames spriteFrames, string direction)
     {
-        if (!FileExistsForFrame(assetFolder, direction, 0))
+        AddSpriteAnimation(spriteFrames, $"walk_{direction}", "walk", direction, true);
+        AddSpriteAnimation(spriteFrames, $"{AttackAnimation}_{direction}", "cross-punch", direction, false);
+        AddSpriteAnimation(spriteFrames, $"{DeathAnimation}_{direction}", DeathAnimation.ToString(), direction, false);
+    }
+
+    private void AddSpriteAnimation(SpriteFrames spriteFrames, string animationName, string assetFolder, string direction, bool loops)
+    {
+        if (!RuntimeSpriteLoader.HasFrame("assets/skeleton/animations", assetFolder, direction, 0))
             return;
 
-        spriteFrames.AddAnimation(animationName);
-        spriteFrames.SetAnimationLoop(animationName, animationName.StartsWith("walk_", StringComparison.Ordinal));
-        var frameLoaded = 0;
-
-        var frame = 0;
-        while (frame <= 999)
-        {
-            var resourcePath = $"res://assets/skeleton/animations/{assetFolder}/{direction}/frame_{frame:000}.png";
-            var absolutePath = ProjectSettings.GlobalizePath(resourcePath);
-            if (!FileAccess.FileExists(absolutePath))
-                break;
-
-            var image = Image.LoadFromFile(absolutePath);
-            if (image == null)
-            {
-                GD.PrintErr($"Skeleton failed to load frame image at '{resourcePath}'.");
-                frame++;
-                continue;
-            }
-
-            var texture = ImageTexture.CreateFromImage(image);
-
-            if (texture != null)
-            {
-                spriteFrames.AddFrame(animationName, texture);
-                frameLoaded++;
-            }
-
-            frame++;
-        }
-
-        if (frameLoaded == 0)
-        {
-            GD.PrintErr(
-                $"Skeleton animation '{animationName}' has no frames at assets/skeleton/animations/{assetFolder}/{direction}/");
-        }
+        RuntimeSpriteLoader.AddAnimationFrames(
+            spriteFrames,
+            animationName,
+            "assets/skeleton/animations",
+            assetFolder,
+            direction,
+            loops,
+            "Skeleton",
+            false);
     }
 
     private void StartDeath()
@@ -257,10 +235,4 @@ public partial class Skeleton : CharacterBody2D, IEnemyTarget
         SetPhysicsProcess(false);
     }
 
-    private bool FileExistsForFrame(string assetFolder, string direction, int frame)
-    {
-        var resourcePath = $"res://assets/skeleton/animations/{assetFolder}/{direction}/frame_{frame:000}.png";
-        var absolutePath = ProjectSettings.GlobalizePath(resourcePath);
-        return FileAccess.FileExists(absolutePath);
-    }
 }
