@@ -147,9 +147,7 @@ public partial class Skeleton : EnemyBase, IEnemyTarget
     private SpriteFrames BuildSpriteFrames()
     {
         var spriteFrames = new SpriteFrames();
-        var directions = new[] { "south", "east", "north", "west" };
-
-        foreach (var direction in directions)
+        foreach (var direction in DirectionHelper.GetCardinalDirections())
         {
             AddWalkAndAttackAndDeathFrames(spriteFrames, direction);
         }
