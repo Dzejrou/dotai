@@ -43,6 +43,8 @@ public partial class Main : Node2D
         var player = _world?.GetNodeOrNull<Player>(playerPath);
         if (player != null)
             UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealth);
+        else
+            UpdatePlayerHealthHud(0, 0);
     }
 
     public override void _ExitTree()
@@ -113,26 +115,31 @@ public partial class Main : Node2D
         };
         AddChild(hudCanvas);
 
-        const float leftOffset = 8.0f;
-        const float topOffset = 8.0f;
+        var healthPanel = new Control
+        {
+            Name = "HealthPanel",
+            CustomMinimumSize = new Vector2(220.0f, 24.0f),
+        };
+        healthPanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
+        healthPanel.OffsetLeft = 8.0f;
+        healthPanel.OffsetTop = 8.0f;
+        hudCanvas.AddChild(healthPanel);
 
         _healthBackground = new ColorRect
         {
             Name = "HealthBarBackground",
             Color = Colors.Black,
-            Position = new Vector2(leftOffset, topOffset),
             Size = new Vector2(HealthBarWidth, HealthBarHeight)
         };
-        hudCanvas.AddChild(_healthBackground);
+        healthPanel.AddChild(_healthBackground);
 
         _healthFill = new ColorRect
         {
             Name = "HealthBarFill",
             Color = new Color(1.0f, 0.0f, 0.0f, 1.0f),
-            Position = new Vector2(leftOffset, topOffset),
             Size = new Vector2(HealthBarWidth, HealthBarHeight)
         };
-        hudCanvas.AddChild(_healthFill);
+        healthPanel.AddChild(_healthFill);
 
         _healthText = new Label
         {
@@ -140,8 +147,10 @@ public partial class Main : Node2D
             Text = "0/0",
             Modulate = new Color(1.0f, 1.0f, 1.0f, 1.0f)
         };
-        _healthText.Position = new Vector2(leftOffset + HealthBarWidth + 10.0f, topOffset);
+        _healthText.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
+        _healthText.OffsetLeft = HealthBarWidth + 10.0f;
+        _healthText.OffsetTop = 1.0f;
         _healthText.AddThemeFontSizeOverride("font_size", 18);
-        hudCanvas.AddChild(_healthText);
+        healthPanel.AddChild(_healthText);
     }
 }

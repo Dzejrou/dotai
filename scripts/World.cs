@@ -42,12 +42,14 @@ public partial class World : Node2D
 
     public override void _ExitTree()
     {
-        if (_player != null && _player.IsConnected(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
+        if (GodotObject.IsInstanceValid(_player) &&
+            _player.IsConnected(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
         {
             _player.Disconnect(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
         }
 
-        if (_player != null && _player.IsConnected(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
+        if (GodotObject.IsInstanceValid(_player) &&
+            _player.IsConnected(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
         {
             _player.Disconnect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
         }
