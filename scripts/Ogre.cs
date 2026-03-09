@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Ogre : CharacterBody2D, IEnemyTarget
+public partial class Ogre : EnemyBase, IEnemyTarget
 {
     [Export]
     public float Speed { get; set; } = 64.0f;
@@ -29,48 +29,27 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
     [Export]
     public int HealthRegenerationAmount { get; set; } = 1;
 
-    [Export]
-    public bool DisableCollisionOnDeath { get; set; } = true;
-
-    [Export]
-    public NodePath PlayerPath { get; set; } = new NodePath("../Player");
-
-    [Export]
-    public StringName DeathAnimation { get; set; } = "falling-back-death";
-
-    private AnimatedSprite2D _animatedSprite;
-    private CollisionShape2D _collisionShape;
-    private Player _player;
     private RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
     private float _healthRegenTimer;
     private int _currentHealth;
     private bool _isDead;
-    private string _lastDirection = "south";
-
     public override void _Ready()
     {
         _currentHealth = Math.Max(1, MaxHealth);
-        _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
-        _collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
-        _animatedSprite.SpriteFrames = BuildSpriteFrames();
+        InitializeEnemy(
+            GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
+            GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
+            "Ogre");
+        AnimatedSprite.SpriteFrames = BuildSpriteFrames();
 
-        if (_animatedSprite.SpriteFrames.HasAnimation("walk_south"))
+        if (AnimatedSprite.SpriteFrames.HasAnimation("walk_south"))
         {
-            _animatedSprite.Animation = "walk_south";
-            _animatedSprite.Play();
+            AnimatedSprite.Animation = "walk_south";
+            AnimatedSprite.Play();
         }
 
-        _animatedSprite.AnimationFinished += OnAnimationFinished;
-        AddToGroup("enemies");
-
-        if (!PlayerPath.IsEmpty && HasNode(PlayerPath))
-            _player = GetNode<Player>(PlayerPath);
-        else
-            _player = GetParent()?.GetNodeOrNull<Player>("Player");
-
-        if (_player == null)
-            GD.PrintErr("Ogre could not find Player node.");
+        AnimatedSprite.AnimationFinished += OnAnimationFinished;
 
         _randomNumberGenerator.Randomize();
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
@@ -83,18 +62,18 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
 
         HandleHealthRegeneration((float)delta);
 
-        if (_player == null || !IsInstanceValid(_player) || !_player.IsInsideTree())
+        if (Player == null || !IsInstanceValid(Player) || !Player.IsInsideTree())
         {
-            _player = null;
+            ClearPlayer();
             Velocity = Vector2.Zero;
-            _animatedSprite.Stop();
+            AnimatedSprite.Stop();
             return;
         }
 
         if (_attackCooldownTimer > 0.0f)
             _attackCooldownTimer -= (float)delta;
 
-        var toPlayer = _player.GlobalPosition - GlobalPosition;
+        var toPlayer = Player.GlobalPosition - GlobalPosition;
         if (toPlayer.Length() <= AttackRange)
         {
             Velocity = Vector2.Zero;
@@ -105,14 +84,14 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
         if (toPlayer == Vector2.Zero)
         {
             Velocity = Vector2.Zero;
-            _animatedSprite.Stop();
+            AnimatedSprite.Stop();
             return;
         }
 
-        _lastDirection = GetDirectionName(toPlayer);
-        var walkAnimation = $"walk_{_lastDirection}";
-        if (_animatedSprite.SpriteFrames != null && _animatedSprite.SpriteFrames.HasAnimation(walkAnimation))
-            _animatedSprite.Play(walkAnimation);
+        LastDirection = DirectionHelper.GetDirectionName(toPlayer);
+        var walkAnimation = $"walk_{LastDirection}";
+        if (AnimatedSprite.SpriteFrames != null && AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation))
+            AnimatedSprite.Play(walkAnimation);
 
         Velocity = toPlayer.Normalized() * Speed;
         MoveAndSlide();
@@ -136,14 +115,14 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
 
     private void TryAttackPlayer()
     {
-        if (_attackCooldownTimer > 0.0f || _player == null || _isDead)
+        if (_attackCooldownTimer > 0.0f || Player == null || _isDead)
             return;
 
         _attackCooldownTimer = AttackCooldown;
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
         var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
-        _player.ApplyDamage(damage);
+        Player.ApplyDamage(damage);
     }
 
     private void HandleHealthRegeneration(float delta)
@@ -170,23 +149,7 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
 
     private void OnAnimationFinished()
     {
-        var animationName = _animatedSprite.Animation.ToString();
-
-        if (!animationName.StartsWith(DeathAnimation.ToString(), StringComparison.Ordinal))
-            return;
-
-        var finalFrame = Math.Max(0, _animatedSprite.SpriteFrames.GetFrameCount(animationName) - 1);
-        _animatedSprite.Stop();
-        _animatedSprite.SetFrame(finalFrame);
-        SetPhysicsProcess(false);
-    }
-
-    private static string GetDirectionName(Vector2 direction)
-    {
-        if (Mathf.Abs(direction.X) > Mathf.Abs(direction.Y))
-            return direction.X > 0.0f ? "east" : "west";
-
-        return direction.Y > 0.0f ? "south" : "north";
+        TryFinalizeDeathAnimation();
     }
 
     private SpriteFrames BuildSpriteFrames()
@@ -223,21 +186,7 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
     {
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
-
-        if (DisableCollisionOnDeath && _collisionShape != null)
-            _collisionShape.Disabled = true;
-
-        var deathAnimation = $"{DeathAnimation}_{_lastDirection}";
-        if (_animatedSprite.SpriteFrames != null &&
-            _animatedSprite.SpriteFrames.HasAnimation(deathAnimation) &&
-            _animatedSprite.SpriteFrames.GetFrameCount(deathAnimation) > 0)
-        {
-            _animatedSprite.Play(deathAnimation);
-            return;
-        }
-
-        _animatedSprite.Stop();
-        SetPhysicsProcess(false);
+        TryPlayDeathAnimation();
     }
 
     private void ShowFloatingHealingNumber(int amount)

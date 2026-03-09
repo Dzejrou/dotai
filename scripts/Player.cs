@@ -92,7 +92,7 @@ public partial class Player : CharacterBody2D
             if (direction == Vector2.Zero)
                 UpdateDirectionFromNearestEnemy();
             else
-                _lastDirection = GetDirectionName(direction);
+                _lastDirection = DirectionHelper.GetDirectionName(direction);
 
             StartAttack();
             return;
@@ -115,7 +115,7 @@ public partial class Player : CharacterBody2D
         }
 
         direction = direction.Normalized();
-        _lastDirection = GetDirectionName(direction);
+        _lastDirection = DirectionHelper.GetDirectionName(direction);
         var isSprinting = Input.IsKeyPressed(Key.Shift);
         var moveSpeed = isSprinting ? Speed * 2.0f : Speed;
         Velocity = direction * moveSpeed;
@@ -179,7 +179,7 @@ public partial class Player : CharacterBody2D
         if (_isDead)
             return;
 
-        var facingVector = GetDirectionVector(_lastDirection);
+        var facingVector = DirectionHelper.GetDirectionVector(_lastDirection);
         var minimumDot = Mathf.Cos(Mathf.DegToRad(AttackArcDegrees / 2.0f));
 
         foreach (var node in GetTree().GetNodesInGroup("enemies"))
@@ -225,7 +225,7 @@ public partial class Player : CharacterBody2D
 
         var toEnemy = nearestEnemy.GlobalPosition - GlobalPosition;
         if (toEnemy != Vector2.Zero)
-            _lastDirection = GetDirectionName(toEnemy);
+            _lastDirection = DirectionHelper.GetDirectionName(toEnemy);
     }
 
     private Node2D FindClosestEnemy()
@@ -247,25 +247,6 @@ public partial class Player : CharacterBody2D
         }
 
         return closest;
-    }
-
-    private static string GetDirectionName(Vector2 direction)
-    {
-        if (Mathf.Abs(direction.X) > Mathf.Abs(direction.Y))
-            return direction.X > 0.0f ? "east" : "west";
-
-        return direction.Y > 0.0f ? "south" : "north";
-    }
-
-    private static Vector2 GetDirectionVector(string direction)
-    {
-        return direction switch
-        {
-            "east" => Vector2.Right,
-            "west" => Vector2.Left,
-            "north" => Vector2.Up,
-            _ => Vector2.Down,
-        };
     }
 
     private void HandleHealthRegeneration(float delta)
