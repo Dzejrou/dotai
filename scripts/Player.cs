@@ -308,7 +308,7 @@ public partial class Player : CharacterBody2D
 
     private void ShowFloatingDamageNumber(int amount)
     {
-        ShowFloatingNumber(amount.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
+        FloatingNumberHelper.ShowFloatingNumber(this, amount.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
     }
 
     private void ShowFloatingHealingNumber(int amount)
@@ -316,42 +316,7 @@ public partial class Player : CharacterBody2D
         if (amount <= 0)
             return;
 
-        ShowFloatingNumber($"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
-    }
-
-    private void ShowFloatingNumber(string text, Color color)
-    {
-        var popup = new Node2D
-        {
-            GlobalPosition = GlobalPosition + new Vector2(0, -16.0f)
-        };
-
-        var label = new Label
-        {
-            Text = text,
-            Modulate = color,
-            ZIndex = 4
-        };
-        label.AddThemeFontSizeOverride("font_size", 20);
-        popup.AddChild(label);
-
-        var parent = GetTree().CurrentScene ?? GetParent();
-        if (parent == null)
-            return;
-
-        parent.AddChild(popup);
-
-        var tween = GetTree().CreateTween();
-        var targetY = popup.GlobalPosition + new Vector2(0.0f, -18.0f);
-        tween.TweenProperty(popup, "global_position", targetY, 0.6f)
-            .SetTrans(Tween.TransitionType.Quad)
-            .SetEase(Tween.EaseType.Out);
-        tween.Parallel().TweenProperty(label, "modulate:a", 0.0f, 0.6f);
-        tween.Finished += () =>
-        {
-            if (GodotObject.IsInstanceValid(popup))
-                popup.QueueFree();
-        };
+        FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
     }
 
     private SpriteFrames BuildSpriteFrames()
