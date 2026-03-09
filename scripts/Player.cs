@@ -3,11 +3,6 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public interface IEnemyTarget
-{
-    void ApplyDamage(int amount);
-}
-
 [GlobalClass]
 public partial class Player : CharacterBody2D
 {
