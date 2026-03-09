@@ -196,50 +196,27 @@ public partial class Ogre : CharacterBody2D, IEnemyTarget
 
         foreach (var direction in directions)
         {
-            AddAnimationFrames(spriteFrames, $"walk_{direction}", "walk", direction, true);
-            AddAnimationFrames(spriteFrames, $"{DeathAnimation}_{direction}", "falling-back-death", direction, false);
+            RuntimeSpriteLoader.AddAnimationFrames(
+                spriteFrames,
+                $"walk_{direction}",
+                "assets/ogre/animations",
+                "walk",
+                direction,
+                true,
+                "Ogre",
+                true);
+            RuntimeSpriteLoader.AddAnimationFrames(
+                spriteFrames,
+                $"{DeathAnimation}_{direction}",
+                "assets/ogre/animations",
+                "falling-back-death",
+                direction,
+                false,
+                "Ogre",
+                true);
         }
 
         return spriteFrames;
-    }
-
-    private void AddAnimationFrames(SpriteFrames spriteFrames, string animationName, string assetFolder, string direction, bool loops)
-    {
-        spriteFrames.AddAnimation(animationName);
-        spriteFrames.SetAnimationLoop(animationName, loops);
-        var frameLoaded = 0;
-
-        var frame = 0;
-        while (frame <= 999)
-        {
-            var path = $"res://assets/ogre/animations/{assetFolder}/{direction}/frame_{frame:000}.png";
-            var absolutePath = ProjectSettings.GlobalizePath(path);
-            if (!FileAccess.FileExists(absolutePath))
-                break;
-
-            var image = Image.LoadFromFile(absolutePath);
-            if (image == null)
-            {
-                GD.PrintErr($"Ogre failed to load frame image at '{path}'.");
-                frame++;
-                continue;
-            }
-
-            var texture = ImageTexture.CreateFromImage(image);
-            if (texture != null)
-            {
-                spriteFrames.AddFrame(animationName, texture);
-                frameLoaded++;
-            }
-
-            frame++;
-        }
-
-        if (frameLoaded == 0)
-        {
-            GD.PrintErr($"Ogre animation '{animationName}' has no frames at assets/ogre/animations/{assetFolder}/{direction}/");
-            spriteFrames.RemoveAnimation(animationName);
-        }
     }
 
     private void StartDeath()
