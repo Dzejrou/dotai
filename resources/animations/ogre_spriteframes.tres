@@ -1,0 +1,374 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/east/frame_000.png" id="1_6i52q"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/east/frame_001.png" id="2_rumor"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/east/frame_002.png" id="3_n7v5f"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/east/frame_003.png" id="4_ati4i"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/east/frame_004.png" id="5_03kyp"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/east/frame_005.png" id="6_pgf5q"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/north/frame_000.png" id="7_v2gwv"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/north/frame_001.png" id="8_3xw4n"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/north/frame_002.png" id="9_jgthv"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/north/frame_003.png" id="10_jekfd"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/north/frame_004.png" id="11_n4lah"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/north/frame_005.png" id="12_17s28"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/south/frame_000.png" id="13_n3f2h"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/south/frame_001.png" id="14_etvpb"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/south/frame_002.png" id="15_jsrvx"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/south/frame_003.png" id="16_cdy8k"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/south/frame_004.png" id="17_rreo4"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/south/frame_005.png" id="18_4emam"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/west/frame_000.png" id="19_h5t0s"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/west/frame_001.png" id="20_gqyft"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/west/frame_002.png" id="21_wyseu"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/west/frame_003.png" id="22_nj17p"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/west/frame_004.png" id="23_ordg6"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/cross-punch/west/frame_005.png" id="24_s7wa6"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/east/frame_000.png" id="25_eypnp"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/east/frame_001.png" id="26_735ij"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/east/frame_002.png" id="27_7sdbq"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/east/frame_003.png" id="28_d3wox"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/east/frame_004.png" id="29_s2o1t"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/east/frame_005.png" id="30_5j2j8"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/east/frame_006.png" id="31_28x83"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/north/frame_000.png" id="32_xtwkx"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/north/frame_001.png" id="33_r8nid"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/north/frame_002.png" id="34_gfgqc"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/north/frame_003.png" id="35_shjmk"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/north/frame_004.png" id="36_5rwpb"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/north/frame_005.png" id="37_a5k1x"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/north/frame_006.png" id="38_1qkoy"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/south/frame_000.png" id="39_sdscj"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/south/frame_001.png" id="40_pd1am"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/south/frame_002.png" id="41_wpt3b"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/south/frame_003.png" id="42_0aoa7"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/south/frame_004.png" id="43_ip5pa"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/south/frame_005.png" id="44_fbgtd"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/south/frame_006.png" id="45_rs2jd"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/west/frame_000.png" id="46_o8dv7"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/west/frame_001.png" id="47_su0o2"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/west/frame_002.png" id="48_tp2kl"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/west/frame_003.png" id="49_l1ekb"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/west/frame_004.png" id="50_vggs6"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/west/frame_005.png" id="51_pqcva"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/falling-back-death/west/frame_006.png" id="52_c7c3n"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/east/frame_000.png" id="53_t6uv1"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/east/frame_001.png" id="54_ims6y"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/east/frame_002.png" id="55_galae"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/east/frame_003.png" id="56_t65i8"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/east/frame_004.png" id="57_fcoyy"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/east/frame_005.png" id="58_xxj6t"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/north/frame_000.png" id="59_dbxv8"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/north/frame_001.png" id="60_ccxg4"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/north/frame_002.png" id="61_dyni1"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/north/frame_003.png" id="62_smvu1"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/north/frame_004.png" id="63_2axmy"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/north/frame_005.png" id="64_srmy3"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/south/frame_000.png" id="65_gdmkq"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/south/frame_001.png" id="66_35nca"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/south/frame_002.png" id="67_7eh2w"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/south/frame_003.png" id="68_3s4do"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/south/frame_004.png" id="69_5dg33"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/south/frame_005.png" id="70_3ijrv"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/west/frame_000.png" id="71_gon8q"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/west/frame_001.png" id="72_sjc1h"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/west/frame_002.png" id="73_mkh1n"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/west/frame_003.png" id="74_o74nb"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/west/frame_004.png" id="75_fvmr4"]
+[ext_resource type="Texture2D" path="res://assets/ogre/animations/walk/west/frame_005.png" id="76_2v3r4"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_6i52q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_rumor")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_n7v5f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_ati4i")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_03kyp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_pgf5q")
+}],
+"loop": false,
+"name": &"cross-punch_east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_v2gwv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_3xw4n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_jgthv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_jekfd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_n4lah")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_17s28")
+}],
+"loop": false,
+"name": &"cross-punch_north",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("13_n3f2h")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_etvpb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_jsrvx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_cdy8k")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_rreo4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_4emam")
+}],
+"loop": false,
+"name": &"cross-punch_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("19_h5t0s")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_gqyft")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_wyseu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_nj17p")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_ordg6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_s7wa6")
+}],
+"loop": false,
+"name": &"cross-punch_west",
+"speed": 5.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("25_eypnp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_735ij")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_7sdbq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_d3wox")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_s2o1t")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_5j2j8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_28x83")
+}],
+"loop": false,
+"name": &"falling-back-death_east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("32_xtwkx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_r8nid")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_gfgqc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_shjmk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_5rwpb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("37_a5k1x")
+}, {
+"duration": 1.0,
+"texture": ExtResource("38_1qkoy")
+}],
+"loop": false,
+"name": &"falling-back-death_north",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("39_sdscj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("40_pd1am")
+}, {
+"duration": 1.0,
+"texture": ExtResource("41_wpt3b")
+}, {
+"duration": 1.0,
+"texture": ExtResource("42_0aoa7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("43_ip5pa")
+}, {
+"duration": 1.0,
+"texture": ExtResource("44_fbgtd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("45_rs2jd")
+}],
+"loop": false,
+"name": &"falling-back-death_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("46_o8dv7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("47_su0o2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_tp2kl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_l1ekb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_vggs6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_pqcva")
+}, {
+"duration": 1.0,
+"texture": ExtResource("52_c7c3n")
+}],
+"loop": false,
+"name": &"falling-back-death_west",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("53_t6uv1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("54_ims6y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("55_galae")
+}, {
+"duration": 1.0,
+"texture": ExtResource("56_t65i8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("57_fcoyy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("58_xxj6t")
+}],
+"loop": true,
+"name": &"walk_east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("59_dbxv8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("60_ccxg4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("61_dyni1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("62_smvu1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("63_2axmy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("64_srmy3")
+}],
+"loop": true,
+"name": &"walk_north",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("65_gdmkq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("66_35nca")
+}, {
+"duration": 1.0,
+"texture": ExtResource("67_7eh2w")
+}, {
+"duration": 1.0,
+"texture": ExtResource("68_3s4do")
+}, {
+"duration": 1.0,
+"texture": ExtResource("69_5dg33")
+}, {
+"duration": 1.0,
+"texture": ExtResource("70_3ijrv")
+}],
+"loop": true,
+"name": &"walk_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("71_gon8q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("72_sjc1h")
+}, {
+"duration": 1.0,
+"texture": ExtResource("73_mkh1n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("74_o74nb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("75_fvmr4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("76_2v3r4")
+}],
+"loop": true,
+"name": &"walk_west",
+"speed": 5.0
+}]

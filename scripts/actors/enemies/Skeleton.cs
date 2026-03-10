@@ -33,7 +33,6 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             "Skeleton");
         SetMovementSpeed(Speed);
-        AnimatedSprite.SpriteFrames = BuildSpriteFrames();
         AnimatedSprite.Animation = "walk_south";
         AnimatedSprite.Play();
         AnimatedSprite.AnimationFinished += OnAnimationFinished;
@@ -126,40 +125,6 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
         }
 
         TryFinalizeDeathAnimation();
-    }
-
-    private SpriteFrames BuildSpriteFrames()
-    {
-        var spriteFrames = new SpriteFrames();
-        foreach (var direction in DirectionHelper.GetCardinalDirections())
-        {
-            AddWalkAndAttackAndDeathFrames(spriteFrames, direction);
-        }
-
-        return spriteFrames;
-    }
-
-    private void AddWalkAndAttackAndDeathFrames(SpriteFrames spriteFrames, string direction)
-    {
-        AddSpriteAnimation(spriteFrames, $"walk_{direction}", "walk", direction, true);
-        AddSpriteAnimation(spriteFrames, $"{AttackAnimation}_{direction}", "cross-punch", direction, false);
-        AddSpriteAnimation(spriteFrames, $"{DeathAnimation}_{direction}", DeathAnimation.ToString(), direction, false);
-    }
-
-    private void AddSpriteAnimation(SpriteFrames spriteFrames, string animationName, string assetFolder, string direction, bool loops)
-    {
-        if (!RuntimeSpriteLoader.HasFrame("assets/skeleton/animations", assetFolder, direction, 0))
-            return;
-
-        RuntimeSpriteLoader.AddAnimationFrames(
-            spriteFrames,
-            animationName,
-            "assets/skeleton/animations",
-            assetFolder,
-            direction,
-            loops,
-            "Skeleton",
-            false);
     }
 
     private void StartDeath()

@@ -57,7 +57,6 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             "SkeletonMage");
         SetMovementSpeed(Speed);
-        AnimatedSprite.SpriteFrames = BuildSpriteFrames();
 
         if (AnimatedSprite.SpriteFrames.HasAnimation("walk_south"))
         {
@@ -165,43 +164,6 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
         }
 
         TryFinalizeDeathAnimation();
-    }
-
-    private SpriteFrames BuildSpriteFrames()
-    {
-        var spriteFrames = new SpriteFrames();
-        foreach (var direction in DirectionHelper.GetCardinalDirections())
-        {
-            RuntimeSpriteLoader.AddAnimationFrames(
-                spriteFrames,
-                $"walk_{direction}",
-                "assets/skeleton_mage/animations",
-                "walk",
-                direction,
-                true,
-                "SkeletonMage",
-                false);
-            RuntimeSpriteLoader.AddAnimationFrames(
-                spriteFrames,
-                $"{AttackAnimation}_{direction}",
-                "assets/skeleton_mage/animations",
-                "fireball",
-                direction,
-                false,
-                "SkeletonMage",
-                false);
-            RuntimeSpriteLoader.AddAnimationFrames(
-                spriteFrames,
-                $"{DeathAnimation}_{direction}",
-                "assets/skeleton_mage/animations",
-                "falling-back-death",
-                direction,
-                false,
-                "SkeletonMage",
-                false);
-        }
-
-        return spriteFrames;
     }
 
     private void StartDeath()
