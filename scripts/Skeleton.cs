@@ -46,9 +46,20 @@ public partial class Skeleton : EnemyBase, IEnemyTarget
         if (_isDead)
             return;
 
-        if (!IsInstanceValid(Player) || Player == null || !Player.IsInsideTree())
+        if (!ValidateCurrentTarget())
         {
-            ClearPlayer();
+            AcquireTarget();
+
+            if (!ValidateCurrentTarget())
+            {
+                Velocity = Vector2.Zero;
+                AnimatedSprite.Stop();
+                return;
+            }
+        }
+
+        if (Player == null || !IsInstanceValid(Player) || !Player.IsInsideTree())
+        {
             Velocity = Vector2.Zero;
             AnimatedSprite.Stop();
             return;
@@ -122,7 +133,7 @@ public partial class Skeleton : EnemyBase, IEnemyTarget
             return;
         }
 
-        if (Player.GlobalPosition != Vector2.Zero)
+        if (Player != null && Player.GlobalPosition != Vector2.Zero)
             LastDirection = DirectionHelper.GetDirectionName(Player.GlobalPosition - GlobalPosition);
 
         AnimatedSprite.Play(attackAnimation);

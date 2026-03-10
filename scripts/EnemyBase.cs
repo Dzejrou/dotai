@@ -15,6 +15,7 @@ public abstract partial class EnemyBase : CharacterBody2D
 
     protected AnimatedSprite2D AnimatedSprite { get; private set; }
     protected CollisionShape2D CollisionShape { get; private set; }
+    protected Node2D CurrentTarget { get; private set; }
     protected Player Player { get; private set; }
     protected string LastDirection { get; set; } = "south";
 
@@ -33,7 +34,7 @@ public abstract partial class EnemyBase : CharacterBody2D
                 resolvedPlayer = GetParent()?.GetNodeOrNull<Player>("Player");
         }
 
-        Player = resolvedPlayer;
+        SetPlayer(resolvedPlayer);
 
         if (resolvedPlayer == null)
             GD.PrintErr($"{enemyName} could not find Player node.");
@@ -41,12 +42,49 @@ public abstract partial class EnemyBase : CharacterBody2D
 
     protected void ClearPlayer()
     {
+        ClearTarget();
+    }
+
+    protected bool ValidateCurrentTarget()
+    {
+        if (CurrentTarget == null)
+        {
+            Player = null;
+            return false;
+        }
+
+        if (!GodotObject.IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
+        {
+            ClearTarget();
+            return false;
+        }
+
+        if (CurrentTarget is Player player)
+        {
+            Player = player;
+            return true;
+        }
+
+        ClearTarget();
+        return false;
+    }
+
+    protected void AcquireTarget()
+    {
+        CurrentTarget = TargetingHelper.FindClosestTarget(this, CombatGroups.Allies, node => node is Player);
+        Player = CurrentTarget as Player;
+    }
+
+    protected void ClearTarget()
+    {
+        CurrentTarget = null;
         Player = null;
     }
 
     public void SetPlayer(Player player)
     {
         Player = player;
+        CurrentTarget = player;
     }
 
     protected bool TryFinalizeDeathAnimation()

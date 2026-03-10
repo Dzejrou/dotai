@@ -66,7 +66,20 @@ public partial class Ogre : EnemyBase, IEnemyTarget
 
         HandleHealthRegeneration((float)delta);
 
-        if (Player == null || !IsInstanceValid(Player) || !Player.IsInsideTree())
+        if (!ValidateCurrentTarget())
+        {
+            AcquireTarget();
+
+            if (!ValidateCurrentTarget())
+            {
+                ClearPlayer();
+                Velocity = Vector2.Zero;
+                AnimatedSprite.Stop();
+                return;
+            }
+        }
+
+        if (Player == null)
         {
             ClearPlayer();
             Velocity = Vector2.Zero;
