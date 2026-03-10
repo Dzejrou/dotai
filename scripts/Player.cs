@@ -76,13 +76,13 @@ public partial class Player : CharacterBody2D
         HandleHealthRegeneration((float)delta);
 
         var direction = Vector2.Zero;
-        if (Input.IsKeyPressed(Key.A) || Input.IsKeyPressed(Key.Left))
+        if (Input.IsActionPressed("move_left"))
             direction.X -= 1.0f;
-        if (Input.IsKeyPressed(Key.D) || Input.IsKeyPressed(Key.Right))
+        if (Input.IsActionPressed("move_right"))
             direction.X += 1.0f;
-        if (Input.IsKeyPressed(Key.W) || Input.IsKeyPressed(Key.Up))
+        if (Input.IsActionPressed("move_up"))
             direction.Y -= 1.0f;
-        if (Input.IsKeyPressed(Key.S) || Input.IsKeyPressed(Key.Down))
+        if (Input.IsActionPressed("move_down"))
             direction.Y += 1.0f;
 
         if (_isAttacking)
@@ -95,7 +95,7 @@ public partial class Player : CharacterBody2D
         if (_attackCooldownTimer > 0.0f)
             _attackCooldownTimer -= (float)delta;
 
-        if (Input.IsKeyPressed(Key.E) && _attackCooldownTimer <= 0.0f)
+        if (Input.IsActionPressed("attack") && _attackCooldownTimer <= 0.0f)
         {
             if (direction != Vector2.Zero)
                 _lastDirection = DirectionHelper.GetDirectionName(direction);
@@ -113,7 +113,7 @@ public partial class Player : CharacterBody2D
 
         direction = direction.Normalized();
         _lastDirection = DirectionHelper.GetDirectionName(direction);
-        var isSprinting = Input.IsKeyPressed(Key.Shift);
+        var isSprinting = Input.IsActionPressed("sprint");
         var moveSpeed = isSprinting ? Speed * 2.0f : Speed;
         Velocity = direction * moveSpeed;
         MoveAndSlide();
@@ -216,34 +216,13 @@ public partial class Player : CharacterBody2D
 
     private void UpdateDirectionFromNearestEnemy()
     {
-        var nearestEnemy = FindClosestEnemy();
+        var nearestEnemy = TargetingHelper.FindClosestTarget(this, "enemies", node => node is IEnemyTarget);
         if (nearestEnemy == null)
             return;
 
         var toEnemy = nearestEnemy.GlobalPosition - GlobalPosition;
         if (toEnemy != Vector2.Zero)
             _lastDirection = DirectionHelper.GetDirectionName(toEnemy);
-    }
-
-    private Node2D FindClosestEnemy()
-    {
-        Node2D closest = null;
-        var closestDistance = float.MaxValue;
-
-        foreach (var node in GetTree().GetNodesInGroup("enemies"))
-        {
-            if (node is not IEnemyTarget || node is not Node2D enemyNode || !IsInstanceValid(node) || !enemyNode.IsInsideTree())
-                continue;
-
-            var distance = (enemyNode.GlobalPosition - GlobalPosition).Length();
-            if (distance >= closestDistance)
-                continue;
-
-            closestDistance = distance;
-            closest = enemyNode;
-        }
-
-        return closest;
     }
 
     private void HandleHealthRegeneration(float delta)
