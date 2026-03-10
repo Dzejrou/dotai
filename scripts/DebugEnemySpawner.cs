@@ -9,7 +9,7 @@ public partial class DebugEnemySpawner : Node2D
     public PackedScene OgreScene { get; set; }
 
     [Export]
-    public NodePath PlayerPath { get; set; } = new NodePath("../Player");
+    public NodePath TargetPath { get; set; } = new NodePath("../Player");
 
     [Export]
     public Vector2 SpawnOffset { get; set; } = new Vector2(36.0f, 0.0f);
@@ -17,17 +17,17 @@ public partial class DebugEnemySpawner : Node2D
     [Export]
     public float SpawnCooldown { get; set; } = 0.25f;
 
-    private Player _player;
+    private Node2D _target;
     private float _spawnCooldown;
 
     public override void _Ready()
     {
-        _player = GetNodeOrNull<Player>(PlayerPath);
-        if (_player == null)
-            _player = GetParentOrNull<Node>()?.GetNodeOrNull<Player>("Player");
+        _target = GetNodeOrNull<Node2D>(TargetPath);
+        if (_target == null)
+            _target = GetParentOrNull<Node>()?.GetNodeOrNull<Node2D>("Player");
 
-        if (_player == null)
-            GD.PrintErr("DebugEnemySpawner could not find Player node.");
+        if (_target == null)
+            GD.PrintErr("DebugEnemySpawner could not find target node.");
     }
 
     public override void _PhysicsProcess(double delta)
@@ -66,7 +66,7 @@ public partial class DebugEnemySpawner : Node2D
 
         skeleton.GlobalPosition = GetSpawnPosition();
         skeleton.ZIndex = -1;
-        skeleton.SetPlayer(_player);
+        skeleton.SetTarget(_target);
         var parent = GetParent();
         if (parent != null)
             parent.AddChild(skeleton);
@@ -80,7 +80,7 @@ public partial class DebugEnemySpawner : Node2D
 
         ogre.GlobalPosition = GetSpawnPosition();
         ogre.ZIndex = -1;
-        ogre.SetPlayer(_player);
+        ogre.SetTarget(_target);
         var parent = GetParent();
         if (parent != null)
             parent.AddChild(ogre);
@@ -89,8 +89,8 @@ public partial class DebugEnemySpawner : Node2D
     private Vector2 GetSpawnPosition()
     {
         var spawnPosition = GlobalPosition;
-        if (_player != null && _player.IsInsideTree())
-            spawnPosition = _player.GlobalPosition + SpawnOffset;
+        if (_target != null && _target.IsInsideTree())
+            spawnPosition = _target.GlobalPosition + SpawnOffset;
 
         return spawnPosition;
     }

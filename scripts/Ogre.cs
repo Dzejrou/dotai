@@ -72,7 +72,7 @@ public partial class Ogre : EnemyBase, IAttackable
 
             if (!ValidateCurrentTarget())
             {
-                ClearPlayer();
+                ClearTarget();
                 Velocity = Vector2.Zero;
                 AnimatedSprite.Stop();
                 return;
@@ -81,7 +81,7 @@ public partial class Ogre : EnemyBase, IAttackable
 
         if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
         {
-            ClearPlayer();
+            ClearTarget();
             Velocity = Vector2.Zero;
             AnimatedSprite.Stop();
             return;

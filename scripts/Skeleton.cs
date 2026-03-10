@@ -117,14 +117,14 @@ public partial class Skeleton : EnemyBase, IAttackable
     {
         if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
         {
-            ClearPlayer();
+            ClearTarget();
             _attackCooldownTimer = 0.0f;
             return;
         }
 
         if (CurrentTarget is not IAttackable attackable)
         {
-            ClearPlayer();
+            ClearTarget();
             _attackCooldownTimer = 0.0f;
             return;
         }
