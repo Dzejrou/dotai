@@ -12,9 +12,6 @@ public partial class DebugEnemySpawner : Node2D
     public NodePath TargetPath { get; set; } = new NodePath("../Player");
 
     [Export]
-    public Vector2 SpawnOffset { get; set; } = new Vector2(36.0f, 0.0f);
-
-    [Export]
     public float SpawnCooldown { get; set; } = 0.25f;
 
     private Node2D _target;
@@ -89,8 +86,13 @@ public partial class DebugEnemySpawner : Node2D
     private Vector2 GetSpawnPosition()
     {
         var spawnPosition = GlobalPosition;
-        if (_target != null && _target.IsInsideTree())
-            spawnPosition = _target.GlobalPosition + SpawnOffset;
+        var viewport = GetViewport();
+        if (viewport != null)
+        {
+            var mousePosition = viewport.GetMousePosition();
+            var canvasTransform = viewport.GetCanvasTransform();
+            spawnPosition = canvasTransform.AffineInverse() * mousePosition;
+        }
 
         return spawnPosition;
     }
