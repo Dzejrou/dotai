@@ -105,7 +105,7 @@ public partial class Projectile : Area2D
                 return;
         }
 
-        if (targetNode is not IAttackable attackable)
+        if (targetNode is not IAttackable attackable || targetNode is not ITargetable targetable || !targetable.CanBeTargeted)
             return;
 
         _hasHitTarget = true;

@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Ogre : EnemyBase, IAttackable
+public partial class Ogre : EnemyBase, IAttackable, ITargetable
 {
     [Export]
     public float Speed { get; set; } = 64.0f;
@@ -79,7 +79,10 @@ public partial class Ogre : EnemyBase, IAttackable
 
     protected override void StartAttack()
     {
-        if (_attackCooldownTimer > 0.0f || _isDead || CurrentTarget is not IAttackable attackable)
+        if (_attackCooldownTimer > 0.0f || _isDead ||
+            CurrentTarget is not IAttackable attackable ||
+            CurrentTarget is not ITargetable targetable ||
+            !targetable.CanBeTargeted)
             return;
 
         _attackCooldownTimer = AttackCooldown;
@@ -101,6 +104,8 @@ public partial class Ogre : EnemyBase, IAttackable
         var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
         attackable.ApplyDamage(damage);
     }
+
+    public bool CanBeTargeted => !_isDead;
 
     public void ApplyDamage(int amount)
     {
