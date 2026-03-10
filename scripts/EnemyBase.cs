@@ -162,25 +162,34 @@ public abstract partial class EnemyBase : CharacterBody2D
             return;
         }
 
-        if (toTarget == Vector2.Zero)
+        var desiredDirection = GetDesiredMovementDirection(toTarget, delta);
+        if (desiredDirection == Vector2.Zero)
         {
             Velocity = Vector2.Zero;
             AnimatedSprite.Stop();
             return;
         }
 
-        LastDirection = DirectionHelper.GetDirectionName(toTarget);
+        LastDirection = DirectionHelper.GetDirectionName(desiredDirection);
         var walkAnimation = $"walk_{LastDirection}";
         if (AnimatedSprite.SpriteFrames != null &&
             AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
             (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
             AnimatedSprite.Play(walkAnimation);
 
-        Velocity = toTarget.Normalized() * MovementSpeed;
+        Velocity = desiredDirection * MovementSpeed;
         MoveAndSlide();
     }
 
     protected virtual void PrePhysicsProcess(double delta) { }
+
+    protected virtual Vector2 GetDesiredMovementDirection(Vector2 toTarget, double delta)
+    {
+        if (toTarget == Vector2.Zero)
+            return Vector2.Zero;
+
+        return toTarget.Normalized();
+    }
 
     protected abstract bool CanAttackNow(Vector2 toTarget, double delta);
 
