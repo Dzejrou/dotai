@@ -58,7 +58,7 @@ public partial class Skeleton : EnemyBase, IAttackable
             }
         }
 
-        if (Player == null || !IsInstanceValid(Player) || !Player.IsInsideTree())
+        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
         {
             Velocity = Vector2.Zero;
             AnimatedSprite.Stop();
@@ -74,26 +74,26 @@ public partial class Skeleton : EnemyBase, IAttackable
             return;
         }
 
-        var toPlayer = Player.GlobalPosition - GlobalPosition;
-        if (toPlayer.Length() <= AttackRange && _attackCooldownTimer <= 0.0f)
+        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
+        if (toTarget.Length() <= AttackRange && _attackCooldownTimer <= 0.0f)
         {
             StartAttack();
             return;
         }
 
-        if (toPlayer == Vector2.Zero)
+        if (toTarget == Vector2.Zero)
         {
             Velocity = Vector2.Zero;
             AnimatedSprite.Stop();
             return;
         }
 
-        LastDirection = DirectionHelper.GetDirectionName(toPlayer);
+        LastDirection = DirectionHelper.GetDirectionName(toTarget);
         var walkAnimation = $"walk_{LastDirection}";
         if (AnimatedSprite.Animation != walkAnimation)
             AnimatedSprite.Play(walkAnimation);
 
-        Velocity = toPlayer.Normalized() * Speed;
+        Velocity = toTarget.Normalized() * Speed;
         MoveAndSlide();
     }
 
@@ -115,9 +115,17 @@ public partial class Skeleton : EnemyBase, IAttackable
 
     private void StartAttack()
     {
-        if (Player == null || !Player.IsInsideTree())
+        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
         {
             ClearPlayer();
+            _attackCooldownTimer = 0.0f;
+            return;
+        }
+
+        if (CurrentTarget is not IAttackable attackable)
+        {
+            ClearPlayer();
+            _attackCooldownTimer = 0.0f;
             return;
         }
 
@@ -129,17 +137,17 @@ public partial class Skeleton : EnemyBase, IAttackable
             AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
         {
             _attacking = false;
-            Player.ApplyDamage(_randomNumberGenerator.RandiRange(1, 5));
+            attackable.ApplyDamage(_randomNumberGenerator.RandiRange(1, 5));
             return;
         }
 
-        if (Player != null && Player.GlobalPosition != Vector2.Zero)
-            LastDirection = DirectionHelper.GetDirectionName(Player.GlobalPosition - GlobalPosition);
+        if (CurrentTarget != null && CurrentTarget.GlobalPosition != Vector2.Zero)
+            LastDirection = DirectionHelper.GetDirectionName(CurrentTarget.GlobalPosition - GlobalPosition);
 
         AnimatedSprite.Play(attackAnimation);
 
         var damage = _randomNumberGenerator.RandiRange(1, 5);
-        Player.ApplyDamage(damage);
+        attackable.ApplyDamage(damage);
     }
 
     private void OnAnimationFinished()
