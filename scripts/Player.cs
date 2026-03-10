@@ -42,6 +42,21 @@ public partial class Player : CharacterBody2D, IAttackable
     [Export]
     public float HealthRegenerationDelayAfterDamage { get; set; } = 5.0f;
 
+    [Export]
+    public PackedScene FireballScene { get; set; }
+
+    [Export]
+    public float FireballSpeed { get; set; } = 280.0f;
+
+    [Export]
+    public int FireballDamage { get; set; } = 4;
+
+    [Export]
+    public float FireballLifetime { get; set; } = 2.5f;
+
+    [Export]
+    public float FireballMaxDistance { get; set; } = 320.0f;
+
     private int _health;
     private bool _isDead;
     private AnimatedSprite2D _animatedSprite;
@@ -75,6 +90,8 @@ public partial class Player : CharacterBody2D, IAttackable
 
         HandleHealthRegenerationDelay((float)delta);
         HandleHealthRegeneration((float)delta);
+        if (Input.IsActionJustPressed("cast_spell"))
+            CastFireball();
 
         var direction = Vector2.Zero;
         if (Input.IsActionPressed("move_left"))
@@ -149,6 +166,40 @@ public partial class Player : CharacterBody2D, IAttackable
     {
         if (_animatedSprite.Animation.ToString().StartsWith("slash_", StringComparison.Ordinal))
             _isAttacking = false;
+    }
+
+    private void CastFireball()
+    {
+        if (_isDead || FireballScene == null)
+            return;
+
+        var nearestTarget = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IAttackable);
+        var fireDirection = DirectionHelper.GetDirectionVector(_lastDirection);
+        if (nearestTarget != null)
+        {
+            var toTarget = nearestTarget.GlobalPosition - GlobalPosition;
+            if (toTarget != Vector2.Zero)
+                fireDirection = toTarget.Normalized();
+        }
+
+        var fireball = FireballScene.Instantiate<Projectile>();
+        if (fireball == null)
+            return;
+
+        var parent = GetParent();
+        if (parent == null)
+            return;
+
+        fireball.GlobalPosition = GlobalPosition;
+        parent.AddChild(fireball);
+        fireball.Initialize(
+            fireDirection,
+            this,
+            FireballDamage,
+            FireballSpeed,
+            FireballLifetime,
+            FireballMaxDistance,
+            CombatGroups.Enemies);
     }
 
     public void ApplyDamage(int amount)

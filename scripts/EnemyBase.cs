@@ -223,7 +223,7 @@ public abstract partial class EnemyBase : CharacterBody2D
     protected bool TryPlayDeathAnimation()
     {
         if (DisableCollisionOnDeath && CollisionShape != null)
-            CollisionShape.Disabled = true;
+            CollisionShape.CallDeferred("set", "disabled", true);
 
         var deathAnimation = $"{DeathAnimation}_{LastDirection}";
         if (AnimatedSprite.SpriteFrames != null &&
