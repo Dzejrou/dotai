@@ -76,6 +76,14 @@ public partial class Player : CharacterBody2D
         HandleHealthRegeneration((float)delta);
 
         var direction = Vector2.Zero;
+        if (Input.IsKeyPressed(Key.A) || Input.IsKeyPressed(Key.Left))
+            direction.X -= 1.0f;
+        if (Input.IsKeyPressed(Key.D) || Input.IsKeyPressed(Key.Right))
+            direction.X += 1.0f;
+        if (Input.IsKeyPressed(Key.W) || Input.IsKeyPressed(Key.Up))
+            direction.Y -= 1.0f;
+        if (Input.IsKeyPressed(Key.S) || Input.IsKeyPressed(Key.Down))
+            direction.Y += 1.0f;
 
         if (_isAttacking)
         {
@@ -89,23 +97,12 @@ public partial class Player : CharacterBody2D
 
         if (Input.IsKeyPressed(Key.E) && _attackCooldownTimer <= 0.0f)
         {
-            if (direction == Vector2.Zero)
-                UpdateDirectionFromNearestEnemy();
-            else
+            if (direction != Vector2.Zero)
                 _lastDirection = DirectionHelper.GetDirectionName(direction);
 
             StartAttack();
             return;
         }
-
-        if (Input.IsKeyPressed(Key.A) || Input.IsKeyPressed(Key.Left))
-            direction.X -= 1.0f;
-        if (Input.IsKeyPressed(Key.D) || Input.IsKeyPressed(Key.Right))
-            direction.X += 1.0f;
-        if (Input.IsKeyPressed(Key.W) || Input.IsKeyPressed(Key.Up))
-            direction.Y -= 1.0f;
-        if (Input.IsKeyPressed(Key.S) || Input.IsKeyPressed(Key.Down))
-            direction.Y += 1.0f;
 
         if (direction == Vector2.Zero)
         {
