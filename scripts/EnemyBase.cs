@@ -13,6 +13,12 @@ public abstract partial class EnemyBase : CharacterBody2D
     [Export]
     public bool DisableCollisionOnDeath { get; set; } = true;
 
+    [Export]
+    public float AggroAcquisitionRange { get; set; } = 150.0f;
+
+    [Export]
+    public float AggroLossRange { get; set; } = 220.0f;
+
     protected AnimatedSprite2D AnimatedSprite { get; private set; }
     protected CollisionShape2D CollisionShape { get; private set; }
     protected Node2D CurrentTarget { get; private set; }
@@ -33,17 +39,12 @@ public abstract partial class EnemyBase : CharacterBody2D
                 resolvedTarget = GetParent()?.GetNodeOrNull<Node2D>("Player");
         }
 
-        if (resolvedTarget != null)
+        if (resolvedTarget != null && CanAcquireTarget(resolvedTarget))
         {
             SetTarget(resolvedTarget);
         }
-        else
-        {
-            AcquireTarget();
-        }
-
-        if (resolvedTarget == null && CurrentTarget == null)
-            GD.PrintErr($"{enemyName} could not find initial target node.");
+        else if (resolvedTarget != null && !CanAcquireTarget(resolvedTarget))
+            GD.PrintErr($"{enemyName} did not acquire initial target (not in aggro range).");
     }
 
 
@@ -54,13 +55,7 @@ public abstract partial class EnemyBase : CharacterBody2D
             return false;
         }
 
-        if (!GodotObject.IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
-        {
-            ClearTarget();
-            return false;
-        }
-
-        if (CurrentTarget is not IAttackable)
+        if (ShouldLoseCurrentTarget(CurrentTarget))
         {
             ClearTarget();
             return false;
@@ -72,10 +67,13 @@ public abstract partial class EnemyBase : CharacterBody2D
 
     protected void AcquireTarget()
     {
-        CurrentTarget = TargetingHelper.FindClosestTarget(
+        var candidate = TargetingHelper.FindClosestTarget(
             this,
             CombatGroups.Allies,
             node => node is Node2D && node is IAttackable);
+
+        if (candidate != null && CanAcquireTarget(candidate))
+            CurrentTarget = candidate;
     }
 
     protected void ClearTarget()
@@ -86,6 +84,43 @@ public abstract partial class EnemyBase : CharacterBody2D
     public void SetTarget(Node2D target)
     {
         CurrentTarget = target;
+    }
+
+    protected bool CanAcquireTarget(Node2D target)
+    {
+        return target is IAttackable && IsTargetWithinAcquisitionRange(target);
+    }
+
+    protected bool ShouldLoseCurrentTarget(Node2D target)
+    {
+        if (target == null || !GodotObject.IsInstanceValid(target))
+            return true;
+
+        if (!target.IsInsideTree())
+            return true;
+
+        if (target is not IAttackable)
+            return true;
+
+        return !IsTargetWithinLossRange(target);
+    }
+
+    private bool IsTargetWithinAcquisitionRange(Node2D target)
+    {
+        return IsTargetWithinRange(target, Math.Max(0.0f, AggroAcquisitionRange));
+    }
+
+    private bool IsTargetWithinLossRange(Node2D target)
+    {
+        return IsTargetWithinRange(target, Math.Max(AggroLossRange, AggroAcquisitionRange));
+    }
+
+    private bool IsTargetWithinRange(Node2D target, float range)
+    {
+        if (target == null)
+            return false;
+
+        return GlobalPosition.DistanceTo(target.GlobalPosition) <= range;
     }
 
     protected bool TryFinalizeDeathAnimation()
