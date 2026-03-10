@@ -24,15 +24,18 @@ public abstract partial class EnemyBase : CharacterBody2D
         CollisionShape = collisionShape;
         AddToGroup("enemies");
 
-        if (Player == null)
+        var resolvedPlayer = Player;
+        if (resolvedPlayer == null)
         {
             if (!PlayerPath.IsEmpty && HasNode(PlayerPath))
-                Player = GetNode<Player>(PlayerPath);
+                resolvedPlayer = GetNode<Player>(PlayerPath);
             else
-                Player = GetParent()?.GetNodeOrNull<Player>("Player");
+                resolvedPlayer = GetParent()?.GetNodeOrNull<Player>("Player");
         }
 
-        if (Player == null)
+        Player = resolvedPlayer;
+
+        if (resolvedPlayer == null)
             GD.PrintErr($"{enemyName} could not find Player node.");
     }
 
