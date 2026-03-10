@@ -37,7 +37,7 @@ public partial class Ogre : EnemyBase, IAttackable
     private float _healthRegenTimer;
     private int _currentHealth;
     private bool _isDead;
-    private bool _attacking;
+
     public override void _Ready()
     {
         _currentHealth = Math.Max(1, MaxHealth);
@@ -66,67 +66,40 @@ public partial class Ogre : EnemyBase, IAttackable
             return;
 
         HandleHealthRegeneration((float)delta);
+        base._PhysicsProcess(delta);
+    }
 
-        if (!ValidateCurrentTarget())
-        {
-            AcquireTarget();
-
-            if (!ValidateCurrentTarget())
-            {
-                ClearTarget();
-                if (TryReturnHome())
-                {
-                    MoveAndSlide();
-                    return;
-                }
-
-                Velocity = Vector2.Zero;
-                AnimatedSprite.Stop();
-                return;
-            }
-        }
-
-        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
-        {
-            ClearTarget();
-            Velocity = Vector2.Zero;
-            AnimatedSprite.Stop();
-            return;
-        }
-
+    protected override bool CanAttackNow(Vector2 toTarget, double delta)
+    {
         if (_attackCooldownTimer > 0.0f)
             _attackCooldownTimer -= (float)delta;
 
-        if (_attacking)
-        {
-            Velocity = Vector2.Zero;
-            return;
-        }
+        return _attackCooldownTimer <= 0.0f && toTarget.Length() <= AttackRange;
+    }
 
-        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
-        if (toTarget.Length() <= AttackRange)
-        {
-            Velocity = Vector2.Zero;
-            TryAttackPlayer();
+    protected override void StartAttack()
+    {
+        if (_attackCooldownTimer > 0.0f || _isDead || CurrentTarget is not IAttackable attackable)
             return;
-        }
 
-        if (toTarget == Vector2.Zero)
-        {
-            Velocity = Vector2.Zero;
-            AnimatedSprite.Stop();
-            return;
-        }
+        _attackCooldownTimer = AttackCooldown;
+        IsAttacking = true;
 
-        LastDirection = DirectionHelper.GetDirectionName(toTarget);
-        var walkAnimation = $"walk_{LastDirection}";
+        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
         if (AnimatedSprite.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
-            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
-            AnimatedSprite.Play(walkAnimation);
+            AnimatedSprite.SpriteFrames.HasAnimation(attackAnimation) &&
+            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) > 0)
+        {
+            AnimatedSprite.Play(attackAnimation);
+        }
+        else
+        {
+            IsAttacking = false;
+        }
 
-        Velocity = toTarget.Normalized() * Speed;
-        MoveAndSlide();
+        var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
+        var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
+        attackable.ApplyDamage(damage);
     }
 
     public void ApplyDamage(int amount)
@@ -143,31 +116,6 @@ public partial class Ogre : EnemyBase, IAttackable
             _isDead = true;
             StartDeath();
         }
-    }
-
-    private void TryAttackPlayer()
-    {
-        if (_attackCooldownTimer > 0.0f || _isDead || CurrentTarget is not IAttackable attackable)
-            return;
-
-        _attackCooldownTimer = AttackCooldown;
-        _attacking = true;
-
-        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(attackAnimation) &&
-            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) > 0)
-        {
-            AnimatedSprite.Play(attackAnimation);
-        }
-        else
-        {
-            _attacking = false;
-        }
-
-        var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
-        var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
-        attackable.ApplyDamage(damage);
     }
 
     private void HandleHealthRegeneration(float delta)
@@ -196,7 +144,7 @@ public partial class Ogre : EnemyBase, IAttackable
     {
         if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
         {
-            _attacking = false;
+            IsAttacking = false;
             return;
         }
 

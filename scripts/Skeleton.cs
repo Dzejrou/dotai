@@ -22,7 +22,6 @@ public partial class Skeleton : EnemyBase, IAttackable
 
     private RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
-    private bool _attacking;
     private int _currentHealth;
     private bool _isDead;
 
@@ -47,61 +46,55 @@ public partial class Skeleton : EnemyBase, IAttackable
         if (_isDead)
             return;
 
-        if (!ValidateCurrentTarget())
+        base._PhysicsProcess(delta);
+    }
+
+    protected override bool CanAttackNow(Vector2 toTarget, double delta)
+    {
+        if (_attackCooldownTimer > 0.0f)
         {
-            AcquireTarget();
-
-            if (!ValidateCurrentTarget())
-            {
-                if (TryReturnHome())
-                {
-                    MoveAndSlide();
-                    return;
-                }
-
-                Velocity = Vector2.Zero;
-                AnimatedSprite.Stop();
-                return;
-            }
+            _attackCooldownTimer -= (float)delta;
+            return false;
         }
 
+        return toTarget.Length() <= AttackRange;
+    }
+
+    protected override void StartAttack()
+    {
         if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
         {
-            Velocity = Vector2.Zero;
-            AnimatedSprite.Stop();
+            ClearTarget();
+            _attackCooldownTimer = 0.0f;
             return;
         }
 
-        if (_attackCooldownTimer > 0.0f)
-            _attackCooldownTimer -= (float)delta;
-
-        if (_attacking)
+        if (CurrentTarget is not IAttackable attackable)
         {
-            Velocity = Vector2.Zero;
+            ClearTarget();
+            _attackCooldownTimer = 0.0f;
             return;
         }
 
-        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
-        if (toTarget.Length() <= AttackRange && _attackCooldownTimer <= 0.0f)
+        IsAttacking = true;
+        _attackCooldownTimer = AttackCooldown;
+
+        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
+        if (AnimatedSprite.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
         {
-            StartAttack();
+            IsAttacking = false;
+            attackable.ApplyDamage(_randomNumberGenerator.RandiRange(1, 5));
             return;
         }
 
-        if (toTarget == Vector2.Zero)
-        {
-            Velocity = Vector2.Zero;
-            AnimatedSprite.Stop();
-            return;
-        }
+        if (CurrentTarget != null && CurrentTarget.GlobalPosition != Vector2.Zero)
+            LastDirection = DirectionHelper.GetDirectionName(CurrentTarget.GlobalPosition - GlobalPosition);
 
-        LastDirection = DirectionHelper.GetDirectionName(toTarget);
-        var walkAnimation = $"walk_{LastDirection}";
-        if (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation)
-            AnimatedSprite.Play(walkAnimation);
+        AnimatedSprite.Play(attackAnimation);
 
-        Velocity = toTarget.Normalized() * Speed;
-        MoveAndSlide();
+        var damage = _randomNumberGenerator.RandiRange(1, 5);
+        attackable.ApplyDamage(damage);
     }
 
     public void ApplyDamage(int amount)
@@ -120,50 +113,13 @@ public partial class Skeleton : EnemyBase, IAttackable
         }
     }
 
-    private void StartAttack()
-    {
-        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        if (CurrentTarget is not IAttackable attackable)
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        _attacking = true;
-        _attackCooldownTimer = AttackCooldown;
-
-        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
-        {
-            _attacking = false;
-            attackable.ApplyDamage(_randomNumberGenerator.RandiRange(1, 5));
-            return;
-        }
-
-        if (CurrentTarget != null && CurrentTarget.GlobalPosition != Vector2.Zero)
-            LastDirection = DirectionHelper.GetDirectionName(CurrentTarget.GlobalPosition - GlobalPosition);
-
-        AnimatedSprite.Play(attackAnimation);
-
-        var damage = _randomNumberGenerator.RandiRange(1, 5);
-        attackable.ApplyDamage(damage);
-    }
-
     private void OnAnimationFinished()
     {
         var animationName = AnimatedSprite.Animation.ToString();
 
         if (animationName.StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
         {
-            _attacking = false;
+            IsAttacking = false;
             return;
         }
 
@@ -206,7 +162,7 @@ public partial class Skeleton : EnemyBase, IAttackable
 
     private void StartDeath()
     {
-        _attacking = false;
+        IsAttacking = false;
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
 

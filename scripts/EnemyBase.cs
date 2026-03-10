@@ -28,6 +28,7 @@ public abstract partial class EnemyBase : CharacterBody2D
     protected Vector2 HomePosition { get; private set; }
     protected float MovementSpeed { get; private set; } = 1.0f;
     protected string LastDirection { get; set; } = "south";
+    protected bool IsAttacking { get; set; }
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
     {
@@ -139,6 +140,51 @@ public abstract partial class EnemyBase : CharacterBody2D
         return GlobalPosition.DistanceTo(HomePosition) <= Math.Max(0.0f, HomeReturnTolerance);
     }
 
+    public override void _PhysicsProcess(double delta)
+    {
+        PrePhysicsProcess(delta);
+
+        if (!TryEnsureActiveTarget())
+            return;
+
+        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
+
+        if (IsAttacking)
+        {
+            Velocity = Vector2.Zero;
+            return;
+        }
+
+        if (CanAttackNow(toTarget, delta))
+        {
+            StartAttack();
+            return;
+        }
+
+        if (toTarget == Vector2.Zero)
+        {
+            Velocity = Vector2.Zero;
+            AnimatedSprite.Stop();
+            return;
+        }
+
+        LastDirection = DirectionHelper.GetDirectionName(toTarget);
+        var walkAnimation = $"walk_{LastDirection}";
+        if (AnimatedSprite.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
+            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
+            AnimatedSprite.Play(walkAnimation);
+
+        Velocity = toTarget.Normalized() * MovementSpeed;
+        MoveAndSlide();
+    }
+
+    protected virtual void PrePhysicsProcess(double delta) { }
+
+    protected abstract bool CanAttackNow(Vector2 toTarget, double delta);
+
+    protected abstract void StartAttack();
+
     protected bool TryReturnHome()
     {
         if (IsAtHome())
@@ -191,5 +237,28 @@ public abstract partial class EnemyBase : CharacterBody2D
         AnimatedSprite.Stop();
         SetPhysicsProcess(false);
         return false;
+    }
+
+    private bool TryEnsureActiveTarget()
+    {
+        if (!ValidateCurrentTarget())
+        {
+            AcquireTarget();
+
+            if (!ValidateCurrentTarget())
+            {
+                if (TryReturnHome())
+                {
+                    MoveAndSlide();
+                    return false;
+                }
+
+                Velocity = Vector2.Zero;
+                AnimatedSprite.Stop();
+                return false;
+            }
+        }
+
+        return true;
     }
 }
