@@ -5,7 +5,7 @@ using System;
 public abstract partial class EnemyBase : CharacterBody2D
 {
     [Export]
-    public NodePath PlayerPath { get; set; } = new NodePath("../Player");
+    public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
 
     [Export]
     public StringName DeathAnimation { get; set; } = "falling-back-death";
@@ -24,32 +24,28 @@ public abstract partial class EnemyBase : CharacterBody2D
         CollisionShape = collisionShape;
         AddToGroup(CombatGroups.Enemies);
 
-        var resolvedPlayer = CurrentTarget as Player;
-        if (resolvedPlayer == null)
+        var resolvedTarget = CurrentTarget;
+        if (resolvedTarget == null)
         {
-            if (!PlayerPath.IsEmpty && HasNode(PlayerPath))
-                resolvedPlayer = GetNode<Player>(PlayerPath);
+            if (!InitialTargetPath.IsEmpty && HasNode(InitialTargetPath))
+                resolvedTarget = GetNode<Node2D>(InitialTargetPath);
             else
-                resolvedPlayer = GetParent()?.GetNodeOrNull<Player>("Player");
+                resolvedTarget = GetParent()?.GetNodeOrNull<Node2D>("Player");
         }
 
-        if (resolvedPlayer != null)
+        if (resolvedTarget != null)
         {
-            SetPlayer(resolvedPlayer);
+            SetTarget(resolvedTarget);
         }
         else
         {
             AcquireTarget();
         }
 
-        if (resolvedPlayer == null && CurrentTarget == null)
-            GD.PrintErr($"{enemyName} could not find Player node.");
+        if (resolvedTarget == null && CurrentTarget == null)
+            GD.PrintErr($"{enemyName} could not find initial target node.");
     }
 
-    protected void ClearPlayer()
-    {
-        ClearTarget();
-    }
 
     protected bool ValidateCurrentTarget()
     {
@@ -87,9 +83,9 @@ public abstract partial class EnemyBase : CharacterBody2D
         CurrentTarget = null;
     }
 
-    public void SetPlayer(Player player)
+    public void SetTarget(Node2D target)
     {
-        CurrentTarget = player;
+        CurrentTarget = target;
     }
 
     protected bool TryFinalizeDeathAnimation()
