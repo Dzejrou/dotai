@@ -19,9 +19,14 @@ public abstract partial class EnemyBase : CharacterBody2D
     [Export]
     public float AggroLossRange { get; set; } = 220.0f;
 
+    [Export]
+    public float HomeReturnTolerance { get; set; } = 4.0f;
+
     protected AnimatedSprite2D AnimatedSprite { get; private set; }
     protected CollisionShape2D CollisionShape { get; private set; }
     protected Node2D CurrentTarget { get; private set; }
+    protected Vector2 HomePosition { get; private set; }
+    protected float MovementSpeed { get; private set; } = 1.0f;
     protected string LastDirection { get; set; } = "south";
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
@@ -29,6 +34,7 @@ public abstract partial class EnemyBase : CharacterBody2D
         AnimatedSprite = animatedSprite;
         CollisionShape = collisionShape;
         AddToGroup(CombatGroups.Enemies);
+        HomePosition = GlobalPosition;
 
         var resolvedTarget = CurrentTarget;
         if (resolvedTarget == null)
@@ -86,6 +92,11 @@ public abstract partial class EnemyBase : CharacterBody2D
         CurrentTarget = target;
     }
 
+    protected void SetMovementSpeed(float speed)
+    {
+        MovementSpeed = Math.Max(0.0f, speed);
+    }
+
     protected bool CanAcquireTarget(Node2D target)
     {
         return target is IAttackable && IsTargetWithinAcquisitionRange(target);
@@ -121,6 +132,33 @@ public abstract partial class EnemyBase : CharacterBody2D
             return false;
 
         return GlobalPosition.DistanceTo(target.GlobalPosition) <= range;
+    }
+
+    protected bool IsAtHome()
+    {
+        return GlobalPosition.DistanceTo(HomePosition) <= Math.Max(0.0f, HomeReturnTolerance);
+    }
+
+    protected bool TryReturnHome()
+    {
+        if (IsAtHome())
+            return false;
+
+        var toHome = HomePosition - GlobalPosition;
+        if (toHome == Vector2.Zero)
+            return false;
+
+        LastDirection = DirectionHelper.GetDirectionName(toHome);
+        var walkAnimation = $"walk_{LastDirection}";
+        if (AnimatedSprite.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
+            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
+        {
+            AnimatedSprite.Play(walkAnimation);
+        }
+
+        Velocity = toHome.Normalized() * MovementSpeed;
+        return true;
     }
 
     protected bool TryFinalizeDeathAnimation()
