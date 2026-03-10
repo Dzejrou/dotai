@@ -5,6 +5,15 @@ using System;
 [GlobalClass]
 public partial class Main : Node2D
 {
+    private static readonly Vector2I[] WindowPresets =
+    {
+        new Vector2I(960, 540),
+        new Vector2I(1280, 720),
+        new Vector2I(1600, 900),
+        new Vector2I(1920, 1080),
+        new Vector2I(2560, 1440),
+    };
+
     [Export]
     public NodePath WorldPath { get; set; } = new NodePath("World");
 
@@ -20,6 +29,7 @@ public partial class Main : Node2D
     private ColorRect _healthFill;
     private const int HealthBarWidth = 140;
     private const int HealthBarHeight = 16;
+    private int _windowPresetIndex;
 
     public override void _Ready()
     {
@@ -46,6 +56,8 @@ public partial class Main : Node2D
             UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealth);
         else
             UpdatePlayerHealthHud(0, 0);
+
+        InitializeWindowPreset();
     }
 
     public override void _ExitTree()
@@ -62,6 +74,9 @@ public partial class Main : Node2D
 
     public override void _Input(InputEvent @event)
     {
+        if (TryHandleWindowResizeInput(@event))
+            return;
+
         if (!_gameOverActive || _restartingFromGameOver)
             return;
 
@@ -153,5 +168,56 @@ public partial class Main : Node2D
         _healthText.OffsetTop = 1.0f;
         _healthText.AddThemeFontSizeOverride("font_size", 18);
         healthPanel.AddChild(_healthText);
+    }
+
+    private void InitializeWindowPreset()
+    {
+        var currentSize = DisplayServer.WindowGetSize();
+        var closestPresetIndex = 0;
+        var closestDistanceSq = int.MaxValue;
+
+        for (var i = 0; i < WindowPresets.Length; i++)
+        {
+            var preset = WindowPresets[i];
+            var dx = currentSize.X - preset.X;
+            var dy = currentSize.Y - preset.Y;
+            var distanceSq = dx * dx + dy * dy;
+            if (distanceSq < closestDistanceSq)
+            {
+                closestDistanceSq = distanceSq;
+                closestPresetIndex = i;
+            }
+        }
+
+        _windowPresetIndex = Mathf.Clamp(closestPresetIndex, 0, WindowPresets.Length - 1);
+    }
+
+    private bool TryHandleWindowResizeInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+            return false;
+
+        var shouldIncrease = keyEvent.PhysicalKeycode == Key.Key9;
+        var shouldDecrease = keyEvent.PhysicalKeycode == Key.Key0;
+
+        if (!shouldIncrease && !shouldDecrease)
+            return false;
+
+        var newIndex = _windowPresetIndex;
+        if (shouldIncrease)
+            newIndex++;
+        else
+            newIndex--;
+
+        newIndex = Mathf.Clamp(newIndex, 0, WindowPresets.Length - 1);
+        if (newIndex == _windowPresetIndex)
+            return true;
+
+        _windowPresetIndex = newIndex;
+        var newSize = WindowPresets[_windowPresetIndex];
+        DisplayServer.WindowSetSize(newSize);
+        GD.Print($"Window size set to {newSize.X}x{newSize.Y}");
+
+        return true;
     }
 }
