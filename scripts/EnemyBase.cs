@@ -16,7 +16,6 @@ public abstract partial class EnemyBase : CharacterBody2D
     protected AnimatedSprite2D AnimatedSprite { get; private set; }
     protected CollisionShape2D CollisionShape { get; private set; }
     protected Node2D CurrentTarget { get; private set; }
-    protected Player Player { get; private set; }
     protected string LastDirection { get; set; } = "south";
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
@@ -25,7 +24,7 @@ public abstract partial class EnemyBase : CharacterBody2D
         CollisionShape = collisionShape;
         AddToGroup(CombatGroups.Enemies);
 
-        var resolvedPlayer = Player;
+        var resolvedPlayer = CurrentTarget as Player;
         if (resolvedPlayer == null)
         {
             if (!PlayerPath.IsEmpty && HasNode(PlayerPath))
@@ -34,9 +33,16 @@ public abstract partial class EnemyBase : CharacterBody2D
                 resolvedPlayer = GetParent()?.GetNodeOrNull<Player>("Player");
         }
 
-        SetPlayer(resolvedPlayer);
+        if (resolvedPlayer != null)
+        {
+            SetPlayer(resolvedPlayer);
+        }
+        else
+        {
+            AcquireTarget();
+        }
 
-        if (resolvedPlayer == null)
+        if (resolvedPlayer == null && CurrentTarget == null)
             GD.PrintErr($"{enemyName} could not find Player node.");
     }
 
@@ -49,7 +55,6 @@ public abstract partial class EnemyBase : CharacterBody2D
     {
         if (CurrentTarget == null)
         {
-            Player = null;
             return false;
         }
 
@@ -59,31 +64,31 @@ public abstract partial class EnemyBase : CharacterBody2D
             return false;
         }
 
-        if (CurrentTarget is Player player)
+        if (CurrentTarget is not IAttackable)
         {
-            Player = player;
-            return true;
+            ClearTarget();
+            return false;
         }
 
-        ClearTarget();
-        return false;
+        return true;
     }
+
 
     protected void AcquireTarget()
     {
-        CurrentTarget = TargetingHelper.FindClosestTarget(this, CombatGroups.Allies, node => node is Player);
-        Player = CurrentTarget as Player;
+        CurrentTarget = TargetingHelper.FindClosestTarget(
+            this,
+            CombatGroups.Allies,
+            node => node is Node2D && node is IAttackable);
     }
 
     protected void ClearTarget()
     {
         CurrentTarget = null;
-        Player = null;
     }
 
     public void SetPlayer(Player player)
     {
-        Player = player;
         CurrentTarget = player;
     }
 

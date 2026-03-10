@@ -79,7 +79,7 @@ public partial class Ogre : EnemyBase, IAttackable
             }
         }
 
-        if (Player == null)
+        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
         {
             ClearPlayer();
             Velocity = Vector2.Zero;
@@ -96,27 +96,27 @@ public partial class Ogre : EnemyBase, IAttackable
             return;
         }
 
-        var toPlayer = Player.GlobalPosition - GlobalPosition;
-        if (toPlayer.Length() <= AttackRange)
+        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
+        if (toTarget.Length() <= AttackRange)
         {
             Velocity = Vector2.Zero;
             TryAttackPlayer();
             return;
         }
 
-        if (toPlayer == Vector2.Zero)
+        if (toTarget == Vector2.Zero)
         {
             Velocity = Vector2.Zero;
             AnimatedSprite.Stop();
             return;
         }
 
-        LastDirection = DirectionHelper.GetDirectionName(toPlayer);
+        LastDirection = DirectionHelper.GetDirectionName(toTarget);
         var walkAnimation = $"walk_{LastDirection}";
         if (AnimatedSprite.SpriteFrames != null && AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation))
             AnimatedSprite.Play(walkAnimation);
 
-        Velocity = toPlayer.Normalized() * Speed;
+        Velocity = toTarget.Normalized() * Speed;
         MoveAndSlide();
     }
 
@@ -138,7 +138,7 @@ public partial class Ogre : EnemyBase, IAttackable
 
     private void TryAttackPlayer()
     {
-        if (_attackCooldownTimer > 0.0f || Player == null || _isDead)
+        if (_attackCooldownTimer > 0.0f || _isDead || CurrentTarget is not IAttackable attackable)
             return;
 
         _attackCooldownTimer = AttackCooldown;
@@ -158,7 +158,7 @@ public partial class Ogre : EnemyBase, IAttackable
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
         var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
-        Player.ApplyDamage(damage);
+        attackable.ApplyDamage(damage);
     }
 
     private void HandleHealthRegeneration(float delta)
