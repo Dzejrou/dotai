@@ -1,5 +1,4 @@
-public interface IEnemyTarget
+public interface IAttackable
 {
     void ApplyDamage(int amount);
 }
-

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D
+public partial class Player : CharacterBody2D, IAttackable
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -182,7 +182,7 @@ public partial class Player : CharacterBody2D
 
         foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Enemies))
         {
-            if (_hitThisAttack.Contains(node) || node is not IEnemyTarget enemyTarget)
+            if (_hitThisAttack.Contains(node) || node is not IAttackable attackable)
                 continue;
 
             if (!IsInstanceValid(node) || node is not Node2D enemyNode || !enemyNode.IsInsideTree())
@@ -194,18 +194,18 @@ public partial class Player : CharacterBody2D
 
             if (toEnemy == Vector2.Zero)
             {
-                ApplyDamageToEnemy(node, enemyTarget);
+                ApplyDamageToEnemy(node, attackable);
                 continue;
             }
 
             if (facingVector.Dot(toEnemy.Normalized()) < minimumDot)
                 continue;
 
-            ApplyDamageToEnemy(node, enemyTarget);
+            ApplyDamageToEnemy(node, attackable);
         }
     }
 
-    private void ApplyDamageToEnemy(Node node, IEnemyTarget enemy)
+    private void ApplyDamageToEnemy(Node node, IAttackable enemy)
     {
         if (enemy == null || !_hitThisAttack.Add(node))
             return;
@@ -217,7 +217,7 @@ public partial class Player : CharacterBody2D
 
     private void UpdateDirectionFromNearestEnemy()
     {
-        var nearestEnemy = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IEnemyTarget);
+        var nearestEnemy = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IAttackable);
         if (nearestEnemy == null)
             return;
 

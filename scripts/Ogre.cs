@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Ogre : EnemyBase, IEnemyTarget
+public partial class Ogre : EnemyBase, IAttackable
 {
     [Export]
     public float Speed { get; set; } = 64.0f;
