@@ -12,6 +12,12 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
     public float AttackRange { get; set; } = 150.0f;
 
     [Export]
+    public float MinimumRange { get; set; } = 70.0f;
+
+    [Export]
+    public float PreferredRange { get; set; } = 120.0f;
+
+    [Export]
     public float AttackCooldown { get; set; } = 1.2f;
 
     [Export]
@@ -78,7 +84,20 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
             return false;
         }
 
-        return toTarget.Length() <= AttackRange;
+        var distance = toTarget.Length();
+        return distance >= MinimumRange && distance <= PreferredRange;
+    }
+
+    protected override Vector2 GetDesiredMovementDirection(Vector2 toTarget, double delta)
+    {
+        var distance = toTarget.Length();
+        if (toTarget == Vector2.Zero || (distance >= MinimumRange && distance <= PreferredRange))
+            return Vector2.Zero;
+
+        if (distance > PreferredRange)
+            return toTarget.Normalized();
+
+        return -toTarget.Normalized();
     }
 
     protected override void StartAttack()
