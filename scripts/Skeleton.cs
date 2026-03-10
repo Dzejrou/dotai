@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Skeleton : EnemyBase, IEnemyTarget
+public partial class Skeleton : EnemyBase, IAttackable
 {
     [Export]
     public float Speed { get; set; } = 52.0f;
