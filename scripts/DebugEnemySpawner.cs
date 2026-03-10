@@ -9,6 +9,9 @@ public partial class DebugEnemySpawner : Node2D
     public PackedScene OgreScene { get; set; }
 
     [Export]
+    public PackedScene SkeletonMageScene { get; set; }
+
+    [Export]
     public NodePath TargetPath { get; set; } = new NodePath("../Player");
 
     [Export]
@@ -49,6 +52,12 @@ public partial class DebugEnemySpawner : Node2D
             attemptedSpawn = true;
         }
 
+        if (Input.IsKeyPressed(Key.I) && SkeletonMageScene != null)
+        {
+            SpawnSkeletonMage();
+            attemptedSpawn = true;
+        }
+
         if (!attemptedSpawn)
             return;
 
@@ -81,6 +90,20 @@ public partial class DebugEnemySpawner : Node2D
         var parent = GetParent();
         if (parent != null)
             parent.AddChild(ogre);
+    }
+
+    private void SpawnSkeletonMage()
+    {
+        var skeletonMage = SkeletonMageScene?.Instantiate<SkeletonMage>();
+        if (skeletonMage == null)
+            return;
+
+        skeletonMage.GlobalPosition = GetSpawnPosition();
+        skeletonMage.ZIndex = -1;
+        skeletonMage.SetTarget(_target);
+        var parent = GetParent();
+        if (parent != null)
+            parent.AddChild(skeletonMage);
     }
 
     private Vector2 GetSpawnPosition()
