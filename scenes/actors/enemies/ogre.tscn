@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/Ogre.cs" id="1_ogre"]
+[ext_resource type="Script" path="res://scripts/actors/enemies/Ogre.cs" id="1_ogre"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ogre"]
 radius = 6.0

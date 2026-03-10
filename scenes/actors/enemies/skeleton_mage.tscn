@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/SkeletonMage.cs" id="1_skeleton_mage"]
+[ext_resource type="Script" path="res://scripts/actors/enemies/SkeletonMage.cs" id="1_skeleton_mage"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0

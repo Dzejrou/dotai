@@ -51,7 +51,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
     {
         _currentHealth = Math.Max(1, Health);
         if (ProjectileScene == null)
-            ProjectileScene = GD.Load<PackedScene>("res://scenes/projectile.tscn");
+            ProjectileScene = GD.Load<PackedScene>("res://scenes/projectiles/projectile.tscn");
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
