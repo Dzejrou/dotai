@@ -45,6 +45,7 @@ public partial class Ogre : EnemyBase, IAttackable
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             "Ogre");
+        SetMovementSpeed(Speed);
         AnimatedSprite.SpriteFrames = BuildSpriteFrames();
 
         if (AnimatedSprite.SpriteFrames.HasAnimation("walk_south"))
@@ -73,6 +74,12 @@ public partial class Ogre : EnemyBase, IAttackable
             if (!ValidateCurrentTarget())
             {
                 ClearTarget();
+                if (TryReturnHome())
+                {
+                    MoveAndSlide();
+                    return;
+                }
+
                 Velocity = Vector2.Zero;
                 AnimatedSprite.Stop();
                 return;
