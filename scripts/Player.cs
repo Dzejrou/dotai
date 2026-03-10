@@ -63,6 +63,7 @@ public partial class Player : CharacterBody2D
         _animatedSprite.Animation = "walk_south";
         _animatedSprite.Play();
         _animatedSprite.AnimationFinished += OnAnimationFinished;
+        AddToGroup(CombatGroups.Allies);
 
         EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
     }
@@ -179,7 +180,7 @@ public partial class Player : CharacterBody2D
         var facingVector = DirectionHelper.GetDirectionVector(_lastDirection);
         var minimumDot = Mathf.Cos(Mathf.DegToRad(AttackArcDegrees / 2.0f));
 
-        foreach (var node in GetTree().GetNodesInGroup("enemies"))
+        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Enemies))
         {
             if (_hitThisAttack.Contains(node) || node is not IEnemyTarget enemyTarget)
                 continue;
@@ -216,7 +217,7 @@ public partial class Player : CharacterBody2D
 
     private void UpdateDirectionFromNearestEnemy()
     {
-        var nearestEnemy = TargetingHelper.FindClosestTarget(this, "enemies", node => node is IEnemyTarget);
+        var nearestEnemy = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IEnemyTarget);
         if (nearestEnemy == null)
             return;
 

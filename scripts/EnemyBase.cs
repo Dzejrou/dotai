@@ -22,7 +22,7 @@ public abstract partial class EnemyBase : CharacterBody2D
     {
         AnimatedSprite = animatedSprite;
         CollisionShape = collisionShape;
-        AddToGroup("enemies");
+        AddToGroup(CombatGroups.Enemies);
 
         var resolvedPlayer = Player;
         if (resolvedPlayer == null)
