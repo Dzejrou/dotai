@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://7r3kh3tx2max"]
 
 [ext_resource type="Script" uid="uid://dvutl3mkyi0ph" path="res://scripts/Player.cs" id="1_t1u7h"]
+[ext_resource type="PackedScene" path="res://scenes/projectile.tscn" id="2_gx9kq"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -10,6 +11,7 @@ script = ExtResource("1_t1u7h")
 MaxAttackDamage = 20
 MinAttackDamage = 4
 HealthRegenerationAmount = 2
+FireballScene = ExtResource("2_gx9kq")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=122948576]
 current = true
