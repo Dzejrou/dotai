@@ -46,7 +46,6 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             "Ogre");
         SetMovementSpeed(Speed);
-        AnimatedSprite.SpriteFrames = BuildSpriteFrames();
 
         if (AnimatedSprite.SpriteFrames.HasAnimation("walk_south"))
         {
@@ -154,43 +153,6 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         }
 
         TryFinalizeDeathAnimation();
-    }
-
-    private SpriteFrames BuildSpriteFrames()
-    {
-        var spriteFrames = new SpriteFrames();
-        foreach (var direction in DirectionHelper.GetCardinalDirections())
-        {
-            RuntimeSpriteLoader.AddAnimationFrames(
-                spriteFrames,
-                $"walk_{direction}",
-                "assets/ogre/animations",
-                "walk",
-                direction,
-                true,
-                "Ogre",
-                true);
-            RuntimeSpriteLoader.AddAnimationFrames(
-                spriteFrames,
-                $"{DeathAnimation}_{direction}",
-                "assets/ogre/animations",
-                "falling-back-death",
-                direction,
-                false,
-                "Ogre",
-                true);
-            RuntimeSpriteLoader.AddAnimationFrames(
-                spriteFrames,
-                $"{AttackAnimation}_{direction}",
-                "assets/ogre/animations",
-                "cross-punch",
-                direction,
-                false,
-                "Ogre",
-                true);
-        }
-
-        return spriteFrames;
     }
 
     private void StartDeath()

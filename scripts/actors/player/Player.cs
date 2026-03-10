@@ -75,7 +75,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
     {
         _health = Math.Max(1, MaxHealth);
         _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
-        _animatedSprite.SpriteFrames = BuildSpriteFrames();
         _animatedSprite.Animation = "walk_south";
         _animatedSprite.Play();
         _animatedSprite.AnimationFinished += OnAnimationFinished;
@@ -329,31 +328,4 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
     }
 
-    private SpriteFrames BuildSpriteFrames()
-    {
-        var spriteFrames = new SpriteFrames();
-        foreach (var direction in DirectionHelper.GetCardinalDirections())
-        {
-            RuntimeSpriteLoader.AddAnimationFrames(
-                spriteFrames,
-                $"walk_{direction}",
-                "assets/player/animations",
-                "walk",
-                direction,
-                true,
-                "Player",
-                false);
-            RuntimeSpriteLoader.AddAnimationFrames(
-                spriteFrames,
-                $"slash_{direction}",
-                "assets/player/animations",
-                "slash",
-                direction,
-                false,
-                "Player",
-                false);
-        }
-
-        return spriteFrames;
-    }
 }
