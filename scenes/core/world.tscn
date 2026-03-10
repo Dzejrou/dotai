@@ -1,12 +1,12 @@
 [gd_scene load_steps=7 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_k6v4i"]
+[ext_resource type="PackedScene" path="res://scenes/actors/player/player.tscn" id="1_k6v4i"]
 [ext_resource type="Texture2D" path="res://assets/world/rock.png" id="2_qx8h3"]
-[ext_resource type="PackedScene" path="res://scenes/skeleton.tscn" id="3_3w8xk"]
-[ext_resource type="PackedScene" path="res://scenes/ogre.tscn" id="5_ogre"]
-[ext_resource type="PackedScene" path="res://scenes/skeleton_mage.tscn" id="6_skeleton_mage"]
-[ext_resource type="Script" path="res://scripts/World.cs" id="5_qx7qz"]
-[ext_resource type="Script" path="res://scripts/DebugEnemySpawner.cs" id="6_debug_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton.tscn" id="3_3w8xk"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/ogre.tscn" id="5_ogre"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="6_skeleton_mage"]
+[ext_resource type="Script" path="res://scripts/core/World.cs" id="5_qx7qz"]
+[ext_resource type="Script" path="res://scripts/core/DebugEnemySpawner.cs" id="6_debug_spawner"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_z8t4t"]
 size = Vector2(54, 38)

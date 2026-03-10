@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://b031w2t1d4q2g"]
 
-[ext_resource type="PackedScene" uid="uid://7r3kh3tx2max" path="res://scenes/player.tscn" id="1_k6v4i"]
+[ext_resource type="PackedScene" uid="uid://7r3kh3tx2max" path="res://scenes/actors/player/player.tscn" id="1_k6v4i"]
 [ext_resource type="Texture2D" uid="uid://cdnobkte5yigl" path="res://assets/world/rock.png" id="2_qx8h3"]
-[ext_resource type="PackedScene" path="res://scenes/game_over.tscn" id="4_jk0bq"]
-[ext_resource type="Script" uid="uid://dhkp7bkox0i6e" path="res://scripts/World.cs" id="5_qx7qz"]
+[ext_resource type="PackedScene" path="res://scenes/core/game_over.tscn" id="4_jk0bq"]
+[ext_resource type="Script" uid="uid://dhkp7bkox0i6e" path="res://scripts/core/World.cs" id="5_qx7qz"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_z8t4t"]
 size = Vector2(54, 38)
