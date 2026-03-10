@@ -77,7 +77,7 @@ public abstract partial class EnemyBase : CharacterBody2D
         var candidate = TargetingHelper.FindClosestTarget(
             this,
             CombatGroups.Allies,
-            node => node is Node2D && node is IAttackable);
+            node => node is Node2D && node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
 
         if (candidate != null && CanAcquireTarget(candidate))
             CurrentTarget = candidate;
@@ -100,7 +100,8 @@ public abstract partial class EnemyBase : CharacterBody2D
 
     protected bool CanAcquireTarget(Node2D target)
     {
-        return target is IAttackable && IsTargetWithinAcquisitionRange(target);
+        return target is IAttackable && target is ITargetable targetable && targetable.CanBeTargeted &&
+               IsTargetWithinAcquisitionRange(target);
     }
 
     protected bool ShouldLoseCurrentTarget(Node2D target)
@@ -111,7 +112,7 @@ public abstract partial class EnemyBase : CharacterBody2D
         if (!target.IsInsideTree())
             return true;
 
-        if (target is not IAttackable)
+        if (target is not IAttackable || target is not ITargetable targetable || !targetable.CanBeTargeted)
             return true;
 
         return !IsTargetWithinLossRange(target);

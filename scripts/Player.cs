@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D, IAttackable
+public partial class Player : CharacterBody2D, IAttackable, ITargetable
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -69,6 +69,7 @@ public partial class Player : CharacterBody2D, IAttackable
     private float _healthRegenDelayTimer;
 
     public int CurrentHealth => _health;
+    public bool CanBeTargeted => !_isDead;
 
     public override void _Ready()
     {
@@ -173,7 +174,7 @@ public partial class Player : CharacterBody2D, IAttackable
         if (_isDead || FireballScene == null)
             return;
 
-        var nearestTarget = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IAttackable);
+        var nearestTarget = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
         var fireDirection = DirectionHelper.GetDirectionVector(_lastDirection);
         if (nearestTarget != null)
         {
@@ -233,7 +234,7 @@ public partial class Player : CharacterBody2D, IAttackable
 
         foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Enemies))
         {
-            if (_hitThisAttack.Contains(node) || node is not IAttackable attackable)
+            if (_hitThisAttack.Contains(node) || node is not IAttackable attackable || node is not ITargetable targetable || !targetable.CanBeTargeted)
                 continue;
 
             if (!IsInstanceValid(node) || node is not Node2D enemyNode || !enemyNode.IsInsideTree())
@@ -268,7 +269,7 @@ public partial class Player : CharacterBody2D, IAttackable
 
     private void UpdateDirectionFromNearestEnemy()
     {
-        var nearestEnemy = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IAttackable);
+        var nearestEnemy = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
         if (nearestEnemy == null)
             return;
 

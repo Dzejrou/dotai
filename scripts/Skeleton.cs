@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Skeleton : EnemyBase, IAttackable
+public partial class Skeleton : EnemyBase, IAttackable, ITargetable
 {
     [Export]
     public float Speed { get; set; } = 52.0f;
@@ -69,7 +69,7 @@ public partial class Skeleton : EnemyBase, IAttackable
             return;
         }
 
-        if (CurrentTarget is not IAttackable attackable)
+        if (CurrentTarget is not IAttackable attackable || CurrentTarget is not ITargetable targetable || !targetable.CanBeTargeted)
         {
             ClearTarget();
             _attackCooldownTimer = 0.0f;
@@ -96,6 +96,8 @@ public partial class Skeleton : EnemyBase, IAttackable
         var damage = _randomNumberGenerator.RandiRange(1, 5);
         attackable.ApplyDamage(damage);
     }
+
+    public bool CanBeTargeted => !_isDead;
 
     public void ApplyDamage(int amount)
     {
