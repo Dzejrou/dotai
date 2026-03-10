@@ -113,7 +113,9 @@ public partial class Ogre : EnemyBase, IAttackable
 
         LastDirection = DirectionHelper.GetDirectionName(toTarget);
         var walkAnimation = $"walk_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames != null && AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation))
+        if (AnimatedSprite.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
+            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
             AnimatedSprite.Play(walkAnimation);
 
         Velocity = toTarget.Normalized() * Speed;

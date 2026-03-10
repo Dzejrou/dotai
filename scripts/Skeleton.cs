@@ -90,7 +90,7 @@ public partial class Skeleton : EnemyBase, IAttackable
 
         LastDirection = DirectionHelper.GetDirectionName(toTarget);
         var walkAnimation = $"walk_{LastDirection}";
-        if (AnimatedSprite.Animation != walkAnimation)
+        if (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation)
             AnimatedSprite.Play(walkAnimation);
 
         Velocity = toTarget.Normalized() * Speed;
