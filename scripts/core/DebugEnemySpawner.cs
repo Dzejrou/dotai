@@ -75,7 +75,7 @@ public partial class DebugEnemySpawner : Node2D
         HidePlacementGhost();
     }
 
-    public bool PlacePendingAtCursor()
+    public bool PlacePendingAtCursor(bool preservePlacement = false)
     {
         if (!_pending_enemy_type.HasValue)
             return false;
@@ -86,7 +86,9 @@ public partial class DebugEnemySpawner : Node2D
         if (enemy == null)
             return false;
 
-        CancelPlacement();
+        if (!preservePlacement)
+            CancelPlacement();
+
         return true;
     }
 
