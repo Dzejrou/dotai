@@ -20,10 +20,19 @@ public partial class Main : Node2D
     [Export]
     public NodePath GameOverPath { get; set; } = new NodePath("GameOver/Root");
 
+    [Export]
+    public NodePath PauseMenuPath { get; set; } = new NodePath("PauseMenu/Root");
+
+    [Export]
+    public NodePath DebugTrayPath { get; set; } = new NodePath("DebugTray/Root");
+
     private World _world;
     private Control _gameOverRoot;
+    private PauseMenu _pauseMenuRoot;
+    private DebugTray _debugTrayRoot;
     private bool _gameOverActive;
     private bool _restartingFromGameOver;
+    private bool _pauseMenuOpen;
     private Label _healthText;
     private ColorRect _healthBackground;
     private ColorRect _healthFill;
@@ -42,12 +51,28 @@ public partial class Main : Node2D
         }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
+        _pauseMenuRoot = GetNodeOrNull<PauseMenu>(PauseMenuPath);
+        _debugTrayRoot = GetNodeOrNull<DebugTray>(DebugTrayPath);
         CreateHud();
 
         if (_gameOverRoot != null)
         {
             _gameOverRoot.Visible = false;
             _gameOverRoot.ProcessMode = ProcessModeEnum.Always;
+        }
+
+        if (_pauseMenuRoot != null)
+        {
+            _pauseMenuRoot.Visible = false;
+            _pauseMenuRoot.ProcessMode = ProcessModeEnum.Always;
+            _pauseMenuRoot.Connect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
+            _pauseMenuRoot.Connect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
+        }
+
+        if (_debugTrayRoot != null)
+        {
+            _debugTrayRoot.Visible = false;
+            _debugTrayRoot.ProcessMode = ProcessModeEnum.Always;
         }
 
         var playerPath = _world != null && !_world.PlayerPath.IsEmpty ? _world.PlayerPath : new NodePath("Player");
@@ -70,6 +95,12 @@ public partial class Main : Node2D
 
         if (_world.IsConnected(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
             _world.Disconnect(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
+
+        if (_pauseMenuRoot != null && _pauseMenuRoot.IsConnected(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested))))
+            _pauseMenuRoot.Disconnect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
+
+        if (_pauseMenuRoot != null && _pauseMenuRoot.IsConnected(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested))))
+            _pauseMenuRoot.Disconnect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
     }
 
     public override void _Input(InputEvent @event)
@@ -77,11 +108,15 @@ public partial class Main : Node2D
         if (TryHandleWindowResizeInput(@event))
             return;
 
-        if (!_gameOverActive || _restartingFromGameOver)
-            return;
+        if (_gameOverActive && !_restartingFromGameOver)
+        {
+            if (@event is InputEventKey keyEvent && keyEvent.Pressed)
+                RestartFromGameOver();
 
-        if (@event is InputEventKey keyEvent && keyEvent.Pressed)
-            RestartFromGameOver();
+            return;
+        }
+
+        TryHandlePauseMenuInput(@event);
     }
 
     private void OnPlayerDied()
@@ -89,6 +124,8 @@ public partial class Main : Node2D
         if (_gameOverActive)
             return;
 
+        ClosePauseMenu();
+        CloseDebugTray(false);
         _gameOverActive = true;
         GetTree().Paused = true;
 
@@ -108,6 +145,17 @@ public partial class Main : Node2D
         _restartingFromGameOver = true;
         GetTree().Paused = false;
         GetTree().ReloadCurrentScene();
+    }
+
+    private void OnPauseMenuResumeRequested()
+    {
+        ClosePauseMenu();
+    }
+
+    private void OnPauseMenuDebugRequested()
+    {
+        ClosePauseMenu();
+        OpenDebugTray();
     }
 
     private void UpdatePlayerHealthHud(int health, int maxHealth)
@@ -219,5 +267,66 @@ public partial class Main : Node2D
         GD.Print($"Window size set to {newSize.X}x{newSize.Y}");
 
         return true;
+    }
+
+    private bool TryHandlePauseMenuInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+            return false;
+
+        if (keyEvent.PhysicalKeycode != Key.Escape)
+            return false;
+
+        if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
+        {
+            if (_debugTrayRoot.HandleEscape())
+                return true;
+
+            CloseDebugTray();
+            OpenPauseMenu();
+            return true;
+        }
+
+        if (_pauseMenuOpen)
+            ClosePauseMenu();
+        else
+            OpenPauseMenu();
+
+        return true;
+    }
+
+    private void OpenPauseMenu()
+    {
+        CloseDebugTray();
+        _pauseMenuOpen = true;
+        if (_pauseMenuRoot != null)
+            _pauseMenuRoot.Visible = true;
+
+        GetTree().Paused = true;
+    }
+
+    private void ClosePauseMenu()
+    {
+        _pauseMenuOpen = false;
+        if (_pauseMenuRoot != null)
+            _pauseMenuRoot.Visible = false;
+
+        if (!_gameOverActive)
+            GetTree().Paused = false;
+    }
+
+    private void OpenDebugTray()
+    {
+        if (_debugTrayRoot != null)
+            _debugTrayRoot.Open();
+
+        if (!_gameOverActive)
+            GetTree().Paused = false;
+    }
+
+    private void CloseDebugTray(bool cancelPlacement = true)
+    {
+        if (_debugTrayRoot != null)
+            _debugTrayRoot.Close(cancelPlacement);
     }
 }
