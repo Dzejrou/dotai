@@ -206,7 +206,7 @@ public partial class DebugTray : Control
 
         if (!mouseButton.Pressed)
         {
-            HandleLeftMouseRelease(screenPosition);
+            HandleLeftMouseRelease(screenPosition, mouseButton.ShiftPressed);
             return;
         }
 
@@ -215,14 +215,14 @@ public partial class DebugTray : Control
 
         if (HasPendingPlacement && !IsMouseOverTray(screenPosition) && _debug_enemy_spawner != null)
         {
-            _debug_enemy_spawner.PlacePendingAtCursor();
+            _debug_enemy_spawner.PlacePendingAtCursor(mouseButton.ShiftPressed);
             UpdateCardSelection();
             UpdateStatusLabel();
             GetViewport().SetInputAsHandled();
         }
     }
 
-    private void HandleLeftMouseRelease(Vector2 screenPosition)
+    private void HandleLeftMouseRelease(Vector2 screenPosition, bool shiftPressed)
     {
         if (!_pressed_card_type.HasValue)
             return;
@@ -232,7 +232,7 @@ public partial class DebugTray : Control
             if (IsMouseOverTray(screenPosition))
                 _debug_enemy_spawner.CancelPlacement();
             else
-                _debug_enemy_spawner.PlacePendingAtCursor();
+                _debug_enemy_spawner.PlacePendingAtCursor(shiftPressed);
         }
         else if (IsMouseOverCard(_pressed_card_type.Value, screenPosition))
         {
