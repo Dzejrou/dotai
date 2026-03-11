@@ -75,8 +75,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
     {
         _health = Math.Max(1, MaxHealth);
         _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
-        _animatedSprite.Animation = "walk_south";
-        _animatedSprite.Play();
+        SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Allies);
 
@@ -125,7 +124,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         if (direction == Vector2.Zero)
         {
             Velocity = Vector2.Zero;
-            _animatedSprite.Stop();
+            SetAnimationSafe(GetIdleAnimationName());
             return;
         }
 
@@ -266,16 +265,16 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         enemy.ApplyDamage(damage);
     }
 
-    private void UpdateDirectionFromNearestEnemy()
+    private void SetAnimationSafe(string animationName)
     {
-        var nearestEnemy = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
-        if (nearestEnemy == null)
+        if (_animatedSprite == null || _animatedSprite.SpriteFrames == null)
             return;
 
-        var toEnemy = nearestEnemy.GlobalPosition - GlobalPosition;
-        if (toEnemy != Vector2.Zero)
-            _lastDirection = DirectionHelper.GetDirectionName(toEnemy);
+        if (_animatedSprite.SpriteFrames.HasAnimation(animationName))
+            _animatedSprite.Play(animationName);
     }
+
+    private string GetIdleAnimationName() => $"breathing-idle_{_lastDirection}";
 
     private void HandleHealthRegeneration(float delta)
     {

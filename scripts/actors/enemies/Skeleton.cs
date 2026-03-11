@@ -33,8 +33,7 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             "Skeleton");
         SetMovementSpeed(Speed);
-        AnimatedSprite.Animation = "walk_south";
-        AnimatedSprite.Play();
+        PlayIdleIfAvailable();
         AnimatedSprite.AnimationFinished += OnAnimationFinished;
 
         _randomNumberGenerator.Randomize();

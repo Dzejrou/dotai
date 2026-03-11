@@ -58,11 +58,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
             "SkeletonMage");
         SetMovementSpeed(Speed);
 
-        if (AnimatedSprite.SpriteFrames.HasAnimation("walk_south"))
-        {
-            AnimatedSprite.Animation = "walk_south";
-            AnimatedSprite.Play();
-        }
+        PlayIdleIfAvailable();
 
         AnimatedSprite.AnimationFinished += OnAnimationFinished;
     }

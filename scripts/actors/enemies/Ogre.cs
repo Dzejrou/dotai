@@ -47,11 +47,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
             "Ogre");
         SetMovementSpeed(Speed);
 
-        if (AnimatedSprite.SpriteFrames.HasAnimation("walk_south"))
-        {
-            AnimatedSprite.Animation = "walk_south";
-            AnimatedSprite.Play();
-        }
+        PlayIdleIfAvailable();
 
         AnimatedSprite.AnimationFinished += OnAnimationFinished;
 

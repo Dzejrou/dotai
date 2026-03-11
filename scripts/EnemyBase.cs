@@ -166,7 +166,7 @@ public abstract partial class EnemyBase : CharacterBody2D
         if (desiredDirection == Vector2.Zero)
         {
             Velocity = Vector2.Zero;
-            AnimatedSprite.Stop();
+            PlayIdleIfAvailable();
             return;
         }
 
@@ -179,6 +179,21 @@ public abstract partial class EnemyBase : CharacterBody2D
 
         Velocity = desiredDirection * MovementSpeed;
         MoveAndSlide();
+    }
+
+    protected void PlayIdleIfAvailable()
+    {
+        if (AnimatedSprite == null || AnimatedSprite.SpriteFrames == null)
+            return;
+
+        var idleAnimation = $"breathing-idle_{LastDirection}";
+        if (AnimatedSprite.SpriteFrames.HasAnimation(idleAnimation))
+        {
+            if (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != idleAnimation)
+                AnimatedSprite.Play(idleAnimation);
+
+            return;
+        }
     }
 
     protected virtual void PrePhysicsProcess(double delta) { }
@@ -264,7 +279,7 @@ public abstract partial class EnemyBase : CharacterBody2D
                 }
 
                 Velocity = Vector2.Zero;
-                AnimatedSprite.Stop();
+                PlayIdleIfAvailable();
                 return false;
             }
         }

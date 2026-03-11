@@ -15,6 +15,7 @@ Health = 10
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2100045633]
 sprite_frames = ExtResource("2_skeleton_frames")
+animation = &"breathing-idle_south"
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 
