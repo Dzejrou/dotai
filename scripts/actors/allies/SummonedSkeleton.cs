@@ -32,10 +32,31 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     [Export]
     public bool DisableCollisionOnDeath { get; set; } = true;
 
+    [Export]
+    public NodePath OwnerPath { get; set; } = new NodePath("../Player");
+
+    [Export]
+    public float FollowDistance { get; set; } = 56.0f;
+
+    [Export]
+    public float FollowStopDistance { get; set; } = 36.0f;
+
+    [Export]
+    public float LeashDistance { get; set; } = 220.0f;
+
+    [Export]
+    public float LeashReturnDistance { get; set; } = 72.0f;
+
+    [Export]
+    public float LeashCatchupSpeedMultiplier { get; set; } = 1.35f;
+
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
+    private Node2D _owner;
     private float _attackCooldownTimer;
     private int _currentHealth;
     private bool _isDead;
+    private bool _isFollowingOwner;
+    private bool _isLeashing;
 
     public bool CanBeTargeted => !_isDead;
 
@@ -47,6 +68,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"));
         SetMovementSpeed(Speed);
         AddToGroup(CombatGroups.Allies);
+        _owner = ResolveOwner();
         PlayIdleIfAvailable();
 
         if (AnimatedSprite != null)
@@ -79,12 +101,29 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     protected override void AcquireTarget()
     {
+        if (ShouldPrioritizeLeashReturn())
+            return;
+
         var candidate = TargetingHelper.FindClosestTarget(
             this,
             CombatGroups.Enemies,
             node => node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
         if (candidate != null)
+        {
+            _isFollowingOwner = false;
+            _isLeashing = false;
             SetTarget(candidate);
+        }
+    }
+
+    protected override bool ShouldLoseCurrentTarget(Node2D target)
+    {
+        if (!ShouldPrioritizeLeashReturn())
+            return false;
+
+        _isLeashing = true;
+        _isFollowingOwner = false;
+        return true;
     }
 
     protected override bool CanAttackNow(Vector2 toTarget, double delta)
@@ -153,5 +192,87 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
         TryPlayDeathAnimation(DeathAnimation, DisableCollisionOnDeath);
+    }
+
+    protected override bool HandleNoTarget(double delta)
+    {
+        if (_owner == null || !GodotObject.IsInstanceValid(_owner) || !_owner.IsInsideTree())
+            _owner = ResolveOwner();
+
+        if (_owner == null)
+            return false;
+
+        var toOwner = _owner.GlobalPosition - GlobalPosition;
+        var distance = toOwner.Length();
+        var startFollowDistance = Math.Max(FollowDistance, 0.0f);
+        var stopFollowDistance = Math.Clamp(FollowStopDistance, 0.0f, startFollowDistance);
+        var startLeashDistance = Math.Max(LeashDistance, startFollowDistance);
+        var stopLeashDistance = Math.Clamp(LeashReturnDistance, 0.0f, startLeashDistance);
+
+        if (!_isLeashing && distance > startLeashDistance)
+        {
+            _isLeashing = true;
+            _isFollowingOwner = false;
+        }
+
+        if (_isLeashing && distance <= stopLeashDistance)
+            _isLeashing = false;
+
+        if (_isLeashing)
+            return MoveTowardOwner(toOwner, LeashCatchupSpeedMultiplier);
+
+        if (!_isFollowingOwner)
+        {
+            if (distance <= startFollowDistance)
+                return false;
+
+            _isFollowingOwner = true;
+        }
+
+        if (_isFollowingOwner && distance <= stopFollowDistance)
+        {
+            _isFollowingOwner = false;
+            return false;
+        }
+
+        return MoveTowardOwner(toOwner, 1.0f);
+    }
+
+    private bool MoveTowardOwner(Vector2 toOwner, float speedMultiplier)
+    {
+        if (toOwner == Vector2.Zero)
+            return false;
+
+        LastDirection = DirectionHelper.GetDirectionName(toOwner);
+        var walkAnimation = $"walk_{LastDirection}";
+        if (AnimatedSprite?.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
+            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
+        {
+            AnimatedSprite.Play(walkAnimation);
+        }
+
+        var movementMultiplier = Math.Max(0.0f, speedMultiplier);
+        Velocity = toOwner.Normalized() * MovementSpeed * movementMultiplier;
+        return true;
+    }
+
+    private bool ShouldPrioritizeLeashReturn()
+    {
+        if (_owner == null || !GodotObject.IsInstanceValid(_owner) || !_owner.IsInsideTree())
+            _owner = ResolveOwner();
+
+        if (_owner == null)
+            return false;
+
+        return GlobalPosition.DistanceTo(_owner.GlobalPosition) > Math.Max(LeashDistance, 0.0f);
+    }
+
+    private Node2D ResolveOwner()
+    {
+        if (!OwnerPath.IsEmpty && HasNode(OwnerPath))
+            return GetNodeOrNull<Node2D>(OwnerPath);
+
+        return GetParent()?.GetNodeOrNull<Node2D>("Player");
     }
 }
