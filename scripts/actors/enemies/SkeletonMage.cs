@@ -134,12 +134,15 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
         LaunchProjectile(projectileDirection);
     }
 
-    public void ApplyDamage(int amount)
+    public void ApplyDamage(DamageInfo damageInfo)
     {
         if (_isDead)
             return;
 
-        var damage = Math.Max(1, amount);
+        if (!TryReactToDamageSource(damageInfo))
+            return;
+
+        var damage = Math.Max(1, damageInfo.Amount);
         _currentHealth = Math.Max(0, _currentHealth - damage);
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
 

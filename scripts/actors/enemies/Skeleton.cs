@@ -82,7 +82,7 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
             AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
         {
             IsAttacking = false;
-            attackable.ApplyDamage(_randomNumberGenerator.RandiRange(1, 5));
+            attackable.ApplyDamage(new DamageInfo(_randomNumberGenerator.RandiRange(1, 5), this));
             return;
         }
 
@@ -92,17 +92,20 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
         AnimatedSprite.Play(attackAnimation);
 
         var damage = _randomNumberGenerator.RandiRange(1, 5);
-        attackable.ApplyDamage(damage);
+        attackable.ApplyDamage(new DamageInfo(damage, this));
     }
 
     public bool CanBeTargeted => !_isDead;
 
-    public void ApplyDamage(int amount)
+    public void ApplyDamage(DamageInfo damageInfo)
     {
         if (_isDead)
             return;
 
-        var damage = Math.Max(1, amount);
+        if (!TryReactToDamageSource(damageInfo))
+            return;
+
+        var damage = Math.Max(1, damageInfo.Amount);
         _currentHealth = Math.Max(0, _currentHealth - damage);
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
         GD.Print($"Skeleton health: {_currentHealth}/{Health} (took {damage})");

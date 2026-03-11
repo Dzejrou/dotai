@@ -20,7 +20,7 @@ public partial class Projectile : Area2D
     private Vector2 _direction = Vector2.Right;
     private float _lifetimeTimer;
     private float _traveledDistance;
-    private Node2D _source;
+    private Node _source;
     private bool _isActive;
     private bool _hasHitTarget;
 
@@ -56,7 +56,7 @@ public partial class Projectile : Area2D
 
     public void Initialize(
         Vector2 direction,
-        Node2D source,
+        Node source,
         int? overrideDamage = null,
         float? overrideSpeed = null,
         float? overrideLifetime = null,
@@ -109,7 +109,7 @@ public partial class Projectile : Area2D
             return;
 
         _hasHitTarget = true;
-        attackable.ApplyDamage(Damage);
+        attackable.ApplyDamage(new DamageInfo(Damage, _source));
         CallDeferred(nameof(Despawn));
     }
 

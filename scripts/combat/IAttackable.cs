@@ -1,4 +1,4 @@
 public interface IAttackable
 {
-    void ApplyDamage(int amount);
+    void ApplyDamage(DamageInfo damageInfo);
 }
