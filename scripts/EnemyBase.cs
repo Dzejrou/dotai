@@ -123,7 +123,7 @@ public abstract partial class EnemyBase : CharacterBody2D
         return IsTargetWithinRange(target, Math.Max(0.0f, AggroAcquisitionRange));
     }
 
-    private bool IsTargetWithinLossRange(Node2D target)
+    protected bool IsTargetWithinLossRange(Node2D target)
     {
         return IsTargetWithinRange(target, Math.Max(AggroLossRange, AggroAcquisitionRange));
     }
@@ -134,6 +134,32 @@ public abstract partial class EnemyBase : CharacterBody2D
             return false;
 
         return GlobalPosition.DistanceTo(target.GlobalPosition) <= range;
+    }
+
+    protected bool TryReactToDamageSource(DamageInfo damageInfo)
+    {
+        if (damageInfo.Source is not Node2D sourceNode)
+            return true;
+
+        if (!sourceNode.IsInGroup(CombatGroups.Allies))
+            return true;
+
+        if (sourceNode is not ITargetable targetable || !targetable.CanBeTargeted)
+            return true;
+
+        if (IsTargetWithinLossRange(sourceNode))
+        {
+            SetTarget(sourceNode);
+            return true;
+        }
+
+        ShowFloatingDamageNumber("EVADE", new Color(1.0f, 1.0f, 1.0f, 1.0f));
+        return false;
+    }
+
+    protected void ShowFloatingDamageNumber(string text, Color color)
+    {
+        FloatingNumberHelper.ShowFloatingNumber(this, text, color);
     }
 
     protected bool IsAtHome()

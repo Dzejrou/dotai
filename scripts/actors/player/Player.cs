@@ -201,12 +201,12 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
             CombatGroups.Enemies);
     }
 
-    public void ApplyDamage(int amount)
+    public void ApplyDamage(DamageInfo damageInfo)
     {
         if (_isDead)
             return;
 
-        var damage = Math.Max(1, amount);
+        var damage = Math.Max(1, damageInfo.Amount);
         _health = Math.Max(0, _health - damage);
 
         ShowFloatingDamageNumber(damage);
@@ -262,7 +262,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
         var damage = _random.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
-        enemy.ApplyDamage(damage);
+        enemy.ApplyDamage(new DamageInfo(damage, this));
     }
 
     private void SetAnimationSafe(string animationName)

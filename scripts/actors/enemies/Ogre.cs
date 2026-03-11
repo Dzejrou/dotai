@@ -97,17 +97,20 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
         var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
-        attackable.ApplyDamage(damage);
+        attackable.ApplyDamage(new DamageInfo(damage, this));
     }
 
     public bool CanBeTargeted => !_isDead;
 
-    public void ApplyDamage(int amount)
+    public void ApplyDamage(DamageInfo damageInfo)
     {
         if (_isDead)
             return;
 
-        var damage = Math.Max(1, amount);
+        if (!TryReactToDamageSource(damageInfo))
+            return;
+
+        var damage = Math.Max(1, damageInfo.Amount);
         _currentHealth = Math.Max(0, _currentHealth - damage);
         GD.Print($"Ogre health: {_currentHealth}/{MaxHealth} (took {damage})");
 
