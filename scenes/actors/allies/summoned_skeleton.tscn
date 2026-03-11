@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/allies/SummonedSkeleton.cs" id="1_summoned_skeleton_script"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/skeleton_spriteframes.tres" id="2_skeleton_frames"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
+radius = 5.0
+height = 26.0
+
+[node name="SummonedSkeleton" type="CharacterBody2D"]
+z_index = -1
+script = ExtResource("1_summoned_skeleton_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_skeleton_frames")
+animation = &"breathing-idle_south"
+position = Vector2(0, -2)
+scale = Vector2(1.1, 1.1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 12)
+shape = SubResource("CapsuleShape2D_q6f3w")

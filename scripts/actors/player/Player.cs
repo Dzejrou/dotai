@@ -57,6 +57,12 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
     [Export]
     public float FireballMaxDistance { get; set; } = 320.0f;
 
+    [Export]
+    public PackedScene SummonedSkeletonScene { get; set; }
+
+    [Export]
+    public float SummonSkeletonSpawnOffset { get; set; } = 24.0f;
+
     private int _health;
     private bool _isDead;
     private AnimatedSprite2D _animatedSprite;
@@ -91,6 +97,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         HandleHealthRegeneration((float)delta);
         if (Input.IsActionJustPressed("cast_spell"))
             CastFireball();
+        if (Input.IsActionJustPressed("summon_skeleton"))
+            SummonSkeleton();
 
         var direction = Vector2.Zero;
         if (Input.IsActionPressed("move_left"))
@@ -199,6 +207,27 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
             FireballLifetime,
             FireballMaxDistance,
             CombatGroups.Enemies);
+    }
+
+    private void SummonSkeleton()
+    {
+        if (_isDead || SummonedSkeletonScene == null)
+            return;
+
+        var summonedSkeleton = SummonedSkeletonScene.Instantiate<SummonedSkeleton>();
+        if (summonedSkeleton == null)
+            return;
+
+        var parent = GetParent();
+        if (parent == null)
+            return;
+
+        var summonDirection = DirectionHelper.GetDirectionVector(_lastDirection);
+        if (summonDirection == Vector2.Zero)
+            summonDirection = Vector2.Right;
+
+        summonedSkeleton.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, SummonSkeletonSpawnOffset);
+        parent.AddChild(summonedSkeleton);
     }
 
     public void ApplyDamage(DamageInfo damageInfo)

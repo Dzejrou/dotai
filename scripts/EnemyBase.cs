@@ -2,7 +2,7 @@ using Godot;
 
 using System;
 
-public abstract partial class EnemyBase : CharacterBody2D
+public abstract partial class EnemyBase : CombatUnitBase
 {
     [Export]
     public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
@@ -22,18 +22,11 @@ public abstract partial class EnemyBase : CharacterBody2D
     [Export]
     public float HomeReturnTolerance { get; set; } = 4.0f;
 
-    protected AnimatedSprite2D AnimatedSprite { get; private set; }
-    protected CollisionShape2D CollisionShape { get; private set; }
-    protected Node2D CurrentTarget { get; private set; }
     protected Vector2 HomePosition { get; private set; }
-    protected float MovementSpeed { get; private set; } = 1.0f;
-    protected string LastDirection { get; set; } = "south";
-    protected bool IsAttacking { get; set; }
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
     {
-        AnimatedSprite = animatedSprite;
-        CollisionShape = collisionShape;
+        InitializeCombatUnit(animatedSprite, collisionShape);
         AddToGroup(CombatGroups.Enemies);
         HomePosition = GlobalPosition;
 
@@ -54,25 +47,7 @@ public abstract partial class EnemyBase : CharacterBody2D
             GD.PrintErr($"{enemyName} did not acquire initial target (not in aggro range).");
     }
 
-
-    protected bool ValidateCurrentTarget()
-    {
-        if (CurrentTarget == null)
-        {
-            return false;
-        }
-
-        if (ShouldLoseCurrentTarget(CurrentTarget))
-        {
-            ClearTarget();
-            return false;
-        }
-
-        return true;
-    }
-
-
-    protected void AcquireTarget()
+    protected override void AcquireTarget()
     {
         var candidate = TargetingHelper.FindClosestTarget(
             this,
@@ -80,23 +55,7 @@ public abstract partial class EnemyBase : CharacterBody2D
             node => node is Node2D && node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
 
         if (candidate != null && CanAcquireTarget(candidate))
-            CurrentTarget = candidate;
-    }
-
-    protected void ClearTarget()
-    {
-        IsAttacking = false;
-        CurrentTarget = null;
-    }
-
-    public void SetTarget(Node2D target)
-    {
-        CurrentTarget = target;
-    }
-
-    protected void SetMovementSpeed(float speed)
-    {
-        MovementSpeed = Math.Max(0.0f, speed);
+            SetTarget(candidate);
     }
 
     protected bool CanAcquireTarget(Node2D target)
@@ -105,17 +64,8 @@ public abstract partial class EnemyBase : CharacterBody2D
                IsTargetWithinAcquisitionRange(target);
     }
 
-    protected bool ShouldLoseCurrentTarget(Node2D target)
+    protected override bool ShouldLoseCurrentTarget(Node2D target)
     {
-        if (target == null || !GodotObject.IsInstanceValid(target))
-            return true;
-
-        if (!target.IsInsideTree())
-            return true;
-
-        if (target is not IAttackable || target is not ITargetable targetable || !targetable.CanBeTargeted)
-            return true;
-
         return !IsTargetWithinLossRange(target);
     }
 
@@ -168,76 +118,7 @@ public abstract partial class EnemyBase : CharacterBody2D
         return GlobalPosition.DistanceTo(HomePosition) <= Math.Max(0.0f, HomeReturnTolerance);
     }
 
-    public override void _PhysicsProcess(double delta)
-    {
-        PrePhysicsProcess(delta);
-
-        if (!TryEnsureActiveTarget())
-            return;
-
-        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
-
-        if (IsAttacking)
-        {
-            Velocity = Vector2.Zero;
-            return;
-        }
-
-        if (CanAttackNow(toTarget, delta))
-        {
-            StartAttack();
-            return;
-        }
-
-        var desiredDirection = GetDesiredMovementDirection(toTarget, delta);
-        if (desiredDirection == Vector2.Zero)
-        {
-            Velocity = Vector2.Zero;
-            PlayIdleIfAvailable();
-            return;
-        }
-
-        LastDirection = DirectionHelper.GetDirectionName(desiredDirection);
-        var walkAnimation = $"walk_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
-            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
-            AnimatedSprite.Play(walkAnimation);
-
-        Velocity = desiredDirection * MovementSpeed;
-        MoveAndSlide();
-    }
-
-    protected void PlayIdleIfAvailable()
-    {
-        if (AnimatedSprite == null || AnimatedSprite.SpriteFrames == null)
-            return;
-
-        var idleAnimation = $"breathing-idle_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames.HasAnimation(idleAnimation))
-        {
-            if (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != idleAnimation)
-                AnimatedSprite.Play(idleAnimation);
-
-            return;
-        }
-    }
-
-    protected virtual void PrePhysicsProcess(double delta) { }
-
-    protected virtual Vector2 GetDesiredMovementDirection(Vector2 toTarget, double delta)
-    {
-        if (toTarget == Vector2.Zero)
-            return Vector2.Zero;
-
-        return toTarget.Normalized();
-    }
-
-    protected abstract bool CanAttackNow(Vector2 toTarget, double delta);
-
-    protected abstract void StartAttack();
-
-    protected bool TryReturnHome()
+    protected override bool HandleNoTarget(double delta)
     {
         if (IsAtHome())
             return false;
@@ -259,58 +140,7 @@ public abstract partial class EnemyBase : CharacterBody2D
         return true;
     }
 
-    protected bool TryFinalizeDeathAnimation()
-    {
-        var animationName = AnimatedSprite.Animation.ToString();
-        if (!animationName.StartsWith(DeathAnimation.ToString(), StringComparison.Ordinal))
-            return false;
+    protected bool TryFinalizeDeathAnimation() => TryFinalizeDeathAnimation(DeathAnimation);
 
-        var finalFrame = Math.Max(0, AnimatedSprite.SpriteFrames.GetFrameCount(animationName) - 1);
-        AnimatedSprite.Stop();
-        AnimatedSprite.SetFrame(finalFrame);
-        SetPhysicsProcess(false);
-        return true;
-    }
-
-    protected bool TryPlayDeathAnimation()
-    {
-        if (DisableCollisionOnDeath && CollisionShape != null)
-            CollisionShape.CallDeferred("set", "disabled", true);
-
-        var deathAnimation = $"{DeathAnimation}_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(deathAnimation) &&
-            AnimatedSprite.SpriteFrames.GetFrameCount(deathAnimation) > 0)
-        {
-            AnimatedSprite.Play(deathAnimation);
-            return true;
-        }
-
-        AnimatedSprite.Stop();
-        SetPhysicsProcess(false);
-        return false;
-    }
-
-    private bool TryEnsureActiveTarget()
-    {
-        if (!ValidateCurrentTarget())
-        {
-            AcquireTarget();
-
-            if (!ValidateCurrentTarget())
-            {
-                if (TryReturnHome())
-                {
-                    MoveAndSlide();
-                    return false;
-                }
-
-                Velocity = Vector2.Zero;
-                PlayIdleIfAvailable();
-                return false;
-            }
-        }
-
-        return true;
-    }
+    protected bool TryPlayDeathAnimation() => TryPlayDeathAnimation(DeathAnimation, DisableCollisionOnDeath);
 }
