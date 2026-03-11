@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/core/world.tscn" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/core/game_over.tscn" id="2_gameover"]
 [ext_resource type="Script" path="res://scripts/core/Main.cs" id="3_main"]
+[ext_resource type="PackedScene" path="res://scenes/core/pause_menu.tscn" id="4_pausemenu"]
+[ext_resource type="PackedScene" path="res://scenes/core/debug_tray.tscn" id="5_debugtray"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("3_main")
@@ -10,3 +12,7 @@ script = ExtResource("3_main")
 [node name="World" parent="." instance=ExtResource("1_world")]
 
 [node name="GameOver" parent="." instance=ExtResource("2_gameover")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("4_pausemenu")]
+
+[node name="DebugTray" parent="." instance=ExtResource("5_debugtray")]
