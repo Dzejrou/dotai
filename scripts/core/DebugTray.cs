@@ -1,5 +1,6 @@
 using Godot;
 
+using System;
 using System.Collections.Generic;
 
 public partial class DebugTray : Control
@@ -11,25 +12,10 @@ public partial class DebugTray : Control
     public NodePath StatusLabelPath { get; set; } = new NodePath("Bottom/Panel/VBox/Header/Status");
 
     [Export]
+    public NodePath CardsContainerPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards");
+
+    [Export]
     public NodePath DebugEnemySpawnerPath { get; set; } = new NodePath("../../World/DebugEnemySpawner");
-
-    [Export]
-    public NodePath SkeletonCardPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards/SkeletonCard");
-
-    [Export]
-    public NodePath OgreCardPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards/OgreCard");
-
-    [Export]
-    public NodePath SkeletonMageCardPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards/SkeletonMageCard");
-
-    [Export]
-    public NodePath SkeletonPreviewPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards/SkeletonCard/Margin/VBox/PreviewContainer/SkeletonPreviewViewport/SkeletonPreview");
-
-    [Export]
-    public NodePath OgrePreviewPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards/OgreCard/Margin/VBox/PreviewContainer/OgrePreviewViewport/OgrePreview");
-
-    [Export]
-    public NodePath SkeletonMagePreviewPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards/SkeletonMageCard/Margin/VBox/PreviewContainer/SkeletonMagePreviewViewport/SkeletonMagePreview");
 
     private const float DragThreshold = 12.0f;
     private static readonly Vector2 PreviewCenter = new(48.0f, 52.0f);
@@ -37,14 +23,10 @@ public partial class DebugTray : Control
     private DebugEnemySpawner _debug_enemy_spawner;
     private Control _tray_panel;
     private Label _status_label;
-    private Button _skeleton_card;
-    private Button _ogre_card;
-    private Button _skeleton_mage_card;
-    private AnimatedSprite2D _skeleton_preview;
-    private AnimatedSprite2D _ogre_preview;
-    private AnimatedSprite2D _skeleton_mage_preview;
-    private readonly Dictionary<DebugEnemySpawner.EnemyType, Button> _cards_by_type = new();
-    private DebugEnemySpawner.EnemyType? _pressed_card_type;
+    private HBoxContainer _cards_container;
+    private readonly Dictionary<string, Button> _cards_by_id = new();
+    private readonly Dictionary<Button, Control.GuiInputEventHandler> _card_input_handlers = new();
+    private string _pressed_card_id;
     private Vector2 _press_start_screen_position;
     private bool _dragging_from_card;
 
@@ -59,23 +41,9 @@ public partial class DebugTray : Control
         _debug_enemy_spawner = GetNodeOrNull<DebugEnemySpawner>(DebugEnemySpawnerPath);
         _tray_panel = GetNodeOrNull<Control>(TrayPanelPath);
         _status_label = GetNodeOrNull<Label>(StatusLabelPath);
-        _skeleton_card = GetNodeOrNull<Button>(SkeletonCardPath);
-        _ogre_card = GetNodeOrNull<Button>(OgreCardPath);
-        _skeleton_mage_card = GetNodeOrNull<Button>(SkeletonMageCardPath);
-        _skeleton_preview = GetNodeOrNull<AnimatedSprite2D>(SkeletonPreviewPath);
-        _ogre_preview = GetNodeOrNull<AnimatedSprite2D>(OgrePreviewPath);
-        _skeleton_mage_preview = GetNodeOrNull<AnimatedSprite2D>(SkeletonMagePreviewPath);
+        _cards_container = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
 
-        RegisterCard(DebugEnemySpawner.EnemyType.Skeleton, _skeleton_card, _skeleton_preview);
-        RegisterCard(DebugEnemySpawner.EnemyType.Ogre, _ogre_card, _ogre_preview);
-        RegisterCard(DebugEnemySpawner.EnemyType.SkeletonMage, _skeleton_mage_card, _skeleton_mage_preview);
-
-        if (_skeleton_card != null)
-            _skeleton_card.GuiInput += OnSkeletonCardGuiInput;
-        if (_ogre_card != null)
-            _ogre_card.GuiInput += OnOgreCardGuiInput;
-        if (_skeleton_mage_card != null)
-            _skeleton_mage_card.GuiInput += OnSkeletonMageCardGuiInput;
+        BuildCardsFromCatalog();
 
         Visible = false;
         UpdateCardSelection();
@@ -84,12 +52,11 @@ public partial class DebugTray : Control
 
     public override void _ExitTree()
     {
-        if (_skeleton_card != null)
-            _skeleton_card.GuiInput -= OnSkeletonCardGuiInput;
-        if (_ogre_card != null)
-            _ogre_card.GuiInput -= OnOgreCardGuiInput;
-        if (_skeleton_mage_card != null)
-            _skeleton_mage_card.GuiInput -= OnSkeletonMageCardGuiInput;
+        foreach (var (button, handler) in _card_input_handlers)
+        {
+            if (button != null)
+                button.GuiInput -= handler;
+        }
     }
 
     public override void _Input(InputEvent @event)
@@ -146,18 +113,113 @@ public partial class DebugTray : Control
         UpdateStatusLabel();
     }
 
-    private void RegisterCard(DebugEnemySpawner.EnemyType enemyType, Button card, AnimatedSprite2D previewSprite)
+    private void BuildCardsFromCatalog()
     {
-        if (card == null || previewSprite == null || _debug_enemy_spawner == null)
+        if (_cards_container == null || _debug_enemy_spawner == null)
             return;
 
-        _cards_by_type[enemyType] = card;
+        foreach (var child in _cards_container.GetChildren())
+            child.QueueFree();
 
-        var spriteFrames = _debug_enemy_spawner.GetPreviewFrames(enemyType);
-        var animationName = _debug_enemy_spawner.GetPreviewAnimationName(enemyType);
+        _cards_by_id.Clear();
+        _card_input_handlers.Clear();
+
+        foreach (var entry in _debug_enemy_spawner.GetCatalogEntries())
+        {
+            if (entry == null || string.IsNullOrWhiteSpace(entry.Id))
+                continue;
+
+            var card = CreateCard(entry);
+            if (card == null)
+                continue;
+
+            _cards_container.AddChild(card);
+            _cards_by_id[entry.Id] = card;
+
+            Control.GuiInputEventHandler input_handler = @event => BeginCardPress(entry.Id, @event);
+            card.GuiInput += input_handler;
+            _card_input_handlers[card] = input_handler;
+        }
+    }
+
+    private Button CreateCard(EnemyCatalogEntry entry)
+    {
+        var card = new Button
+        {
+            Name = $"{entry.Id}_Card",
+            CustomMinimumSize = new Vector2(124.0f, 120.0f),
+            ToggleMode = true,
+            Text = string.Empty,
+        };
+
+        var margin = new MarginContainer
+        {
+            Name = "Margin",
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        margin.OffsetLeft = 8.0f;
+        margin.OffsetTop = 8.0f;
+        margin.OffsetRight = -8.0f;
+        margin.OffsetBottom = -8.0f;
+        card.AddChild(margin);
+
+        var vBox = new VBoxContainer
+        {
+            Name = "VBox",
+            Alignment = BoxContainer.AlignmentMode.Center,
+        };
+        vBox.AddThemeConstantOverride("separation", 6);
+        margin.AddChild(vBox);
+
+        var preview_container = new SubViewportContainer
+        {
+            Name = "PreviewContainer",
+            CustomMinimumSize = new Vector2(96.0f, 96.0f),
+            Stretch = true,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        vBox.AddChild(preview_container);
+
+        var preview_viewport = new SubViewport
+        {
+            Name = "PreviewViewport",
+            HandleInputLocally = false,
+            Disable3D = true,
+            TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
+            Size = new Vector2I(96, 96),
+        };
+        preview_container.AddChild(preview_viewport);
+
+        var preview_sprite = new AnimatedSprite2D
+        {
+            Name = "PreviewSprite",
+        };
+        preview_viewport.AddChild(preview_sprite);
+
+        var label = new Label
+        {
+            Name = "Label",
+            Text = entry.DisplayName,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        vBox.AddChild(label);
+
+        ConfigurePreview(entry.Id, preview_sprite);
+        return card;
+    }
+
+    private void ConfigurePreview(string enemyId, AnimatedSprite2D previewSprite)
+    {
+        if (_debug_enemy_spawner == null || previewSprite == null)
+            return;
+
+        var spriteFrames = _debug_enemy_spawner.GetPreviewFrames(enemyId);
+        var animationName = _debug_enemy_spawner.GetPreviewAnimationName(enemyId);
         previewSprite.SpriteFrames = spriteFrames;
-        previewSprite.Scale = _debug_enemy_spawner.GetPreviewScale(enemyType);
-        previewSprite.Position = PreviewCenter + _debug_enemy_spawner.GetPreviewOffset(enemyType);
+        previewSprite.Scale = _debug_enemy_spawner.GetPreviewScale(enemyId);
+        previewSprite.Position = PreviewCenter + _debug_enemy_spawner.GetPreviewOffset(enemyId);
 
         if (spriteFrames == null)
             return;
@@ -174,7 +236,7 @@ public partial class DebugTray : Control
 
     private void HandleMouseMotion(InputEventMouseMotion mouseMotion)
     {
-        if (!_pressed_card_type.HasValue || _dragging_from_card)
+        if (string.IsNullOrEmpty(_pressed_card_id) || _dragging_from_card)
             return;
 
         if ((mouseMotion.ButtonMask & MouseButtonMask.Left) == 0)
@@ -184,7 +246,7 @@ public partial class DebugTray : Control
             return;
 
         _dragging_from_card = true;
-        _debug_enemy_spawner?.BeginPlacement(_pressed_card_type.Value);
+        _debug_enemy_spawner?.BeginPlacement(_pressed_card_id);
         UpdateCardSelection();
         UpdateStatusLabel();
         GetViewport().SetInputAsHandled();
@@ -210,7 +272,7 @@ public partial class DebugTray : Control
             return;
         }
 
-        if (_pressed_card_type.HasValue)
+        if (!string.IsNullOrEmpty(_pressed_card_id))
             return;
 
         if (HasPendingPlacement && !IsMouseOverTray(screenPosition) && _debug_enemy_spawner != null)
@@ -224,7 +286,7 @@ public partial class DebugTray : Control
 
     private void HandleLeftMouseRelease(Vector2 screenPosition, bool shiftPressed)
     {
-        if (!_pressed_card_type.HasValue)
+        if (string.IsNullOrEmpty(_pressed_card_id))
             return;
 
         if (_dragging_from_card && _debug_enemy_spawner != null)
@@ -234,9 +296,9 @@ public partial class DebugTray : Control
             else
                 _debug_enemy_spawner.PlacePendingAtCursor(shiftPressed);
         }
-        else if (IsMouseOverCard(_pressed_card_type.Value, screenPosition))
+        else if (IsMouseOverCard(_pressed_card_id, screenPosition))
         {
-            _debug_enemy_spawner?.BeginPlacement(_pressed_card_type.Value);
+            _debug_enemy_spawner?.BeginPlacement(_pressed_card_id);
         }
 
         ClearPressedCardState();
@@ -247,18 +309,18 @@ public partial class DebugTray : Control
 
     private void ClearPressedCardState()
     {
-        _pressed_card_type = null;
+        _pressed_card_id = null;
         _dragging_from_card = false;
     }
 
     private void UpdateCardSelection()
     {
-        foreach (var (enemyType, card) in _cards_by_type)
+        foreach (var (enemyId, card) in _cards_by_id)
         {
             if (card == null)
                 continue;
 
-            card.ButtonPressed = HasPendingPlacement && _debug_enemy_spawner?.PendingEnemyType == enemyType;
+            card.ButtonPressed = HasPendingPlacement && _debug_enemy_spawner?.PendingEnemyId == enemyId;
         }
     }
 
@@ -287,34 +349,19 @@ public partial class DebugTray : Control
         return _tray_panel != null && _tray_panel.GetGlobalRect().HasPoint(screenPosition);
     }
 
-    private bool IsMouseOverCard(DebugEnemySpawner.EnemyType enemyType, Vector2 screenPosition)
+    private bool IsMouseOverCard(string enemyId, Vector2 screenPosition)
     {
-        return _cards_by_type.TryGetValue(enemyType, out var card) && card != null && card.GetGlobalRect().HasPoint(screenPosition);
+        return _cards_by_id.TryGetValue(enemyId, out var card) && card != null && card.GetGlobalRect().HasPoint(screenPosition);
     }
 
-    private void BeginCardPress(DebugEnemySpawner.EnemyType enemyType, InputEvent @event)
+    private void BeginCardPress(string enemyId, InputEvent @event)
     {
         if (@event is not InputEventMouseButton mouseButton || mouseButton.ButtonIndex != MouseButton.Left || !mouseButton.Pressed)
             return;
 
-        _pressed_card_type = enemyType;
+        _pressed_card_id = enemyId;
         _press_start_screen_position = mouseButton.GlobalPosition;
         _dragging_from_card = false;
         GetViewport().SetInputAsHandled();
-    }
-
-    private void OnSkeletonCardGuiInput(InputEvent @event)
-    {
-        BeginCardPress(DebugEnemySpawner.EnemyType.Skeleton, @event);
-    }
-
-    private void OnOgreCardGuiInput(InputEvent @event)
-    {
-        BeginCardPress(DebugEnemySpawner.EnemyType.Ogre, @event);
-    }
-
-    private void OnSkeletonMageCardGuiInput(InputEvent @event)
-    {
-        BeginCardPress(DebugEnemySpawner.EnemyType.SkeletonMage, @event);
     }
 }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/actors/player/player.tscn" id="1_k6v4i"]
 [ext_resource type="Texture2D" path="res://assets/world/rock.png" id="2_qx8h3"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="6_skeleton_mage"]
 [ext_resource type="Script" path="res://scripts/core/World.cs" id="5_qx7qz"]
 [ext_resource type="Script" path="res://scripts/core/DebugEnemySpawner.cs" id="6_debug_spawner"]
+[ext_resource type="Resource" path="res://resources/debug/enemy_catalog.tres" id="7_enemy_catalog"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_z8t4t"]
 size = Vector2(54, 38)
@@ -19,9 +20,7 @@ position = Vector2(120, 120)
 
 [node name="DebugEnemySpawner" type="Node2D" parent="."]
 script = ExtResource("6_debug_spawner")
-SkeletonScene = ExtResource("3_3w8xk")
-OgreScene = ExtResource("5_ogre")
-SkeletonMageScene = ExtResource("6_skeleton_mage")
+EnemyCatalog = ExtResource("7_enemy_catalog")
 
 [node name="Rock" type="StaticBody2D" parent="."]
 position = Vector2(260, 200)
