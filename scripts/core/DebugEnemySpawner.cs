@@ -4,13 +4,6 @@ using System.Collections.Generic;
 
 public partial class DebugEnemySpawner : Node2D
 {
-    public enum EnemyType
-    {
-        Skeleton,
-        Ogre,
-        SkeletonMage
-    }
-
     private sealed class PreviewData
     {
         public SpriteFrames SpriteFrames { get; init; }
@@ -21,25 +14,21 @@ public partial class DebugEnemySpawner : Node2D
     }
 
     [Export]
-    public PackedScene SkeletonScene { get; set; }
-
-    [Export]
-    public PackedScene OgreScene { get; set; }
-
-    [Export]
-    public PackedScene SkeletonMageScene { get; set; }
+    public EnemyCatalog EnemyCatalog { get; set; }
 
     [Export]
     public NodePath TargetPath { get; set; } = new NodePath("../Player");
 
-    private readonly Dictionary<EnemyType, PreviewData> _preview_by_type = new();
+    private readonly Dictionary<string, EnemyCatalogEntry> _entries_by_id = new();
+    private readonly List<EnemyCatalogEntry> _ordered_entries = new();
+    private readonly Dictionary<string, PreviewData> _preview_by_id = new();
     private Node2D _target;
-    private EnemyType? _pending_enemy_type;
+    private string _pending_enemy_id;
     private Sprite2D _placement_ghost;
 
-    public bool HasPendingPlacement => _pending_enemy_type.HasValue;
+    public bool HasPendingPlacement => !string.IsNullOrEmpty(_pending_enemy_id);
 
-    public EnemyType? PendingEnemyType => _pending_enemy_type;
+    public string PendingEnemyId => _pending_enemy_id;
 
     public override void _Ready()
     {
@@ -50,6 +39,7 @@ public partial class DebugEnemySpawner : Node2D
         if (_target == null)
             GD.PrintErr("DebugEnemySpawner could not find target node.");
 
+        BuildCatalogCache();
         BuildPreviewCache();
         EnsurePlacementGhost();
         HidePlacementGhost();
@@ -63,26 +53,31 @@ public partial class DebugEnemySpawner : Node2D
         _placement_ghost.GlobalPosition = GetMouseWorldPosition();
     }
 
-    public void BeginPlacement(EnemyType enemyType)
+    public IReadOnlyList<EnemyCatalogEntry> GetCatalogEntries() => _ordered_entries;
+
+    public void BeginPlacement(string enemyId)
     {
-        _pending_enemy_type = enemyType;
-        UpdatePlacementGhost(enemyType);
+        if (!_entries_by_id.ContainsKey(enemyId))
+            return;
+
+        _pending_enemy_id = enemyId;
+        UpdatePlacementGhost(enemyId);
     }
 
     public void CancelPlacement()
     {
-        _pending_enemy_type = null;
+        _pending_enemy_id = null;
         HidePlacementGhost();
     }
 
     public bool PlacePendingAtCursor(bool preservePlacement = false)
     {
-        if (!_pending_enemy_type.HasValue)
+        if (!HasPendingPlacement)
             return false;
 
-        var enemyType = _pending_enemy_type.Value;
+        var enemyId = _pending_enemy_id;
         var spawnPosition = GetMouseWorldPosition();
-        var enemy = SpawnEnemy(enemyType, spawnPosition);
+        var enemy = SpawnEnemy(enemyId, spawnPosition);
         if (enemy == null)
             return false;
 
@@ -92,24 +87,30 @@ public partial class DebugEnemySpawner : Node2D
         return true;
     }
 
-    public SpriteFrames GetPreviewFrames(EnemyType enemyType)
+    public void SpawnEnemyFromDebugUi(string enemyId)
     {
-        return _preview_by_type.TryGetValue(enemyType, out var previewData) ? previewData.SpriteFrames : null;
+        var spawnPosition = GetMouseWorldPosition();
+        SpawnEnemy(enemyId, spawnPosition);
     }
 
-    public StringName GetPreviewAnimationName(EnemyType enemyType)
+    public SpriteFrames GetPreviewFrames(string enemyId)
     {
-        return _preview_by_type.TryGetValue(enemyType, out var previewData) ? previewData.AnimationName : new StringName();
+        return _preview_by_id.TryGetValue(enemyId, out var previewData) ? previewData.SpriteFrames : null;
     }
 
-    public Vector2 GetPreviewScale(EnemyType enemyType)
+    public StringName GetPreviewAnimationName(string enemyId)
     {
-        return _preview_by_type.TryGetValue(enemyType, out var previewData) ? previewData.Scale : Vector2.One;
+        return _preview_by_id.TryGetValue(enemyId, out var previewData) ? previewData.AnimationName : new StringName();
     }
 
-    public Vector2 GetPreviewOffset(EnemyType enemyType)
+    public Vector2 GetPreviewScale(string enemyId)
     {
-        return _preview_by_type.TryGetValue(enemyType, out var previewData) ? previewData.Offset : Vector2.Zero;
+        return _preview_by_id.TryGetValue(enemyId, out var previewData) ? previewData.Scale : Vector2.One;
+    }
+
+    public Vector2 GetPreviewOffset(string enemyId)
+    {
+        return _preview_by_id.TryGetValue(enemyId, out var previewData) ? previewData.Offset : Vector2.Zero;
     }
 
     public Vector2 GetMouseWorldPosition()
@@ -126,10 +127,12 @@ public partial class DebugEnemySpawner : Node2D
         return spawnPosition;
     }
 
-    private EnemyBase SpawnEnemy(EnemyType enemyType, Vector2 spawnPosition)
+    private EnemyBase SpawnEnemy(string enemyId, Vector2 spawnPosition)
     {
-        var enemyScene = GetSceneForType(enemyType);
-        var enemy = enemyScene?.Instantiate<EnemyBase>();
+        if (!_entries_by_id.TryGetValue(enemyId, out var entry))
+            return null;
+
+        var enemy = entry.EnemyScene?.Instantiate<EnemyBase>();
         if (enemy == null)
             return null;
 
@@ -143,29 +146,34 @@ public partial class DebugEnemySpawner : Node2D
         return enemy;
     }
 
-    private PackedScene GetSceneForType(EnemyType enemyType)
+    private void BuildCatalogCache()
     {
-        return enemyType switch
+        _ordered_entries.Clear();
+        _entries_by_id.Clear();
+
+        if (EnemyCatalog == null)
+            return;
+
+        foreach (var entry in EnemyCatalog.GetEnabledEntries())
         {
-            EnemyType.Skeleton => SkeletonScene,
-            EnemyType.Ogre => OgreScene,
-            EnemyType.SkeletonMage => SkeletonMageScene,
-            _ => null,
-        };
+            if (entry == null || _entries_by_id.ContainsKey(entry.Id))
+                continue;
+
+            _ordered_entries.Add(entry);
+            _entries_by_id[entry.Id] = entry;
+        }
     }
 
     private void BuildPreviewCache()
     {
-        CachePreviewData(EnemyType.Skeleton, SkeletonScene);
-        CachePreviewData(EnemyType.Ogre, OgreScene);
-        CachePreviewData(EnemyType.SkeletonMage, SkeletonMageScene);
-    }
+        _preview_by_id.Clear();
 
-    private void CachePreviewData(EnemyType enemyType, PackedScene enemyScene)
-    {
-        var previewData = BuildPreviewData(enemyScene);
-        if (previewData != null)
-            _preview_by_type[enemyType] = previewData;
+        foreach (var entry in _ordered_entries)
+        {
+            var previewData = BuildPreviewData(entry.EnemyScene);
+            if (previewData != null)
+                _preview_by_id[entry.Id] = previewData;
+        }
     }
 
     private PreviewData BuildPreviewData(PackedScene enemyScene)
@@ -217,11 +225,11 @@ public partial class DebugEnemySpawner : Node2D
         AddChild(_placement_ghost);
     }
 
-    private void UpdatePlacementGhost(EnemyType enemyType)
+    private void UpdatePlacementGhost(string enemyId)
     {
         EnsurePlacementGhost();
 
-        if (!_preview_by_type.TryGetValue(enemyType, out var previewData) || previewData.Texture == null)
+        if (!_preview_by_id.TryGetValue(enemyId, out var previewData) || previewData.Texture == null)
         {
             HidePlacementGhost();
             return;
