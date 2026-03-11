@@ -85,6 +85,7 @@ public abstract partial class EnemyBase : CharacterBody2D
 
     protected void ClearTarget()
     {
+        IsAttacking = false;
         CurrentTarget = null;
     }
 
