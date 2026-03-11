@@ -10,6 +10,9 @@ public partial class EnemyCatalogEntry : Resource
     public string DisplayName { get; set; } = string.Empty;
 
     [Export]
+    public string Category { get; set; } = "General";
+
+    [Export]
     public PackedScene EnemyScene { get; set; }
 
     [Export]

@@ -123,23 +123,66 @@ public partial class DebugTray : Control
 
         _cards_by_id.Clear();
         _card_input_handlers.Clear();
+        var rows_by_category = new Dictionary<string, HBoxContainer>();
 
         foreach (var entry in _debug_enemy_spawner.GetCatalogEntries())
         {
             if (entry == null || string.IsNullOrWhiteSpace(entry.Id))
                 continue;
 
+            var category = NormalizeCategory(entry.Category);
+            var category_row = GetOrCreateCategoryRow(category, rows_by_category);
+            if (category_row == null)
+                continue;
+
             var card = CreateCard(entry);
             if (card == null)
                 continue;
 
-            _cards_container.AddChild(card);
+            category_row.AddChild(card);
             _cards_by_id[entry.Id] = card;
 
             Control.GuiInputEventHandler input_handler = @event => BeginCardPress(entry.Id, @event);
             card.GuiInput += input_handler;
             _card_input_handlers[card] = input_handler;
         }
+    }
+
+    private HBoxContainer GetOrCreateCategoryRow(string category, Dictionary<string, HBoxContainer> rowsByCategory)
+    {
+        if (rowsByCategory.TryGetValue(category, out var existingRow))
+            return existingRow;
+
+        var section = new VBoxContainer
+        {
+            Name = $"{category}_Section",
+            CustomMinimumSize = new Vector2(140.0f, 0.0f),
+        };
+        section.AddThemeConstantOverride("separation", 6);
+
+        var categoryLabel = new Label
+        {
+            Name = "CategoryLabel",
+            Text = category,
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        section.AddChild(categoryLabel);
+
+        var row = new HBoxContainer
+        {
+            Name = "CardsRow",
+        };
+        row.AddThemeConstantOverride("separation", 12);
+        section.AddChild(row);
+
+        _cards_container.AddChild(section);
+        rowsByCategory[category] = row;
+        return row;
+    }
+
+    private static string NormalizeCategory(string category)
+    {
+        return string.IsNullOrWhiteSpace(category) ? "Uncategorized" : category.Trim();
     }
 
     private Button CreateCard(EnemyCatalogEntry entry)
