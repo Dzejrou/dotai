@@ -136,6 +136,7 @@ public abstract partial class EnemyBase : CombatUnitBase
             AnimatedSprite.Play(walkAnimation);
         }
 
+        SetCombatState(CombatUnitState.ReturningHome);
         Velocity = toHome.Normalized() * MovementSpeed;
         return true;
     }

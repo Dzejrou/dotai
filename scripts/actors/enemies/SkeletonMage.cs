@@ -114,7 +114,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
             return;
         }
 
-        IsAttacking = true;
+        SetCombatState(CombatUnitState.Attacking);
         _attackCooldownTimer = AttackCooldown;
 
         var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
@@ -125,7 +125,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
             !AnimatedSprite.SpriteFrames.HasAnimation(spawnAttackAnimation) ||
             AnimatedSprite.SpriteFrames.GetFrameCount(spawnAttackAnimation) == 0)
         {
-            IsAttacking = false;
+            SetCombatState(CombatUnitState.PursuingTarget);
             LaunchProjectile(projectileDirection);
             return;
         }
@@ -158,7 +158,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
     {
         if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
         {
-            IsAttacking = false;
+            FinishAttackState();
             return;
         }
 
@@ -167,7 +167,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
 
     private void StartDeath()
     {
-        IsAttacking = false;
+        MarkDead();
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
         TryPlayDeathAnimation();

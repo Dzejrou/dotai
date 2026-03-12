@@ -55,8 +55,6 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private float _attackCooldownTimer;
     private int _currentHealth;
     private bool _isDead;
-    private bool _isFollowingOwner;
-    private bool _isLeashing;
 
     public bool CanBeTargeted => !_isDead;
 
@@ -109,11 +107,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             CombatGroups.Enemies,
             node => node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
         if (candidate != null)
-        {
-            _isFollowingOwner = false;
-            _isLeashing = false;
             SetTarget(candidate);
-        }
     }
 
     protected override bool ShouldLoseCurrentTarget(Node2D target)
@@ -121,8 +115,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (!ShouldPrioritizeLeashReturn())
             return false;
 
-        _isLeashing = true;
-        _isFollowingOwner = false;
+        SetCombatState(CombatUnitState.Leashing);
         return true;
     }
 
@@ -132,6 +125,11 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             _attackCooldownTimer -= (float)delta;
 
         return _attackCooldownTimer <= 0.0f && toTarget.Length() <= AttackRange;
+    }
+
+    protected override bool ShouldStayEngaged(Vector2 toTarget, double delta)
+    {
+        return toTarget.Length() <= AttackRange;
     }
 
     protected override void StartAttack()
@@ -146,7 +144,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             return;
         }
 
-        IsAttacking = true;
+        SetCombatState(CombatUnitState.Attacking);
         _attackCooldownTimer = AttackCooldown;
 
         var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
@@ -162,7 +160,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         }
         else
         {
-            IsAttacking = false;
+            SetCombatState(CombatUnitState.PursuingTarget);
         }
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
@@ -178,7 +176,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         var animationName = AnimatedSprite.Animation.ToString();
         if (animationName.StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
         {
-            IsAttacking = false;
+            FinishAttackState();
             return;
         }
 
@@ -188,7 +186,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private void StartDeath()
     {
         _isDead = true;
-        IsAttacking = false;
+        MarkDead();
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
         TryPlayDeathAnimation(DeathAnimation, DisableCollisionOnDeath);
@@ -209,32 +207,33 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         var startLeashDistance = Math.Max(LeashDistance, startFollowDistance);
         var stopLeashDistance = Math.Clamp(LeashReturnDistance, 0.0f, startLeashDistance);
 
-        if (!_isLeashing && distance > startLeashDistance)
+        if (CurrentState != CombatUnitState.Leashing && distance > startLeashDistance)
+            SetCombatState(CombatUnitState.Leashing);
+
+        if (CurrentState == CombatUnitState.Leashing && distance <= stopLeashDistance)
+            SetCombatState(CombatUnitState.Idle);
+
+        if (CurrentState == CombatUnitState.Leashing)
         {
-            _isLeashing = true;
-            _isFollowingOwner = false;
+            SetCombatState(CombatUnitState.Leashing);
+            return MoveTowardOwner(toOwner, LeashCatchupSpeedMultiplier);
         }
 
-        if (_isLeashing && distance <= stopLeashDistance)
-            _isLeashing = false;
-
-        if (_isLeashing)
-            return MoveTowardOwner(toOwner, LeashCatchupSpeedMultiplier);
-
-        if (!_isFollowingOwner)
+        if (CurrentState != CombatUnitState.FollowingOwner)
         {
             if (distance <= startFollowDistance)
                 return false;
 
-            _isFollowingOwner = true;
+            SetCombatState(CombatUnitState.FollowingOwner);
         }
 
-        if (_isFollowingOwner && distance <= stopFollowDistance)
+        if (CurrentState == CombatUnitState.FollowingOwner && distance <= stopFollowDistance)
         {
-            _isFollowingOwner = false;
+            SetCombatState(CombatUnitState.Idle);
             return false;
         }
 
+        SetCombatState(CombatUnitState.FollowingOwner);
         return MoveTowardOwner(toOwner, 1.0f);
     }
 

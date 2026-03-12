@@ -72,6 +72,11 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         return _attackCooldownTimer <= 0.0f && toTarget.Length() <= AttackRange;
     }
 
+    protected override bool ShouldStayEngaged(Vector2 toTarget, double delta)
+    {
+        return toTarget.Length() <= AttackRange;
+    }
+
     protected override void StartAttack()
     {
         if (_attackCooldownTimer > 0.0f || _isDead ||
@@ -81,7 +86,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
             return;
 
         _attackCooldownTimer = AttackCooldown;
-        IsAttacking = true;
+        SetCombatState(CombatUnitState.Attacking);
 
         var attackAnimation = $"{AttackAnimation}_{LastDirection}";
         if (AnimatedSprite.SpriteFrames != null &&
@@ -92,7 +97,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         }
         else
         {
-            IsAttacking = false;
+            SetCombatState(CombatUnitState.PursuingTarget);
         }
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
@@ -147,7 +152,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
     {
         if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
         {
-            IsAttacking = false;
+            FinishAttackState();
             return;
         }
 
@@ -156,6 +161,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
 
     private void StartDeath()
     {
+        MarkDead();
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
         TryPlayDeathAnimation();
