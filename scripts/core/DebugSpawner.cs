@@ -2,7 +2,7 @@ using Godot;
 
 using System.Collections.Generic;
 
-public partial class DebugEnemySpawner : Node2D
+public partial class DebugSpawner : Node2D
 {
     private sealed class PreviewData
     {
@@ -14,21 +14,21 @@ public partial class DebugEnemySpawner : Node2D
     }
 
     [Export]
-    public EnemyCatalog EnemyCatalog { get; set; }
+    public SpawnCatalog SpawnCatalog { get; set; }
 
     [Export]
     public NodePath TargetPath { get; set; } = new NodePath("../Player");
 
-    private readonly Dictionary<string, EnemyCatalogEntry> _entries_by_id = new();
-    private readonly List<EnemyCatalogEntry> _ordered_entries = new();
-    private readonly Dictionary<string, PreviewData> _preview_by_id = new();
+    private readonly Dictionary<string, SpawnCatalogEntry> _entriesById = new();
+    private readonly List<SpawnCatalogEntry> _orderedEntries = new();
+    private readonly Dictionary<string, PreviewData> _previewById = new();
     private Node2D _target;
-    private string _pending_enemy_id;
-    private Sprite2D _placement_ghost;
+    private string _pendingSpawnId;
+    private Sprite2D _placementGhost;
 
-    public bool HasPendingPlacement => !string.IsNullOrEmpty(_pending_enemy_id);
+    public bool HasPendingPlacement => !string.IsNullOrEmpty(_pendingSpawnId);
 
-    public string PendingEnemyId => _pending_enemy_id;
+    public string PendingSpawnId => _pendingSpawnId;
 
     public override void _Ready()
     {
@@ -37,7 +37,7 @@ public partial class DebugEnemySpawner : Node2D
             _target = GetParentOrNull<Node>()?.GetNodeOrNull<Node2D>("Player");
 
         if (_target == null)
-            GD.PrintErr("DebugEnemySpawner could not find target node.");
+            GD.PrintErr("DebugSpawner could not find target node.");
 
         BuildCatalogCache();
         BuildPreviewCache();
@@ -47,26 +47,26 @@ public partial class DebugEnemySpawner : Node2D
 
     public override void _Process(double delta)
     {
-        if (!HasPendingPlacement || _placement_ghost == null)
+        if (!HasPendingPlacement || _placementGhost == null)
             return;
 
-        _placement_ghost.GlobalPosition = GetMouseWorldPosition();
+        _placementGhost.GlobalPosition = GetMouseWorldPosition();
     }
 
-    public IReadOnlyList<EnemyCatalogEntry> GetCatalogEntries() => _ordered_entries;
+    public IReadOnlyList<SpawnCatalogEntry> GetCatalogEntries() => _orderedEntries;
 
-    public void BeginPlacement(string enemyId)
+    public void BeginPlacement(string spawnId)
     {
-        if (!_entries_by_id.ContainsKey(enemyId))
+        if (!_entriesById.ContainsKey(spawnId))
             return;
 
-        _pending_enemy_id = enemyId;
-        UpdatePlacementGhost(enemyId);
+        _pendingSpawnId = spawnId;
+        UpdatePlacementGhost(spawnId);
     }
 
     public void CancelPlacement()
     {
-        _pending_enemy_id = null;
+        _pendingSpawnId = null;
         HidePlacementGhost();
     }
 
@@ -75,10 +75,10 @@ public partial class DebugEnemySpawner : Node2D
         if (!HasPendingPlacement)
             return false;
 
-        var enemyId = _pending_enemy_id;
+        var spawnId = _pendingSpawnId;
         var spawnPosition = GetMouseWorldPosition();
-        var enemy = SpawnEnemy(enemyId, spawnPosition);
-        if (enemy == null)
+        var spawnedNode = SpawnNode(spawnId, spawnPosition);
+        if (spawnedNode == null)
             return false;
 
         if (!preservePlacement)
@@ -87,30 +87,30 @@ public partial class DebugEnemySpawner : Node2D
         return true;
     }
 
-    public void SpawnEnemyFromDebugUi(string enemyId)
+    public void SpawnFromDebugUi(string spawnId)
     {
         var spawnPosition = GetMouseWorldPosition();
-        SpawnEnemy(enemyId, spawnPosition);
+        SpawnNode(spawnId, spawnPosition);
     }
 
-    public SpriteFrames GetPreviewFrames(string enemyId)
+    public SpriteFrames GetPreviewFrames(string spawnId)
     {
-        return _preview_by_id.TryGetValue(enemyId, out var previewData) ? previewData.SpriteFrames : null;
+        return _previewById.TryGetValue(spawnId, out var previewData) ? previewData.SpriteFrames : null;
     }
 
-    public StringName GetPreviewAnimationName(string enemyId)
+    public StringName GetPreviewAnimationName(string spawnId)
     {
-        return _preview_by_id.TryGetValue(enemyId, out var previewData) ? previewData.AnimationName : new StringName();
+        return _previewById.TryGetValue(spawnId, out var previewData) ? previewData.AnimationName : new StringName();
     }
 
-    public Vector2 GetPreviewScale(string enemyId)
+    public Vector2 GetPreviewScale(string spawnId)
     {
-        return _preview_by_id.TryGetValue(enemyId, out var previewData) ? previewData.Scale : Vector2.One;
+        return _previewById.TryGetValue(spawnId, out var previewData) ? previewData.Scale : Vector2.One;
     }
 
-    public Vector2 GetPreviewOffset(string enemyId)
+    public Vector2 GetPreviewOffset(string spawnId)
     {
-        return _preview_by_id.TryGetValue(enemyId, out var previewData) ? previewData.Offset : Vector2.Zero;
+        return _previewById.TryGetValue(spawnId, out var previewData) ? previewData.Offset : Vector2.Zero;
     }
 
     public Vector2 GetMouseWorldPosition()
@@ -127,52 +127,55 @@ public partial class DebugEnemySpawner : Node2D
         return spawnPosition;
     }
 
-    private EnemyBase SpawnEnemy(string enemyId, Vector2 spawnPosition)
+    private Node2D SpawnNode(string spawnId, Vector2 spawnPosition)
     {
-        if (!_entries_by_id.TryGetValue(enemyId, out var entry))
+        if (!_entriesById.TryGetValue(spawnId, out var entry))
             return null;
 
-        var enemy = entry.EnemyScene?.Instantiate<EnemyBase>();
-        if (enemy == null)
+        var spawnedNode = entry.SpawnScene?.Instantiate<Node2D>();
+        if (spawnedNode == null)
             return null;
 
-        enemy.GlobalPosition = spawnPosition;
-        enemy.ZIndex = -1;
-        enemy.SetTarget(_target);
+        spawnedNode.GlobalPosition = spawnPosition;
+        spawnedNode.ZIndex = -1;
+
+        if (spawnedNode is EnemyBase enemy)
+            enemy.SetTarget(_target);
+
         var parent = GetParent();
         if (parent != null)
-            parent.AddChild(enemy);
+            parent.AddChild(spawnedNode);
 
-        return enemy;
+        return spawnedNode;
     }
 
     private void BuildCatalogCache()
     {
-        _ordered_entries.Clear();
-        _entries_by_id.Clear();
+        _orderedEntries.Clear();
+        _entriesById.Clear();
 
-        if (EnemyCatalog == null)
+        if (SpawnCatalog == null)
             return;
 
-        foreach (var entry in EnemyCatalog.GetEnabledEntries())
+        foreach (var entry in SpawnCatalog.GetEnabledEntries())
         {
-            if (entry == null || _entries_by_id.ContainsKey(entry.Id))
+            if (entry == null || _entriesById.ContainsKey(entry.Id))
                 continue;
 
-            _ordered_entries.Add(entry);
-            _entries_by_id[entry.Id] = entry;
+            _orderedEntries.Add(entry);
+            _entriesById[entry.Id] = entry;
         }
     }
 
     private void BuildPreviewCache()
     {
-        _preview_by_id.Clear();
+        _previewById.Clear();
 
-        foreach (var entry in _ordered_entries)
+        foreach (var entry in _orderedEntries)
         {
-            var previewData = BuildPreviewData(entry.EnemyScene);
+            var previewData = BuildPreviewData(entry.SpawnScene);
             if (previewData != null)
-                _preview_by_id[entry.Id] = previewData;
+                _previewById[entry.Id] = previewData;
         }
     }
 
@@ -210,10 +213,10 @@ public partial class DebugEnemySpawner : Node2D
 
     private void EnsurePlacementGhost()
     {
-        if (_placement_ghost != null)
+        if (_placementGhost != null)
             return;
 
-        _placement_ghost = new Sprite2D
+        _placementGhost = new Sprite2D
         {
             Name = "PlacementGhost",
             Centered = true,
@@ -222,29 +225,29 @@ public partial class DebugEnemySpawner : Node2D
             TopLevel = true,
             Visible = false,
         };
-        AddChild(_placement_ghost);
+        AddChild(_placementGhost);
     }
 
-    private void UpdatePlacementGhost(string enemyId)
+    private void UpdatePlacementGhost(string spawnId)
     {
         EnsurePlacementGhost();
 
-        if (!_preview_by_id.TryGetValue(enemyId, out var previewData) || previewData.Texture == null)
+        if (!_previewById.TryGetValue(spawnId, out var previewData) || previewData.Texture == null)
         {
             HidePlacementGhost();
             return;
         }
 
-        _placement_ghost.Texture = previewData.Texture;
-        _placement_ghost.Scale = previewData.Scale;
-        _placement_ghost.Offset = previewData.Offset;
-        _placement_ghost.GlobalPosition = GetMouseWorldPosition();
-        _placement_ghost.Visible = true;
+        _placementGhost.Texture = previewData.Texture;
+        _placementGhost.Scale = previewData.Scale;
+        _placementGhost.Offset = previewData.Offset;
+        _placementGhost.GlobalPosition = GetMouseWorldPosition();
+        _placementGhost.Visible = true;
     }
 
     private void HidePlacementGhost()
     {
-        if (_placement_ghost != null)
-            _placement_ghost.Visible = false;
+        if (_placementGhost != null)
+            _placementGhost.Visible = false;
     }
 }

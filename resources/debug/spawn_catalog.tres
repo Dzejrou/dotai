@@ -1,0 +1,48 @@
+[gd_resource type="Resource" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/SpawnCatalog.cs" id="1_spawn_catalog_script"]
+[ext_resource type="Script" path="res://scripts/core/SpawnCatalogEntry.cs" id="2_spawn_catalog_entry_script"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton.tscn" id="3_skeleton_scene"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/ogre.tscn" id="4_ogre_scene"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="5_skeleton_mage_scene"]
+[ext_resource type="PackedScene" path="res://scenes/actors/allies/summoned_skeleton.tscn" id="6_summoned_skeleton_scene"]
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_skeleton"]
+script = ExtResource("2_spawn_catalog_entry_script")
+Id = "skeleton"
+DisplayName = "Skeleton"
+Category = "Melee"
+SpawnScene = ExtResource("3_skeleton_scene")
+Enabled = true
+SortOrder = 10
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_ogre"]
+script = ExtResource("2_spawn_catalog_entry_script")
+Id = "ogre"
+DisplayName = "Ogre"
+Category = "Melee"
+SpawnScene = ExtResource("4_ogre_scene")
+Enabled = true
+SortOrder = 20
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_skeleton_mage"]
+script = ExtResource("2_spawn_catalog_entry_script")
+Id = "skeleton_mage"
+DisplayName = "Skeleton Mage"
+Category = "Ranged"
+SpawnScene = ExtResource("5_skeleton_mage_scene")
+Enabled = true
+SortOrder = 30
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_summoned_skeleton"]
+script = ExtResource("2_spawn_catalog_entry_script")
+Id = "summoned_skeleton"
+DisplayName = "Summoned Skeleton"
+Category = "Allies"
+SpawnScene = ExtResource("6_summoned_skeleton_scene")
+Enabled = true
+SortOrder = 40
+
+[resource]
+script = ExtResource("1_spawn_catalog_script")
+Entries = Array[Resource]([SubResource("Resource_spawn_catalog_entry_skeleton"), SubResource("Resource_spawn_catalog_entry_ogre"), SubResource("Resource_spawn_catalog_entry_skeleton_mage"), SubResource("Resource_spawn_catalog_entry_summoned_skeleton")])
