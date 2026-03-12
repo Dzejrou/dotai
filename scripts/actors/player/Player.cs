@@ -62,6 +62,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
     [Export]
     public float SummonSkeletonSpawnOffset { get; set; } = 24.0f;
+    [Export]
+    public int MaxSummonedSkeletonsPerOwner { get; set; } = 4;
 
     private int _health;
     private bool _isDead;
@@ -222,12 +224,31 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         if (parent == null)
             return;
 
+        if (!CanSummonAdditionalSkeleton(parent))
+            return;
+
         var summonDirection = DirectionHelper.GetDirectionVector(_lastDirection);
         if (summonDirection == Vector2.Zero)
             summonDirection = Vector2.Right;
 
+        summonedSkeleton.SetOwner(this);
         summonedSkeleton.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, SummonSkeletonSpawnOffset);
         parent.AddChild(summonedSkeleton);
+    }
+
+    private bool CanSummonAdditionalSkeleton(Node parent)
+    {
+        if (parent == null)
+            return false;
+
+        var count = 0;
+        foreach (var node in parent.GetChildren())
+        {
+            if (node is SummonedSkeleton summon && summon.IsOwnedBy(this))
+                count++;
+        }
+
+        return count < Math.Max(1, MaxSummonedSkeletonsPerOwner);
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
