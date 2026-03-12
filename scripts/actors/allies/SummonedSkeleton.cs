@@ -45,16 +45,21 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     public float LeashCatchupSpeedMultiplier { get; set; } = 1.35f;
 
     [Export]
-    public Vector2 PreferredOwnerOffset { get; set; } = new Vector2(24.0f, 34.0f);
+    public float IdleAnchorTolerance { get; set; } = 10.0f;
 
     [Export]
-    public float IdleAnchorTolerance { get; set; } = 10.0f;
+    public float FormationHorizontalOffset { get; set; } = 24.0f;
+
+    [Export]
+    public float FormationVerticalOffset { get; set; } = 42.0f;
 
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
     private Node2D _owner;
     private float _attackCooldownTimer;
     private int _currentHealth;
     private bool _isDead;
+    private bool _ownerCollisionExceptionApplied;
+    private const int MaxFormationSlots = 4;
 
     public bool CanBeTargeted => !_isDead;
 
@@ -67,6 +72,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         SetMovementSpeed(Speed);
         AddToGroup(CombatGroups.Allies);
         _owner = ResolveOwner();
+        ApplyOwnerCollisionException();
         PlayIdleIfAvailable();
 
         if (AnimatedSprite != null)
@@ -81,6 +87,24 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             return;
 
         base._PhysicsProcess(delta);
+    }
+
+    public bool IsOwnedBy(Node2D owner)
+    {
+        return owner != null && _owner == owner;
+    }
+
+    public void SetOwner(Node2D owner)
+    {
+        if (_owner == owner)
+        {
+            ApplyOwnerCollisionException();
+            return;
+        }
+
+        _owner = owner;
+        _ownerCollisionExceptionApplied = false;
+        ApplyOwnerCollisionException();
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -198,7 +222,11 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     protected override bool HandleNoTarget(double delta)
     {
         if (_owner == null || !GodotObject.IsInstanceValid(_owner) || !_owner.IsInsideTree())
+        {
             _owner = ResolveOwner();
+            _ownerCollisionExceptionApplied = false;
+            ApplyOwnerCollisionException();
+        }
 
         if (_owner == null)
             return false;
@@ -277,33 +305,66 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (_owner == null || !GodotObject.IsInstanceValid(_owner))
             return GlobalPosition;
 
-        var ownerFacing = GetOwnerFacingDirection();
-        if (ownerFacing == Vector2.Zero)
-            ownerFacing = Vector2.Down;
-
-        var ownerForward = ownerFacing;
-        var ownerRight = new Vector2(-ownerForward.Y, ownerForward.X);
-        return _owner.GlobalPosition + (ownerRight * PreferredOwnerOffset.X) + ((-ownerForward) * PreferredOwnerOffset.Y);
+        return _owner.GlobalPosition + GetSummonSpreadOffset();
     }
 
-    private Vector2 GetOwnerFacingDirection()
+    private Vector2 GetSummonSpreadOffset()
+    {
+        var summonSlot = GetSummonSlotIndex();
+        if (summonSlot < 0)
+            return Vector2.Zero;
+
+        summonSlot = Math.Min(summonSlot, MaxFormationSlots - 1);
+        var localSlot = GetSlotOffsetForIndex(summonSlot);
+        return localSlot;
+    }
+
+    private Vector2 GetSlotOffsetForIndex(int slotIndex)
+    {
+        if (slotIndex < 0)
+            return Vector2.Zero;
+
+        return slotIndex switch
+        {
+            0 => new Vector2(-FormationHorizontalOffset, -FormationVerticalOffset),
+            1 => new Vector2(FormationHorizontalOffset, -FormationVerticalOffset),
+            2 => new Vector2(-FormationHorizontalOffset, FormationVerticalOffset),
+            3 => new Vector2(FormationHorizontalOffset, FormationVerticalOffset),
+            _ => Vector2.Zero,
+        };
+    }
+
+    private int GetSummonSlotIndex()
     {
         if (_owner == null || !GodotObject.IsInstanceValid(_owner))
-            return Vector2.Down;
+            return 0;
 
-        if (_owner is CharacterBody2D ownerBody && ownerBody.Velocity != Vector2.Zero)
-            return ownerBody.Velocity.Normalized();
+        var parent = GetParent();
+        if (parent == null)
+            return 0;
 
-        var animatedSprite = _owner.GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
-        if (animatedSprite == null || animatedSprite.Animation.IsEmpty)
-            return Vector2.Down;
+        var slot = 0;
+        foreach (var node in parent.GetChildren())
+        {
+            if (node is not SummonedSkeleton summon)
+                continue;
 
-        var animationName = animatedSprite.Animation.ToString();
-        if (!animationName.Contains('_'))
-            return Vector2.Down;
+            var summonOwner = summon._owner;
+            if (!GodotObject.IsInstanceValid(summonOwner))
+                summonOwner = summon.ResolveOwner();
 
-        var facing = animationName[(animationName.LastIndexOf('_') + 1)..];
-        return DirectionHelper.GetDirectionVector(facing);
+            if (!GodotObject.IsInstanceValid(summonOwner) || summonOwner != _owner)
+                continue;
+
+            if (summon == this)
+                return slot;
+
+            slot++;
+            if (slot >= MaxFormationSlots)
+                return MaxFormationSlots - 1;
+        }
+
+        return 0;
     }
 
     private bool ShouldPrioritizeLeashReturn()
@@ -327,5 +388,27 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             return GetNodeOrNull<Node2D>(OwnerPath);
 
         return GetParent()?.GetNodeOrNull<Node2D>("Player");
+    }
+
+    private void ApplyOwnerCollisionException()
+    {
+        if (_ownerCollisionExceptionApplied)
+            return;
+
+        if (!GodotObject.IsInstanceValid(_owner))
+            return;
+
+        if (_owner == null)
+            return;
+
+        if (_owner is not PhysicsBody2D ownerPhysicsBody)
+            return;
+
+        if (this is not PhysicsBody2D summonPhysicsBody)
+            return;
+
+        ownerPhysicsBody.AddCollisionExceptionWith(this);
+        summonPhysicsBody.AddCollisionExceptionWith(_owner);
+        _ownerCollisionExceptionApplied = true;
     }
 }
