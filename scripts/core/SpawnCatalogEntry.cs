@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class EnemyCatalogEntry : Resource
+public partial class SpawnCatalogEntry : Resource
 {
     [Export]
     public string Id { get; set; } = string.Empty;
@@ -13,7 +13,7 @@ public partial class EnemyCatalogEntry : Resource
     public string Category { get; set; } = "General";
 
     [Export]
-    public PackedScene EnemyScene { get; set; }
+    public PackedScene SpawnScene { get; set; }
 
     [Export]
     public bool Enabled { get; set; } = true;

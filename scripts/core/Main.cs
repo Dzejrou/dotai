@@ -83,7 +83,6 @@ public partial class Main : Node2D
             UpdatePlayerHealthHud(0, 0);
 
         InitializeWindowPreset();
-        OpenDebugTray();
     }
 
     public override void _ExitTree()
@@ -274,6 +273,19 @@ public partial class Main : Node2D
     {
         if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
             return false;
+
+        if (keyEvent.PhysicalKeycode == Key.P)
+        {
+            if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
+                CloseDebugTray();
+            else
+            {
+                ClosePauseMenu();
+                OpenDebugTray();
+            }
+
+            return true;
+        }
 
         if (keyEvent.PhysicalKeycode != Key.Escape)
             return false;

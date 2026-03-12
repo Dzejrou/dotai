@@ -15,33 +15,33 @@ public partial class DebugTray : Control
     public NodePath CardsContainerPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards");
 
     [Export]
-    public NodePath DebugEnemySpawnerPath { get; set; } = new NodePath("../../World/DebugEnemySpawner");
+    public NodePath DebugSpawnerPath { get; set; } = new NodePath("../../World/DebugSpawner");
 
     private const float DragThreshold = 12.0f;
     private static readonly Vector2 PreviewCenter = new(48.0f, 52.0f);
 
-    private DebugEnemySpawner _debug_enemy_spawner;
-    private Control _tray_panel;
-    private Label _status_label;
-    private HBoxContainer _cards_container;
-    private readonly Dictionary<string, Button> _cards_by_id = new();
-    private readonly Dictionary<Button, Control.GuiInputEventHandler> _card_input_handlers = new();
-    private string _pressed_card_id;
-    private Vector2 _press_start_screen_position;
-    private bool _dragging_from_card;
+    private DebugSpawner _debugSpawner;
+    private Control _trayPanel;
+    private Label _statusLabel;
+    private HBoxContainer _cardsContainer;
+    private readonly Dictionary<string, Button> _cardsById = new();
+    private readonly Dictionary<Button, Control.GuiInputEventHandler> _cardInputHandlers = new();
+    private string _pressedCardId;
+    private Vector2 _pressStartScreenPosition;
+    private bool _draggingFromCard;
 
     public bool TrayVisible => Visible;
 
-    public bool HasPendingPlacement => _debug_enemy_spawner?.HasPendingPlacement ?? false;
+    public bool HasPendingPlacement => _debugSpawner?.HasPendingPlacement ?? false;
 
     public override void _Ready()
     {
         ProcessMode = ProcessModeEnum.Always;
 
-        _debug_enemy_spawner = GetNodeOrNull<DebugEnemySpawner>(DebugEnemySpawnerPath);
-        _tray_panel = GetNodeOrNull<Control>(TrayPanelPath);
-        _status_label = GetNodeOrNull<Label>(StatusLabelPath);
-        _cards_container = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
+        _debugSpawner = GetNodeOrNull<DebugSpawner>(DebugSpawnerPath);
+        _trayPanel = GetNodeOrNull<Control>(TrayPanelPath);
+        _statusLabel = GetNodeOrNull<Label>(StatusLabelPath);
+        _cardsContainer = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
 
         BuildCardsFromCatalog();
 
@@ -52,7 +52,7 @@ public partial class DebugTray : Control
 
     public override void _ExitTree()
     {
-        foreach (var (button, handler) in _card_input_handlers)
+        foreach (var (button, handler) in _cardInputHandlers)
         {
             if (button != null)
                 button.GuiInput -= handler;
@@ -107,7 +107,7 @@ public partial class DebugTray : Control
 
     public void CancelPlacement()
     {
-        _debug_enemy_spawner?.CancelPlacement();
+        _debugSpawner?.CancelPlacement();
         ClearPressedCardState();
         UpdateCardSelection();
         UpdateStatusLabel();
@@ -115,36 +115,36 @@ public partial class DebugTray : Control
 
     private void BuildCardsFromCatalog()
     {
-        if (_cards_container == null || _debug_enemy_spawner == null)
+        if (_cardsContainer == null || _debugSpawner == null)
             return;
 
-        foreach (var child in _cards_container.GetChildren())
+        foreach (var child in _cardsContainer.GetChildren())
             child.QueueFree();
 
-        _cards_by_id.Clear();
-        _card_input_handlers.Clear();
-        var rows_by_category = new Dictionary<string, HBoxContainer>();
+        _cardsById.Clear();
+        _cardInputHandlers.Clear();
+        var rowsByCategory = new Dictionary<string, HBoxContainer>();
 
-        foreach (var entry in _debug_enemy_spawner.GetCatalogEntries())
+        foreach (var entry in _debugSpawner.GetCatalogEntries())
         {
             if (entry == null || string.IsNullOrWhiteSpace(entry.Id))
                 continue;
 
             var category = NormalizeCategory(entry.Category);
-            var category_row = GetOrCreateCategoryRow(category, rows_by_category);
-            if (category_row == null)
+            var categoryRow = GetOrCreateCategoryRow(category, rowsByCategory);
+            if (categoryRow == null)
                 continue;
 
             var card = CreateCard(entry);
             if (card == null)
                 continue;
 
-            category_row.AddChild(card);
-            _cards_by_id[entry.Id] = card;
+            categoryRow.AddChild(card);
+            _cardsById[entry.Id] = card;
 
-            Control.GuiInputEventHandler input_handler = @event => BeginCardPress(entry.Id, @event);
-            card.GuiInput += input_handler;
-            _card_input_handlers[card] = input_handler;
+            Control.GuiInputEventHandler inputHandler = @event => BeginCardPress(entry.Id, @event);
+            card.GuiInput += inputHandler;
+            _cardInputHandlers[card] = inputHandler;
         }
     }
 
@@ -175,7 +175,7 @@ public partial class DebugTray : Control
         row.AddThemeConstantOverride("separation", 12);
         section.AddChild(row);
 
-        _cards_container.AddChild(section);
+        _cardsContainer.AddChild(section);
         rowsByCategory[category] = row;
         return row;
     }
@@ -185,7 +185,7 @@ public partial class DebugTray : Control
         return string.IsNullOrWhiteSpace(category) ? "Uncategorized" : category.Trim();
     }
 
-    private Button CreateCard(EnemyCatalogEntry entry)
+    private Button CreateCard(SpawnCatalogEntry entry)
     {
         var card = new Button
         {
@@ -215,16 +215,16 @@ public partial class DebugTray : Control
         vBox.AddThemeConstantOverride("separation", 6);
         margin.AddChild(vBox);
 
-        var preview_container = new SubViewportContainer
+        var previewContainer = new SubViewportContainer
         {
             Name = "PreviewContainer",
             CustomMinimumSize = new Vector2(96.0f, 96.0f),
             Stretch = true,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        vBox.AddChild(preview_container);
+        vBox.AddChild(previewContainer);
 
-        var preview_viewport = new SubViewport
+        var previewViewport = new SubViewport
         {
             Name = "PreviewViewport",
             HandleInputLocally = false,
@@ -233,13 +233,13 @@ public partial class DebugTray : Control
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
             Size = new Vector2I(96, 96),
         };
-        preview_container.AddChild(preview_viewport);
+        previewContainer.AddChild(previewViewport);
 
-        var preview_sprite = new AnimatedSprite2D
+        var previewSprite = new AnimatedSprite2D
         {
             Name = "PreviewSprite",
         };
-        preview_viewport.AddChild(preview_sprite);
+        previewViewport.AddChild(previewSprite);
 
         var label = new Label
         {
@@ -249,20 +249,20 @@ public partial class DebugTray : Control
         };
         vBox.AddChild(label);
 
-        ConfigurePreview(entry.Id, preview_sprite);
+        ConfigurePreview(entry.Id, previewSprite);
         return card;
     }
 
     private void ConfigurePreview(string enemyId, AnimatedSprite2D previewSprite)
     {
-        if (_debug_enemy_spawner == null || previewSprite == null)
+        if (_debugSpawner == null || previewSprite == null)
             return;
 
-        var spriteFrames = _debug_enemy_spawner.GetPreviewFrames(enemyId);
-        var animationName = _debug_enemy_spawner.GetPreviewAnimationName(enemyId);
+        var spriteFrames = _debugSpawner.GetPreviewFrames(enemyId);
+        var animationName = _debugSpawner.GetPreviewAnimationName(enemyId);
         previewSprite.SpriteFrames = spriteFrames;
-        previewSprite.Scale = _debug_enemy_spawner.GetPreviewScale(enemyId);
-        previewSprite.Position = PreviewCenter + _debug_enemy_spawner.GetPreviewOffset(enemyId);
+        previewSprite.Scale = _debugSpawner.GetPreviewScale(enemyId);
+        previewSprite.Position = PreviewCenter + _debugSpawner.GetPreviewOffset(enemyId);
 
         if (spriteFrames == null)
             return;
@@ -279,17 +279,17 @@ public partial class DebugTray : Control
 
     private void HandleMouseMotion(InputEventMouseMotion mouseMotion)
     {
-        if (string.IsNullOrEmpty(_pressed_card_id) || _dragging_from_card)
+        if (string.IsNullOrEmpty(_pressedCardId) || _draggingFromCard)
             return;
 
         if ((mouseMotion.ButtonMask & MouseButtonMask.Left) == 0)
             return;
 
-        if (mouseMotion.GlobalPosition.DistanceTo(_press_start_screen_position) < DragThreshold)
+        if (mouseMotion.GlobalPosition.DistanceTo(_pressStartScreenPosition) < DragThreshold)
             return;
 
-        _dragging_from_card = true;
-        _debug_enemy_spawner?.BeginPlacement(_pressed_card_id);
+        _draggingFromCard = true;
+        _debugSpawner?.BeginPlacement(_pressedCardId);
         UpdateCardSelection();
         UpdateStatusLabel();
         GetViewport().SetInputAsHandled();
@@ -315,12 +315,12 @@ public partial class DebugTray : Control
             return;
         }
 
-        if (!string.IsNullOrEmpty(_pressed_card_id))
+        if (!string.IsNullOrEmpty(_pressedCardId))
             return;
 
-        if (HasPendingPlacement && !IsMouseOverTray(screenPosition) && _debug_enemy_spawner != null)
+        if (HasPendingPlacement && !IsMouseOverTray(screenPosition) && _debugSpawner != null)
         {
-            _debug_enemy_spawner.PlacePendingAtCursor(mouseButton.ShiftPressed);
+            _debugSpawner.PlacePendingAtCursor(mouseButton.ShiftPressed);
             UpdateCardSelection();
             UpdateStatusLabel();
             GetViewport().SetInputAsHandled();
@@ -329,19 +329,19 @@ public partial class DebugTray : Control
 
     private void HandleLeftMouseRelease(Vector2 screenPosition, bool shiftPressed)
     {
-        if (string.IsNullOrEmpty(_pressed_card_id))
+        if (string.IsNullOrEmpty(_pressedCardId))
             return;
 
-        if (_dragging_from_card && _debug_enemy_spawner != null)
+        if (_draggingFromCard && _debugSpawner != null)
         {
             if (IsMouseOverTray(screenPosition))
-                _debug_enemy_spawner.CancelPlacement();
+                _debugSpawner.CancelPlacement();
             else
-                _debug_enemy_spawner.PlacePendingAtCursor(shiftPressed);
+                _debugSpawner.PlacePendingAtCursor(shiftPressed);
         }
-        else if (IsMouseOverCard(_pressed_card_id, screenPosition))
+        else if (IsMouseOverCard(_pressedCardId, screenPosition))
         {
-            _debug_enemy_spawner?.BeginPlacement(_pressed_card_id);
+            _debugSpawner?.BeginPlacement(_pressedCardId);
         }
 
         ClearPressedCardState();
@@ -352,49 +352,49 @@ public partial class DebugTray : Control
 
     private void ClearPressedCardState()
     {
-        _pressed_card_id = null;
-        _dragging_from_card = false;
+        _pressedCardId = null;
+        _draggingFromCard = false;
     }
 
     private void UpdateCardSelection()
     {
-        foreach (var (enemyId, card) in _cards_by_id)
+        foreach (var (enemyId, card) in _cardsById)
         {
             if (card == null)
                 continue;
 
-            card.ButtonPressed = HasPendingPlacement && _debug_enemy_spawner?.PendingEnemyId == enemyId;
+            card.ButtonPressed = HasPendingPlacement && _debugSpawner?.PendingSpawnId == enemyId;
         }
     }
 
     private void UpdateStatusLabel()
     {
-        if (_status_label == null)
+        if (_statusLabel == null)
             return;
 
-        if (_dragging_from_card)
+        if (_draggingFromCard)
         {
-            _status_label.Text = "Release in the world to place. Release over tray, right click, or Esc to cancel.";
+            _statusLabel.Text = "Release in the world to place. Release over tray, right click, or Esc to cancel.";
             return;
         }
 
         if (HasPendingPlacement)
         {
-            _status_label.Text = "Click in the world to place. Right click or Esc cancels.";
+            _statusLabel.Text = "Click in the world to place. Right click or Esc cancels.";
             return;
         }
 
-        _status_label.Text = "Click a card to arm placement, or drag it out into the world.";
+        _statusLabel.Text = "Click a card to arm placement, or drag it out into the world.";
     }
 
     private bool IsMouseOverTray(Vector2 screenPosition)
     {
-        return _tray_panel != null && _tray_panel.GetGlobalRect().HasPoint(screenPosition);
+        return _trayPanel != null && _trayPanel.GetGlobalRect().HasPoint(screenPosition);
     }
 
     private bool IsMouseOverCard(string enemyId, Vector2 screenPosition)
     {
-        return _cards_by_id.TryGetValue(enemyId, out var card) && card != null && card.GetGlobalRect().HasPoint(screenPosition);
+        return _cardsById.TryGetValue(enemyId, out var card) && card != null && card.GetGlobalRect().HasPoint(screenPosition);
     }
 
     private void BeginCardPress(string enemyId, InputEvent @event)
@@ -402,9 +402,9 @@ public partial class DebugTray : Control
         if (@event is not InputEventMouseButton mouseButton || mouseButton.ButtonIndex != MouseButton.Left || !mouseButton.Pressed)
             return;
 
-        _pressed_card_id = enemyId;
-        _press_start_screen_position = mouseButton.GlobalPosition;
-        _dragging_from_card = false;
+        _pressedCardId = enemyId;
+        _pressStartScreenPosition = mouseButton.GlobalPosition;
+        _draggingFromCard = false;
         GetViewport().SetInputAsHandled();
     }
 }
