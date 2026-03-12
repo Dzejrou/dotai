@@ -9,7 +9,7 @@ public abstract partial class CombatUnitBase : CharacterBody2D
     protected Node2D CurrentTarget { get; private set; }
     protected float MovementSpeed { get; private set; } = 1.0f;
     protected string LastDirection { get; set; } = "south";
-    protected bool IsAttacking { get; set; }
+    public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
     protected void InitializeCombatUnit(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape)
     {
@@ -29,8 +29,25 @@ public abstract partial class CombatUnitBase : CharacterBody2D
 
     protected void ClearTarget()
     {
-        IsAttacking = false;
         CurrentTarget = null;
+    }
+
+    protected void SetCombatState(CombatUnitState state)
+    {
+        CurrentState = state;
+    }
+
+    protected void MarkDead()
+    {
+        CurrentState = CombatUnitState.Dead;
+    }
+
+    protected void FinishAttackState()
+    {
+        if (CurrentState != CombatUnitState.Attacking)
+            return;
+
+        SetCombatState(CurrentTarget != null ? CombatUnitState.PursuingTarget : CombatUnitState.Idle);
     }
 
     protected bool ValidateCurrentTarget()
@@ -59,7 +76,7 @@ public abstract partial class CombatUnitBase : CharacterBody2D
 
         var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
 
-        if (IsAttacking)
+        if (CurrentState == CombatUnitState.Attacking)
         {
             Velocity = Vector2.Zero;
             return;
@@ -68,8 +85,23 @@ public abstract partial class CombatUnitBase : CharacterBody2D
         if (CanAttackNow(toTarget, delta))
         {
             StartAttack();
+            if (CurrentState == CombatUnitState.Attacking)
+                SetCombatState(CombatUnitState.Attacking);
             return;
         }
+
+        if (ShouldStayEngaged(toTarget, delta))
+        {
+            if (toTarget != Vector2.Zero)
+                LastDirection = DirectionHelper.GetDirectionName(toTarget);
+
+            SetCombatState(CombatUnitState.Engaged);
+            Velocity = Vector2.Zero;
+            PlayIdleIfAvailable();
+            return;
+        }
+
+        SetCombatState(CombatUnitState.PursuingTarget);
 
         var desiredDirection = GetDesiredMovementDirection(toTarget, delta);
         if (desiredDirection == Vector2.Zero)
@@ -161,6 +193,8 @@ public abstract partial class CombatUnitBase : CharacterBody2D
 
     protected abstract void StartAttack();
 
+    protected virtual bool ShouldStayEngaged(Vector2 toTarget, double delta) => false;
+
     protected virtual bool HandleNoTarget(double delta) => false;
 
     private bool TryEnsureActiveTarget(double delta)
@@ -177,6 +211,7 @@ public abstract partial class CombatUnitBase : CharacterBody2D
                     return false;
                 }
 
+                SetCombatState(CombatUnitState.Idle);
                 Velocity = Vector2.Zero;
                 PlayIdleIfAvailable();
                 return false;

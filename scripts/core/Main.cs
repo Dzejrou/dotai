@@ -83,6 +83,7 @@ public partial class Main : Node2D
             UpdatePlayerHealthHud(0, 0);
 
         InitializeWindowPreset();
+        OpenDebugTray();
     }
 
     public override void _ExitTree()

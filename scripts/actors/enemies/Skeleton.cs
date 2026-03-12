@@ -58,6 +58,11 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
         return toTarget.Length() <= AttackRange;
     }
 
+    protected override bool ShouldStayEngaged(Vector2 toTarget, double delta)
+    {
+        return toTarget.Length() <= AttackRange;
+    }
+
     protected override void StartAttack()
     {
         if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
@@ -74,14 +79,14 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
             return;
         }
 
-        IsAttacking = true;
+        SetCombatState(CombatUnitState.Attacking);
         _attackCooldownTimer = AttackCooldown;
 
         var attackAnimation = $"{AttackAnimation}_{LastDirection}";
         if (AnimatedSprite.SpriteFrames != null &&
             AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
         {
-            IsAttacking = false;
+            SetCombatState(CombatUnitState.PursuingTarget);
             attackable.ApplyDamage(new DamageInfo(_randomNumberGenerator.RandiRange(1, 5), this));
             return;
         }
@@ -122,7 +127,7 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
 
         if (animationName.StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
         {
-            IsAttacking = false;
+            FinishAttackState();
             return;
         }
 
@@ -131,7 +136,7 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
 
     private void StartDeath()
     {
-        IsAttacking = false;
+        MarkDead();
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
 
