@@ -36,12 +36,6 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     public NodePath OwnerPath { get; set; } = new NodePath("../Player");
 
     [Export]
-    public float FollowDistance { get; set; } = 56.0f;
-
-    [Export]
-    public float FollowStopDistance { get; set; } = 36.0f;
-
-    [Export]
     public float LeashDistance { get; set; } = 220.0f;
 
     [Export]
@@ -49,6 +43,12 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     [Export]
     public float LeashCatchupSpeedMultiplier { get; set; } = 1.35f;
+
+    [Export]
+    public Vector2 PreferredOwnerOffset { get; set; } = new Vector2(24.0f, 34.0f);
+
+    [Export]
+    public float IdleAnchorTolerance { get; set; } = 10.0f;
 
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
     private Node2D _owner;
@@ -99,6 +99,9 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     protected override void AcquireTarget()
     {
+        if (CurrentState == CombatUnitState.Leashing)
+            return;
+
         if (ShouldPrioritizeLeashReturn())
             return;
 
@@ -202,9 +205,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
         var toOwner = _owner.GlobalPosition - GlobalPosition;
         var distance = toOwner.Length();
-        var startFollowDistance = Math.Max(FollowDistance, 0.0f);
-        var stopFollowDistance = Math.Clamp(FollowStopDistance, 0.0f, startFollowDistance);
-        var startLeashDistance = Math.Max(LeashDistance, startFollowDistance);
+        var startLeashDistance = Math.Max(LeashDistance, 0.0f);
         var stopLeashDistance = Math.Clamp(LeashReturnDistance, 0.0f, startLeashDistance);
 
         if (CurrentState != CombatUnitState.Leashing && distance > startLeashDistance)
@@ -219,22 +220,18 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             return MoveTowardOwner(toOwner, LeashCatchupSpeedMultiplier);
         }
 
-        if (CurrentState != CombatUnitState.FollowingOwner)
-        {
-            if (distance <= startFollowDistance)
-                return false;
+        var idleAnchor = GetIdleAnchor();
+        var toAnchor = idleAnchor - GlobalPosition;
+        var anchorDistance = toAnchor.Length();
 
-            SetCombatState(CombatUnitState.FollowingOwner);
-        }
-
-        if (CurrentState == CombatUnitState.FollowingOwner && distance <= stopFollowDistance)
+        if (anchorDistance <= Math.Max(0.0f, IdleAnchorTolerance))
         {
             SetCombatState(CombatUnitState.Idle);
             return false;
         }
 
         SetCombatState(CombatUnitState.FollowingOwner);
-        return MoveTowardOwner(toOwner, 1.0f);
+        return MoveTowardPosition(toAnchor, 1.0f);
     }
 
     private bool MoveTowardOwner(Vector2 toOwner, float speedMultiplier)
@@ -256,6 +253,59 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         return true;
     }
 
+    private bool MoveTowardPosition(Vector2 toPosition, float speedMultiplier)
+    {
+        if (toPosition == Vector2.Zero)
+            return false;
+
+        LastDirection = DirectionHelper.GetDirectionName(toPosition);
+        var walkAnimation = $"walk_{LastDirection}";
+        if (AnimatedSprite?.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
+            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
+        {
+            AnimatedSprite.Play(walkAnimation);
+        }
+
+        var movementMultiplier = Math.Max(0.0f, speedMultiplier);
+        Velocity = toPosition.Normalized() * MovementSpeed * movementMultiplier;
+        return true;
+    }
+
+    private Vector2 GetIdleAnchor()
+    {
+        if (_owner == null || !GodotObject.IsInstanceValid(_owner))
+            return GlobalPosition;
+
+        var ownerFacing = GetOwnerFacingDirection();
+        if (ownerFacing == Vector2.Zero)
+            ownerFacing = Vector2.Down;
+
+        var ownerForward = ownerFacing;
+        var ownerRight = new Vector2(-ownerForward.Y, ownerForward.X);
+        return _owner.GlobalPosition + (ownerRight * PreferredOwnerOffset.X) + ((-ownerForward) * PreferredOwnerOffset.Y);
+    }
+
+    private Vector2 GetOwnerFacingDirection()
+    {
+        if (_owner == null || !GodotObject.IsInstanceValid(_owner))
+            return Vector2.Down;
+
+        if (_owner is CharacterBody2D ownerBody && ownerBody.Velocity != Vector2.Zero)
+            return ownerBody.Velocity.Normalized();
+
+        var animatedSprite = _owner.GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
+        if (animatedSprite == null || animatedSprite.Animation.IsEmpty)
+            return Vector2.Down;
+
+        var animationName = animatedSprite.Animation.ToString();
+        if (!animationName.Contains('_'))
+            return Vector2.Down;
+
+        var facing = animationName[(animationName.LastIndexOf('_') + 1)..];
+        return DirectionHelper.GetDirectionVector(facing);
+    }
+
     private bool ShouldPrioritizeLeashReturn()
     {
         if (_owner == null || !GodotObject.IsInstanceValid(_owner) || !_owner.IsInsideTree())
@@ -264,7 +314,11 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (_owner == null)
             return false;
 
-        return GlobalPosition.DistanceTo(_owner.GlobalPosition) > Math.Max(LeashDistance, 0.0f);
+        var distanceToOwner = GlobalPosition.DistanceTo(_owner.GlobalPosition);
+        if (CurrentState == CombatUnitState.Leashing)
+            return distanceToOwner > Math.Max(LeashReturnDistance, 0.0f);
+
+        return distanceToOwner > Math.Max(LeashDistance, 0.0f);
     }
 
     private Node2D ResolveOwner()
