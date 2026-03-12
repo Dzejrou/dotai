@@ -72,7 +72,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         SetMovementSpeed(Speed);
         AddToGroup(CombatGroups.Allies);
         _owner = ResolveOwner();
-        ApplyOwnerCollisionException();
+        ApplyAllyCollisionExceptions();
         PlayIdleIfAvailable();
 
         if (AnimatedSprite != null)
@@ -98,13 +98,13 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     {
         if (_owner == owner)
         {
-            ApplyOwnerCollisionException();
+            ApplyAllyCollisionExceptions();
             return;
         }
 
         _owner = owner;
         _ownerCollisionExceptionApplied = false;
-        ApplyOwnerCollisionException();
+        ApplyAllyCollisionExceptions();
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -225,7 +225,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         {
             _owner = ResolveOwner();
             _ownerCollisionExceptionApplied = false;
-            ApplyOwnerCollisionException();
+            ApplyAllyCollisionExceptions();
         }
 
         if (_owner == null)
@@ -390,25 +390,26 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         return GetParent()?.GetNodeOrNull<Node2D>("Player");
     }
 
-    private void ApplyOwnerCollisionException()
+    private void ApplyAllyCollisionExceptions()
     {
         if (_ownerCollisionExceptionApplied)
             return;
 
-        if (!GodotObject.IsInstanceValid(_owner))
-            return;
-
-        if (_owner == null)
-            return;
-
-        if (_owner is not PhysicsBody2D ownerPhysicsBody)
+        if (GetTree() == null)
             return;
 
         if (this is not PhysicsBody2D summonPhysicsBody)
             return;
 
-        ownerPhysicsBody.AddCollisionExceptionWith(this);
-        summonPhysicsBody.AddCollisionExceptionWith(_owner);
+        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Allies))
+        {
+            if (node == this || node is not PhysicsBody2D allyPhysicsBody)
+                continue;
+
+            summonPhysicsBody.AddCollisionExceptionWith(allyPhysicsBody);
+            allyPhysicsBody.AddCollisionExceptionWith(summonPhysicsBody);
+        }
+
         _ownerCollisionExceptionApplied = true;
     }
 }
