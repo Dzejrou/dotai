@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c47bnjp8ugxap"]
 
-[ext_resource type="Script" path="res://scripts/actors/enemies/Skeleton.cs" id="1_8g1m3"]
+[ext_resource type="Script" uid="uid://bh7q0agjpycv1" path="res://scripts/actors/enemies/Skeleton.cs" id="1_8g1m3"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/skeleton_spriteframes.tres" id="2_skeleton_frames"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
@@ -14,10 +14,14 @@ script = ExtResource("1_8g1m3")
 Health = 10
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2100045633]
-sprite_frames = ExtResource("2_skeleton_frames")
-animation = &"breathing-idle_south"
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
+sprite_frames = ExtResource("2_skeleton_frames")
+animation = &"breathing-idle_south"
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1135505834]
+avoidance_enabled = true
+debug_enabled = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=434218639]
 position = Vector2(0, 12)

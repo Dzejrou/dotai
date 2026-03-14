@@ -216,15 +216,15 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         if (_isDead || SummonedSkeletonScene == null)
             return;
 
-        var summonedSkeleton = SummonedSkeletonScene.Instantiate<SummonedSkeleton>();
-        if (summonedSkeleton == null)
-            return;
-
         var parent = GetParent();
         if (parent == null)
             return;
 
         if (!CanSummonAdditionalSkeleton(parent))
+            return;
+
+        var summonedSkeleton = SummonedSkeletonScene.Instantiate<SummonedSkeleton>();
+        if (summonedSkeleton == null)
             return;
 
         var summonDirection = DirectionHelper.GetDirectionVector(_lastDirection);
@@ -244,7 +244,13 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         var count = 0;
         foreach (var node in parent.GetChildren())
         {
-            if (node is SummonedSkeleton summon && summon.IsOwnedBy(this))
+            if (node is not SummonedSkeleton summon)
+                continue;
+
+            if (!summon.IsInsideTree() || summon.IsQueuedForDeletion())
+                continue;
+
+            if (summon.IsOwnedBy(this) && summon.CanBeTargeted)
                 count++;
         }
 

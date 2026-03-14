@@ -26,7 +26,16 @@ public abstract partial class EnemyBase : CombatUnitBase
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
     {
-        InitializeCombatUnit(animatedSprite, collisionShape);
+        InitializeEnemy(animatedSprite, collisionShape, null, enemyName);
+    }
+
+    protected void InitializeEnemy(
+        AnimatedSprite2D animatedSprite,
+        CollisionShape2D collisionShape,
+        NavigationAgent2D navigationAgent,
+        string enemyName)
+    {
+        InitializeCombatUnit(animatedSprite, collisionShape, navigationAgent);
         AddToGroup(CombatGroups.Enemies);
         HomePosition = GlobalPosition;
 
@@ -123,22 +132,7 @@ public abstract partial class EnemyBase : CombatUnitBase
         if (IsAtHome())
             return false;
 
-        var toHome = HomePosition - GlobalPosition;
-        if (toHome == Vector2.Zero)
-            return false;
-
-        LastDirection = DirectionHelper.GetDirectionName(toHome);
-        var walkAnimation = $"walk_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
-            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
-        {
-            AnimatedSprite.Play(walkAnimation);
-        }
-
-        SetCombatState(CombatUnitState.ReturningHome);
-        Velocity = toHome.Normalized() * MovementSpeed;
-        return true;
+        return TryMoveTowardDestination(HomePosition, 1.0f, CombatUnitState.ReturningHome, delta);
     }
 
     protected bool TryFinalizeDeathAnimation() => TryFinalizeDeathAnimation(DeathAnimation);

@@ -55,6 +55,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
+            GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
             "SkeletonMage");
         SetMovementSpeed(Speed);
 
@@ -83,16 +84,18 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
         return distance >= MinimumRange && distance <= PreferredRange;
     }
 
-    protected override Vector2 GetDesiredMovementDirection(Vector2 toTarget, double delta)
+    protected override Vector2 GetDesiredMovementTarget(Vector2 targetPosition, double delta)
     {
+        var toTarget = targetPosition - GlobalPosition;
         var distance = toTarget.Length();
         if (toTarget == Vector2.Zero || (distance >= MinimumRange && distance <= PreferredRange))
-            return Vector2.Zero;
+            return GlobalPosition;
 
         if (distance > PreferredRange)
-            return toTarget.Normalized();
+            return targetPosition;
 
-        return -toTarget.Normalized();
+        var retreatDirection = toTarget == Vector2.Zero ? Vector2.Zero : -toTarget.Normalized();
+        return GlobalPosition + retreatDirection * Math.Max(PreferredRange, 0.0f);
     }
 
     protected override void StartAttack()

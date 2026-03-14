@@ -45,6 +45,18 @@ public partial class DebugSpawner : Node2D
         HidePlacementGhost();
     }
 
+    public override void _ExitTree()
+    {
+        _previewById.Clear();
+        _entriesById.Clear();
+        _orderedEntries.Clear();
+
+        if (_placementGhost != null)
+            _placementGhost.QueueFree();
+
+        _placementGhost = null;
+    }
+
     public override void _Process(double delta)
     {
         if (!HasPendingPlacement || _placementGhost == null)
