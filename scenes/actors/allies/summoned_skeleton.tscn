@@ -17,6 +17,8 @@ animation = &"breathing-idle_south"
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_q6f3w")

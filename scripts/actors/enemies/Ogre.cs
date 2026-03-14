@@ -44,6 +44,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
+            GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
             "Ogre");
         SetMovementSpeed(Speed);
 

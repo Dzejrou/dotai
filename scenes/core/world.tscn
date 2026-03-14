@@ -1,32 +1,53 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://cnpc2ij535kmo"]
 
-[ext_resource type="PackedScene" path="res://scenes/actors/player/player.tscn" id="1_k6v4i"]
-[ext_resource type="Texture2D" path="res://assets/world/rock.png" id="2_qx8h3"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton.tscn" id="3_3w8xk"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/ogre.tscn" id="5_ogre"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="6_skeleton_mage"]
-[ext_resource type="Script" path="res://scripts/core/World.cs" id="5_qx7qz"]
-[ext_resource type="Script" path="res://scripts/core/DebugSpawner.cs" id="6_debug_spawner"]
-[ext_resource type="Resource" path="res://resources/debug/spawn_catalog.tres" id="7_spawn_catalog"]
+[ext_resource type="PackedScene" uid="uid://7r3kh3tx2max" path="res://scenes/actors/player/player.tscn" id="1_k6v4i"]
+[ext_resource type="Texture2D" uid="uid://cdnobkte5yigl" path="res://assets/world/rock.png" id="2_qx8h3"]
+[ext_resource type="Script" uid="uid://dhkp7bkox0i6e" path="res://scripts/core/World.cs" id="5_qx7qz"]
+[ext_resource type="Script" uid="uid://47bka353y2ms" path="res://scripts/core/DebugSpawner.cs" id="6_debug_spawner"]
+[ext_resource type="Resource" uid="uid://dywxbx4vl0ax3" path="res://resources/debug/spawn_catalog.tres" id="7_spawn_catalog"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_world_navigation"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_z8t4t"]
 size = Vector2(54, 38)
 
-[node name="World" type="Node2D"]
+[node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("5_qx7qz")
+NavigationBlockerPaths = Array[NodePath]([NodePath("Rock"), NodePath("Rock2"), NodePath("Rock3")])
 
-[node name="Player" parent="." instance=ExtResource("1_k6v4i")]
+[node name="WorldNavigation" type="NavigationRegion2D" parent="." unique_id=367567325]
+navigation_polygon = SubResource("NavigationPolygon_world_navigation")
+
+[node name="Player" parent="." unique_id=643983542 instance=ExtResource("1_k6v4i")]
 position = Vector2(120, 120)
 
-[node name="DebugSpawner" type="Node2D" parent="."]
+[node name="DebugSpawner" type="Node2D" parent="." unique_id=59067455]
 script = ExtResource("6_debug_spawner")
 SpawnCatalog = ExtResource("7_spawn_catalog")
 
-[node name="Rock" type="StaticBody2D" parent="."]
+[node name="Rock" type="StaticBody2D" parent="." unique_id=711250312]
 position = Vector2(260, 200)
 
-[node name="RockSprite" type="Sprite2D" parent="Rock"]
+[node name="RockSprite" type="Sprite2D" parent="Rock" unique_id=644038065]
 texture = ExtResource("2_qx8h3")
 
-[node name="RockCollision" type="CollisionShape2D" parent="Rock"]
+[node name="RockCollision" type="CollisionShape2D" parent="Rock" unique_id=1405027392]
+shape = SubResource("RectangleShape2D_z8t4t")
+
+[node name="Rock2" type="StaticBody2D" parent="." unique_id=1096967789]
+position = Vector2(184, 51)
+
+[node name="RockSprite" type="Sprite2D" parent="Rock2" unique_id=1894400947]
+texture = ExtResource("2_qx8h3")
+
+[node name="RockCollision" type="CollisionShape2D" parent="Rock2" unique_id=146010539]
+shape = SubResource("RectangleShape2D_z8t4t")
+
+[node name="Rock3" type="StaticBody2D" parent="." unique_id=443736387]
+position = Vector2(52, 174)
+
+[node name="RockSprite" type="Sprite2D" parent="Rock3" unique_id=1609034016]
+texture = ExtResource("2_qx8h3")
+
+[node name="RockCollision" type="CollisionShape2D" parent="Rock3" unique_id=1905583252]
 shape = SubResource("RectangleShape2D_z8t4t")

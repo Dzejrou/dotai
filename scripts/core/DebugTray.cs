@@ -57,6 +57,15 @@ public partial class DebugTray : Control
             if (button != null)
                 button.GuiInput -= handler;
         }
+
+        if (_cardsContainer != null)
+        {
+            foreach (var child in _cardsContainer.GetChildren())
+                child.QueueFree();
+        }
+
+        _cardsById.Clear();
+        _cardInputHandlers.Clear();
     }
 
     public override void _Input(InputEvent @event)

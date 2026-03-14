@@ -59,6 +59,8 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private int _currentHealth;
     private bool _isDead;
     private bool _ownerCollisionExceptionApplied;
+    private bool _deathFallbackQueued;
+    private const float DeathFallbackDelay = 2.0f;
     private const int MaxFormationSlots = 4;
 
     public bool CanBeTargeted => !_isDead;
@@ -68,7 +70,8 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         _currentHealth = Math.Max(1, Health);
         InitializeCombatUnit(
             GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"),
-            GetNodeOrNull<CollisionShape2D>("CollisionShape2D"));
+            GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
+            GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
         AddToGroup(CombatGroups.Allies);
         _owner = ResolveOwner();
@@ -89,6 +92,12 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         base._PhysicsProcess(delta);
     }
 
+    public override void _ExitTree()
+    {
+        _deathFallbackQueued = false;
+        ClearAllyCollisionExceptions();
+    }
+
     public bool IsOwnedBy(Node2D owner)
     {
         return owner != null && _owner == owner;
@@ -98,13 +107,15 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     {
         if (_owner == owner)
         {
-            ApplyAllyCollisionExceptions();
+            if (IsInsideTree())
+                ApplyAllyCollisionExceptions();
             return;
         }
 
         _owner = owner;
         _ownerCollisionExceptionApplied = false;
-        ApplyAllyCollisionExceptions();
+        if (IsInsideTree())
+            ApplyAllyCollisionExceptions();
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -207,7 +218,11 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             return;
         }
 
-        TryFinalizeDeathAnimation(DeathAnimation);
+        if (TryFinalizeDeathAnimation(DeathAnimation))
+        {
+            ClearAllyCollisionExceptions();
+            QueueFree();
+        }
     }
 
     private void StartDeath()
@@ -216,7 +231,29 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         MarkDead();
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
-        TryPlayDeathAnimation(DeathAnimation, DisableCollisionOnDeath);
+        ClearAllyCollisionExceptions();
+        if (NavigationAgent != null)
+            NavigationAgent.SetPhysicsProcess(false);
+        TryPlayDeathAnimation(DeathAnimation, DisableCollisionOnDeath, queueFreeOnMissingAnimation: true);
+        ScheduleDeathCleanupFallback();
+    }
+
+    private void ScheduleDeathCleanupFallback()
+    {
+        if (_deathFallbackQueued || GetTree() == null || !IsInsideTree())
+            return;
+
+        _deathFallbackQueued = true;
+        var timer = GetTree().CreateTimer(DeathFallbackDelay);
+        timer.Timeout += OnDeathCleanupTimeout;
+    }
+
+    private void OnDeathCleanupTimeout()
+    {
+        if (!IsInstanceValid(this) || IsQueuedForDeletion())
+            return;
+
+        QueueFree();
     }
 
     protected override bool HandleNoTarget(double delta)
@@ -231,8 +268,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (_owner == null)
             return false;
 
-        var toOwner = _owner.GlobalPosition - GlobalPosition;
-        var distance = toOwner.Length();
+        var distance = (_owner.GlobalPosition - GlobalPosition).Length();
         var startLeashDistance = Math.Max(LeashDistance, 0.0f);
         var stopLeashDistance = Math.Clamp(LeashReturnDistance, 0.0f, startLeashDistance);
 
@@ -244,8 +280,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
         if (CurrentState == CombatUnitState.Leashing)
         {
-            SetCombatState(CombatUnitState.Leashing);
-            return MoveTowardOwner(toOwner, LeashCatchupSpeedMultiplier);
+            return TryMoveTowardDestination(_owner.GlobalPosition, LeashCatchupSpeedMultiplier, CombatUnitState.Leashing, delta);
         }
 
         var idleAnchor = GetIdleAnchor();
@@ -258,46 +293,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             return false;
         }
 
-        SetCombatState(CombatUnitState.FollowingOwner);
-        return MoveTowardPosition(toAnchor, 1.0f);
-    }
-
-    private bool MoveTowardOwner(Vector2 toOwner, float speedMultiplier)
-    {
-        if (toOwner == Vector2.Zero)
-            return false;
-
-        LastDirection = DirectionHelper.GetDirectionName(toOwner);
-        var walkAnimation = $"walk_{LastDirection}";
-        if (AnimatedSprite?.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
-            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
-        {
-            AnimatedSprite.Play(walkAnimation);
-        }
-
-        var movementMultiplier = Math.Max(0.0f, speedMultiplier);
-        Velocity = toOwner.Normalized() * MovementSpeed * movementMultiplier;
-        return true;
-    }
-
-    private bool MoveTowardPosition(Vector2 toPosition, float speedMultiplier)
-    {
-        if (toPosition == Vector2.Zero)
-            return false;
-
-        LastDirection = DirectionHelper.GetDirectionName(toPosition);
-        var walkAnimation = $"walk_{LastDirection}";
-        if (AnimatedSprite?.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
-            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
-        {
-            AnimatedSprite.Play(walkAnimation);
-        }
-
-        var movementMultiplier = Math.Max(0.0f, speedMultiplier);
-        Velocity = toPosition.Normalized() * MovementSpeed * movementMultiplier;
-        return true;
+        return TryMoveTowardDestination(idleAnchor, 1.0f, CombatUnitState.FollowingOwner, delta);
     }
 
     private Vector2 GetIdleAnchor()
@@ -395,7 +391,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (_ownerCollisionExceptionApplied)
             return;
 
-        if (GetTree() == null)
+        if (!IsInsideTree() || GetTree() == null)
             return;
 
         if (this is not PhysicsBody2D summonPhysicsBody)
@@ -403,7 +399,10 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
         foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Allies))
         {
-            if (node == this || node is not PhysicsBody2D allyPhysicsBody)
+            if (node == this ||
+                node is not PhysicsBody2D allyPhysicsBody ||
+                !GodotObject.IsInstanceValid(allyPhysicsBody) ||
+                !allyPhysicsBody.IsInsideTree())
                 continue;
 
             summonPhysicsBody.AddCollisionExceptionWith(allyPhysicsBody);
@@ -411,5 +410,29 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         }
 
         _ownerCollisionExceptionApplied = true;
+    }
+
+    private void ClearAllyCollisionExceptions()
+    {
+        if (this is not PhysicsBody2D summonPhysicsBody)
+            return;
+
+        var tree = GetTree();
+        if (tree == null)
+            return;
+
+        foreach (var node in tree.GetNodesInGroup(CombatGroups.Allies))
+        {
+            if (node == this ||
+                node is not PhysicsBody2D allyPhysicsBody ||
+                !GodotObject.IsInstanceValid(allyPhysicsBody) ||
+                !allyPhysicsBody.IsInsideTree())
+                continue;
+
+            summonPhysicsBody.RemoveCollisionExceptionWith(allyPhysicsBody);
+            allyPhysicsBody.RemoveCollisionExceptionWith(summonPhysicsBody);
+        }
+
+        _ownerCollisionExceptionApplied = false;
     }
 }

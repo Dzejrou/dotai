@@ -4,17 +4,35 @@ using System;
 
 public abstract partial class CombatUnitBase : CharacterBody2D
 {
+    private const float NavigationTargetUpdateThreshold = 8.0f;
+    private const float DefaultPathDesiredDistance = 6.0f;
+    private const float DefaultTargetDesiredDistance = 8.0f;
+
     protected AnimatedSprite2D AnimatedSprite { get; private set; }
     protected CollisionShape2D CollisionShape { get; private set; }
+    protected NavigationAgent2D NavigationAgent { get; private set; }
     protected Node2D CurrentTarget { get; private set; }
     protected float MovementSpeed { get; private set; } = 1.0f;
     protected string LastDirection { get; set; } = "south";
     public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
-    protected void InitializeCombatUnit(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape)
+    private bool _hasNavigationDestination;
+    private Vector2 _lastNavigationDestination;
+
+    protected void InitializeCombatUnit(
+        AnimatedSprite2D animatedSprite,
+        CollisionShape2D collisionShape,
+        NavigationAgent2D navigationAgent = null)
     {
         AnimatedSprite = animatedSprite;
         CollisionShape = collisionShape;
+        NavigationAgent = navigationAgent;
+
+        if (NavigationAgent != null)
+        {
+            NavigationAgent.PathDesiredDistance = DefaultPathDesiredDistance;
+            NavigationAgent.TargetDesiredDistance = DefaultTargetDesiredDistance;
+        }
     }
 
     protected void SetMovementSpeed(float speed)
@@ -75,6 +93,7 @@ public abstract partial class CombatUnitBase : CharacterBody2D
             return;
 
         var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
+        var desiredMovementTarget = GetDesiredMovementTarget(CurrentTarget.GlobalPosition, delta);
 
         if (CurrentState == CombatUnitState.Attacking)
         {
@@ -103,24 +122,12 @@ public abstract partial class CombatUnitBase : CharacterBody2D
 
         SetCombatState(CombatUnitState.PursuingTarget);
 
-        var desiredDirection = GetDesiredMovementDirection(toTarget, delta);
-        if (desiredDirection == Vector2.Zero)
+        if (!TryMoveTowardDestination(desiredMovementTarget, 1.0f, CombatUnitState.PursuingTarget, delta))
         {
             Velocity = Vector2.Zero;
             PlayIdleIfAvailable();
             return;
         }
-
-        LastDirection = DirectionHelper.GetDirectionName(desiredDirection);
-        var walkAnimation = $"walk_{LastDirection}";
-        if (AnimatedSprite?.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
-            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
-        {
-            AnimatedSprite.Play(walkAnimation);
-        }
-
-        Velocity = desiredDirection * MovementSpeed;
         MoveAndSlide();
     }
 
@@ -179,12 +186,63 @@ public abstract partial class CombatUnitBase : CharacterBody2D
 
     protected virtual void PrePhysicsProcess(double delta) { }
 
-    protected virtual Vector2 GetDesiredMovementDirection(Vector2 toTarget, double delta)
-    {
-        if (toTarget == Vector2.Zero)
-            return Vector2.Zero;
+    protected virtual Vector2 GetDesiredMovementTarget(Vector2 targetPosition, double delta) => targetPosition;
 
-        return toTarget.Normalized();
+    protected Vector2 ResolveMovementDirection(Vector2 desiredDestination, double delta)
+    {
+        if (desiredDestination == GlobalPosition)
+        {
+            ResetNavigationPathState();
+            return Vector2.Zero;
+        }
+
+        var agentInsideTree = NavigationAgent != null && NavigationAgent.IsInsideTree();
+        if (!agentInsideTree)
+        {
+            ResetNavigationPathState();
+            return desiredDestination - GlobalPosition;
+        }
+
+        var navigationMapValid = NavigationAgent.GetNavigationMap().IsValid;
+        if (!navigationMapValid)
+        {
+            ResetNavigationPathState();
+            return desiredDestination - GlobalPosition;
+        }
+
+        if (ShouldRefreshNavigationTarget(desiredDestination))
+            RefreshNavigationTarget(desiredDestination);
+
+        var nextPathPosition = NavigationAgent.GetNextPathPosition();
+
+        var movementToPath = nextPathPosition - GlobalPosition;
+        if (movementToPath == Vector2.Zero)
+            movementToPath = desiredDestination - GlobalPosition;
+
+        return movementToPath;
+    }
+
+    protected bool TryMoveTowardDestination(Vector2 destinationPosition, float speedMultiplier, CombatUnitState movingState, double delta)
+    {
+        var movement = ResolveMovementDirection(destinationPosition, delta);
+        if (movement == Vector2.Zero)
+            return false;
+
+        SetCombatState(movingState);
+
+        var normalizedMovement = movement.Normalized();
+        LastDirection = DirectionHelper.GetDirectionName(normalizedMovement);
+        var walkAnimation = $"walk_{LastDirection}";
+        if (AnimatedSprite?.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
+            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
+        {
+            AnimatedSprite.Play(walkAnimation);
+        }
+
+        var movementMultiplier = Math.Max(0.0f, speedMultiplier);
+        Velocity = normalizedMovement * MovementSpeed * movementMultiplier;
+        return true;
     }
 
     protected abstract void AcquireTarget();
@@ -196,6 +254,32 @@ public abstract partial class CombatUnitBase : CharacterBody2D
     protected virtual bool ShouldStayEngaged(Vector2 toTarget, double delta) => false;
 
     protected virtual bool HandleNoTarget(double delta) => false;
+
+    private bool ShouldRefreshNavigationTarget(Vector2 desiredDestination)
+    {
+        if (!_hasNavigationDestination)
+            return true;
+
+        if (_lastNavigationDestination.DistanceTo(desiredDestination) > NavigationTargetUpdateThreshold)
+            return true;
+
+        return false;
+    }
+
+    private void RefreshNavigationTarget(Vector2 desiredDestination)
+    {
+        if (NavigationAgent == null)
+            return;
+
+        NavigationAgent.TargetPosition = desiredDestination;
+        _hasNavigationDestination = true;
+        _lastNavigationDestination = desiredDestination;
+    }
+
+    private void ResetNavigationPathState()
+    {
+        _hasNavigationDestination = false;
+    }
 
     private bool TryEnsureActiveTarget(double delta)
     {
@@ -211,6 +295,7 @@ public abstract partial class CombatUnitBase : CharacterBody2D
                     return false;
                 }
 
+                ResetNavigationPathState();
                 SetCombatState(CombatUnitState.Idle);
                 Velocity = Vector2.Zero;
                 PlayIdleIfAvailable();

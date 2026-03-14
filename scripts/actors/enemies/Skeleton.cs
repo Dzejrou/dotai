@@ -31,6 +31,7 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
+            GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
             "Skeleton");
         SetMovementSpeed(Speed);
         PlayIdleIfAvailable();
