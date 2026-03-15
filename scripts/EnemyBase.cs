@@ -7,6 +7,8 @@ public abstract partial class EnemyBase : CombatUnitBase
     private const float PursuitStuckProgressThreshold = 1.0f;
     private const float PursuitStuckTimeout = 0.6f;
     private const float PursuitStuckWaypointDistance = 8.0f;
+    private static readonly Vector2 EnemyHealthLabelOffset = new Vector2(-24.0f, -36.0f);
+    private static readonly Vector2 EnemyHealthLabelSize = new Vector2(48.0f, 16.0f);
 
     [Export]
     public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
@@ -48,6 +50,7 @@ public abstract partial class EnemyBase : CombatUnitBase
     private Node2D _trackedPursuitTarget;
     private bool _suppressTargetAcquisitionUntilHome;
     private float _returnHomeRegenerationTimer;
+    private Label _healthLabel;
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
     {
@@ -65,6 +68,8 @@ public abstract partial class EnemyBase : CombatUnitBase
         IsDead = false;
         AddToGroup(CombatGroups.Enemies);
         HomePosition = GlobalPosition;
+        EnsureHealthLabel();
+        UpdateHealthLabel();
 
         var resolvedTarget = CurrentTarget;
         if (resolvedTarget == null)
@@ -207,7 +212,7 @@ public abstract partial class EnemyBase : CombatUnitBase
             return false;
 
         damage = Math.Max(1, damageInfo.Amount);
-        CurrentHealth = Math.Max(0, CurrentHealth - damage);
+        SetCurrentHealth(Math.Max(0, CurrentHealth - damage));
         died = CurrentHealth <= 0;
         if (died)
             IsDead = true;
@@ -324,8 +329,43 @@ public abstract partial class EnemyBase : CombatUnitBase
         if (healAmount <= 0)
             return;
 
-        CurrentHealth = Math.Min(ResolvedMaxHealth, CurrentHealth + healAmount);
+        SetCurrentHealth(Math.Min(ResolvedMaxHealth, CurrentHealth + healAmount));
         ShowFloatingHealingNumber(healAmount);
+    }
+
+    private void EnsureHealthLabel()
+    {
+        if (_healthLabel != null)
+            return;
+
+        _healthLabel = new Label
+        {
+            Name = "HealthLabel",
+            Position = EnemyHealthLabelOffset,
+            Size = EnemyHealthLabelSize,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ZIndex = 10
+        };
+        _healthLabel.AddThemeFontSizeOverride("font_size", 12);
+        _healthLabel.AddThemeColorOverride("font_color", Colors.White);
+        _healthLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
+        _healthLabel.AddThemeConstantOverride("outline_size", 2);
+        AddChild(_healthLabel);
+    }
+
+    private void SetCurrentHealth(int value)
+    {
+        CurrentHealth = Math.Clamp(value, 0, ResolvedMaxHealth);
+        UpdateHealthLabel();
+    }
+
+    private void UpdateHealthLabel()
+    {
+        if (_healthLabel == null)
+            return;
+
+        _healthLabel.Text = $"{CurrentHealth}/{ResolvedMaxHealth}";
     }
 
     protected void ShowFloatingHealingNumber(int amount)
