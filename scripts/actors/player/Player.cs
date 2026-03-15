@@ -78,6 +78,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
     private bool _isAttacking;
     private float _healthRegenTimer;
     private float _healthRegenDelayTimer;
+    private PlayerTargetMarker _targetMarker;
 
     public int CurrentHealth => _health;
     public bool CanBeTargeted => !_isDead;
@@ -90,6 +91,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Allies);
+        _targetMarker = new PlayerTargetMarker();
+        AddChild(_targetMarker);
 
         EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
     }
@@ -282,6 +285,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         {
             _isDead = true;
             Targeting.ClearAllTargets();
+            UpdateTargetMarker();
             EmitSignal(SignalName.PlayerDied);
             QueueFree();
         }
@@ -329,6 +333,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
             Targeting.SetSoftTarget(bestTarget);
         else
             Targeting.ClearSoftTarget();
+
+        UpdateTargetMarker();
     }
 
     private static bool IsValidSoftTargetCandidate(Node node, out Node2D targetNode)
@@ -343,6 +349,18 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
         targetNode = node2D;
         return true;
+    }
+
+    private void UpdateTargetMarker()
+    {
+        if (_targetMarker == null)
+            return;
+
+        var activeTarget = Targeting.ActiveTarget;
+        if (activeTarget != null && IsInstanceValid(activeTarget) && activeTarget.IsInsideTree())
+            _targetMarker.SetTarget(activeTarget);
+        else
+            _targetMarker.ClearTarget();
     }
 
     private void ApplySlashDamage()
