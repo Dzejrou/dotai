@@ -66,6 +66,7 @@ public abstract partial class EnemyBase : CombatUnitBase
     private Node2D _trackedPursuitTarget;
     private bool _suppressTargetAcquisitionUntilHome;
     private float _returnHomeRegenerationTimer;
+    private float _rangedAttackCooldownTimer;
     private RegenerationPhase _regenerationPhase;
     private Label _healthLabel;
 
@@ -186,6 +187,83 @@ public abstract partial class EnemyBase : CombatUnitBase
     protected void ShowFloatingDamageNumber(string text, Color color)
     {
         FloatingNumberHelper.ShowFloatingNumber(this, text, color);
+    }
+
+    protected bool CanUseRangedAttack(Vector2 toTarget, double delta, float attackCooldown, float minimumRange, float maximumRange)
+    {
+        if (_rangedAttackCooldownTimer > 0.0f)
+        {
+            _rangedAttackCooldownTimer -= (float)delta;
+            return false;
+        }
+
+        var resolvedMinimumRange = Math.Max(0.0f, minimumRange);
+        var resolvedMaximumRange = Math.Max(resolvedMinimumRange, maximumRange);
+        var distance = toTarget.Length();
+        return distance >= resolvedMinimumRange && distance <= resolvedMaximumRange;
+    }
+
+    protected void ResetRangedAttackCooldown()
+    {
+        _rangedAttackCooldownTimer = 0.0f;
+    }
+
+    protected bool TryStartRangedProjectileAttack(
+        PackedScene projectileScene,
+        StringName attackAnimation,
+        float attackCooldown,
+        int projectileDamage,
+        float projectileSpeed,
+        float projectileLifetime,
+        float projectileMaxTravelDistance,
+        string projectileTargetGroup)
+    {
+        if (projectileScene == null)
+            return false;
+
+        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
+        {
+            ClearTarget();
+            ResetRangedAttackCooldown();
+            return false;
+        }
+
+        if (CurrentTarget is not ITargetable targetable || !targetable.CanBeTargeted)
+        {
+            ClearTarget();
+            ResetRangedAttackCooldown();
+            return false;
+        }
+
+        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
+        if (toTarget != Vector2.Zero)
+            LastDirection = DirectionHelper.GetDirectionName(toTarget);
+
+        SetCombatState(CombatUnitState.Attacking);
+        _rangedAttackCooldownTimer = Math.Max(0.0f, attackCooldown);
+
+        var projectileDirection = toTarget != Vector2.Zero ? toTarget.Normalized() : DirectionHelper.GetDirectionVector(LastDirection);
+        var attackAnimationName = $"{attackAnimation}_{LastDirection}";
+        if (AnimatedSprite?.SpriteFrames != null &&
+            AnimatedSprite.SpriteFrames.HasAnimation(attackAnimationName) &&
+            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimationName) > 0)
+        {
+            AnimatedSprite.Play(attackAnimationName);
+        }
+        else
+        {
+            SetCombatState(CombatUnitState.PursuingTarget);
+        }
+
+        LaunchEnemyProjectile(
+            projectileScene,
+            projectileDirection,
+            projectileDamage,
+            projectileSpeed,
+            projectileLifetime,
+            projectileMaxTravelDistance,
+            projectileTargetGroup);
+        return true;
     }
 
     protected bool IsAtHome()
@@ -421,6 +499,35 @@ public abstract partial class EnemyBase : CombatUnitBase
             return;
 
         FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+    }
+
+    private void LaunchEnemyProjectile(
+        PackedScene projectileScene,
+        Vector2 direction,
+        int projectileDamage,
+        float projectileSpeed,
+        float projectileLifetime,
+        float projectileMaxTravelDistance,
+        string projectileTargetGroup)
+    {
+        var projectile = projectileScene.Instantiate<Projectile>();
+        if (projectile == null)
+            return;
+
+        var parent = GetParent();
+        if (parent == null)
+            return;
+
+        projectile.GlobalPosition = GlobalPosition;
+        parent.AddChild(projectile);
+        projectile.Initialize(
+            direction,
+            this,
+            projectileDamage,
+            projectileSpeed,
+            projectileLifetime,
+            projectileMaxTravelDistance,
+            projectileTargetGroup);
     }
 
     protected abstract int MaxHealthValue { get; }

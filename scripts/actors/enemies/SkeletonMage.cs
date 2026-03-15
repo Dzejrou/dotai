@@ -41,7 +41,6 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
     [Export]
     public float ProjectileMaxTravelDistance { get; set; } = 320.0f;
 
-    private float _attackCooldownTimer;
     public bool CanBeTargeted => !IsDead;
 
     public override void _Ready()
@@ -70,14 +69,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
 
     protected override bool CanAttackNow(Vector2 toTarget, double delta)
     {
-        if (_attackCooldownTimer > 0.0f)
-        {
-            _attackCooldownTimer -= (float)delta;
-            return false;
-        }
-
-        var distance = toTarget.Length();
-        return distance >= MinimumRange && distance <= PreferredRange;
+        return CanUseRangedAttack(toTarget, delta, AttackCooldown, MinimumRange, PreferredRange);
     }
 
     protected override Vector2 GetDesiredMovementTarget(Vector2 targetPosition, double delta)
@@ -96,41 +88,18 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
 
     protected override void StartAttack()
     {
-        if (IsDead || ProjectileScene == null)
+        if (IsDead)
             return;
 
-        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        if (CurrentTarget is not ITargetable targetable || !targetable.CanBeTargeted)
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        SetCombatState(CombatUnitState.Attacking);
-        _attackCooldownTimer = AttackCooldown;
-
-        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
-        var projectileDirection = toTarget != Vector2.Zero ? toTarget.Normalized() : DirectionHelper.GetDirectionVector(LastDirection);
-
-        var spawnAttackAnimation = $"{AttackAnimation}_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames == null ||
-            !AnimatedSprite.SpriteFrames.HasAnimation(spawnAttackAnimation) ||
-            AnimatedSprite.SpriteFrames.GetFrameCount(spawnAttackAnimation) == 0)
-        {
-            SetCombatState(CombatUnitState.PursuingTarget);
-            LaunchProjectile(projectileDirection);
-            return;
-        }
-
-        AnimatedSprite.Play(spawnAttackAnimation);
-        LaunchProjectile(projectileDirection);
+        TryStartRangedProjectileAttack(
+            ProjectileScene,
+            AttackAnimation,
+            AttackCooldown,
+            ProjectileDamage,
+            ProjectileSpeed,
+            ProjectileLifetime,
+            ProjectileMaxTravelDistance,
+            CombatGroups.Allies);
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -158,30 +127,8 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
     {
         MarkDead();
         Velocity = Vector2.Zero;
-        _attackCooldownTimer = 0.0f;
+        ResetRangedAttackCooldown();
         TryPlayDeathAnimation();
-    }
-
-    private void LaunchProjectile(Vector2 direction)
-    {
-        var projectile = ProjectileScene?.Instantiate<Projectile>();
-        if (projectile == null)
-            return;
-
-        var parent = GetParent();
-        if (parent == null)
-            return;
-
-        projectile.GlobalPosition = GlobalPosition;
-        parent.AddChild(projectile);
-        projectile.Initialize(
-            direction,
-            this,
-            ProjectileDamage,
-            ProjectileSpeed,
-            ProjectileLifetime,
-            ProjectileMaxTravelDistance,
-            CombatGroups.Allies);
     }
 
     protected override int MaxHealthValue => Health;
