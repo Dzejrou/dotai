@@ -65,6 +65,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
     [Export]
     public int MaxSummonedSkeletonsPerOwner { get; set; } = 4;
 
+    [Export]
+    public float SoftTargetRange { get; set; } = 180.0f;
+
     private int _health;
     private bool _isDead;
     private AnimatedSprite2D _animatedSprite;
@@ -115,6 +118,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
         if (_isAttacking)
         {
+            UpdateSoftTarget();
             Velocity = Vector2.Zero;
             ApplySlashDamage();
             return;
@@ -128,12 +132,14 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
             if (direction != Vector2.Zero)
                 _lastDirection = DirectionHelper.GetDirectionName(direction);
 
+            UpdateSoftTarget();
             StartAttack();
             return;
         }
 
         if (direction == Vector2.Zero)
         {
+            UpdateSoftTarget();
             Velocity = Vector2.Zero;
             SetAnimationSafe(GetIdleAnimationName());
             return;
@@ -145,6 +151,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         var moveSpeed = isSprinting ? Speed * 2.0f : Speed;
         Velocity = direction * moveSpeed;
         MoveAndSlide();
+        UpdateSoftTarget();
 
         var animationName = $"walk_{_lastDirection}";
         if (_animatedSprite.Animation != animationName)
@@ -274,9 +281,68 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         if (_health <= 0)
         {
             _isDead = true;
+            Targeting.ClearAllTargets();
             EmitSignal(SignalName.PlayerDied);
             QueueFree();
         }
+    }
+
+    private void UpdateSoftTarget()
+    {
+        var softTargetRange = Math.Max(0.0f, SoftTargetRange);
+        if (softTargetRange <= 0.0f)
+        {
+            Targeting.ClearSoftTarget();
+            return;
+        }
+
+        var facingDirection = DirectionHelper.GetDirectionVector(_lastDirection);
+        if (facingDirection == Vector2.Zero)
+            facingDirection = Vector2.Down;
+
+        Node2D bestTarget = null;
+        var bestScore = float.NegativeInfinity;
+
+        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Enemies))
+        {
+            if (!IsValidSoftTargetCandidate(node, out var targetNode))
+                continue;
+
+            var toTarget = targetNode.GlobalPosition - GlobalPosition;
+            var distance = toTarget.Length();
+            if (distance <= 0.0f || distance > softTargetRange)
+                continue;
+
+            var alignment = facingDirection.Dot(toTarget.Normalized());
+            var distanceScore = 1.0f - (distance / softTargetRange);
+            var alignmentScore = (alignment + 1.0f) * 0.5f;
+            var score = (alignmentScore * 0.65f) + (distanceScore * 0.35f);
+
+            if (score <= bestScore)
+                continue;
+
+            bestScore = score;
+            bestTarget = targetNode;
+        }
+
+        if (bestTarget != null)
+            Targeting.SetSoftTarget(bestTarget);
+        else
+            Targeting.ClearSoftTarget();
+    }
+
+    private static bool IsValidSoftTargetCandidate(Node node, out Node2D targetNode)
+    {
+        targetNode = null;
+
+        if (!IsInstanceValid(node) || node is not Node2D node2D || !node2D.IsInsideTree())
+            return false;
+
+        if (node is not IAttackable || node is not ITargetable targetable || !targetable.CanBeTargeted)
+            return false;
+
+        targetNode = node2D;
+        return true;
     }
 
     private void ApplySlashDamage()
