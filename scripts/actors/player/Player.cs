@@ -108,7 +108,11 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         HandleHealthRegenerationDelay((float)delta);
         HandleHealthRegeneration((float)delta);
         if (Input.IsActionJustPressed("tab_target"))
-            CycleTabTarget();
+            CycleTabTarget(1);
+        if (Input.IsActionJustPressed("tab_target_reverse"))
+            CycleTabTarget(-1);
+        if (Input.IsActionJustPressed("clear_tab_target"))
+            ClearTabTarget();
         if (Input.IsActionJustPressed("cast_spell"))
             CastFireball();
         if (Input.IsActionJustPressed("summon_skeleton"))
@@ -365,13 +369,18 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         return true;
     }
 
-    private void CycleTabTarget()
+    private void ClearTabTarget()
+    {
+        Targeting.ClearTabTarget();
+        UpdateTargetMarker();
+    }
+
+    private void CycleTabTarget(int direction)
     {
         var candidates = GetTabTargetCandidates();
         if (candidates.Count == 0)
         {
-            Targeting.ClearTabTarget();
-            UpdateTargetMarker();
+            ClearTabTarget();
             return;
         }
 
@@ -379,19 +388,20 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         var currentIndex = candidates.IndexOf(currentTabTarget);
         if (currentIndex < 0)
         {
-            Targeting.SetTabTarget(candidates[0]);
+            var initialIndex = direction < 0 ? candidates.Count - 1 : 0;
+            Targeting.SetTabTarget(candidates[initialIndex]);
             UpdateTargetMarker();
             return;
         }
 
         if (candidates.Count == 1)
         {
-            Targeting.ClearTabTarget();
-            UpdateTargetMarker();
+            ClearTabTarget();
             return;
         }
 
-        var nextIndex = (currentIndex + 1) % candidates.Count;
+        var step = direction < 0 ? -1 : 1;
+        var nextIndex = (currentIndex + step + candidates.Count) % candidates.Count;
         Targeting.SetTabTarget(candidates[nextIndex]);
         UpdateTargetMarker();
     }
