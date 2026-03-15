@@ -12,8 +12,11 @@ public abstract partial class CombatUnitBase : CharacterBody2D
     protected CollisionShape2D CollisionShape { get; private set; }
     protected NavigationAgent2D NavigationAgent { get; private set; }
     protected Node2D CurrentTarget { get; private set; }
+    protected bool IsUsingNavigationPath { get; private set; }
+    protected Vector2 LastNavigationPathPosition { get; private set; }
     protected float MovementSpeed { get; private set; } = 1.0f;
     protected string LastDirection { get; set; } = "south";
+    [Export]
     public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
     private bool _hasNavigationDestination;
@@ -214,6 +217,8 @@ public abstract partial class CombatUnitBase : CharacterBody2D
             RefreshNavigationTarget(desiredDestination);
 
         var nextPathPosition = NavigationAgent.GetNextPathPosition();
+        IsUsingNavigationPath = true;
+        LastNavigationPathPosition = nextPathPosition;
 
         var movementToPath = nextPathPosition - GlobalPosition;
         if (movementToPath == Vector2.Zero)
@@ -279,6 +284,8 @@ public abstract partial class CombatUnitBase : CharacterBody2D
     private void ResetNavigationPathState()
     {
         _hasNavigationDestination = false;
+        IsUsingNavigationPath = false;
+        LastNavigationPathPosition = Vector2.Zero;
     }
 
     private bool TryEnsureActiveTarget(double delta)

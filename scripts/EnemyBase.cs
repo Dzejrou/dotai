@@ -4,6 +4,10 @@ using System;
 
 public abstract partial class EnemyBase : CombatUnitBase
 {
+    private const float PursuitStuckProgressThreshold = 1.0f;
+    private const float PursuitStuckTimeout = 0.6f;
+    private const float PursuitStuckWaypointDistance = 8.0f;
+
     [Export]
     public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
 
@@ -22,7 +26,18 @@ public abstract partial class EnemyBase : CombatUnitBase
     [Export]
     public float HomeReturnTolerance { get; set; } = 4.0f;
 
+    [Export]
+    public bool EvadeOnAggroLoss { get; set; } = true;
+
+    [Export]
+    public bool IgnoreDamageWhileEvading { get; set; } = true;
+
     protected Vector2 HomePosition { get; private set; }
+    private bool _hasPursuitProgressPosition;
+    private Vector2 _lastPursuitProgressPosition;
+    private float _pursuitStuckTimer;
+    private Node2D _trackedPursuitTarget;
+    private bool _suppressTargetAcquisitionUntilHome;
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
     {
@@ -58,13 +73,19 @@ public abstract partial class EnemyBase : CombatUnitBase
 
     protected override void AcquireTarget()
     {
+        if (_suppressTargetAcquisitionUntilHome)
+            return;
+
         var candidate = TargetingHelper.FindClosestTarget(
             this,
             CombatGroups.Allies,
             node => node is Node2D && node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
 
         if (candidate != null && CanAcquireTarget(candidate))
+        {
             SetTarget(candidate);
+            ResetPursuitStuckTracking();
+        }
     }
 
     protected bool CanAcquireTarget(Node2D target)
@@ -75,7 +96,11 @@ public abstract partial class EnemyBase : CombatUnitBase
 
     protected override bool ShouldLoseCurrentTarget(Node2D target)
     {
-        return !IsTargetWithinLossRange(target);
+        var shouldLoseTarget = !IsTargetWithinLossRange(target);
+        if (shouldLoseTarget && EvadeOnAggroLoss)
+            BeginEvadeReset(false);
+
+        return shouldLoseTarget;
     }
 
     private bool IsTargetWithinAcquisitionRange(Node2D target)
@@ -98,6 +123,12 @@ public abstract partial class EnemyBase : CombatUnitBase
 
     protected bool TryReactToDamageSource(DamageInfo damageInfo)
     {
+        if (IsEvadingHomeReturn() && IgnoreDamageWhileEvading)
+        {
+            ShowFloatingDamageNumber("EVADE", new Color(1.0f, 1.0f, 1.0f, 1.0f));
+            return false;
+        }
+
         if (damageInfo.Source is not Node2D sourceNode)
             return true;
 
@@ -109,6 +140,7 @@ public abstract partial class EnemyBase : CombatUnitBase
 
         if (IsTargetWithinLossRange(sourceNode))
         {
+            _suppressTargetAcquisitionUntilHome = false;
             SetTarget(sourceNode);
             return true;
         }
@@ -130,9 +162,96 @@ public abstract partial class EnemyBase : CombatUnitBase
     protected override bool HandleNoTarget(double delta)
     {
         if (IsAtHome())
+        {
+            _suppressTargetAcquisitionUntilHome = false;
+            ResetPursuitStuckTracking();
             return false;
+        }
 
         return TryMoveTowardDestination(HomePosition, 1.0f, CombatUnitState.ReturningHome, delta);
+    }
+
+    protected override void PrePhysicsProcess(double delta)
+    {
+        base.PrePhysicsProcess(delta);
+        UpdatePursuitStuckEvade((float)delta);
+    }
+
+    private void UpdatePursuitStuckEvade(float delta)
+    {
+        if (_suppressTargetAcquisitionUntilHome)
+        {
+            ResetPursuitStuckTracking();
+            return;
+        }
+
+        if (CurrentTarget == null ||
+            CurrentState != CombatUnitState.PursuingTarget ||
+            !IsUsingNavigationPath ||
+            Velocity == Vector2.Zero)
+        {
+            ResetPursuitStuckTracking();
+            return;
+        }
+
+        if (GlobalPosition.DistanceTo(LastNavigationPathPosition) <= PursuitStuckWaypointDistance)
+        {
+            ResetPursuitStuckTracking();
+            return;
+        }
+
+        if (!ReferenceEquals(_trackedPursuitTarget, CurrentTarget))
+        {
+            _trackedPursuitTarget = CurrentTarget;
+            _hasPursuitProgressPosition = true;
+            _lastPursuitProgressPosition = GlobalPosition;
+            _pursuitStuckTimer = 0.0f;
+            return;
+        }
+
+        if (!_hasPursuitProgressPosition)
+        {
+            _hasPursuitProgressPosition = true;
+            _lastPursuitProgressPosition = GlobalPosition;
+            _pursuitStuckTimer = 0.0f;
+            return;
+        }
+
+        if (GlobalPosition.DistanceTo(_lastPursuitProgressPosition) > PursuitStuckProgressThreshold)
+        {
+            _lastPursuitProgressPosition = GlobalPosition;
+            _pursuitStuckTimer = 0.0f;
+            return;
+        }
+
+        _pursuitStuckTimer += Math.Max(0.0f, delta);
+        if (_pursuitStuckTimer < PursuitStuckTimeout)
+            return;
+
+        BeginEvadeReset(true);
+    }
+
+    private void ResetPursuitStuckTracking()
+    {
+        _hasPursuitProgressPosition = false;
+        _lastPursuitProgressPosition = Vector2.Zero;
+        _pursuitStuckTimer = 0.0f;
+        _trackedPursuitTarget = null;
+    }
+
+    private void BeginEvadeReset(bool showEvadeText)
+    {
+        if (showEvadeText)
+            ShowFloatingDamageNumber("EVADE", new Color(1.0f, 1.0f, 1.0f, 1.0f));
+
+        _suppressTargetAcquisitionUntilHome = true;
+        ClearTarget();
+        ResetPursuitStuckTracking();
+    }
+
+    private bool IsEvadingHomeReturn()
+    {
+        return _suppressTargetAcquisitionUntilHome;
     }
 
     protected bool TryFinalizeDeathAnimation() => TryFinalizeDeathAnimation(DeathAnimation);
