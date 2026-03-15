@@ -78,6 +78,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
     public int CurrentHealth => _health;
     public bool CanBeTargeted => !_isDead;
+    public PlayerTargetingState Targeting { get; } = new();
 
     public override void _Ready()
     {
