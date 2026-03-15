@@ -39,6 +39,9 @@ public abstract partial class EnemyBase : CombatUnitBase
     public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
 
     protected Vector2 HomePosition { get; private set; }
+    protected int CurrentHealth { get; private set; }
+    protected bool IsDead { get; private set; }
+    protected int ResolvedMaxHealth => Math.Max(1, MaxHealthValue);
     private bool _hasPursuitProgressPosition;
     private Vector2 _lastPursuitProgressPosition;
     private float _pursuitStuckTimer;
@@ -58,6 +61,8 @@ public abstract partial class EnemyBase : CombatUnitBase
         string enemyName)
     {
         InitializeCombatUnit(animatedSprite, collisionShape, navigationAgent);
+        CurrentHealth = ResolvedMaxHealth;
+        IsDead = false;
         AddToGroup(CombatGroups.Enemies);
         HomePosition = GlobalPosition;
 
@@ -190,6 +195,26 @@ public abstract partial class EnemyBase : CombatUnitBase
         UpdateReturnHomeRegeneration((float)delta);
     }
 
+    protected bool TryApplyEnemyDamage(DamageInfo damageInfo, out int damage, out bool died)
+    {
+        damage = 0;
+        died = false;
+
+        if (IsDead)
+            return false;
+
+        if (!TryReactToDamageSource(damageInfo))
+            return false;
+
+        damage = Math.Max(1, damageInfo.Amount);
+        CurrentHealth = Math.Max(0, CurrentHealth - damage);
+        died = CurrentHealth <= 0;
+        if (died)
+            IsDead = true;
+
+        return true;
+    }
+
     private void UpdatePursuitStuckEvade(float delta)
     {
         if (_suppressTargetAcquisitionUntilHome)
@@ -270,16 +295,14 @@ public abstract partial class EnemyBase : CombatUnitBase
     private void UpdateReturnHomeRegeneration(float delta)
     {
         if (!EnableReturnHomeRegeneration ||
-            IsEnemyDead() ||
+            IsDead ||
             CurrentState != CombatUnitState.ReturningHome)
         {
             _returnHomeRegenerationTimer = 0.0f;
             return;
         }
 
-        var maxHealth = Math.Max(1, GetMaxHealthValue());
-        var currentHealth = Math.Clamp(GetCurrentHealthValue(), 0, maxHealth);
-        if (currentHealth >= maxHealth)
+        if (CurrentHealth >= ResolvedMaxHealth)
         {
             _returnHomeRegenerationTimer = 0.0f;
             return;
@@ -296,12 +319,12 @@ public abstract partial class EnemyBase : CombatUnitBase
 
         _returnHomeRegenerationTimer -= regenerationTicks;
 
-        var regenerationPerTick = Math.Max(1, (int)MathF.Round(maxHealth * regenerationRate));
-        var healAmount = Math.Min(regenerationTicks * regenerationPerTick, maxHealth - currentHealth);
+        var regenerationPerTick = Math.Max(1, (int)MathF.Round(ResolvedMaxHealth * regenerationRate));
+        var healAmount = Math.Min(regenerationTicks * regenerationPerTick, ResolvedMaxHealth - CurrentHealth);
         if (healAmount <= 0)
             return;
 
-        SetCurrentHealthValue(currentHealth + healAmount);
+        CurrentHealth = Math.Min(ResolvedMaxHealth, CurrentHealth + healAmount);
         ShowFloatingHealingNumber(healAmount);
     }
 
@@ -313,13 +336,7 @@ public abstract partial class EnemyBase : CombatUnitBase
         FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
     }
 
-    protected abstract int GetCurrentHealthValue();
-
-    protected abstract void SetCurrentHealthValue(int value);
-
-    protected abstract int GetMaxHealthValue();
-
-    protected abstract bool IsEnemyDead();
+    protected abstract int MaxHealthValue { get; }
 
     protected bool TryFinalizeDeathAnimation() => TryFinalizeDeathAnimation(DeathAnimation);
 

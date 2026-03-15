@@ -42,14 +42,10 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
     public float ProjectileMaxTravelDistance { get; set; } = 320.0f;
 
     private float _attackCooldownTimer;
-    private int _currentHealth;
-    private bool _isDead;
-
-    public bool CanBeTargeted => !_isDead;
+    public bool CanBeTargeted => !IsDead;
 
     public override void _Ready()
     {
-        _currentHealth = Math.Max(1, Health);
         if (ProjectileScene == null)
             ProjectileScene = GD.Load<PackedScene>("res://scenes/projectiles/projectile.tscn");
         InitializeEnemy(
@@ -66,7 +62,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
 
     public override void _PhysicsProcess(double delta)
     {
-        if (_isDead)
+        if (IsDead)
             return;
 
         base._PhysicsProcess(delta);
@@ -100,7 +96,7 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
 
     protected override void StartAttack()
     {
-        if (_isDead || ProjectileScene == null)
+        if (IsDead || ProjectileScene == null)
             return;
 
         if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
@@ -139,22 +135,14 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (_isDead)
+        if (!TryApplyEnemyDamage(damageInfo, out var damage, out var died))
             return;
 
-        if (!TryReactToDamageSource(damageInfo))
-            return;
-
-        var damage = Math.Max(1, damageInfo.Amount);
-        _currentHealth = Math.Max(0, _currentHealth - damage);
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
 
-        GD.Print($"SkeletonMage health: {_currentHealth}/{Health} (took {damage})");
-        if (_currentHealth <= 0)
-        {
-            _isDead = true;
+        GD.Print($"SkeletonMage health: {CurrentHealth}/{Health} (took {damage})");
+        if (died)
             StartDeath();
-        }
     }
 
     private void OnAnimationFinished()
@@ -198,14 +186,5 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
             CombatGroups.Allies);
     }
 
-    protected override int GetCurrentHealthValue() => _currentHealth;
-
-    protected override void SetCurrentHealthValue(int value)
-    {
-        _currentHealth = Math.Clamp(value, 0, Math.Max(1, Health));
-    }
-
-    protected override int GetMaxHealthValue() => Math.Max(1, Health);
-
-    protected override bool IsEnemyDead() => _isDead;
+    protected override int MaxHealthValue => Health;
 }
