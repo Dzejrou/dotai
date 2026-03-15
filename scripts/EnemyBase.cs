@@ -32,12 +32,19 @@ public abstract partial class EnemyBase : CombatUnitBase
     [Export]
     public bool IgnoreDamageWhileEvading { get; set; } = true;
 
+    [Export]
+    public bool EnableReturnHomeRegeneration { get; set; } = true;
+
+    [Export]
+    public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
+
     protected Vector2 HomePosition { get; private set; }
     private bool _hasPursuitProgressPosition;
     private Vector2 _lastPursuitProgressPosition;
     private float _pursuitStuckTimer;
     private Node2D _trackedPursuitTarget;
     private bool _suppressTargetAcquisitionUntilHome;
+    private float _returnHomeRegenerationTimer;
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
     {
@@ -177,6 +184,12 @@ public abstract partial class EnemyBase : CombatUnitBase
         UpdatePursuitStuckEvade((float)delta);
     }
 
+    public override void _PhysicsProcess(double delta)
+    {
+        base._PhysicsProcess(delta);
+        UpdateReturnHomeRegeneration((float)delta);
+    }
+
     private void UpdatePursuitStuckEvade(float delta)
     {
         if (_suppressTargetAcquisitionUntilHome)
@@ -253,6 +266,60 @@ public abstract partial class EnemyBase : CombatUnitBase
     {
         return _suppressTargetAcquisitionUntilHome;
     }
+
+    private void UpdateReturnHomeRegeneration(float delta)
+    {
+        if (!EnableReturnHomeRegeneration ||
+            IsEnemyDead() ||
+            CurrentState != CombatUnitState.ReturningHome)
+        {
+            _returnHomeRegenerationTimer = 0.0f;
+            return;
+        }
+
+        var maxHealth = Math.Max(1, GetMaxHealthValue());
+        var currentHealth = Math.Clamp(GetCurrentHealthValue(), 0, maxHealth);
+        if (currentHealth >= maxHealth)
+        {
+            _returnHomeRegenerationTimer = 0.0f;
+            return;
+        }
+
+        var regenerationRate = Math.Max(0.0f, ReturnHomeRegenerationFractionPerSecond);
+        if (regenerationRate <= 0.0f)
+            return;
+
+        _returnHomeRegenerationTimer += Math.Max(0.0f, delta);
+        var regenerationTicks = (int)MathF.Floor(_returnHomeRegenerationTimer);
+        if (regenerationTicks <= 0)
+            return;
+
+        _returnHomeRegenerationTimer -= regenerationTicks;
+
+        var regenerationPerTick = Math.Max(1, (int)MathF.Round(maxHealth * regenerationRate));
+        var healAmount = Math.Min(regenerationTicks * regenerationPerTick, maxHealth - currentHealth);
+        if (healAmount <= 0)
+            return;
+
+        SetCurrentHealthValue(currentHealth + healAmount);
+        ShowFloatingHealingNumber(healAmount);
+    }
+
+    protected void ShowFloatingHealingNumber(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+    }
+
+    protected abstract int GetCurrentHealthValue();
+
+    protected abstract void SetCurrentHealthValue(int value);
+
+    protected abstract int GetMaxHealthValue();
+
+    protected abstract bool IsEnemyDead();
 
     protected bool TryFinalizeDeathAnimation() => TryFinalizeDeathAnimation(DeathAnimation);
 

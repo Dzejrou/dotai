@@ -197,4 +197,15 @@ public partial class SkeletonMage : EnemyBase, IAttackable, ITargetable
             ProjectileMaxTravelDistance,
             CombatGroups.Allies);
     }
+
+    protected override int GetCurrentHealthValue() => _currentHealth;
+
+    protected override void SetCurrentHealthValue(int value)
+    {
+        _currentHealth = Math.Clamp(value, 0, Math.Max(1, Health));
+    }
+
+    protected override int GetMaxHealthValue() => Math.Max(1, Health);
+
+    protected override bool IsEnemyDead() => _isDead;
 }
