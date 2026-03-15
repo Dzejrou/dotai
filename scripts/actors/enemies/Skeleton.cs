@@ -105,7 +105,6 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
             return;
 
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
-        GD.Print($"Skeleton health: {CurrentHealth}/{Health} (took {damage})");
         if (died)
             StartDeath();
     }

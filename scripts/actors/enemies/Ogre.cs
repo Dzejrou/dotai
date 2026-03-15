@@ -100,8 +100,6 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         if (!TryApplyEnemyDamage(damageInfo, out var damage, out var died))
             return;
 
-        GD.Print($"Ogre health: {CurrentHealth}/{MaxHealth} (took {damage})");
-
         if (died)
             StartDeath();
     }
