@@ -4,6 +4,13 @@ using System;
 
 public abstract partial class EnemyBase : CombatUnitBase
 {
+    private enum RegenerationPhase
+    {
+        None,
+        ReturningHome,
+        Idle,
+    }
+
     private const float PursuitStuckProgressThreshold = 1.0f;
     private const float PursuitStuckTimeout = 0.6f;
     private const float PursuitStuckWaypointDistance = 8.0f;
@@ -40,6 +47,15 @@ public abstract partial class EnemyBase : CombatUnitBase
     [Export]
     public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
 
+    [Export]
+    public bool EnableIdleRegeneration { get; set; } = true;
+
+    [Export]
+    public float IdleRegenerationFractionPerSecond { get; set; } = 0.01f;
+
+    [Export]
+    public float IdleRegenerationIntervalSeconds { get; set; } = 5.0f;
+
     protected Vector2 HomePosition { get; private set; }
     protected int CurrentHealth { get; private set; }
     protected bool IsDead { get; private set; }
@@ -50,6 +66,7 @@ public abstract partial class EnemyBase : CombatUnitBase
     private Node2D _trackedPursuitTarget;
     private bool _suppressTargetAcquisitionUntilHome;
     private float _returnHomeRegenerationTimer;
+    private RegenerationPhase _regenerationPhase;
     private Label _healthLabel;
 
     protected void InitializeEnemy(AnimatedSprite2D animatedSprite, CollisionShape2D collisionShape, string enemyName)
@@ -299,12 +316,18 @@ public abstract partial class EnemyBase : CombatUnitBase
 
     private void UpdateReturnHomeRegeneration(float delta)
     {
-        if (!EnableReturnHomeRegeneration ||
-            IsDead ||
-            CurrentState != CombatUnitState.ReturningHome)
+        var regenerationPhase = GetRegenerationPhase();
+        if (regenerationPhase == RegenerationPhase.None || IsDead)
         {
             _returnHomeRegenerationTimer = 0.0f;
+            _regenerationPhase = RegenerationPhase.None;
             return;
+        }
+
+        if (_regenerationPhase != regenerationPhase)
+        {
+            _returnHomeRegenerationTimer = 0.0f;
+            _regenerationPhase = regenerationPhase;
         }
 
         if (CurrentHealth >= ResolvedMaxHealth)
@@ -313,16 +336,22 @@ public abstract partial class EnemyBase : CombatUnitBase
             return;
         }
 
-        var regenerationRate = Math.Max(0.0f, ReturnHomeRegenerationFractionPerSecond);
+        var regenerationRate = regenerationPhase == RegenerationPhase.ReturningHome
+            ? Math.Max(0.0f, ReturnHomeRegenerationFractionPerSecond)
+            : Math.Max(0.0f, IdleRegenerationFractionPerSecond);
         if (regenerationRate <= 0.0f)
             return;
 
+        var regenerationInterval = regenerationPhase == RegenerationPhase.ReturningHome
+            ? 1.0f
+            : Math.Max(0.01f, IdleRegenerationIntervalSeconds);
+
         _returnHomeRegenerationTimer += Math.Max(0.0f, delta);
-        var regenerationTicks = (int)MathF.Floor(_returnHomeRegenerationTimer);
+        var regenerationTicks = (int)MathF.Floor(_returnHomeRegenerationTimer / regenerationInterval);
         if (regenerationTicks <= 0)
             return;
 
-        _returnHomeRegenerationTimer -= regenerationTicks;
+        _returnHomeRegenerationTimer -= regenerationTicks * regenerationInterval;
 
         var regenerationPerTick = Math.Max(1, (int)MathF.Round(ResolvedMaxHealth * regenerationRate));
         var healAmount = Math.Min(regenerationTicks * regenerationPerTick, ResolvedMaxHealth - CurrentHealth);
@@ -331,6 +360,24 @@ public abstract partial class EnemyBase : CombatUnitBase
 
         SetCurrentHealth(Math.Min(ResolvedMaxHealth, CurrentHealth + healAmount));
         ShowFloatingHealingNumber(healAmount);
+    }
+
+    private RegenerationPhase GetRegenerationPhase()
+    {
+        if (IsDead)
+            return RegenerationPhase.None;
+
+        if (CurrentState == CombatUnitState.ReturningHome && EnableReturnHomeRegeneration)
+            return RegenerationPhase.ReturningHome;
+
+        if (CurrentState == CombatUnitState.Idle &&
+            CurrentTarget == null &&
+            EnableIdleRegeneration)
+        {
+            return RegenerationPhase.Idle;
+        }
+
+        return RegenerationPhase.None;
     }
 
     private void EnsureHealthLabel()
