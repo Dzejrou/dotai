@@ -26,15 +26,8 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
     [Export]
     public int MaxAttackDamage { get; set; } = 4;
 
-    [Export]
-    public float HealthRegenerationInterval { get; set; } = 5.0f;
-
-    [Export]
-    public int HealthRegenerationAmount { get; set; } = 1;
-
     private RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
-    private float _healthRegenTimer;
     private int _currentHealth;
     private bool _isDead;
 
@@ -53,7 +46,6 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         AnimatedSprite.AnimationFinished += OnAnimationFinished;
 
         _randomNumberGenerator.Randomize();
-        _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -61,7 +53,6 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         if (_isDead)
             return;
 
-        HandleHealthRegeneration((float)delta);
         base._PhysicsProcess(delta);
     }
 
@@ -127,28 +118,6 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         }
     }
 
-    private void HandleHealthRegeneration(float delta)
-    {
-        _healthRegenTimer -= delta;
-        if (_healthRegenTimer > 0.0f)
-            return;
-
-        if (_currentHealth >= MaxHealth)
-        {
-            _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
-            return;
-        }
-
-        var missing = MaxHealth - _currentHealth;
-        var healAmount = Math.Min(Math.Max(HealthRegenerationAmount, 1), missing);
-        if (healAmount <= 0)
-            return;
-
-        _currentHealth += healAmount;
-        ShowFloatingHealingNumber(healAmount);
-        _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
-    }
-
     private void OnAnimationFinished()
     {
         if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
@@ -168,12 +137,15 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         TryPlayDeathAnimation();
     }
 
-    private void ShowFloatingHealingNumber(int amount)
-    {
-        if (amount <= 0)
-            return;
+    protected override int GetCurrentHealthValue() => _currentHealth;
 
-        FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+    protected override void SetCurrentHealthValue(int value)
+    {
+        _currentHealth = Math.Clamp(value, 0, Math.Max(1, MaxHealth));
     }
+
+    protected override int GetMaxHealthValue() => Math.Max(1, MaxHealth);
+
+    protected override bool IsEnemyDead() => _isDead;
 
 }

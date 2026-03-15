@@ -144,4 +144,15 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
         TryPlayDeathAnimation();
     }
 
+    protected override int GetCurrentHealthValue() => _currentHealth;
+
+    protected override void SetCurrentHealthValue(int value)
+    {
+        _currentHealth = Math.Clamp(value, 0, Math.Max(1, Health));
+    }
+
+    protected override int GetMaxHealthValue() => Math.Max(1, Health);
+
+    protected override bool IsEnemyDead() => _isDead;
+
 }
