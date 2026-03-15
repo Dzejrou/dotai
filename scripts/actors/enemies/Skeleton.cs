@@ -22,12 +22,8 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
 
     private RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
-    private int _currentHealth;
-    private bool _isDead;
-
     public override void _Ready()
     {
-        _currentHealth = Math.Max(1, Health);
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
@@ -42,7 +38,7 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
 
     public override void _PhysicsProcess(double delta)
     {
-        if (_isDead)
+        if (IsDead)
             return;
 
         base._PhysicsProcess(delta);
@@ -101,25 +97,17 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
         attackable.ApplyDamage(new DamageInfo(damage, this));
     }
 
-    public bool CanBeTargeted => !_isDead;
+    public bool CanBeTargeted => !IsDead;
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (_isDead)
+        if (!TryApplyEnemyDamage(damageInfo, out var damage, out var died))
             return;
 
-        if (!TryReactToDamageSource(damageInfo))
-            return;
-
-        var damage = Math.Max(1, damageInfo.Amount);
-        _currentHealth = Math.Max(0, _currentHealth - damage);
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
-        GD.Print($"Skeleton health: {_currentHealth}/{Health} (took {damage})");
-        if (_currentHealth <= 0)
-        {
-            _isDead = true;
+        GD.Print($"Skeleton health: {CurrentHealth}/{Health} (took {damage})");
+        if (died)
             StartDeath();
-        }
     }
 
     private void OnAnimationFinished()
@@ -144,15 +132,6 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
         TryPlayDeathAnimation();
     }
 
-    protected override int GetCurrentHealthValue() => _currentHealth;
-
-    protected override void SetCurrentHealthValue(int value)
-    {
-        _currentHealth = Math.Clamp(value, 0, Math.Max(1, Health));
-    }
-
-    protected override int GetMaxHealthValue() => Math.Max(1, Health);
-
-    protected override bool IsEnemyDead() => _isDead;
+    protected override int MaxHealthValue => Health;
 
 }

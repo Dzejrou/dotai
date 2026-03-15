@@ -28,12 +28,8 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
 
     private RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
-    private int _currentHealth;
-    private bool _isDead;
-
     public override void _Ready()
     {
-        _currentHealth = Math.Max(1, MaxHealth);
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
@@ -50,7 +46,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
 
     public override void _PhysicsProcess(double delta)
     {
-        if (_isDead)
+        if (IsDead)
             return;
 
         base._PhysicsProcess(delta);
@@ -71,7 +67,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
 
     protected override void StartAttack()
     {
-        if (_attackCooldownTimer > 0.0f || _isDead ||
+        if (_attackCooldownTimer > 0.0f || IsDead ||
             CurrentTarget is not IAttackable attackable ||
             CurrentTarget is not ITargetable targetable ||
             !targetable.CanBeTargeted)
@@ -97,25 +93,17 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         attackable.ApplyDamage(new DamageInfo(damage, this));
     }
 
-    public bool CanBeTargeted => !_isDead;
+    public bool CanBeTargeted => !IsDead;
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (_isDead)
+        if (!TryApplyEnemyDamage(damageInfo, out var damage, out var died))
             return;
 
-        if (!TryReactToDamageSource(damageInfo))
-            return;
+        GD.Print($"Ogre health: {CurrentHealth}/{MaxHealth} (took {damage})");
 
-        var damage = Math.Max(1, damageInfo.Amount);
-        _currentHealth = Math.Max(0, _currentHealth - damage);
-        GD.Print($"Ogre health: {_currentHealth}/{MaxHealth} (took {damage})");
-
-        if (_currentHealth <= 0)
-        {
-            _isDead = true;
+        if (died)
             StartDeath();
-        }
     }
 
     private void OnAnimationFinished()
@@ -137,15 +125,6 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         TryPlayDeathAnimation();
     }
 
-    protected override int GetCurrentHealthValue() => _currentHealth;
-
-    protected override void SetCurrentHealthValue(int value)
-    {
-        _currentHealth = Math.Clamp(value, 0, Math.Max(1, MaxHealth));
-    }
-
-    protected override int GetMaxHealthValue() => Math.Max(1, MaxHealth);
-
-    protected override bool IsEnemyDead() => _isDead;
+    protected override int MaxHealthValue => MaxHealth;
 
 }
