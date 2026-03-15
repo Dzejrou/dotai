@@ -198,11 +198,15 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         if (_isDead || FireballScene == null)
             return;
 
-        var nearestTarget = TargetingHelper.FindClosestTarget(this, CombatGroups.Enemies, node => node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
         var fireDirection = DirectionHelper.GetDirectionVector(_lastDirection);
-        if (nearestTarget != null)
+        var activeTarget = Targeting.ActiveTarget;
+        if (activeTarget != null &&
+            IsInstanceValid(activeTarget) &&
+            activeTarget.IsInsideTree() &&
+            activeTarget is ITargetable targetable &&
+            targetable.CanBeTargeted)
         {
-            var toTarget = nearestTarget.GlobalPosition - GlobalPosition;
+            var toTarget = activeTarget.GlobalPosition - GlobalPosition;
             if (toTarget != Vector2.Zero)
                 fireDirection = toTarget.Normalized();
         }
