@@ -68,6 +68,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
     [Export]
     public float SoftTargetRange { get; set; } = 180.0f;
 
+    [Export]
+    public float TabTargetRange { get; set; } = 220.0f;
+
     private int _health;
     private bool _isDead;
     private AnimatedSprite2D _animatedSprite;
@@ -104,6 +107,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
         HandleHealthRegenerationDelay((float)delta);
         HandleHealthRegeneration((float)delta);
+        if (Input.IsActionJustPressed("tab_target"))
+            CycleTabTarget();
         if (Input.IsActionJustPressed("cast_spell"))
             CastFireball();
         if (Input.IsActionJustPressed("summon_skeleton"))
@@ -121,7 +126,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
         if (_isAttacking)
         {
-            UpdateSoftTarget();
+            UpdateTargetingState();
             Velocity = Vector2.Zero;
             ApplySlashDamage();
             return;
@@ -135,14 +140,14 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
             if (direction != Vector2.Zero)
                 _lastDirection = DirectionHelper.GetDirectionName(direction);
 
-            UpdateSoftTarget();
+            UpdateTargetingState();
             StartAttack();
             return;
         }
 
         if (direction == Vector2.Zero)
         {
-            UpdateSoftTarget();
+            UpdateTargetingState();
             Velocity = Vector2.Zero;
             SetAnimationSafe(GetIdleAnimationName());
             return;
@@ -154,7 +159,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         var moveSpeed = isSprinting ? Speed * 2.0f : Speed;
         Velocity = direction * moveSpeed;
         MoveAndSlide();
-        UpdateSoftTarget();
+        UpdateTargetingState();
 
         var animationName = $"walk_{_lastDirection}";
         if (_animatedSprite.Animation != animationName)
@@ -291,6 +296,13 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         }
     }
 
+    private void UpdateTargetingState()
+    {
+        ValidateTabTarget();
+        UpdateSoftTarget();
+        UpdateTargetMarker();
+    }
+
     private void UpdateSoftTarget()
     {
         var softTargetRange = Math.Max(0.0f, SoftTargetRange);
@@ -333,8 +345,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
             Targeting.SetSoftTarget(bestTarget);
         else
             Targeting.ClearSoftTarget();
-
-        UpdateTargetMarker();
     }
 
     private static bool IsValidSoftTargetCandidate(Node node, out Node2D targetNode)
@@ -349,6 +359,111 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
         targetNode = node2D;
         return true;
+    }
+
+    private void CycleTabTarget()
+    {
+        var candidates = GetTabTargetCandidates();
+        if (candidates.Count == 0)
+        {
+            Targeting.ClearTabTarget();
+            UpdateTargetMarker();
+            return;
+        }
+
+        var currentTabTarget = Targeting.TabTarget;
+        var currentIndex = candidates.IndexOf(currentTabTarget);
+        if (currentIndex < 0)
+        {
+            Targeting.SetTabTarget(candidates[0]);
+            UpdateTargetMarker();
+            return;
+        }
+
+        if (candidates.Count == 1)
+        {
+            Targeting.ClearTabTarget();
+            UpdateTargetMarker();
+            return;
+        }
+
+        var nextIndex = (currentIndex + 1) % candidates.Count;
+        Targeting.SetTabTarget(candidates[nextIndex]);
+        UpdateTargetMarker();
+    }
+
+    private void ValidateTabTarget()
+    {
+        if (IsValidTabTarget(Targeting.TabTarget))
+            return;
+
+        Targeting.ClearTabTarget();
+    }
+
+    private bool IsValidTabTarget(Node2D target)
+    {
+        if (target == null || !IsInstanceValid(target) || !target.IsInsideTree())
+            return false;
+
+        if (target is not IAttackable || target is not ITargetable targetable || !targetable.CanBeTargeted)
+            return false;
+
+        return GlobalPosition.DistanceTo(target.GlobalPosition) <= Math.Max(0.0f, TabTargetRange);
+    }
+
+    private List<Node2D> GetTabTargetCandidates()
+    {
+        var candidates = new List<Node2D>();
+        var tabTargetRange = Math.Max(0.0f, TabTargetRange);
+        if (tabTargetRange <= 0.0f)
+            return candidates;
+
+        var facingDirection = DirectionHelper.GetDirectionVector(_lastDirection);
+        if (facingDirection == Vector2.Zero)
+            facingDirection = Vector2.Down;
+
+        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Enemies))
+        {
+            if (!IsValidSoftTargetCandidate(node, out var targetNode))
+                continue;
+
+            var distance = GlobalPosition.DistanceTo(targetNode.GlobalPosition);
+            if (distance > tabTargetRange)
+                continue;
+
+            candidates.Add(targetNode);
+        }
+
+        candidates.Sort((left, right) =>
+        {
+            var leftScore = GetTabTargetOrderingScore(left, facingDirection, tabTargetRange);
+            var rightScore = GetTabTargetOrderingScore(right, facingDirection, tabTargetRange);
+            var scoreComparison = rightScore.CompareTo(leftScore);
+            if (scoreComparison != 0)
+                return scoreComparison;
+
+            var leftDistance = GlobalPosition.DistanceTo(left.GlobalPosition);
+            var rightDistance = GlobalPosition.DistanceTo(right.GlobalPosition);
+            var distanceComparison = leftDistance.CompareTo(rightDistance);
+            if (distanceComparison != 0)
+                return distanceComparison;
+
+            return left.GetInstanceId().CompareTo(right.GetInstanceId());
+        });
+
+        return candidates;
+    }
+
+    private float GetTabTargetOrderingScore(Node2D target, Vector2 facingDirection, float tabTargetRange)
+    {
+        var toTarget = target.GlobalPosition - GlobalPosition;
+        if (toTarget == Vector2.Zero)
+            return 1.0f;
+
+        var alignment = facingDirection.Dot(toTarget.Normalized());
+        var distanceScore = 1.0f - Mathf.Clamp(toTarget.Length() / tabTargetRange, 0.0f, 1.0f);
+        var alignmentScore = (alignment + 1.0f) * 0.5f;
+        return (alignmentScore * 0.7f) + (distanceScore * 0.3f);
     }
 
     private void UpdateTargetMarker()
