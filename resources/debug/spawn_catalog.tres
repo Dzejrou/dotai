@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/ogre.tscn" id="4_ogre_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="5_skeleton_mage_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/allies/summoned_skeleton.tscn" id="6_summoned_skeleton_scene"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/target_dummy.tscn" id="7_target_dummy_scene"]
 
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_skeleton"]
 script = ExtResource("2_spawn_catalog_entry_script")
@@ -39,6 +40,14 @@ Category = "Allies"
 SpawnScene = ExtResource("6_summoned_skeleton_scene")
 SortOrder = 40
 
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_target_dummy"]
+script = ExtResource("2_spawn_catalog_entry_script")
+Id = "target_dummy"
+DisplayName = "Target Dummy"
+Category = "Practice"
+SpawnScene = ExtResource("7_target_dummy_scene")
+SortOrder = 50
+
 [resource]
 script = ExtResource("1_spawn_catalog_script")
-Entries = Array[ExtResource("2_spawn_catalog_entry_script")]([SubResource("Resource_spawn_catalog_entry_skeleton"), SubResource("Resource_spawn_catalog_entry_ogre"), SubResource("Resource_spawn_catalog_entry_skeleton_mage"), SubResource("Resource_spawn_catalog_entry_summoned_skeleton")])
+Entries = Array[ExtResource("2_spawn_catalog_entry_script")]([SubResource("Resource_spawn_catalog_entry_skeleton"), SubResource("Resource_spawn_catalog_entry_ogre"), SubResource("Resource_spawn_catalog_entry_skeleton_mage"), SubResource("Resource_spawn_catalog_entry_summoned_skeleton"), SubResource("Resource_spawn_catalog_entry_target_dummy")])

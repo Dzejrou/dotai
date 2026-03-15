@@ -1,0 +1,46 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/target_dummy/rotations/east.png" id="1_east"]
+[ext_resource type="Texture2D" path="res://assets/target_dummy/rotations/north.png" id="2_north"]
+[ext_resource type="Texture2D" path="res://assets/target_dummy/rotations/south.png" id="3_south"]
+[ext_resource type="Texture2D" path="res://assets/target_dummy/rotations/west.png" id="4_west"]
+
+[resource]
+animations = [{
+"frames": [],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_east")
+}],
+"loop": true,
+"name": &"breathing-idle_east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_north")
+}],
+"loop": true,
+"name": &"breathing-idle_north",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_south")
+}],
+"loop": true,
+"name": &"breathing-idle_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_west")
+}],
+"loop": true,
+"name": &"breathing-idle_west",
+"speed": 5.0
+}]
