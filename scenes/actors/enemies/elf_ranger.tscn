@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/enemies/ElfRanger.cs" id="1_elf_ranger_script"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/elf_ranger_spriteframes.tres" id="2_elf_ranger_frames"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_elf_ranger"]
+radius = 5.0
+height = 26.0
+
+[node name="ElfRanger" type="CharacterBody2D"]
+z_index = -1
+script = ExtResource("1_elf_ranger_script")
+MinimumRange = 80.0
+PreferredRange = 140.0
+AttackCooldown = 1.35
+AttackAnimation = &"shooting-bow"
+ProjectileDamage = 3
+ProjectileSpeed = 320.0
+ProjectileLifetime = 2.4
+ProjectileMaxTravelDistance = 360.0
+ProjectileTargetGroup = "allies"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -2)
+scale = Vector2(1.1, 1.1)
+sprite_frames = ExtResource("2_elf_ranger_frames")
+animation = &"breathing-idle_south"
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 12)
+shape = SubResource("CapsuleShape2D_elf_ranger")
