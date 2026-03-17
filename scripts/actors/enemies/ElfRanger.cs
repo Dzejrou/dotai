@@ -5,17 +5,33 @@ using System;
 [GlobalClass]
 public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable
 {
+    private const string DefaultWolfSummonScenePath = "res://scenes/actors/enemies/wolf_summon.tscn";
+
     [Export]
     public float Speed { get; set; } = 62.0f;
 
     [Export]
     public int Health { get; set; } = 18;
 
+    [Export]
+    public PackedScene WolfSummonScene { get; set; }
+
+    [Export]
+    public float WolfSummonSpawnOffset { get; set; } = 28.0f;
+
+    [Export]
+    public float WolfSummonTriggerRange { get; set; } = 180.0f;
+
     public bool CanBeTargeted => !IsDead;
+
+    private WolfSummon _summonedWolf;
 
     public override void _Ready()
     {
         EnsureProjectileScene("res://scenes/projectiles/projectile.tscn");
+        if (WolfSummonScene == null)
+            WolfSummonScene = GD.Load<PackedScene>(DefaultWolfSummonScenePath);
+
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
@@ -32,6 +48,7 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable
             return;
 
         base._PhysicsProcess(delta);
+        TrySummonWolf();
     }
 
     protected override Vector2 GetDesiredMovementTarget(Vector2 targetPosition, double delta)
@@ -75,6 +92,56 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable
         Velocity = Vector2.Zero;
         ResetRangedAttackCooldown();
         TryPlayDeathAnimation();
+    }
+
+    private void TrySummonWolf()
+    {
+        if (IsDead || CurrentState == CombatUnitState.Attacking || HasActiveWolfSummon())
+            return;
+
+        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
+            return;
+
+        if (CurrentTarget is not ITargetable targetable || !targetable.CanBeTargeted)
+            return;
+
+        if (GlobalPosition.DistanceTo(CurrentTarget.GlobalPosition) > Math.Max(0.0f, WolfSummonTriggerRange))
+            return;
+
+        var parent = GetParent();
+        if (parent == null || WolfSummonScene == null)
+            return;
+
+        var summonedWolf = WolfSummonScene.Instantiate<WolfSummon>();
+        if (summonedWolf == null)
+            return;
+
+        var summonDirection = DirectionHelper.GetDirectionVector(LastDirection);
+        if (summonDirection == Vector2.Zero && CurrentTarget.GlobalPosition != GlobalPosition)
+            summonDirection = (CurrentTarget.GlobalPosition - GlobalPosition).Normalized();
+        if (summonDirection == Vector2.Zero)
+            summonDirection = Vector2.Right;
+
+        summonedWolf.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, WolfSummonSpawnOffset);
+        parent.AddChild(summonedWolf);
+        _summonedWolf = summonedWolf;
+    }
+
+    private bool HasActiveWolfSummon()
+    {
+        if (_summonedWolf == null || !IsInstanceValid(_summonedWolf) || !_summonedWolf.IsInsideTree())
+        {
+            _summonedWolf = null;
+            return false;
+        }
+
+        if (_summonedWolf is not ITargetable targetable || !targetable.CanBeTargeted)
+        {
+            _summonedWolf = null;
+            return false;
+        }
+
+        return true;
     }
 
     protected override int MaxHealthValue => Health;
