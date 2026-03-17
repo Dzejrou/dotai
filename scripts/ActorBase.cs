@@ -47,6 +47,7 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
     private float _returnHomeRegenerationTimer;
     private RegenerationPhase _regenerationPhase;
     private Label _healthLabel;
+    private ActorAI _actorAI;
 
     protected void InitializeActor(
         AnimatedSprite2D animatedSprite,
@@ -67,6 +68,12 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
         UpdateReturnHomeRegeneration((float)delta);
     }
 
+    public override void _ExitTree()
+    {
+        _actorAI?.Shutdown();
+        OnActorExitTree();
+    }
+
     protected bool IsAtHome()
     {
         return GlobalPosition.DistanceTo(HomePosition) <= Math.Max(0.0f, HomeReturnTolerance);
@@ -84,6 +91,25 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
     }
 
     protected virtual void OnReachedHomeWithoutTarget() { }
+
+    protected virtual void OnActorPrePhysicsProcess(double delta) { }
+
+    protected virtual void OnActorExitTree() { }
+
+    protected void SetActorAI(ActorAI actorAI)
+    {
+        if (ReferenceEquals(_actorAI, actorAI))
+            return;
+
+        _actorAI?.Shutdown();
+        _actorAI = actorAI;
+        _actorAI?.Initialize(this);
+    }
+
+    protected bool TryAcquireTargetWithAI()
+    {
+        return _actorAI != null && _actorAI.TryAcquireTarget();
+    }
 
     protected void SetCurrentHealth(int value)
     {
@@ -109,6 +135,12 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
     protected bool TryPlayDeathAnimation() => TryPlayDeathAnimation(DeathAnimation, DisableCollisionOnDeath);
 
     protected abstract int MaxHealthValue { get; }
+
+    protected override void PrePhysicsProcess(double delta)
+    {
+        _actorAI?.Update(delta);
+        OnActorPrePhysicsProcess(delta);
+    }
 
     private void UpdateReturnHomeRegeneration(float delta)
     {

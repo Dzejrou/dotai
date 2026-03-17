@@ -2,7 +2,7 @@ using Godot;
 
 using System;
 
-public abstract partial class EnemyBase : ActorBase
+public abstract partial class EnemyBase : ActorBase, IAggressiveCombatActorAIHost
 {
     private const float PursuitStuckProgressThreshold = 1.0f;
     private const float PursuitStuckTimeout = 0.6f;
@@ -61,8 +61,13 @@ public abstract partial class EnemyBase : ActorBase
 
     protected override void AcquireTarget()
     {
+        TryAcquireAggressiveTarget();
+    }
+
+    public bool TryAcquireAggressiveTarget()
+    {
         if (_suppressTargetAcquisitionUntilHome)
-            return;
+            return false;
 
         var candidate = TargetingHelper.FindClosestHostileTarget(
             this,
@@ -73,7 +78,10 @@ public abstract partial class EnemyBase : ActorBase
         {
             SetTarget(candidate);
             ResetPursuitStuckTracking();
+            return true;
         }
+
+        return false;
     }
 
     protected bool CanAcquireTarget(Node2D target)
@@ -156,9 +164,8 @@ public abstract partial class EnemyBase : ActorBase
         ResetPursuitStuckTracking();
     }
 
-    protected override void PrePhysicsProcess(double delta)
+    protected override void OnActorPrePhysicsProcess(double delta)
     {
-        base.PrePhysicsProcess(delta);
         UpdatePursuitStuckEvade((float)delta);
     }
 
