@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable
+public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IFactionMember
 {
     private static readonly Vector2 HealthLabelOffset = new Vector2(-24.0f, -36.0f);
     private static readonly Vector2 HealthLabelSize = new Vector2(48.0f, 16.0f);
@@ -16,6 +16,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable
     public float RespawnDelaySeconds { get; set; } = 30.0f;
 
     public bool CanBeTargeted => !_isDead;
+    public Faction Faction => Factions.Neutral;
 
     private AnimatedSprite2D _animatedSprite;
     private CollisionShape2D _collisionShape;
