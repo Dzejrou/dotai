@@ -66,22 +66,37 @@ public abstract partial class EnemyBase : ActorBase, IAggressiveCombatActorAIHos
 
     public bool TryAcquireAggressiveTarget()
     {
-        if (_suppressTargetAcquisitionUntilHome)
+        if (!ShouldAttemptAggressiveTargetAcquisition())
             return false;
 
-        var candidate = TargetingHelper.FindClosestHostileTarget(
+        var candidate = SelectAggressiveTargetCandidate();
+        if (candidate == null)
+            return false;
+
+        ApplyAggressiveTargetCandidate(candidate);
+        return true;
+    }
+
+    public bool ShouldAttemptAggressiveTargetAcquisition()
+    {
+        return !_suppressTargetAcquisitionUntilHome && !IsDead;
+    }
+
+    public Node2D SelectAggressiveTargetCandidate()
+    {
+        return TargetingHelper.FindClosestHostileTarget(
             this,
             Faction,
             node => node is Node2D targetNode && CanAcquireTarget(targetNode));
+    }
 
-        if (candidate != null && CanAcquireTarget(candidate))
-        {
-            SetTarget(candidate);
-            ResetPursuitStuckTracking();
-            return true;
-        }
+    public void ApplyAggressiveTargetCandidate(Node2D target)
+    {
+        if (target == null || !CanAcquireTarget(target))
+            return;
 
-        return false;
+        SetTarget(target);
+        ResetPursuitStuckTracking();
     }
 
     protected bool CanAcquireTarget(Node2D target)

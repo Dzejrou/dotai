@@ -1,4 +1,8 @@
+using Godot;
+
 public interface IAggressiveCombatActorAIHost
 {
-    bool TryAcquireAggressiveTarget();
+    bool ShouldAttemptAggressiveTargetAcquisition();
+    Node2D SelectAggressiveTargetCandidate();
+    void ApplyAggressiveTargetCandidate(Node2D target);
 }

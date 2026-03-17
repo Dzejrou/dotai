@@ -2,7 +2,17 @@ public sealed class AggressiveCombatActorAI : ActorAI
 {
     public override bool TryAcquireTarget()
     {
-        return Actor is IAggressiveCombatActorAIHost aggressiveHost &&
-               aggressiveHost.TryAcquireAggressiveTarget();
+        if (Actor is not IAggressiveCombatActorAIHost aggressiveHost)
+            return false;
+
+        if (!aggressiveHost.ShouldAttemptAggressiveTargetAcquisition())
+            return false;
+
+        var candidate = aggressiveHost.SelectAggressiveTargetCandidate();
+        if (candidate == null)
+            return false;
+
+        aggressiveHost.ApplyAggressiveTargetCandidate(candidate);
+        return true;
     }
 }

@@ -5,6 +5,8 @@ using System;
 [GlobalClass]
 public partial class Ogre : EnemyBase, IAttackable, ITargetable
 {
+    private readonly ActorAI _actorAI = new AggressiveCombatActorAI();
+
     [Export]
     public float Speed { get; set; } = 64.0f;
 
@@ -32,6 +34,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
 
     public override void _Ready()
     {
+        SetActorAI(_actorAI);
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
@@ -52,6 +55,11 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
             return;
 
         base._PhysicsProcess(delta);
+    }
+
+    protected override void AcquireTarget()
+    {
+        TryAcquireTargetWithAI();
     }
 
     protected override bool CanAttackNow(Vector2 toTarget, double delta)
