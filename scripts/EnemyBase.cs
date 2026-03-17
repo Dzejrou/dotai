@@ -422,6 +422,7 @@ public abstract partial class EnemyBase : CombatUnitBase, IFactionMember
             return;
 
         _healthLabel.Text = $"{CurrentHealth}/{ResolvedMaxHealth}";
+        _healthLabel.AddThemeColorOverride("font_color", FactionColors.Resolve(Faction));
     }
 
     protected void ShowFloatingHealingNumber(int amount)

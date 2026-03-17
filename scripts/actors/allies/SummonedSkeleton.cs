@@ -8,6 +8,8 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private const float StuckProgressThreshold = 1.0f;
     private const float StuckTimeoutSeconds = 0.6f;
     private const float StuckWaypointDistance = 8.0f;
+    private static readonly Vector2 HealthLabelOffset = new Vector2(-24.0f, -36.0f);
+    private static readonly Vector2 HealthLabelSize = new Vector2(48.0f, 16.0f);
 
     [Export]
     public float Speed { get; set; } = 52.0f;
@@ -70,6 +72,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private float _stuckTimer;
     private bool _returningToSummonerAfterStuck;
     private Node2D _commandedTarget;
+    private Label _healthLabel;
     private const float DeathFallbackDelay = 2.0f;
     private const int MaxFormationSlots = 4;
 
@@ -88,6 +91,8 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         ApplyFactionGroup();
         RefreshSummonerReference();
         ApplyAllyCollisionExceptions();
+        EnsureHealthLabel();
+        UpdateHealthLabel();
         PlayIdleIfAvailable();
 
         if (AnimatedSprite != null)
@@ -151,6 +156,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         ClearAllyCollisionExceptions();
         ApplyFactionGroup();
         ApplyAllyCollisionExceptions();
+        UpdateHealthLabel();
     }
 
     public bool HasValidSummoner()
@@ -167,8 +173,8 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
         var damage = Math.Max(1, damageInfo.Amount);
         _currentHealth = Math.Max(0, _currentHealth - damage);
+        UpdateHealthLabel();
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
-        GD.Print($"SummonedSkeleton health: {_currentHealth}/{Health} (took {damage})");
 
         if (_currentHealth <= 0)
             StartDeath();
@@ -404,6 +410,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         _commandedTarget = null;
         _returningToSummonerAfterStuck = false;
         ResetStuckRecoveryTracking();
+        UpdateHealthLabel();
         ClearAllyCollisionExceptions();
         if (NavigationAgent != null)
             NavigationAgent.SetPhysicsProcess(false);
@@ -642,5 +649,34 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private void ApplyFactionGroup()
     {
         Factions.ApplyCombatGroup(this, Faction);
+    }
+
+    private void EnsureHealthLabel()
+    {
+        if (_healthLabel != null)
+            return;
+
+        _healthLabel = new Label
+        {
+            Name = "HealthLabel",
+            Position = HealthLabelOffset,
+            Size = HealthLabelSize,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ZIndex = 10
+        };
+        _healthLabel.AddThemeFontSizeOverride("font_size", 12);
+        _healthLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
+        _healthLabel.AddThemeConstantOverride("outline_size", 2);
+        AddChild(_healthLabel);
+    }
+
+    private void UpdateHealthLabel()
+    {
+        if (_healthLabel == null)
+            return;
+
+        _healthLabel.Text = $"{_currentHealth}/{Math.Max(1, Health)}";
+        _healthLabel.AddThemeColorOverride("font_color", FactionColors.Resolve(Faction));
     }
 }

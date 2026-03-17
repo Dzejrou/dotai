@@ -2,10 +2,10 @@ using Godot;
 
 public partial class PlayerTargetMarker : Node2D
 {
-    private static readonly Color MarkerColor = new Color(1.0f, 0.92f, 0.35f, 0.8f);
     private const float MarkerWidth = 2.0f;
 
     private Node2D _target;
+    private Color _markerColor = Colors.White;
 
     public override void _Ready()
     {
@@ -23,6 +23,7 @@ public partial class PlayerTargetMarker : Node2D
         }
 
         GlobalPosition = _target.GlobalPosition + new Vector2(0.0f, -8.0f);
+        UpdateMarkerColor();
     }
 
     public override void _Draw()
@@ -37,8 +38,8 @@ public partial class PlayerTargetMarker : Node2D
         var rightBottom = new Vector2(22.0f, 12.0f);
         var rightEnd = new Vector2(16.0f, 12.0f);
 
-        DrawPolyline([leftTop, leftMid, leftBottom, leftEnd], MarkerColor, MarkerWidth);
-        DrawPolyline([rightTop, rightMid, rightBottom, rightEnd], MarkerColor, MarkerWidth);
+        DrawPolyline([leftTop, leftMid, leftBottom, leftEnd], _markerColor, MarkerWidth);
+        DrawPolyline([rightTop, rightMid, rightBottom, rightEnd], _markerColor, MarkerWidth);
     }
 
     public void SetTarget(Node2D target)
@@ -47,12 +48,28 @@ public partial class PlayerTargetMarker : Node2D
         Visible = _target != null;
 
         if (Visible)
+        {
+            UpdateMarkerColor();
             GlobalPosition = _target.GlobalPosition + new Vector2(0.0f, -8.0f);
+        }
     }
 
     public void ClearTarget()
     {
         _target = null;
         Visible = false;
+        _markerColor = Colors.White;
+        QueueRedraw();
+    }
+
+    private void UpdateMarkerColor()
+    {
+        var nextColor = FactionColors.Resolve(_target);
+        nextColor.A = 0.8f;
+        if (_markerColor == nextColor)
+            return;
+
+        _markerColor = nextColor;
+        QueueRedraw();
     }
 }

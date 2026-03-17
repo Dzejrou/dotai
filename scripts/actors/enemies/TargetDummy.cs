@@ -133,6 +133,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
             return;
 
         _healthLabel.Text = $"{_currentHealth}/{ResolvedMaxHealth}";
+        _healthLabel.AddThemeColorOverride("font_color", FactionColors.Resolve(Faction));
     }
 
     private void SetCollisionEnabled(bool enabled)
