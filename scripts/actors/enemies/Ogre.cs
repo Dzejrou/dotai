@@ -28,6 +28,8 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
 
     private RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
+    public override Faction Faction => Factions.Enemies;
+
     public override void _Ready()
     {
         InitializeEnemy(

@@ -12,6 +12,7 @@ public partial class SkeletonMage : RangedEnemyBase, IAttackable, ITargetable
     public int Health { get; set; } = 22;
 
     public bool CanBeTargeted => !IsDead;
+    public override Faction Faction => Factions.Enemies;
 
     public override void _Ready()
     {

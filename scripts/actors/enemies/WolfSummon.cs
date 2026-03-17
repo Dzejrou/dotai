@@ -33,10 +33,11 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
     public float SummonerRecoveryTolerance { get; set; } = 32.0f;
 
     public bool CanBeTargeted => !IsDead;
-    public Faction Faction { get; private set; } = Factions.Enemies;
+    public override Faction Faction => _faction;
     public ISummoner Summoner { get; private set; }
 
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
+    private Faction _faction = Factions.Enemies;
     private float _attackCooldownTimer;
     private bool _returningToSummonerAfterStuck;
     private bool _hasStuckProgressPosition;
@@ -79,11 +80,13 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
     public void SetSummoner(ISummoner summoner)
     {
         Summoner = summoner;
+        if (summoner is IFactionMember factionMember)
+            SetFaction(factionMember.Faction);
     }
 
     public void SetFaction(Faction faction)
     {
-        Faction = faction ?? Factions.Enemies;
+        _faction = faction ?? Factions.Enemies;
         if (IsInsideTree())
             ApplyFactionGroup();
     }

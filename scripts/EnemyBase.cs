@@ -2,7 +2,7 @@ using Godot;
 
 using System;
 
-public abstract partial class EnemyBase : CombatUnitBase
+public abstract partial class EnemyBase : CombatUnitBase, IFactionMember
 {
     private enum RegenerationPhase
     {
@@ -60,6 +60,7 @@ public abstract partial class EnemyBase : CombatUnitBase
     protected int CurrentHealth { get; private set; }
     protected bool IsDead { get; private set; }
     protected int ResolvedMaxHealth => Math.Max(1, MaxHealthValue);
+    public abstract Faction Faction { get; }
     private bool _hasPursuitProgressPosition;
     private Vector2 _lastPursuitProgressPosition;
     private float _pursuitStuckTimer;
@@ -110,10 +111,10 @@ public abstract partial class EnemyBase : CombatUnitBase
         if (_suppressTargetAcquisitionUntilHome)
             return;
 
-        var candidate = TargetingHelper.FindClosestTarget(
+        var candidate = TargetingHelper.FindClosestHostileTarget(
             this,
-            CombatGroups.Allies,
-            node => node is Node2D && node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
+            Faction,
+            node => node is Node2D targetNode && CanAcquireTarget(targetNode));
 
         if (candidate != null && CanAcquireTarget(candidate))
         {
@@ -124,7 +125,10 @@ public abstract partial class EnemyBase : CombatUnitBase
 
     protected bool CanAcquireTarget(Node2D target)
     {
-        return target is IAttackable && target is ITargetable targetable && targetable.CanBeTargeted &&
+        return target is IAttackable &&
+               target is ITargetable targetable &&
+               targetable.CanBeTargeted &&
+               IsHostileTarget(target) &&
                IsTargetWithinAcquisitionRange(target);
     }
 
@@ -155,6 +159,11 @@ public abstract partial class EnemyBase : CombatUnitBase
         return GlobalPosition.DistanceTo(target.GlobalPosition) <= range;
     }
 
+    private bool IsHostileTarget(Node target)
+    {
+        return Faction != null && Faction.IsHostileTo(Factions.ResolveForNode(target));
+    }
+
     protected bool TryReactToDamageSource(DamageInfo damageInfo)
     {
         if (IsEvadingHomeReturn() && IgnoreDamageWhileEvading)
@@ -166,7 +175,7 @@ public abstract partial class EnemyBase : CombatUnitBase
         if (damageInfo.Source is not Node2D sourceNode)
             return true;
 
-        if (!sourceNode.IsInGroup(CombatGroups.Allies))
+        if (!IsHostileTarget(sourceNode))
             return true;
 
         if (sourceNode is not ITargetable targetable || !targetable.CanBeTargeted)

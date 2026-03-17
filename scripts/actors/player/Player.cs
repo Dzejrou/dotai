@@ -258,7 +258,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (summonDirection == Vector2.Zero)
             summonDirection = Vector2.Right;
 
-        summonedSkeleton.SetFaction(Faction);
         summonedSkeleton.SetSummoner(this);
         summonedSkeleton.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, SummonSkeletonSpawnOffset);
         parent.AddChild(summonedSkeleton);

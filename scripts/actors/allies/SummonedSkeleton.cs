@@ -125,6 +125,8 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (_summonerNode == summonerNode)
         {
             _summoner = summoner;
+            if (summoner is IFactionMember factionMember)
+                SetFaction(factionMember.Faction);
             if (IsInsideTree())
                 ApplyAllyCollisionExceptions();
             return;
@@ -132,6 +134,8 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
         _summoner = summoner;
         _summonerNode = summonerNode;
+        if (summoner is IFactionMember inheritedFactionMember)
+            SetFaction(inheritedFactionMember.Faction);
         _summonerCollisionExceptionApplied = false;
         if (IsInsideTree())
             ApplyAllyCollisionExceptions();
