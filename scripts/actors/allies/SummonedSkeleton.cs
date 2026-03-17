@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
+public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable, ISummonedUnit
 {
     [Export]
     public float Speed { get; set; } = 52.0f;
@@ -54,16 +54,18 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     public float FormationVerticalOffset { get; set; } = 42.0f;
 
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
-    private Node2D _owner;
+    private ISummoner _summoner;
+    private Node2D _summonerNode;
     private float _attackCooldownTimer;
     private int _currentHealth;
     private bool _isDead;
-    private bool _ownerCollisionExceptionApplied;
+    private bool _summonerCollisionExceptionApplied;
     private bool _deathFallbackQueued;
     private const float DeathFallbackDelay = 2.0f;
     private const int MaxFormationSlots = 4;
 
     public bool CanBeTargeted => !_isDead;
+    public ISummoner Summoner => _summoner;
 
     public override void _Ready()
     {
@@ -74,7 +76,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
         AddToGroup(CombatGroups.Allies);
-        _owner = ResolveOwner();
+        RefreshSummonerReference();
         ApplyAllyCollisionExceptions();
         PlayIdleIfAvailable();
 
@@ -100,22 +102,32 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     public bool IsOwnedBy(Node2D owner)
     {
-        return owner != null && _owner == owner;
+        return owner != null && _summonerNode == owner;
     }
 
-    public void SetOwner(Node2D owner)
+    public void SetSummoner(ISummoner summoner)
     {
-        if (_owner == owner)
+        var summonerNode = summoner?.SummonerNode;
+        if (_summonerNode == summonerNode)
         {
+            _summoner = summoner;
             if (IsInsideTree())
                 ApplyAllyCollisionExceptions();
             return;
         }
 
-        _owner = owner;
-        _ownerCollisionExceptionApplied = false;
+        _summoner = summoner;
+        _summonerNode = summonerNode;
+        _summonerCollisionExceptionApplied = false;
         if (IsInsideTree())
             ApplyAllyCollisionExceptions();
+    }
+
+    public bool HasValidSummoner()
+    {
+        return _summoner != null &&
+               GodotObject.IsInstanceValid(_summoner.SummonerNode) &&
+               _summoner.IsSummonerActive;
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -258,17 +270,17 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     protected override bool HandleNoTarget(double delta)
     {
-        if (_owner == null || !GodotObject.IsInstanceValid(_owner) || !_owner.IsInsideTree())
+        if (_summonerNode == null || !GodotObject.IsInstanceValid(_summonerNode) || !_summonerNode.IsInsideTree())
         {
-            _owner = ResolveOwner();
-            _ownerCollisionExceptionApplied = false;
+            RefreshSummonerReference();
+            _summonerCollisionExceptionApplied = false;
             ApplyAllyCollisionExceptions();
         }
 
-        if (_owner == null)
+        if (_summonerNode == null)
             return false;
 
-        var distance = (_owner.GlobalPosition - GlobalPosition).Length();
+        var distance = (_summonerNode.GlobalPosition - GlobalPosition).Length();
         var startLeashDistance = Math.Max(LeashDistance, 0.0f);
         var stopLeashDistance = Math.Clamp(LeashReturnDistance, 0.0f, startLeashDistance);
 
@@ -280,7 +292,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
         if (CurrentState == CombatUnitState.Leashing)
         {
-            return TryMoveTowardDestination(_owner.GlobalPosition, LeashCatchupSpeedMultiplier, CombatUnitState.Leashing, delta);
+            return TryMoveTowardDestination(_summonerNode.GlobalPosition, LeashCatchupSpeedMultiplier, CombatUnitState.Leashing, delta);
         }
 
         var idleAnchor = GetIdleAnchor();
@@ -298,10 +310,10 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     private Vector2 GetIdleAnchor()
     {
-        if (_owner == null || !GodotObject.IsInstanceValid(_owner))
+        if (_summonerNode == null || !GodotObject.IsInstanceValid(_summonerNode))
             return GlobalPosition;
 
-        return _owner.GlobalPosition + GetSummonSpreadOffset();
+        return _summonerNode.GlobalPosition + GetSummonSpreadOffset();
     }
 
     private Vector2 GetSummonSpreadOffset()
@@ -332,7 +344,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     private int GetSummonSlotIndex()
     {
-        if (_owner == null || !GodotObject.IsInstanceValid(_owner))
+        if (_summonerNode == null || !GodotObject.IsInstanceValid(_summonerNode))
             return 0;
 
         var parent = GetParent();
@@ -345,11 +357,13 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             if (node is not SummonedSkeleton summon)
                 continue;
 
-            var summonOwner = summon._owner;
+            var summonOwner = summon.GetSummonerNode();
             if (!GodotObject.IsInstanceValid(summonOwner))
-                summonOwner = summon.ResolveOwner();
+                summon.RefreshSummonerReference();
 
-            if (!GodotObject.IsInstanceValid(summonOwner) || summonOwner != _owner)
+            summonOwner = summon.GetSummonerNode();
+
+            if (!GodotObject.IsInstanceValid(summonOwner) || summonOwner != _summonerNode)
                 continue;
 
             if (summon == this)
@@ -365,30 +379,47 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     private bool ShouldPrioritizeLeashReturn()
     {
-        if (_owner == null || !GodotObject.IsInstanceValid(_owner) || !_owner.IsInsideTree())
-            _owner = ResolveOwner();
+        if (_summonerNode == null || !GodotObject.IsInstanceValid(_summonerNode) || !_summonerNode.IsInsideTree())
+            RefreshSummonerReference();
 
-        if (_owner == null)
+        if (_summonerNode == null)
             return false;
 
-        var distanceToOwner = GlobalPosition.DistanceTo(_owner.GlobalPosition);
+        var distanceToSummoner = GlobalPosition.DistanceTo(_summonerNode.GlobalPosition);
         if (CurrentState == CombatUnitState.Leashing)
-            return distanceToOwner > Math.Max(LeashReturnDistance, 0.0f);
+            return distanceToSummoner > Math.Max(LeashReturnDistance, 0.0f);
 
-        return distanceToOwner > Math.Max(LeashDistance, 0.0f);
+        return distanceToSummoner > Math.Max(LeashDistance, 0.0f);
     }
 
-    private Node2D ResolveOwner()
+    private void RefreshSummonerReference()
+    {
+        if (HasValidSummoner())
+        {
+            _summonerNode = _summoner.SummonerNode;
+            return;
+        }
+
+        _summoner = ResolveSummoner();
+        _summonerNode = _summoner?.SummonerNode;
+    }
+
+    private Node2D GetSummonerNode()
+    {
+        return _summonerNode;
+    }
+
+    private ISummoner ResolveSummoner()
     {
         if (!OwnerPath.IsEmpty && HasNode(OwnerPath))
-            return GetNodeOrNull<Node2D>(OwnerPath);
+            return GetNodeOrNull<Node>(OwnerPath) as ISummoner;
 
-        return GetParent()?.GetNodeOrNull<Node2D>("Player");
+        return null;
     }
 
     private void ApplyAllyCollisionExceptions()
     {
-        if (_ownerCollisionExceptionApplied)
+        if (_summonerCollisionExceptionApplied)
             return;
 
         if (!IsInsideTree() || GetTree() == null)
@@ -409,7 +440,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             allyPhysicsBody.AddCollisionExceptionWith(summonPhysicsBody);
         }
 
-        _ownerCollisionExceptionApplied = true;
+        _summonerCollisionExceptionApplied = true;
     }
 
     private void ClearAllyCollisionExceptions()
@@ -433,6 +464,6 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             allyPhysicsBody.RemoveCollisionExceptionWith(summonPhysicsBody);
         }
 
-        _ownerCollisionExceptionApplied = false;
+        _summonerCollisionExceptionApplied = false;
     }
 }

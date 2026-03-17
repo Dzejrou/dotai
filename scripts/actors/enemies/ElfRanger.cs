@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable
+public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISummoner
 {
     private const string DefaultWolfSummonScenePath = "res://scenes/actors/enemies/wolf_summon.tscn";
 
@@ -22,9 +22,15 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable
     [Export]
     public float WolfSummonTriggerRange { get; set; } = 180.0f;
 
+    [Export]
+    public float WolfResummonDelaySeconds { get; set; } = 10.0f;
+
     public bool CanBeTargeted => !IsDead;
+    public Node2D SummonerNode => this;
+    public bool IsSummonerActive => !IsDead && IsInsideTree();
 
     private WolfSummon _summonedWolf;
+    private float _wolfResummonCooldownTimer;
 
     public override void _Ready()
     {
@@ -47,7 +53,11 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable
         if (IsDead)
             return;
 
+        if (_wolfResummonCooldownTimer > 0.0f)
+            _wolfResummonCooldownTimer -= (float)delta;
+
         base._PhysicsProcess(delta);
+        UpdateWolfSummonState();
         TrySummonWolf();
     }
 
@@ -96,7 +106,10 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable
 
     private void TrySummonWolf()
     {
-        if (IsDead || CurrentState == CombatUnitState.Attacking || HasActiveWolfSummon())
+        if (IsDead ||
+            CurrentState == CombatUnitState.Attacking ||
+            _wolfResummonCooldownTimer > 0.0f ||
+            HasActiveWolfSummon())
             return;
 
         if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
@@ -123,25 +136,37 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable
             summonDirection = Vector2.Right;
 
         summonedWolf.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, WolfSummonSpawnOffset);
+        summonedWolf.SetSummoner(this);
         parent.AddChild(summonedWolf);
         _summonedWolf = summonedWolf;
     }
 
     private bool HasActiveWolfSummon()
     {
-        if (_summonedWolf == null || !IsInstanceValid(_summonedWolf) || !_summonedWolf.IsInsideTree())
-        {
-            _summonedWolf = null;
-            return false;
-        }
+        return IsActiveWolfSummon(_summonedWolf);
+    }
 
-        if (_summonedWolf is not ITargetable targetable || !targetable.CanBeTargeted)
-        {
-            _summonedWolf = null;
-            return false;
-        }
+    private void UpdateWolfSummonState()
+    {
+        if (IsActiveWolfSummon(_summonedWolf))
+            return;
 
-        return true;
+        if (_summonedWolf == null)
+            return;
+
+        _summonedWolf = null;
+        _wolfResummonCooldownTimer = Math.Max(_wolfResummonCooldownTimer, Math.Max(0.0f, WolfResummonDelaySeconds));
+    }
+
+    private bool IsActiveWolfSummon(WolfSummon summonedWolf)
+    {
+        if (summonedWolf == null || !IsInstanceValid(summonedWolf) || !summonedWolf.IsInsideTree())
+            return false;
+
+        if (summonedWolf is not ITargetable targetable || !targetable.CanBeTargeted)
+            return false;
+
+        return summonedWolf.HasValidSummoner();
     }
 
     protected override int MaxHealthValue => Health;

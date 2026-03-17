@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D, IAttackable, ITargetable
+public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummoner
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -85,6 +85,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
 
     public int CurrentHealth => _health;
     public bool CanBeTargeted => !_isDead;
+    public Node2D SummonerNode => this;
+    public bool IsSummonerActive => !_isDead && IsInsideTree();
     public PlayerTargetingState Targeting { get; } = new();
 
     public override void _Ready()
@@ -255,7 +257,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable
         if (summonDirection == Vector2.Zero)
             summonDirection = Vector2.Right;
 
-        summonedSkeleton.SetOwner(this);
+        summonedSkeleton.SetSummoner(this);
         summonedSkeleton.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, SummonSkeletonSpawnOffset);
         parent.AddChild(summonedSkeleton);
     }

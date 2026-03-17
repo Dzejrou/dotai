@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class WolfSummon : EnemyBase, IAttackable, ITargetable
+public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummonedUnit
 {
     [Export]
     public float Speed { get; set; } = 76.0f;
@@ -27,6 +27,7 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable
     public int MaxAttackDamage { get; set; } = 3;
 
     public bool CanBeTargeted => !IsDead;
+    public ISummoner Summoner { get; private set; }
 
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
@@ -46,10 +47,28 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable
 
     public override void _PhysicsProcess(double delta)
     {
+        if (Summoner != null && !HasValidSummoner())
+        {
+            QueueFree();
+            return;
+        }
+
         if (IsDead)
             return;
 
         base._PhysicsProcess(delta);
+    }
+
+    public void SetSummoner(ISummoner summoner)
+    {
+        Summoner = summoner;
+    }
+
+    public bool HasValidSummoner()
+    {
+        return Summoner != null &&
+               GodotObject.IsInstanceValid(Summoner.SummonerNode) &&
+               Summoner.IsSummonerActive;
     }
 
     protected override bool CanAttackNow(Vector2 toTarget, double delta)
