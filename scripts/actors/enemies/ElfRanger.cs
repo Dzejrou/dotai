@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISummoner
+public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISummoner, IFactionMember
 {
     private const string DefaultWolfSummonScenePath = "res://scenes/actors/enemies/wolf_summon.tscn";
 
@@ -26,6 +26,7 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISum
     public float WolfResummonDelaySeconds { get; set; } = 10.0f;
 
     public bool CanBeTargeted => !IsDead;
+    public Faction Faction => Factions.Enemies;
     public Node2D SummonerNode => this;
     public bool IsSummonerActive => !IsDead && IsInsideTree();
 
@@ -135,6 +136,7 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISum
         if (summonDirection == Vector2.Zero)
             summonDirection = Vector2.Right;
 
+        summonedWolf.SetFaction(Faction);
         summonedWolf.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, WolfSummonSpawnOffset);
         summonedWolf.SetSummoner(this);
         parent.AddChild(summonedWolf);

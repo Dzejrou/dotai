@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummonedUnit
+public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember
 {
     private const float StuckProgressThreshold = 1.0f;
     private const float StuckTimeoutSeconds = 0.6f;
@@ -33,6 +33,7 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
     public float SummonerRecoveryTolerance { get; set; } = 32.0f;
 
     public bool CanBeTargeted => !IsDead;
+    public Faction Faction { get; private set; } = Factions.Enemies;
     public ISummoner Summoner { get; private set; }
 
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
@@ -49,6 +50,7 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
             "WolfSummon");
+        ApplyFactionGroup();
         SetMovementSpeed(Speed);
         PlayIdleIfAvailable();
         AnimatedSprite.AnimationFinished += OnAnimationFinished;
@@ -79,6 +81,13 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
         Summoner = summoner;
     }
 
+    public void SetFaction(Faction faction)
+    {
+        Faction = faction ?? Factions.Enemies;
+        if (IsInsideTree())
+            ApplyFactionGroup();
+    }
+
     public bool HasValidSummoner()
     {
         return Summoner != null &&
@@ -102,7 +111,16 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
             _returningToSummonerAfterStuck = false;
         }
 
-        base.AcquireTarget();
+        var candidate = TargetingHelper.FindClosestHostileTarget(
+            this,
+            Faction,
+            node => node is Node2D targetNode &&
+                    node is IAttackable &&
+                    node is ITargetable targetable &&
+                    targetable.CanBeTargeted &&
+                    CanAcquireTarget(targetNode));
+        if (candidate != null)
+            SetTarget(candidate);
     }
 
     protected override bool HandleNoTarget(double delta)
@@ -271,6 +289,11 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
     private Node2D GetSummonerNode()
     {
         return Summoner?.SummonerNode;
+    }
+
+    private void ApplyFactionGroup()
+    {
+        Factions.ApplyCombatGroup(this, Faction);
     }
 
     protected override int MaxHealthValue => MaxHealth;

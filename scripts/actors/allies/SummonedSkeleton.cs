@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable, ISummonedUnit
+public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember
 {
     private const float StuckProgressThreshold = 1.0f;
     private const float StuckTimeoutSeconds = 0.6f;
@@ -73,6 +73,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private const int MaxFormationSlots = 4;
 
     public bool CanBeTargeted => !_isDead;
+    public Faction Faction { get; private set; } = Factions.Allies;
     public ISummoner Summoner => _summoner;
 
     public override void _Ready()
@@ -83,7 +84,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
-        AddToGroup(CombatGroups.Allies);
+        ApplyFactionGroup();
         RefreshSummonerReference();
         ApplyAllyCollisionExceptions();
         PlayIdleIfAvailable();
@@ -134,6 +135,17 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         _summonerCollisionExceptionApplied = false;
         if (IsInsideTree())
             ApplyAllyCollisionExceptions();
+    }
+
+    public void SetFaction(Faction faction)
+    {
+        Faction = faction ?? Factions.Allies;
+        if (!IsInsideTree())
+            return;
+
+        ClearAllyCollisionExceptions();
+        ApplyFactionGroup();
+        ApplyAllyCollisionExceptions();
     }
 
     public bool HasValidSummoner()
@@ -234,9 +246,9 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (ShouldPrioritizeLeashReturn())
             return;
 
-        var candidate = TargetingHelper.FindClosestTarget(
+        var candidate = TargetingHelper.FindClosestHostileTarget(
             this,
-            CombatGroups.Enemies,
+            Faction,
             node => node is IAttackable &&
                     node is ITargetable targetable &&
                     targetable.CanBeTargeted &&
@@ -530,7 +542,11 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (this is not PhysicsBody2D summonPhysicsBody)
             return;
 
-        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Allies))
+        var ownGroup = Factions.GetCombatGroup(Faction);
+        if (string.IsNullOrEmpty(ownGroup))
+            return;
+
+        foreach (var node in GetTree().GetNodesInGroup(ownGroup))
         {
             if (node == this ||
                 node is not PhysicsBody2D allyPhysicsBody ||
@@ -554,7 +570,11 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         if (tree == null)
             return;
 
-        foreach (var node in tree.GetNodesInGroup(CombatGroups.Allies))
+        var ownGroup = Factions.GetCombatGroup(Faction);
+        if (string.IsNullOrEmpty(ownGroup))
+            return;
+
+        foreach (var node in tree.GetNodesInGroup(ownGroup))
         {
             if (node == this ||
                 node is not PhysicsBody2D allyPhysicsBody ||
@@ -567,5 +587,10 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         }
 
         _summonerCollisionExceptionApplied = false;
+    }
+
+    private void ApplyFactionGroup()
+    {
+        Factions.ApplyCombatGroup(this, Faction);
     }
 }
