@@ -5,6 +5,9 @@ using System;
 [GlobalClass]
 public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummonedUnit
 {
+    private const float StuckProgressThreshold = 1.0f;
+    private const float StuckTimeoutSeconds = 0.6f;
+
     [Export]
     public float Speed { get; set; } = 76.0f;
 
@@ -26,11 +29,18 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
     [Export]
     public int MaxAttackDamage { get; set; } = 3;
 
+    [Export]
+    public float SummonerRecoveryTolerance { get; set; } = 32.0f;
+
     public bool CanBeTargeted => !IsDead;
     public ISummoner Summoner { get; private set; }
 
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
     private float _attackCooldownTimer;
+    private bool _returningToSummonerAfterStuck;
+    private bool _hasStuckProgressPosition;
+    private Vector2 _lastStuckProgressPosition;
+    private float _stuckTimer;
 
     public override void _Ready()
     {
@@ -59,6 +69,11 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
         base._PhysicsProcess(delta);
     }
 
+    protected override void PrePhysicsProcess(double delta)
+    {
+        UpdateStuckRecovery((float)delta);
+    }
+
     public void SetSummoner(ISummoner summoner)
     {
         Summoner = summoner;
@@ -69,6 +84,49 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
         return Summoner != null &&
                GodotObject.IsInstanceValid(Summoner.SummonerNode) &&
                Summoner.IsSummonerActive;
+    }
+
+    protected override void AcquireTarget()
+    {
+        if (_returningToSummonerAfterStuck)
+        {
+            var summonerNode = GetSummonerNode();
+            if (summonerNode != null &&
+                GodotObject.IsInstanceValid(summonerNode) &&
+                summonerNode.IsInsideTree() &&
+                GlobalPosition.DistanceTo(summonerNode.GlobalPosition) > Math.Max(0.0f, SummonerRecoveryTolerance))
+            {
+                return;
+            }
+
+            _returningToSummonerAfterStuck = false;
+        }
+
+        base.AcquireTarget();
+    }
+
+    protected override bool HandleNoTarget(double delta)
+    {
+        if (_returningToSummonerAfterStuck)
+        {
+            var summonerNode = GetSummonerNode();
+            if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
+            {
+                _returningToSummonerAfterStuck = false;
+                return false;
+            }
+
+            if (GlobalPosition.DistanceTo(summonerNode.GlobalPosition) <= Math.Max(0.0f, SummonerRecoveryTolerance))
+            {
+                _returningToSummonerAfterStuck = false;
+                SetCombatState(CombatUnitState.Idle);
+                return false;
+            }
+
+            return TryMoveTowardDestination(summonerNode.GlobalPosition, 1.0f, CombatUnitState.Leashing, delta);
+        }
+
+        return base.HandleNoTarget(delta);
     }
 
     protected override bool CanAttackNow(Vector2 toTarget, double delta)
@@ -138,6 +196,57 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
             StartDeath();
     }
 
+    private void UpdateStuckRecovery(float delta)
+    {
+        if (!ShouldCheckForStuckRecovery())
+        {
+            ResetStuckRecoveryTracking();
+            return;
+        }
+
+        if (!_hasStuckProgressPosition)
+        {
+            _hasStuckProgressPosition = true;
+            _lastStuckProgressPosition = GlobalPosition;
+            _stuckTimer = 0.0f;
+            return;
+        }
+
+        if (GlobalPosition.DistanceTo(_lastStuckProgressPosition) > StuckProgressThreshold)
+        {
+            _lastStuckProgressPosition = GlobalPosition;
+            _stuckTimer = 0.0f;
+            return;
+        }
+
+        _stuckTimer += Math.Max(0.0f, delta);
+        if (_stuckTimer < StuckTimeoutSeconds)
+            return;
+
+        ClearTarget();
+        _returningToSummonerAfterStuck = true;
+        SetCombatState(CombatUnitState.Leashing);
+        ResetStuckRecoveryTracking();
+    }
+
+    private bool ShouldCheckForStuckRecovery()
+    {
+        if (IsDead || Velocity == Vector2.Zero)
+            return false;
+
+        if (_returningToSummonerAfterStuck)
+            return CurrentState == CombatUnitState.Leashing;
+
+        return CurrentState == CombatUnitState.PursuingTarget && CurrentTarget != null;
+    }
+
+    private void ResetStuckRecoveryTracking()
+    {
+        _hasStuckProgressPosition = false;
+        _lastStuckProgressPosition = Vector2.Zero;
+        _stuckTimer = 0.0f;
+    }
+
     private void OnAnimationFinished()
     {
         if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
@@ -154,7 +263,14 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
         MarkDead();
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
+        _returningToSummonerAfterStuck = false;
+        ResetStuckRecoveryTracking();
         TryPlayDeathAnimation();
+    }
+
+    private Node2D GetSummonerNode()
+    {
+        return Summoner?.SummonerNode;
     }
 
     protected override int MaxHealthValue => MaxHealth;

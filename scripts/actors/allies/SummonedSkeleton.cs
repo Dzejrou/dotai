@@ -5,6 +5,10 @@ using System;
 [GlobalClass]
 public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable, ISummonedUnit
 {
+    private const float StuckProgressThreshold = 1.0f;
+    private const float StuckTimeoutSeconds = 0.6f;
+    private const float StuckWaypointDistance = 8.0f;
+
     [Export]
     public float Speed { get; set; } = 52.0f;
 
@@ -61,6 +65,10 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private bool _isDead;
     private bool _summonerCollisionExceptionApplied;
     private bool _deathFallbackQueued;
+    private bool _hasStuckProgressPosition;
+    private Vector2 _lastStuckProgressPosition;
+    private float _stuckTimer;
+    private bool _returningToSummonerAfterStuck;
     private const float DeathFallbackDelay = 2.0f;
     private const int MaxFormationSlots = 4;
 
@@ -92,6 +100,11 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             return;
 
         base._PhysicsProcess(delta);
+    }
+
+    protected override void PrePhysicsProcess(double delta)
+    {
+        UpdateStuckRecovery((float)delta);
     }
 
     public override void _ExitTree()
@@ -144,8 +157,77 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             StartDeath();
     }
 
+    private void UpdateStuckRecovery(float delta)
+    {
+        if (!ShouldCheckForStuckRecovery())
+        {
+            ResetStuckRecoveryTracking();
+            return;
+        }
+
+        if (!_hasStuckProgressPosition)
+        {
+            _hasStuckProgressPosition = true;
+            _lastStuckProgressPosition = GlobalPosition;
+            _stuckTimer = 0.0f;
+            return;
+        }
+
+        if (GlobalPosition.DistanceTo(_lastStuckProgressPosition) > StuckProgressThreshold)
+        {
+            _lastStuckProgressPosition = GlobalPosition;
+            _stuckTimer = 0.0f;
+            return;
+        }
+
+        _stuckTimer += Math.Max(0.0f, delta);
+        if (_stuckTimer < StuckTimeoutSeconds)
+            return;
+
+        ClearTarget();
+        _returningToSummonerAfterStuck = true;
+        SetCombatState(CombatUnitState.Leashing);
+        ResetStuckRecoveryTracking();
+    }
+
+    private bool ShouldCheckForStuckRecovery()
+    {
+        if (_isDead || Velocity == Vector2.Zero)
+            return false;
+
+        if (!IsUsingNavigationPath)
+            return false;
+
+        if (GlobalPosition.DistanceTo(LastNavigationPathPosition) <= StuckWaypointDistance)
+            return false;
+
+        return CurrentState == CombatUnitState.PursuingTarget ||
+               CurrentState == CombatUnitState.FollowingOwner ||
+               CurrentState == CombatUnitState.Leashing;
+    }
+
+    private void ResetStuckRecoveryTracking()
+    {
+        _hasStuckProgressPosition = false;
+        _lastStuckProgressPosition = Vector2.Zero;
+        _stuckTimer = 0.0f;
+    }
+
     protected override void AcquireTarget()
     {
+        if (_returningToSummonerAfterStuck)
+        {
+            if (_summonerNode != null &&
+                GodotObject.IsInstanceValid(_summonerNode) &&
+                _summonerNode.IsInsideTree() &&
+                GlobalPosition.DistanceTo(_summonerNode.GlobalPosition) > Math.Max(LeashReturnDistance, 0.0f))
+            {
+                return;
+            }
+
+            _returningToSummonerAfterStuck = false;
+        }
+
         if (CurrentState == CombatUnitState.Leashing)
             return;
 
@@ -155,9 +237,24 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         var candidate = TargetingHelper.FindClosestTarget(
             this,
             CombatGroups.Enemies,
-            node => node is IAttackable && node is ITargetable targetable && targetable.CanBeTargeted);
+            node => node is IAttackable &&
+                    node is ITargetable targetable &&
+                    targetable.CanBeTargeted &&
+                    node is Node2D targetNode &&
+                    CanAcquireTarget(targetNode));
         if (candidate != null)
             SetTarget(candidate);
+    }
+
+    private bool CanAcquireTarget(Node2D target)
+    {
+        if (target == null)
+            return false;
+
+        if (_summonerNode == null || !GodotObject.IsInstanceValid(_summonerNode) || !_summonerNode.IsInsideTree())
+            return true;
+
+        return _summonerNode.GlobalPosition.DistanceTo(target.GlobalPosition) <= Math.Max(LeashDistance, 0.0f);
     }
 
     protected override bool ShouldLoseCurrentTarget(Node2D target)
@@ -243,6 +340,8 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         MarkDead();
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
+        _returningToSummonerAfterStuck = false;
+        ResetStuckRecoveryTracking();
         ClearAllyCollisionExceptions();
         if (NavigationAgent != null)
             NavigationAgent.SetPhysicsProcess(false);
@@ -288,7 +387,10 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
             SetCombatState(CombatUnitState.Leashing);
 
         if (CurrentState == CombatUnitState.Leashing && distance <= stopLeashDistance)
+        {
             SetCombatState(CombatUnitState.Idle);
+            _returningToSummonerAfterStuck = false;
+        }
 
         if (CurrentState == CombatUnitState.Leashing)
         {
