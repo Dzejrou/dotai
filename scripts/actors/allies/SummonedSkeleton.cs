@@ -3,11 +3,10 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember, IOffensiveSummon, IOffensiveSummonActorAIHost
+public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember, IOffensiveSummon
 {
-    private const float StuckProgressThreshold = 1.0f;
-    private const float StuckTimeoutSeconds = 0.6f;
-    private const float StuckWaypointDistance = 8.0f;
+    private const float DeathFallbackDelay = 2.0f;
+    private const int MaxFormationSlots = 4;
 
     [Export]
     public float Speed { get; set; } = 52.0f;
@@ -51,21 +50,13 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
     [Export]
     public float FormationVerticalOffset { get; set; } = 42.0f;
 
-    private readonly RandomNumberGenerator _randomNumberGenerator = new();
-    private readonly ActorAI _actorAI = new OffensiveSummonActorAI();
     private Faction _faction = Factions.Allies;
     private ISummoner _summoner;
     private Node2D _summonerNode;
-    private float _attackCooldownTimer;
     private bool _summonerCollisionExceptionApplied;
     private bool _deathFallbackQueued;
-    private bool _hasStuckProgressPosition;
-    private Vector2 _lastStuckProgressPosition;
-    private float _stuckTimer;
-    private bool _returningToSummonerAfterStuck;
     private Node2D _commandedTarget;
-    private const float DeathFallbackDelay = 2.0f;
-    private const int MaxFormationSlots = 4;
+    private FollowSummonerBehavior _followSummonerBehavior;
 
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
@@ -73,7 +64,6 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
 
     public override void _Ready()
     {
-        SetActorAI(_actorAI);
         InitializeActor(
             GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
@@ -82,31 +72,54 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
         ApplyFactionGroup();
         RefreshSummonerReference();
         ApplyAllyCollisionExceptions();
+        SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
+
+        _followSummonerBehavior = new FollowSummonerBehavior(
+            actor => GetSummonerNode(),
+            actor => GetIdleAnchor(),
+            LeashDistance,
+            LeashReturnDistance,
+            IdleAnchorTolerance,
+            LeashCatchupSpeedMultiplier,
+            followWhenIdle: true);
+
+        ConfigureBehaviors(
+            new CommandedTargetBehavior(actor => GetCommandedTarget()),
+            new AcquireHostileTargetBehavior(
+                float.MaxValue,
+                canAttemptAcquisition: actor =>
+                    !_followSummonerBehavior.IsRecovering &&
+                    actor.CurrentState != CombatUnitState.Leashing &&
+                    !_followSummonerBehavior.ShouldPrioritizeLeashReturn(actor),
+                additionalTargetFilter: (actor, target) => CanAcquireTarget(target)),
+            new PursuitStuckRecoveryBehavior(
+                1.0f,
+                0.6f,
+                8.0f,
+                actor =>
+                    actor.CurrentState == CombatUnitState.PursuingTarget ||
+                    actor.CurrentState == CombatUnitState.FollowingOwner ||
+                    actor.CurrentState == CombatUnitState.Leashing,
+                actor =>
+                {
+                    actor.ClearTarget();
+                    _followSummonerBehavior.BeginRecovery();
+                }),
+            new TargetCombatBehavior((actor, target) => _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor)),
+            _followSummonerBehavior);
         PlayIdleIfAvailable();
-
-        if (AnimatedSprite != null)
-            AnimatedSprite.AnimationFinished += OnAnimationFinished;
-
-        _randomNumberGenerator.Randomize();
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        if (IsDead)
-            return;
-
-        base._PhysicsProcess(delta);
-    }
-
-    protected override void OnActorPrePhysicsProcess(double delta)
-    {
-        UpdateStuckRecovery((float)delta);
     }
 
     protected override void OnActorExitTree()
     {
         _deathFallbackQueued = false;
         ClearAllyCollisionExceptions();
+    }
+
+    protected override void OnDeathAnimationFinalized()
+    {
+        ClearAllyCollisionExceptions();
+        QueueFree();
     }
 
     public bool IsOwnedBy(Node2D owner)
@@ -145,7 +158,7 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
         ClearAllyCollisionExceptions();
         ApplyFactionGroup();
         ApplyAllyCollisionExceptions();
-        SetCurrentHealth(CurrentHealth);
+        RefreshHealthLabel();
     }
 
     public bool HasValidSummoner()
@@ -157,14 +170,11 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (IsDead)
+        if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;
 
-        var damage = Math.Max(1, damageInfo.Amount);
-        SetCurrentHealth(Math.Max(0, CurrentHealth - damage));
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
-
-        if (CurrentHealth <= 0)
+        if (died)
             StartDeath();
     }
 
@@ -174,74 +184,52 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
             return;
 
         _commandedTarget = target;
+        _followSummonerBehavior.CancelRecovery();
 
-        if (forceRetarget || !ValidateCurrentTarget())
-        {
+        if (forceRetarget || !HasUsableCurrentTarget())
             SetTarget(target);
-            _returningToSummonerAfterStuck = false;
-            ResetStuckRecoveryTracking();
-        }
     }
 
-    private void UpdateStuckRecovery(float delta)
+    private void StartDeath()
     {
-        if (!ShouldCheckForStuckRecovery())
-        {
-            ResetStuckRecoveryTracking();
-            return;
-        }
-
-        if (!_hasStuckProgressPosition)
-        {
-            _hasStuckProgressPosition = true;
-            _lastStuckProgressPosition = GlobalPosition;
-            _stuckTimer = 0.0f;
-            return;
-        }
-
-        if (GlobalPosition.DistanceTo(_lastStuckProgressPosition) > StuckProgressThreshold)
-        {
-            _lastStuckProgressPosition = GlobalPosition;
-            _stuckTimer = 0.0f;
-            return;
-        }
-
-        _stuckTimer += Math.Max(0.0f, delta);
-        if (_stuckTimer < StuckTimeoutSeconds)
-            return;
-
+        SetIsDead(true);
+        MarkDead();
+        Velocity = Vector2.Zero;
+        _commandedTarget = null;
+        _followSummonerBehavior?.CancelRecovery();
         ClearTarget();
-        _returningToSummonerAfterStuck = true;
-        SetCombatState(CombatUnitState.Leashing);
-        ResetStuckRecoveryTracking();
+        ResetPrimaryActionController();
+        ClearAllyCollisionExceptions();
+        if (NavigationAgent != null)
+            NavigationAgent.SetPhysicsProcess(false);
+        TryPlayDeathAnimation(queueFreeOnMissingAnimation: true);
+        ScheduleDeathCleanupFallback();
     }
 
-    private bool ShouldCheckForStuckRecovery()
+    private void ScheduleDeathCleanupFallback()
     {
-        if (IsDead || Velocity == Vector2.Zero)
-            return false;
+        if (_deathFallbackQueued || GetTree() == null || !IsInsideTree())
+            return;
 
-        if (!IsUsingNavigationPath)
-            return false;
-
-        if (GlobalPosition.DistanceTo(LastNavigationPathPosition) <= StuckWaypointDistance)
-            return false;
-
-        return CurrentState == CombatUnitState.PursuingTarget ||
-               CurrentState == CombatUnitState.FollowingOwner ||
-               CurrentState == CombatUnitState.Leashing;
+        _deathFallbackQueued = true;
+        var timer = GetTree().CreateTimer(DeathFallbackDelay);
+        timer.Timeout += OnDeathCleanupTimeout;
     }
 
-    private void ResetStuckRecoveryTracking()
+    private void OnDeathCleanupTimeout()
     {
-        _hasStuckProgressPosition = false;
-        _lastStuckProgressPosition = Vector2.Zero;
-        _stuckTimer = 0.0f;
+        if (!IsInstanceValid(this) || IsQueuedForDeletion())
+            return;
+
+        QueueFree();
     }
 
-    protected override void AcquireTarget()
+    private bool HasUsableCurrentTarget()
     {
-        _actorAI.TryAcquireTarget();
+        return CurrentTarget != null &&
+               IsStructurallyValidTarget(CurrentTarget) &&
+               CurrentTarget is ITargetable targetable &&
+               targetable.CanBeTargeted;
     }
 
     private bool CanAcquireTarget(Node2D target)
@@ -268,216 +256,13 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
 
     private bool IsValidCommandedTarget(Node2D target)
     {
-        if (target == null || !GodotObject.IsInstanceValid(target) || !target.IsInsideTree())
+        if (!IsStructurallyValidTarget(target))
             return false;
 
         if (target is not IAttackable || target is not ITargetable targetable || !targetable.CanBeTargeted)
             return false;
 
         return CanAcquireTarget(target);
-    }
-
-    protected override bool ShouldLoseCurrentTarget(Node2D target)
-    {
-        if (!ShouldPrioritizeLeashReturn())
-            return false;
-
-        SetCombatState(CombatUnitState.Leashing);
-        return true;
-    }
-
-    protected override bool CanAttackNow(Vector2 toTarget, double delta)
-    {
-        if (_attackCooldownTimer > 0.0f)
-            _attackCooldownTimer -= (float)delta;
-
-        return _attackCooldownTimer <= 0.0f && toTarget.Length() <= AttackRange;
-    }
-
-    protected override bool ShouldStayEngaged(Vector2 toTarget, double delta)
-    {
-        return toTarget.Length() <= AttackRange;
-    }
-
-    protected override void StartAttack()
-    {
-        if (IsDead ||
-            CurrentTarget is not IAttackable attackable ||
-            CurrentTarget is not ITargetable targetable ||
-            !targetable.CanBeTargeted)
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        SetCombatState(CombatUnitState.Attacking);
-        _attackCooldownTimer = AttackCooldown;
-
-        var toTarget = CurrentTarget.GlobalPosition - GlobalPosition;
-        if (toTarget != Vector2.Zero)
-            LastDirection = DirectionHelper.GetDirectionName(toTarget);
-
-        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
-        if (AnimatedSprite?.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(attackAnimation) &&
-            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) > 0)
-        {
-            AnimatedSprite.Play(attackAnimation);
-        }
-        else
-        {
-            SetCombatState(CombatUnitState.PursuingTarget);
-        }
-
-        var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
-        var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
-        attackable.ApplyDamage(new DamageInfo(damage, this));
-    }
-
-    private void OnAnimationFinished()
-    {
-        if (AnimatedSprite == null)
-            return;
-
-        var animationName = AnimatedSprite.Animation.ToString();
-        if (animationName.StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
-        {
-            FinishAttackState();
-            return;
-        }
-
-        if (TryFinalizeDeathAnimation(DeathAnimation))
-        {
-            ClearAllyCollisionExceptions();
-            QueueFree();
-        }
-    }
-
-    private void StartDeath()
-    {
-        SetIsDead(true);
-        MarkDead();
-        Velocity = Vector2.Zero;
-        _attackCooldownTimer = 0.0f;
-        _commandedTarget = null;
-        _returningToSummonerAfterStuck = false;
-        ResetStuckRecoveryTracking();
-        ClearAllyCollisionExceptions();
-        if (NavigationAgent != null)
-            NavigationAgent.SetPhysicsProcess(false);
-        TryPlayDeathAnimation(DeathAnimation, DisableCollisionOnDeath, queueFreeOnMissingAnimation: true);
-        ScheduleDeathCleanupFallback();
-    }
-
-    private void ScheduleDeathCleanupFallback()
-    {
-        if (_deathFallbackQueued || GetTree() == null || !IsInsideTree())
-            return;
-
-        _deathFallbackQueued = true;
-        var timer = GetTree().CreateTimer(DeathFallbackDelay);
-        timer.Timeout += OnDeathCleanupTimeout;
-    }
-
-    private void OnDeathCleanupTimeout()
-    {
-        if (!IsInstanceValid(this) || IsQueuedForDeletion())
-            return;
-
-        QueueFree();
-    }
-
-    protected override bool HandleNoTarget(double delta)
-    {
-        return TryHandleNoTargetWithAI(delta);
-    }
-
-    bool IOffensiveSummonActorAIHost.ShouldAttemptOffensiveSummonTargetAcquisition()
-    {
-        if (_returningToSummonerAfterStuck)
-        {
-            if (_summonerNode != null &&
-                GodotObject.IsInstanceValid(_summonerNode) &&
-                _summonerNode.IsInsideTree() &&
-                GlobalPosition.DistanceTo(_summonerNode.GlobalPosition) > Math.Max(LeashReturnDistance, 0.0f))
-            {
-                return false;
-            }
-
-            _returningToSummonerAfterStuck = false;
-        }
-
-        if (CurrentState == CombatUnitState.Leashing)
-            return false;
-
-        return !ShouldPrioritizeLeashReturn();
-    }
-
-    Node2D IOffensiveSummonActorAIHost.GetCommandedOffensiveSummonTarget()
-    {
-        return GetCommandedTarget();
-    }
-
-    Node2D IOffensiveSummonActorAIHost.SelectAutonomousOffensiveSummonTarget()
-    {
-        return TargetingHelper.FindClosestHostileTarget(
-            this,
-            Faction,
-            node => node is IAttackable &&
-                    node is ITargetable targetable &&
-                    targetable.CanBeTargeted &&
-                    node is Node2D targetNode &&
-                    CanAcquireTarget(targetNode));
-    }
-
-    void IOffensiveSummonActorAIHost.ApplyOffensiveSummonTarget(Node2D target)
-    {
-        if (target != null)
-            SetTarget(target);
-    }
-
-    bool IOffensiveSummonActorAIHost.TryHandleOffensiveSummonNoTarget(double delta)
-    {
-        if (_summonerNode == null || !GodotObject.IsInstanceValid(_summonerNode) || !_summonerNode.IsInsideTree())
-        {
-            RefreshSummonerReference();
-            _summonerCollisionExceptionApplied = false;
-            ApplyAllyCollisionExceptions();
-        }
-
-        if (_summonerNode == null)
-            return false;
-
-        var distance = (_summonerNode.GlobalPosition - GlobalPosition).Length();
-        var startLeashDistance = Math.Max(LeashDistance, 0.0f);
-        var stopLeashDistance = Math.Clamp(LeashReturnDistance, 0.0f, startLeashDistance);
-
-        if (CurrentState != CombatUnitState.Leashing && distance > startLeashDistance)
-            SetCombatState(CombatUnitState.Leashing);
-
-        if (CurrentState == CombatUnitState.Leashing && distance <= stopLeashDistance)
-        {
-            SetCombatState(CombatUnitState.Idle);
-            _returningToSummonerAfterStuck = false;
-        }
-
-        if (CurrentState == CombatUnitState.Leashing)
-        {
-            return TryMoveTowardDestination(_summonerNode.GlobalPosition, LeashCatchupSpeedMultiplier, CombatUnitState.Leashing, delta);
-        }
-
-        var idleAnchor = GetIdleAnchor();
-        var toAnchor = idleAnchor - GlobalPosition;
-        var anchorDistance = toAnchor.Length();
-
-        if (anchorDistance <= Math.Max(0.0f, IdleAnchorTolerance))
-        {
-            SetCombatState(CombatUnitState.Idle);
-            return false;
-        }
-
-        return TryMoveTowardDestination(idleAnchor, 1.0f, CombatUnitState.FollowingOwner, delta);
     }
 
     private Vector2 GetIdleAnchor()
@@ -495,8 +280,7 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
             return Vector2.Zero;
 
         summonSlot = Math.Min(summonSlot, MaxFormationSlots - 1);
-        var localSlot = GetSlotOffsetForIndex(summonSlot);
-        return localSlot;
+        return GetSlotOffsetForIndex(summonSlot);
     }
 
     private Vector2 GetSlotOffsetForIndex(int slotIndex)
@@ -534,7 +318,6 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
                 summon.RefreshSummonerReference();
 
             summonOwner = summon.GetSummonerNode();
-
             if (!GodotObject.IsInstanceValid(summonOwner) || summonOwner != _summonerNode)
                 continue;
 
@@ -547,21 +330,6 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
         }
 
         return 0;
-    }
-
-    private bool ShouldPrioritizeLeashReturn()
-    {
-        if (_summonerNode == null || !GodotObject.IsInstanceValid(_summonerNode) || !_summonerNode.IsInsideTree())
-            RefreshSummonerReference();
-
-        if (_summonerNode == null)
-            return false;
-
-        var distanceToSummoner = GlobalPosition.DistanceTo(_summonerNode.GlobalPosition);
-        if (CurrentState == CombatUnitState.Leashing)
-            return distanceToSummoner > Math.Max(LeashReturnDistance, 0.0f);
-
-        return distanceToSummoner > Math.Max(LeashDistance, 0.0f);
     }
 
     private void RefreshSummonerReference()
@@ -649,12 +417,8 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
 
     private void ApplyFactionGroup()
     {
-        Factions.ApplyCombatGroup(this, Faction);
+        ApplyFactionCombatGroup();
     }
-
-    protected override bool ShouldUseReturnHomeRegeneration() => false;
-
-    protected override bool ShouldUseIdleRegeneration() => false;
 
     protected override int MaxHealthValue => Health;
 }

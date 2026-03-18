@@ -5,8 +5,6 @@ using System;
 [GlobalClass]
 public partial class Skeleton : ActorBase, IAttackable, ITargetable
 {
-    private readonly ActorAI _actorAI = new AggressiveCombatActorAI();
-
     [Export]
     public float Speed { get; set; } = 52.0f;
 
@@ -22,23 +20,66 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable
     [Export]
     public int Health { get; set; } = 24;
 
-    private RandomNumberGenerator _randomNumberGenerator = new();
-    private float _attackCooldownTimer;
+    [Export]
+    public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
+
+    [Export]
+    public float AggroAcquisitionRange { get; set; } = 150.0f;
+
+    [Export]
+    public float AggroLossRange { get; set; } = 220.0f;
+
+    [Export]
+    public bool EvadeOnAggroLoss { get; set; } = true;
+
+    [Export]
+    public bool IgnoreDamageWhileEvading { get; set; } = true;
+
+    [Export]
+    public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
+
+    [Export]
+    public float IdleRegenerationFractionPerSecond { get; set; } = 0.01f;
+
+    [Export]
+    public float IdleRegenerationIntervalSeconds { get; set; } = 5.0f;
+
     public override Faction Faction => Factions.Enemies;
 
     public override void _Ready()
     {
-        SetActorAI(_actorAI);
-        InitializeAggressiveActor(
+        InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
-            GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
-            "Skeleton");
+            GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
-        PlayIdleIfAvailable();
-        AnimatedSprite.AnimationFinished += OnAnimationFinished;
+        ApplyFactionCombatGroup();
+        SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, 1, 5));
 
-        _randomNumberGenerator.Randomize();
+        var leashBehavior = new LeashBehavior(
+            AggroLossRange,
+            EvadeOnAggroLoss,
+            IgnoreDamageWhileEvading,
+            actor => actor.HomePosition,
+            actor => actor.IsAtHome());
+        ConfigureBehaviors(
+            leashBehavior,
+            new PursuitStuckRecoveryBehavior(
+                1.0f,
+                0.6f,
+                8.0f,
+                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
+                actor => leashBehavior.BeginReturnHome(actor, true)),
+            new AcquireHostileTargetBehavior(
+                AggroAcquisitionRange,
+                InitialTargetPath,
+                "Skeleton",
+                actor => !leashBehavior.IsReturningHome),
+            new TargetCombatBehavior(),
+            new ReturnHomeBehavior(actor => actor.HomePosition, actor => actor.IsAtHome()),
+            new ReturnHomeRegenerationBehavior(ReturnHomeRegenerationFractionPerSecond),
+            new IdleRegenerationBehavior(IdleRegenerationFractionPerSecond, IdleRegenerationIntervalSeconds));
+        PlayIdleIfAvailable();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -49,69 +90,11 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable
         base._PhysicsProcess(delta);
     }
 
-    protected override void AcquireTarget()
-    {
-        TryAcquireTargetWithAI();
-    }
-
-    protected override bool CanAttackNow(Vector2 toTarget, double delta)
-    {
-        if (_attackCooldownTimer > 0.0f)
-        {
-            _attackCooldownTimer -= (float)delta;
-            return false;
-        }
-
-        return toTarget.Length() <= AttackRange;
-    }
-
-    protected override bool ShouldStayEngaged(Vector2 toTarget, double delta)
-    {
-        return toTarget.Length() <= AttackRange;
-    }
-
-    protected override void StartAttack()
-    {
-        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        if (CurrentTarget is not IAttackable attackable || CurrentTarget is not ITargetable targetable || !targetable.CanBeTargeted)
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        SetCombatState(CombatUnitState.Attacking);
-        _attackCooldownTimer = AttackCooldown;
-
-        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
-        {
-            SetCombatState(CombatUnitState.PursuingTarget);
-            attackable.ApplyDamage(new DamageInfo(_randomNumberGenerator.RandiRange(1, 5), this));
-            return;
-        }
-
-        if (CurrentTarget != null && CurrentTarget.GlobalPosition != Vector2.Zero)
-            LastDirection = DirectionHelper.GetDirectionName(CurrentTarget.GlobalPosition - GlobalPosition);
-
-        AnimatedSprite.Play(attackAnimation);
-
-        var damage = _randomNumberGenerator.RandiRange(1, 5);
-        attackable.ApplyDamage(new DamageInfo(damage, this));
-    }
-
     public bool CanBeTargeted => !IsDead;
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (!TryApplyAggressiveActorDamage(damageInfo, out var damage, out var died))
+        if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;
 
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
@@ -119,30 +102,14 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable
             StartDeath();
     }
 
-    private void OnAnimationFinished()
-    {
-        var animationName = AnimatedSprite.Animation.ToString();
-
-        if (animationName.StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
-        {
-            FinishAttackState();
-            return;
-        }
-
-        TryFinalizeDeathAnimation();
-    }
-
     private void StartDeath()
     {
+        SetIsDead(true);
         MarkDead();
         Velocity = Vector2.Zero;
-        _attackCooldownTimer = 0.0f;
-
+        ResetPrimaryActionController();
         TryPlayDeathAnimation();
     }
 
-    protected override bool ShouldUseAggressiveCombatSupport() => true;
-
     protected override int MaxHealthValue => Health;
-
 }

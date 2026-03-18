@@ -3,11 +3,8 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember, IAggressiveSummonedActorAIHost
+public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember
 {
-    private const float StuckProgressThreshold = 1.0f;
-    private const float StuckTimeoutSeconds = 0.6f;
-
     [Export]
     public float Speed { get; set; } = 76.0f;
 
@@ -30,33 +27,88 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
     public int MaxAttackDamage { get; set; } = 3;
 
     [Export]
+    public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
+
+    [Export]
+    public float AggroAcquisitionRange { get; set; } = 150.0f;
+
+    [Export]
+    public float AggroLossRange { get; set; } = 220.0f;
+
+    [Export]
+    public bool EvadeOnAggroLoss { get; set; } = true;
+
+    [Export]
+    public bool IgnoreDamageWhileEvading { get; set; } = true;
+
+    [Export]
+    public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
+
+    [Export]
+    public float IdleRegenerationFractionPerSecond { get; set; } = 0.01f;
+
+    [Export]
+    public float IdleRegenerationIntervalSeconds { get; set; } = 5.0f;
+
+    [Export]
     public float SummonerRecoveryTolerance { get; set; } = 32.0f;
 
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
     public ISummoner Summoner { get; private set; }
 
-    private readonly ActorAI _actorAI = new AggressiveSummonedActorAI();
-    private readonly RandomNumberGenerator _randomNumberGenerator = new();
     private Faction _faction = Factions.Enemies;
-    private float _attackCooldownTimer;
-    private bool _returningToSummonerAfterStuck;
-    private bool _hasStuckProgressPosition;
-    private Vector2 _lastStuckProgressPosition;
-    private float _stuckTimer;
+    private FollowSummonerBehavior _followSummonerBehavior;
 
     public override void _Ready()
     {
-        SetActorAI(_actorAI);
-        InitializeAggressiveActor(
+        InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
-            GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
-            "WolfSummon");
+            GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
+        ApplyFactionGroup();
+        SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
+
+        var leashBehavior = new LeashBehavior(
+            AggroLossRange,
+            EvadeOnAggroLoss,
+            IgnoreDamageWhileEvading,
+            actor => actor.HomePosition,
+            actor => actor.IsAtHome());
+        _followSummonerBehavior = new FollowSummonerBehavior(
+            actor => GetSummonerNode(),
+            actor => actor.GlobalPosition,
+            SummonerRecoveryTolerance,
+            SummonerRecoveryTolerance,
+            0.0f,
+            1.0f,
+            followWhenIdle: false);
+
+        ConfigureBehaviors(
+            leashBehavior,
+            new PursuitStuckRecoveryBehavior(
+                1.0f,
+                0.6f,
+                8.0f,
+                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
+                actor =>
+                {
+                    actor.ClearTarget();
+                    _followSummonerBehavior.BeginRecovery();
+                }),
+            new AcquireHostileTargetBehavior(
+                AggroAcquisitionRange,
+                InitialTargetPath,
+                "WolfSummon",
+                actor => !leashBehavior.IsReturningHome && !_followSummonerBehavior.IsRecovering,
+                additionalTargetFilter: (actor, target) => CanAcquireTarget(target)),
+            new TargetCombatBehavior(),
+            _followSummonerBehavior,
+            new ReturnHomeBehavior(actor => actor.HomePosition, actor => actor.IsAtHome()),
+            new ReturnHomeRegenerationBehavior(ReturnHomeRegenerationFractionPerSecond),
+            new IdleRegenerationBehavior(IdleRegenerationFractionPerSecond, IdleRegenerationIntervalSeconds));
         PlayIdleIfAvailable();
-        AnimatedSprite.AnimationFinished += OnAnimationFinished;
-        _randomNumberGenerator.Randomize();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -67,15 +119,7 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
             return;
         }
 
-        if (IsDead)
-            return;
-
         base._PhysicsProcess(delta);
-    }
-
-    protected override void OnActorPrePhysicsProcess(double delta)
-    {
-        UpdateStuckRecovery((float)delta);
     }
 
     public void SetSummoner(ISummoner summoner)
@@ -99,76 +143,9 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
                Summoner.IsSummonerActive;
     }
 
-    protected override void AcquireTarget()
-    {
-        TryAcquireTargetWithAI();
-    }
-
-    protected override bool HandleNoTarget(double delta)
-    {
-        return TryHandleNoTargetWithAI(delta);
-    }
-
-    protected override bool CanAttackNow(Vector2 toTarget, double delta)
-    {
-        if (_attackCooldownTimer > 0.0f)
-        {
-            _attackCooldownTimer -= (float)delta;
-            return false;
-        }
-
-        return toTarget.Length() <= AttackRange;
-    }
-
-    protected override bool ShouldStayEngaged(Vector2 toTarget, double delta)
-    {
-        return toTarget.Length() <= AttackRange;
-    }
-
-    protected override void StartAttack()
-    {
-        if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        if (CurrentTarget is not IAttackable attackable ||
-            CurrentTarget is not ITargetable targetable ||
-            !targetable.CanBeTargeted)
-        {
-            ClearTarget();
-            _attackCooldownTimer = 0.0f;
-            return;
-        }
-
-        SetCombatState(CombatUnitState.Attacking);
-        _attackCooldownTimer = AttackCooldown;
-
-        if (CurrentTarget.GlobalPosition != Vector2.Zero)
-            LastDirection = DirectionHelper.GetDirectionName(CurrentTarget.GlobalPosition - GlobalPosition);
-
-        var attackAnimation = $"{AttackAnimation}_{LastDirection}";
-        if (AnimatedSprite.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(attackAnimation) &&
-            AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) > 0)
-        {
-            AnimatedSprite.Play(attackAnimation);
-        }
-        else
-        {
-            SetCombatState(CombatUnitState.PursuingTarget);
-        }
-
-        var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
-        var damage = _randomNumberGenerator.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
-        attackable.ApplyDamage(new DamageInfo(damage, this));
-    }
-
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (!TryApplyAggressiveActorDamage(damageInfo, out var damage, out var died))
+        if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;
 
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
@@ -176,75 +153,13 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
             StartDeath();
     }
 
-    private void UpdateStuckRecovery(float delta)
-    {
-        if (!ShouldCheckForStuckRecovery())
-        {
-            ResetStuckRecoveryTracking();
-            return;
-        }
-
-        if (!_hasStuckProgressPosition)
-        {
-            _hasStuckProgressPosition = true;
-            _lastStuckProgressPosition = GlobalPosition;
-            _stuckTimer = 0.0f;
-            return;
-        }
-
-        if (GlobalPosition.DistanceTo(_lastStuckProgressPosition) > StuckProgressThreshold)
-        {
-            _lastStuckProgressPosition = GlobalPosition;
-            _stuckTimer = 0.0f;
-            return;
-        }
-
-        _stuckTimer += Math.Max(0.0f, delta);
-        if (_stuckTimer < StuckTimeoutSeconds)
-            return;
-
-        ClearTarget();
-        _returningToSummonerAfterStuck = true;
-        SetCombatState(CombatUnitState.Leashing);
-        ResetStuckRecoveryTracking();
-    }
-
-    private bool ShouldCheckForStuckRecovery()
-    {
-        if (IsDead || Velocity == Vector2.Zero)
-            return false;
-
-        if (_returningToSummonerAfterStuck)
-            return CurrentState == CombatUnitState.Leashing;
-
-        return CurrentState == CombatUnitState.PursuingTarget && CurrentTarget != null;
-    }
-
-    private void ResetStuckRecoveryTracking()
-    {
-        _hasStuckProgressPosition = false;
-        _lastStuckProgressPosition = Vector2.Zero;
-        _stuckTimer = 0.0f;
-    }
-
-    private void OnAnimationFinished()
-    {
-        if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
-        {
-            FinishAttackState();
-            return;
-        }
-
-        TryFinalizeDeathAnimation();
-    }
-
     private void StartDeath()
     {
+        SetIsDead(true);
         MarkDead();
         Velocity = Vector2.Zero;
-        _attackCooldownTimer = 0.0f;
-        _returningToSummonerAfterStuck = false;
-        ResetStuckRecoveryTracking();
+        _followSummonerBehavior?.CancelRecovery();
+        ResetPrimaryActionController();
         TryPlayDeathAnimation();
     }
 
@@ -255,76 +170,13 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
 
     private bool CanAcquireTarget(Node2D target)
     {
-        return CanAcquireHostileTarget(target);
-    }
-
-    bool IAggressiveSummonedActorAIHost.ShouldAttemptAggressiveSummonedTargetAcquisition()
-    {
-        if (_returningToSummonerAfterStuck)
-        {
-            var summonerNode = GetSummonerNode();
-            if (summonerNode != null &&
-                GodotObject.IsInstanceValid(summonerNode) &&
-                summonerNode.IsInsideTree() &&
-                GlobalPosition.DistanceTo(summonerNode.GlobalPosition) > Math.Max(0.0f, SummonerRecoveryTolerance))
-            {
-                return false;
-            }
-
-            _returningToSummonerAfterStuck = false;
-        }
-
-        return true;
-    }
-
-    Node2D IAggressiveSummonedActorAIHost.SelectAggressiveSummonedTarget()
-    {
-        return TargetingHelper.FindClosestHostileTarget(
-            this,
-            Faction,
-            node => node is Node2D targetNode &&
-                    node is IAttackable &&
-                    node is ITargetable targetable &&
-                    targetable.CanBeTargeted &&
-                    CanAcquireTarget(targetNode));
-    }
-
-    void IAggressiveSummonedActorAIHost.ApplyAggressiveSummonedTarget(Node2D target)
-    {
-        if (target != null)
-            SetTarget(target);
-    }
-
-    bool IAggressiveSummonedActorAIHost.TryHandleAggressiveSummonedNoTarget(double delta)
-    {
-        if (_returningToSummonerAfterStuck)
-        {
-            var summonerNode = GetSummonerNode();
-            if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
-            {
-                _returningToSummonerAfterStuck = false;
-                return false;
-            }
-
-            if (GlobalPosition.DistanceTo(summonerNode.GlobalPosition) <= Math.Max(0.0f, SummonerRecoveryTolerance))
-            {
-                _returningToSummonerAfterStuck = false;
-                SetCombatState(CombatUnitState.Idle);
-                return false;
-            }
-
-            return TryMoveTowardDestination(summonerNode.GlobalPosition, 1.0f, CombatUnitState.Leashing, delta);
-        }
-
-        return base.HandleNoTarget(delta);
+        return target != null && IsHostileTo(target);
     }
 
     private void ApplyFactionGroup()
     {
         ApplyFactionCombatGroup();
     }
-
-    protected override bool ShouldUseAggressiveCombatSupport() => true;
 
     protected override int MaxHealthValue => MaxHealth;
 }
