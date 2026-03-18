@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember
+public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember, IAggressiveSummonedActorAIHost
 {
     private const float StuckProgressThreshold = 1.0f;
     private const float StuckTimeoutSeconds = 0.6f;
@@ -36,6 +36,7 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
     public override Faction Faction => _faction;
     public ISummoner Summoner { get; private set; }
 
+    private readonly ActorAI _actorAI = new AggressiveSummonedActorAI();
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
     private Faction _faction = Factions.Enemies;
     private float _attackCooldownTimer;
@@ -46,6 +47,7 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
 
     public override void _Ready()
     {
+        SetActorAI(_actorAI);
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
@@ -72,7 +74,7 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
         base._PhysicsProcess(delta);
     }
 
-    protected override void PrePhysicsProcess(double delta)
+    protected override void OnActorPrePhysicsProcess(double delta)
     {
         UpdateStuckRecovery((float)delta);
     }
@@ -100,54 +102,12 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
 
     protected override void AcquireTarget()
     {
-        if (_returningToSummonerAfterStuck)
-        {
-            var summonerNode = GetSummonerNode();
-            if (summonerNode != null &&
-                GodotObject.IsInstanceValid(summonerNode) &&
-                summonerNode.IsInsideTree() &&
-                GlobalPosition.DistanceTo(summonerNode.GlobalPosition) > Math.Max(0.0f, SummonerRecoveryTolerance))
-            {
-                return;
-            }
-
-            _returningToSummonerAfterStuck = false;
-        }
-
-        var candidate = TargetingHelper.FindClosestHostileTarget(
-            this,
-            Faction,
-            node => node is Node2D targetNode &&
-                    node is IAttackable &&
-                    node is ITargetable targetable &&
-                    targetable.CanBeTargeted &&
-                    CanAcquireTarget(targetNode));
-        if (candidate != null)
-            SetTarget(candidate);
+        TryAcquireTargetWithAI();
     }
 
     protected override bool HandleNoTarget(double delta)
     {
-        if (_returningToSummonerAfterStuck)
-        {
-            var summonerNode = GetSummonerNode();
-            if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
-            {
-                _returningToSummonerAfterStuck = false;
-                return false;
-            }
-
-            if (GlobalPosition.DistanceTo(summonerNode.GlobalPosition) <= Math.Max(0.0f, SummonerRecoveryTolerance))
-            {
-                _returningToSummonerAfterStuck = false;
-                SetCombatState(CombatUnitState.Idle);
-                return false;
-            }
-
-            return TryMoveTowardDestination(summonerNode.GlobalPosition, 1.0f, CombatUnitState.Leashing, delta);
-        }
-
-        return base.HandleNoTarget(delta);
+        return TryHandleNoTargetWithAI(delta);
     }
 
     protected override bool CanAttackNow(Vector2 toTarget, double delta)
@@ -292,6 +252,67 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
     private Node2D GetSummonerNode()
     {
         return Summoner?.SummonerNode;
+    }
+
+    bool IAggressiveSummonedActorAIHost.ShouldAttemptAggressiveSummonedTargetAcquisition()
+    {
+        if (_returningToSummonerAfterStuck)
+        {
+            var summonerNode = GetSummonerNode();
+            if (summonerNode != null &&
+                GodotObject.IsInstanceValid(summonerNode) &&
+                summonerNode.IsInsideTree() &&
+                GlobalPosition.DistanceTo(summonerNode.GlobalPosition) > Math.Max(0.0f, SummonerRecoveryTolerance))
+            {
+                return false;
+            }
+
+            _returningToSummonerAfterStuck = false;
+        }
+
+        return true;
+    }
+
+    Node2D IAggressiveSummonedActorAIHost.SelectAggressiveSummonedTarget()
+    {
+        return TargetingHelper.FindClosestHostileTarget(
+            this,
+            Faction,
+            node => node is Node2D targetNode &&
+                    node is IAttackable &&
+                    node is ITargetable targetable &&
+                    targetable.CanBeTargeted &&
+                    CanAcquireTarget(targetNode));
+    }
+
+    void IAggressiveSummonedActorAIHost.ApplyAggressiveSummonedTarget(Node2D target)
+    {
+        if (target != null)
+            SetTarget(target);
+    }
+
+    bool IAggressiveSummonedActorAIHost.TryHandleAggressiveSummonedNoTarget(double delta)
+    {
+        if (_returningToSummonerAfterStuck)
+        {
+            var summonerNode = GetSummonerNode();
+            if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
+            {
+                _returningToSummonerAfterStuck = false;
+                return false;
+            }
+
+            if (GlobalPosition.DistanceTo(summonerNode.GlobalPosition) <= Math.Max(0.0f, SummonerRecoveryTolerance))
+            {
+                _returningToSummonerAfterStuck = false;
+                SetCombatState(CombatUnitState.Idle);
+                return false;
+            }
+
+            return TryMoveTowardDestination(summonerNode.GlobalPosition, 1.0f, CombatUnitState.Leashing, delta);
+        }
+
+        return base.HandleNoTarget(delta);
     }
 
     private void ApplyFactionGroup()
