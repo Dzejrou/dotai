@@ -111,6 +111,17 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
         return _actorAI != null && _actorAI.TryAcquireTarget();
     }
 
+    protected override Vector2 GetDesiredMovementTarget(Vector2 targetPosition, double delta)
+    {
+        if (_actorAI != null &&
+            _actorAI.TryGetDesiredMovementTarget(targetPosition, delta, out var desiredMovementTarget))
+        {
+            return desiredMovementTarget;
+        }
+
+        return GetActorDesiredMovementTarget(targetPosition, delta);
+    }
+
     protected void SetCurrentHealth(int value)
     {
         CurrentHealth = Math.Clamp(value, 0, ResolvedMaxHealth);
@@ -135,6 +146,8 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
     protected bool TryPlayDeathAnimation() => TryPlayDeathAnimation(DeathAnimation, DisableCollisionOnDeath);
 
     protected abstract int MaxHealthValue { get; }
+
+    protected virtual Vector2 GetActorDesiredMovementTarget(Vector2 targetPosition, double delta) => targetPosition;
 
     protected override void PrePhysicsProcess(double delta)
     {

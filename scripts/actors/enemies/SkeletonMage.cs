@@ -5,6 +5,9 @@ using System;
 [GlobalClass]
 public partial class SkeletonMage : RangedEnemyBase, IAttackable, ITargetable
 {
+    private readonly ActorAI _actorAI = new AggressiveRangedActorAI();
+    private static readonly StringName cast_spell_animation = "cast_spell";
+
     [Export]
     public float Speed { get; set; } = 58.0f;
 
@@ -16,6 +19,8 @@ public partial class SkeletonMage : RangedEnemyBase, IAttackable, ITargetable
 
     public override void _Ready()
     {
+        AttackAnimation = cast_spell_animation;
+        SetActorAI(_actorAI);
         EnsureProjectileScene("res://scenes/projectiles/projectile.tscn");
         InitializeEnemy(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
@@ -37,18 +42,9 @@ public partial class SkeletonMage : RangedEnemyBase, IAttackable, ITargetable
         base._PhysicsProcess(delta);
     }
 
-    protected override Vector2 GetDesiredMovementTarget(Vector2 targetPosition, double delta)
+    protected override void AcquireTarget()
     {
-        var toTarget = targetPosition - GlobalPosition;
-        var distance = toTarget.Length();
-        if (toTarget == Vector2.Zero || (distance >= MinimumRange && distance <= PreferredRange))
-            return GlobalPosition;
-
-        if (distance > PreferredRange)
-            return targetPosition;
-
-        var retreatDirection = toTarget == Vector2.Zero ? Vector2.Zero : -toTarget.Normalized();
-        return GlobalPosition + retreatDirection * Math.Max(PreferredRange, 0.0f);
+        TryAcquireTargetWithAI();
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -63,11 +59,8 @@ public partial class SkeletonMage : RangedEnemyBase, IAttackable, ITargetable
 
     private void OnAnimationFinished()
     {
-        if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
-        {
-            FinishAttackState();
+        if (TryHandleRangedAttackAnimationFinished())
             return;
-        }
 
         TryFinalizeDeathAnimation();
     }

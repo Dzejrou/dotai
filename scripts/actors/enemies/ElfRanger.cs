@@ -6,6 +6,7 @@ using System;
 public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISummoner, IFactionMember
 {
     private const string DefaultWolfSummonScenePath = "res://scenes/actors/enemies/wolf_summon.tscn";
+    private readonly ActorAI _actorAI = new AggressiveRangedActorAI();
 
     [Export]
     public float Speed { get; set; } = 62.0f;
@@ -35,6 +36,7 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISum
 
     public override void _Ready()
     {
+        SetActorAI(_actorAI);
         EnsureProjectileScene("res://scenes/projectiles/projectile.tscn");
         if (WolfSummonScene == null)
             WolfSummonScene = GD.Load<PackedScene>(DefaultWolfSummonScenePath);
@@ -62,18 +64,9 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISum
         TrySummonWolf();
     }
 
-    protected override Vector2 GetDesiredMovementTarget(Vector2 targetPosition, double delta)
+    protected override void AcquireTarget()
     {
-        var toTarget = targetPosition - GlobalPosition;
-        var distance = toTarget.Length();
-        if (toTarget == Vector2.Zero || (distance >= MinimumRange && distance <= PreferredRange))
-            return GlobalPosition;
-
-        if (distance > PreferredRange)
-            return targetPosition;
-
-        var retreatDirection = toTarget == Vector2.Zero ? Vector2.Zero : -toTarget.Normalized();
-        return GlobalPosition + retreatDirection * Math.Max(PreferredRange, 0.0f);
+        TryAcquireTargetWithAI();
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -88,11 +81,8 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISum
 
     private void OnAnimationFinished()
     {
-        if (AnimatedSprite.Animation.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
-        {
-            FinishAttackState();
+        if (TryHandleRangedAttackAnimationFinished())
             return;
-        }
 
         TryFinalizeDeathAnimation();
     }

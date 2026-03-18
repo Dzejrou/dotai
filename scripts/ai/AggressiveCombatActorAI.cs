@@ -1,4 +1,4 @@
-public sealed class AggressiveCombatActorAI : ActorAI
+public class AggressiveCombatActorAI : ActorAI
 {
     public override bool TryAcquireTarget()
     {

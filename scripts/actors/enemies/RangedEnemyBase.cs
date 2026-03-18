@@ -2,9 +2,11 @@ using Godot;
 
 using System;
 
-public abstract partial class RangedEnemyBase : EnemyBase
+public abstract partial class RangedEnemyBase : EnemyBase, IAggressiveRangedActorAIHost
 {
     private float _rangedAttackCooldownTimer;
+    private bool _hasPendingProjectileShot;
+    private Vector2 _pendingProjectileDirection;
 
     [Export]
     public float AttackRange { get; set; } = 150.0f;
@@ -58,6 +60,8 @@ public abstract partial class RangedEnemyBase : EnemyBase
         if (IsDead || ProjectileScene == null)
             return;
 
+        ClearPendingProjectileShot();
+
         if (CurrentTarget == null || !IsInstanceValid(CurrentTarget) || !CurrentTarget.IsInsideTree())
         {
             ClearTarget();
@@ -85,25 +89,52 @@ public abstract partial class RangedEnemyBase : EnemyBase
             AnimatedSprite.SpriteFrames.HasAnimation(attackAnimationName) &&
             AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimationName) > 0)
         {
+            _hasPendingProjectileShot = true;
+            _pendingProjectileDirection = projectileDirection;
             AnimatedSprite.Play(attackAnimationName);
         }
         else
         {
             SetCombatState(CombatUnitState.PursuingTarget);
+            LaunchRangedProjectile(projectileDirection);
         }
-
-        LaunchRangedProjectile(projectileDirection);
     }
 
     protected void ResetRangedAttackCooldown()
     {
         _rangedAttackCooldownTimer = 0.0f;
+        ClearPendingProjectileShot();
     }
 
     protected void EnsureProjectileScene(string defaultProjectileScenePath)
     {
         if (ProjectileScene == null && !string.IsNullOrWhiteSpace(defaultProjectileScenePath))
             ProjectileScene = GD.Load<PackedScene>(defaultProjectileScenePath);
+    }
+
+    protected bool TryHandleRangedAttackAnimationFinished()
+    {
+        if (AnimatedSprite == null)
+            return false;
+
+        var animationName = AnimatedSprite.Animation.ToString();
+        if (!animationName.StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
+            return false;
+
+        if (_hasPendingProjectileShot)
+        {
+            LaunchRangedProjectile(_pendingProjectileDirection);
+            ClearPendingProjectileShot();
+        }
+
+        FinishAttackState();
+        return true;
+    }
+
+    private void ClearPendingProjectileShot()
+    {
+        _hasPendingProjectileShot = false;
+        _pendingProjectileDirection = Vector2.Zero;
     }
 
     private void LaunchRangedProjectile(Vector2 direction)

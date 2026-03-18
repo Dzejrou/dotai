@@ -10,6 +10,7 @@ height = 26.0
 [node name="SkeletonMage" type="CharacterBody2D"]
 z_index = -1
 script = ExtResource("1_skeleton_mage")
+AttackAnimation = &"cast_spell"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = ExtResource("2_skeleton_mage_frames")
