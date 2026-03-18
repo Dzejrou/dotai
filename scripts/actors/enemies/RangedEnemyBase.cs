@@ -2,7 +2,7 @@ using Godot;
 
 using System;
 
-public abstract partial class RangedEnemyBase : EnemyBase, IAggressiveRangedActorAIHost
+public abstract partial class RangedEnemyBase : ActorBase, IAggressiveRangedActorAIHost
 {
     private float _rangedAttackCooldownTimer;
     private bool _hasPendingProjectileShot;
@@ -40,6 +40,8 @@ public abstract partial class RangedEnemyBase : EnemyBase, IAggressiveRangedActo
 
     [Export]
     public string ProjectileTargetGroup { get; set; } = CombatGroups.Allies;
+
+    protected override bool ShouldUseAggressiveCombatSupport() => true;
 
     protected override bool CanAttackNow(Vector2 toTarget, double delta)
     {

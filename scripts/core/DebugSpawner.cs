@@ -151,8 +151,13 @@ public partial class DebugSpawner : Node2D
         spawnedNode.GlobalPosition = spawnPosition;
         spawnedNode.ZIndex = -1;
 
-        if (spawnedNode is EnemyBase enemy)
-            enemy.SetTarget(_target);
+        if (spawnedNode is ActorBase actor &&
+            _target != null &&
+            actor.Faction != null &&
+            actor.Faction.IsHostileTo(Factions.ResolveForNode(_target)))
+        {
+            actor.SetTarget(_target);
+        }
 
         var parent = GetParent();
         if (parent != null)

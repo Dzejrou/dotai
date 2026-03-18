@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember, IAggressiveSummonedActorAIHost
+public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember, IAggressiveSummonedActorAIHost
 {
     private const float StuckProgressThreshold = 1.0f;
     private const float StuckTimeoutSeconds = 0.6f;
@@ -48,12 +48,11 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
     public override void _Ready()
     {
         SetActorAI(_actorAI);
-        InitializeEnemy(
+        InitializeAggressiveActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
             "WolfSummon");
-        ApplyFactionGroup();
         SetMovementSpeed(Speed);
         PlayIdleIfAvailable();
         AnimatedSprite.AnimationFinished += OnAnimationFinished;
@@ -169,7 +168,7 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (!TryApplyEnemyDamage(damageInfo, out var damage, out var died))
+        if (!TryApplyAggressiveActorDamage(damageInfo, out var damage, out var died))
             return;
 
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
@@ -254,6 +253,11 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
         return Summoner?.SummonerNode;
     }
 
+    private bool CanAcquireTarget(Node2D target)
+    {
+        return CanAcquireHostileTarget(target);
+    }
+
     bool IAggressiveSummonedActorAIHost.ShouldAttemptAggressiveSummonedTargetAcquisition()
     {
         if (_returningToSummonerAfterStuck)
@@ -317,8 +321,10 @@ public partial class WolfSummon : EnemyBase, IAttackable, ITargetable, ISummoned
 
     private void ApplyFactionGroup()
     {
-        Factions.ApplyCombatGroup(this, Faction);
+        ApplyFactionCombatGroup();
     }
+
+    protected override bool ShouldUseAggressiveCombatSupport() => true;
 
     protected override int MaxHealthValue => MaxHealth;
 }

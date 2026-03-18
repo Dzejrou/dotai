@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Ogre : EnemyBase, IAttackable, ITargetable
+public partial class Ogre : ActorBase, IAttackable, ITargetable
 {
     private readonly ActorAI _actorAI = new AggressiveCombatActorAI();
 
@@ -35,7 +35,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
     public override void _Ready()
     {
         SetActorAI(_actorAI);
-        InitializeEnemy(
+        InitializeAggressiveActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
@@ -107,7 +107,7 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (!TryApplyEnemyDamage(damageInfo, out var damage, out var died))
+        if (!TryApplyAggressiveActorDamage(damageInfo, out var damage, out var died))
             return;
 
         if (died)
@@ -132,6 +132,8 @@ public partial class Ogre : EnemyBase, IAttackable, ITargetable
         _attackCooldownTimer = 0.0f;
         TryPlayDeathAnimation();
     }
+
+    protected override bool ShouldUseAggressiveCombatSupport() => true;
 
     protected override int MaxHealthValue => MaxHealth;
 

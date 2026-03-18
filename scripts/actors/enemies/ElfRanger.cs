@@ -41,7 +41,7 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISum
         if (WolfSummonScene == null)
             WolfSummonScene = GD.Load<PackedScene>(DefaultWolfSummonScenePath);
 
-        InitializeEnemy(
+        InitializeAggressiveActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
@@ -71,7 +71,7 @@ public partial class ElfRanger : RangedEnemyBase, IAttackable, ITargetable, ISum
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (!TryApplyEnemyDamage(damageInfo, out var damage, out var died))
+        if (!TryApplyAggressiveActorDamage(damageInfo, out var damage, out var died))
             return;
 
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));

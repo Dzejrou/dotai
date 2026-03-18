@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Skeleton : EnemyBase, IAttackable, ITargetable
+public partial class Skeleton : ActorBase, IAttackable, ITargetable
 {
     private readonly ActorAI _actorAI = new AggressiveCombatActorAI();
 
@@ -29,7 +29,7 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
     public override void _Ready()
     {
         SetActorAI(_actorAI);
-        InitializeEnemy(
+        InitializeAggressiveActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"),
@@ -111,7 +111,7 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (!TryApplyEnemyDamage(damageInfo, out var damage, out var died))
+        if (!TryApplyAggressiveActorDamage(damageInfo, out var damage, out var died))
             return;
 
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
@@ -140,6 +140,8 @@ public partial class Skeleton : EnemyBase, IAttackable, ITargetable
 
         TryPlayDeathAnimation();
     }
+
+    protected override bool ShouldUseAggressiveCombatSupport() => true;
 
     protected override int MaxHealthValue => Health;
 
