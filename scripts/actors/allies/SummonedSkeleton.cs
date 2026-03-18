@@ -3,13 +3,11 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember, IOffensiveSummon
+public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionMember, IOffensiveSummon, IOffensiveSummonActorAIHost
 {
     private const float StuckProgressThreshold = 1.0f;
     private const float StuckTimeoutSeconds = 0.6f;
     private const float StuckWaypointDistance = 8.0f;
-    private static readonly Vector2 HealthLabelOffset = new Vector2(-24.0f, -36.0f);
-    private static readonly Vector2 HealthLabelSize = new Vector2(48.0f, 16.0f);
 
     [Export]
     public float Speed { get; set; } = 52.0f;
@@ -24,9 +22,6 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     public StringName AttackAnimation { get; set; } = "cross-punch";
 
     [Export]
-    public StringName DeathAnimation { get; set; } = "falling-back-death";
-
-    [Export]
     public int Health { get; set; } = 20;
 
     [Export]
@@ -34,9 +29,6 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     [Export]
     public int MaxAttackDamage { get; set; } = 5;
-
-    [Export]
-    public bool DisableCollisionOnDeath { get; set; } = true;
 
     [Export]
     public NodePath OwnerPath { get; set; } = new NodePath("../Player");
@@ -60,11 +52,11 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     public float FormationVerticalOffset { get; set; } = 42.0f;
 
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
+    private readonly ActorAI _actorAI = new OffensiveSummonActorAI();
+    private Faction _faction = Factions.Allies;
     private ISummoner _summoner;
     private Node2D _summonerNode;
     private float _attackCooldownTimer;
-    private int _currentHealth;
-    private bool _isDead;
     private bool _summonerCollisionExceptionApplied;
     private bool _deathFallbackQueued;
     private bool _hasStuckProgressPosition;
@@ -72,18 +64,17 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     private float _stuckTimer;
     private bool _returningToSummonerAfterStuck;
     private Node2D _commandedTarget;
-    private Label _healthLabel;
     private const float DeathFallbackDelay = 2.0f;
     private const int MaxFormationSlots = 4;
 
-    public bool CanBeTargeted => !_isDead;
-    public Faction Faction { get; private set; } = Factions.Allies;
+    public bool CanBeTargeted => !IsDead;
+    public override Faction Faction => _faction;
     public ISummoner Summoner => _summoner;
 
     public override void _Ready()
     {
-        _currentHealth = Math.Max(1, Health);
-        InitializeCombatUnit(
+        SetActorAI(_actorAI);
+        InitializeActor(
             GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
@@ -91,8 +82,6 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         ApplyFactionGroup();
         RefreshSummonerReference();
         ApplyAllyCollisionExceptions();
-        EnsureHealthLabel();
-        UpdateHealthLabel();
         PlayIdleIfAvailable();
 
         if (AnimatedSprite != null)
@@ -103,18 +92,18 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     public override void _PhysicsProcess(double delta)
     {
-        if (_isDead)
+        if (IsDead)
             return;
 
         base._PhysicsProcess(delta);
     }
 
-    protected override void PrePhysicsProcess(double delta)
+    protected override void OnActorPrePhysicsProcess(double delta)
     {
         UpdateStuckRecovery((float)delta);
     }
 
-    public override void _ExitTree()
+    protected override void OnActorExitTree()
     {
         _deathFallbackQueued = false;
         ClearAllyCollisionExceptions();
@@ -149,14 +138,14 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     public void SetFaction(Faction faction)
     {
-        Faction = faction ?? Factions.Allies;
+        _faction = faction ?? Factions.Allies;
         if (!IsInsideTree())
             return;
 
         ClearAllyCollisionExceptions();
         ApplyFactionGroup();
         ApplyAllyCollisionExceptions();
-        UpdateHealthLabel();
+        SetCurrentHealth(CurrentHealth);
     }
 
     public bool HasValidSummoner()
@@ -168,15 +157,14 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
-        if (_isDead)
+        if (IsDead)
             return;
 
         var damage = Math.Max(1, damageInfo.Amount);
-        _currentHealth = Math.Max(0, _currentHealth - damage);
-        UpdateHealthLabel();
+        SetCurrentHealth(Math.Max(0, CurrentHealth - damage));
         FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
 
-        if (_currentHealth <= 0)
+        if (CurrentHealth <= 0)
             StartDeath();
     }
 
@@ -230,7 +218,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     private bool ShouldCheckForStuckRecovery()
     {
-        if (_isDead || Velocity == Vector2.Zero)
+        if (IsDead || Velocity == Vector2.Zero)
             return false;
 
         if (!IsUsingNavigationPath)
@@ -253,42 +241,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     protected override void AcquireTarget()
     {
-        if (_returningToSummonerAfterStuck)
-        {
-            if (_summonerNode != null &&
-                GodotObject.IsInstanceValid(_summonerNode) &&
-                _summonerNode.IsInsideTree() &&
-                GlobalPosition.DistanceTo(_summonerNode.GlobalPosition) > Math.Max(LeashReturnDistance, 0.0f))
-            {
-                return;
-            }
-
-            _returningToSummonerAfterStuck = false;
-        }
-
-        if (CurrentState == CombatUnitState.Leashing)
-            return;
-
-        if (ShouldPrioritizeLeashReturn())
-            return;
-
-        var commandedTarget = GetCommandedTarget();
-        if (commandedTarget != null)
-        {
-            SetTarget(commandedTarget);
-            return;
-        }
-
-        var candidate = TargetingHelper.FindClosestHostileTarget(
-            this,
-            Faction,
-            node => node is IAttackable &&
-                    node is ITargetable targetable &&
-                    targetable.CanBeTargeted &&
-                    node is Node2D targetNode &&
-                    CanAcquireTarget(targetNode));
-        if (candidate != null)
-            SetTarget(candidate);
+        _actorAI.TryAcquireTarget();
     }
 
     private bool CanAcquireTarget(Node2D target)
@@ -348,7 +301,7 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     protected override void StartAttack()
     {
-        if (_isDead ||
+        if (IsDead ||
             CurrentTarget is not IAttackable attackable ||
             CurrentTarget is not ITargetable targetable ||
             !targetable.CanBeTargeted)
@@ -403,14 +356,13 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
 
     private void StartDeath()
     {
-        _isDead = true;
+        SetIsDead(true);
         MarkDead();
         Velocity = Vector2.Zero;
         _attackCooldownTimer = 0.0f;
         _commandedTarget = null;
         _returningToSummonerAfterStuck = false;
         ResetStuckRecoveryTracking();
-        UpdateHealthLabel();
         ClearAllyCollisionExceptions();
         if (NavigationAgent != null)
             NavigationAgent.SetPhysicsProcess(false);
@@ -437,6 +389,55 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
     }
 
     protected override bool HandleNoTarget(double delta)
+    {
+        return TryHandleNoTargetWithAI(delta);
+    }
+
+    bool IOffensiveSummonActorAIHost.ShouldAttemptOffensiveSummonTargetAcquisition()
+    {
+        if (_returningToSummonerAfterStuck)
+        {
+            if (_summonerNode != null &&
+                GodotObject.IsInstanceValid(_summonerNode) &&
+                _summonerNode.IsInsideTree() &&
+                GlobalPosition.DistanceTo(_summonerNode.GlobalPosition) > Math.Max(LeashReturnDistance, 0.0f))
+            {
+                return false;
+            }
+
+            _returningToSummonerAfterStuck = false;
+        }
+
+        if (CurrentState == CombatUnitState.Leashing)
+            return false;
+
+        return !ShouldPrioritizeLeashReturn();
+    }
+
+    Node2D IOffensiveSummonActorAIHost.GetCommandedOffensiveSummonTarget()
+    {
+        return GetCommandedTarget();
+    }
+
+    Node2D IOffensiveSummonActorAIHost.SelectAutonomousOffensiveSummonTarget()
+    {
+        return TargetingHelper.FindClosestHostileTarget(
+            this,
+            Faction,
+            node => node is IAttackable &&
+                    node is ITargetable targetable &&
+                    targetable.CanBeTargeted &&
+                    node is Node2D targetNode &&
+                    CanAcquireTarget(targetNode));
+    }
+
+    void IOffensiveSummonActorAIHost.ApplyOffensiveSummonTarget(Node2D target)
+    {
+        if (target != null)
+            SetTarget(target);
+    }
+
+    bool IOffensiveSummonActorAIHost.TryHandleOffensiveSummonNoTarget(double delta)
     {
         if (_summonerNode == null || !GodotObject.IsInstanceValid(_summonerNode) || !_summonerNode.IsInsideTree())
         {
@@ -651,32 +652,9 @@ public partial class SummonedSkeleton : CombatUnitBase, IAttackable, ITargetable
         Factions.ApplyCombatGroup(this, Faction);
     }
 
-    private void EnsureHealthLabel()
-    {
-        if (_healthLabel != null)
-            return;
+    protected override bool ShouldUseReturnHomeRegeneration() => false;
 
-        _healthLabel = new Label
-        {
-            Name = "HealthLabel",
-            Position = HealthLabelOffset,
-            Size = HealthLabelSize,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            ZIndex = 10
-        };
-        _healthLabel.AddThemeFontSizeOverride("font_size", 12);
-        _healthLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
-        _healthLabel.AddThemeConstantOverride("outline_size", 2);
-        AddChild(_healthLabel);
-    }
+    protected override bool ShouldUseIdleRegeneration() => false;
 
-    private void UpdateHealthLabel()
-    {
-        if (_healthLabel == null)
-            return;
-
-        _healthLabel.Text = $"{_currentHealth}/{Math.Max(1, Health)}";
-        _healthLabel.AddThemeColorOverride("font_color", FactionColors.Resolve(Faction));
-    }
+    protected override int MaxHealthValue => Health;
 }

@@ -111,6 +111,11 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
         return _actorAI != null && _actorAI.TryAcquireTarget();
     }
 
+    protected bool TryHandleNoTargetWithAI(double delta)
+    {
+        return _actorAI != null && _actorAI.TryHandleNoTarget(delta);
+    }
+
     protected override Vector2 GetDesiredMovementTarget(Vector2 targetPosition, double delta)
     {
         if (_actorAI != null &&
@@ -148,6 +153,10 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
     protected abstract int MaxHealthValue { get; }
 
     protected virtual Vector2 GetActorDesiredMovementTarget(Vector2 targetPosition, double delta) => targetPosition;
+
+    protected virtual bool ShouldUseReturnHomeRegeneration() => EnableReturnHomeRegeneration;
+
+    protected virtual bool ShouldUseIdleRegeneration() => EnableIdleRegeneration;
 
     protected override void PrePhysicsProcess(double delta)
     {
@@ -208,12 +217,12 @@ public abstract partial class ActorBase : CombatUnitBase, IFactionMember
         if (IsDead)
             return RegenerationPhase.None;
 
-        if (CurrentState == CombatUnitState.ReturningHome && EnableReturnHomeRegeneration)
+        if (CurrentState == CombatUnitState.ReturningHome && ShouldUseReturnHomeRegeneration())
             return RegenerationPhase.ReturningHome;
 
         if (CurrentState == CombatUnitState.Idle &&
             CurrentTarget == null &&
-            EnableIdleRegeneration)
+            ShouldUseIdleRegeneration())
         {
             return RegenerationPhase.Idle;
         }

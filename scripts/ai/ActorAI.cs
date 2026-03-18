@@ -18,6 +18,8 @@ public abstract class ActorAI
 
     public virtual bool TryAcquireTarget() => false;
 
+    public virtual bool TryHandleNoTarget(double delta) => false;
+
     public virtual bool TryGetDesiredMovementTarget(Vector2 targetPosition, double delta, out Vector2 desiredMovementTarget)
     {
         desiredMovementTarget = Vector2.Zero;
