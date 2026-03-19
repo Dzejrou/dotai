@@ -5,8 +5,6 @@ using System;
 [GlobalClass]
 public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IFactionMember
 {
-    private static readonly Vector2 HealthLabelOffset = new Vector2(-24.0f, -36.0f);
-    private static readonly Vector2 HealthLabelSize = new Vector2(48.0f, 16.0f);
     private static readonly Color InactiveModulate = new Color(0.55f, 0.55f, 0.55f, 0.45f);
 
     [Export]
@@ -21,7 +19,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
     private AnimatedSprite2D _animatedSprite;
     private CollisionShape2D _collisionShape;
     private Timer _respawnTimer;
-    private Label _healthLabel;
+    private ActorHUD _actorHud;
     private Vector2 _spawnPosition;
     private int _currentHealth;
     private bool _isDead;
@@ -36,11 +34,15 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         _spawnPosition = GlobalPosition;
         _currentHealth = ResolvedMaxHealth;
         _isDead = false;
+        _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
+        if (_actorHud == null)
+            GD.PushError($"{GetPath()}: missing required ActorHUD child.");
+        else
+            _actorHud.Bind(this);
 
         // Compatibility only: keep the neutral dummy discoverable by existing target enumeration.
         AddToGroup(CombatGroups.Enemies);
-        EnsureHealthLabel();
-        UpdateHealthLabel();
+        UpdateHud();
         ApplyActiveVisualState();
 
         if (_respawnTimer != null)
@@ -64,8 +66,8 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
 
         var damage = Math.Max(1, damageInfo.Amount);
         _currentHealth = Math.Max(0, _currentHealth - damage);
-        UpdateHealthLabel();
-        FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
+        UpdateHud();
+        _actorHud?.ShowFloatingText(damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
 
         if (_currentHealth <= 0)
             StartDeath();
@@ -79,7 +81,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         _isDead = true;
         _currentHealth = 0;
         Velocity = Vector2.Zero;
-        UpdateHealthLabel();
+        UpdateHud();
         SetCollisionEnabled(false);
         ApplyInactiveVisualState();
 
@@ -102,39 +104,18 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         _currentHealth = ResolvedMaxHealth;
         _isDead = false;
         Velocity = Vector2.Zero;
-        UpdateHealthLabel();
+        UpdateHud();
         SetCollisionEnabled(true);
         ApplyActiveVisualState();
     }
 
-    private void EnsureHealthLabel()
+    private void UpdateHud()
     {
-        if (_healthLabel != null)
+        if (_actorHud == null)
             return;
 
-        _healthLabel = new Label
-        {
-            Name = "HealthLabel",
-            Position = HealthLabelOffset,
-            Size = HealthLabelSize,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            ZIndex = 10
-        };
-        _healthLabel.AddThemeFontSizeOverride("font_size", 12);
-        _healthLabel.AddThemeColorOverride("font_color", Colors.White);
-        _healthLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
-        _healthLabel.AddThemeConstantOverride("outline_size", 2);
-        AddChild(_healthLabel);
-    }
-
-    private void UpdateHealthLabel()
-    {
-        if (_healthLabel == null)
-            return;
-
-        _healthLabel.Text = $"{_currentHealth}/{ResolvedMaxHealth}";
-        _healthLabel.AddThemeColorOverride("font_color", FactionColors.Resolve(Faction));
+        _actorHud.SetHealth(_currentHealth, ResolvedMaxHealth);
+        _actorHud.SetFaction(Faction);
     }
 
     private void SetCollisionEnabled(bool enabled)

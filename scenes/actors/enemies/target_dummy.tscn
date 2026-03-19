@@ -1,7 +1,8 @@
-[gd_scene format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/enemies/TargetDummy.cs" id="1_target_dummy_script"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/target_dummy_spriteframes.tres" id="2_target_dummy_frames"]
+[ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_target_dummy"]
 radius = 5.0
@@ -23,3 +24,5 @@ shape = SubResource("CapsuleShape2D_target_dummy")
 [node name="RespawnTimer" type="Timer" parent="."]
 one_shot = true
 wait_time = 30.0
+
+[node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]

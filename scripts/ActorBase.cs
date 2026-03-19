@@ -8,8 +8,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember
     private const float NavigationTargetUpdateThreshold = 8.0f;
     private const float DefaultPathDesiredDistance = 6.0f;
     private const float DefaultTargetDesiredDistance = 8.0f;
-    private static readonly Vector2 ActorHealthLabelOffset = new Vector2(-24.0f, -36.0f);
-    private static readonly Vector2 ActorHealthLabelSize = new Vector2(48.0f, 16.0f);
 
     [Export]
     public StringName DeathAnimation { get; set; } = "falling-back-death";
@@ -44,7 +42,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember
     private readonly List<IActorDamageInterceptor> _damageInterceptors = new();
     private bool _hasNavigationDestination;
     private Vector2 _lastNavigationDestination;
-    private Label _healthLabel;
+    private ActorHUD _actorHud;
 
     protected abstract int MaxHealthValue { get; }
 
@@ -66,7 +64,11 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember
         CurrentHealth = ResolvedMaxHealth;
         IsDead = false;
         HomePosition = GlobalPosition;
-        EnsureHealthLabel();
+        _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
+        if (_actorHud == null)
+            GD.PushError($"{GetPath()}: missing required ActorHUD child.");
+        else
+            _actorHud.Bind(this);
         RefreshHealthLabel();
 
         if (AnimatedSprite != null)
@@ -207,7 +209,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember
 
     public void ShowFloatingDamageNumber(string text, Color color)
     {
-        FloatingNumberHelper.ShowFloatingNumber(this, text, color);
+        _actorHud?.ShowFloatingText(text, color);
     }
 
     public static bool IsStructurallyValidTarget(Node2D target)
@@ -272,19 +274,19 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember
 
     protected void RefreshHealthLabel()
     {
-        if (_healthLabel == null)
+        if (_actorHud == null)
             return;
 
-        _healthLabel.Text = $"{CurrentHealth}/{ResolvedMaxHealth}";
-        _healthLabel.AddThemeColorOverride("font_color", FactionColors.Resolve(Faction));
+        _actorHud.SetHealth(CurrentHealth, ResolvedMaxHealth);
+        _actorHud.SetFaction(Faction);
     }
 
     protected void ShowFloatingHealingNumber(int amount)
     {
-        if (amount <= 0)
+        if (amount <= 0 || _actorHud == null)
             return;
 
-        FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+        _actorHud.ShowFloatingText($"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
     }
 
     protected bool TryApplyIncomingDamage(DamageInfo damageInfo, out int damage, out bool died)
@@ -502,24 +504,4 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember
         LastNavigationPathPosition = Vector2.Zero;
     }
 
-    private void EnsureHealthLabel()
-    {
-        if (_healthLabel != null)
-            return;
-
-        _healthLabel = new Label
-        {
-            Name = "HealthLabel",
-            Position = ActorHealthLabelOffset,
-            Size = ActorHealthLabelSize,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            ZIndex = 10
-        };
-        _healthLabel.AddThemeFontSizeOverride("font_size", 12);
-        _healthLabel.AddThemeColorOverride("font_color", Colors.White);
-        _healthLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
-        _healthLabel.AddThemeConstantOverride("outline_size", 2);
-        AddChild(_healthLabel);
-    }
 }

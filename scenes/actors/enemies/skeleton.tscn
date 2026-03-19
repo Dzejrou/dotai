@@ -1,7 +1,8 @@
-[gd_scene format=3 uid="uid://c47bnjp8ugxap"]
+[gd_scene load_steps=3 format=3 uid="uid://c47bnjp8ugxap"]
 
 [ext_resource type="Script" uid="uid://bh7q0agjpycv1" path="res://scripts/actors/enemies/Skeleton.cs" id="1_8g1m3"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/skeleton_spriteframes.tres" id="2_skeleton_frames"]
+[ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
 radius = 5.0
@@ -26,3 +27,5 @@ debug_enabled = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=434218639]
 position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_q6f3w")
+
+[node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]

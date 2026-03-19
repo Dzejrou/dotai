@@ -178,7 +178,7 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
         if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;
 
-        FloatingNumberHelper.ShowFloatingNumber(this, damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
+        ShowFloatingDamageNumber(damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
         if (died)
             StartDeath();
     }
