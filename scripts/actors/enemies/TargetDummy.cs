@@ -37,6 +37,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         _currentHealth = ResolvedMaxHealth;
         _isDead = false;
 
+        // Compatibility only: keep the neutral dummy discoverable by existing target enumeration.
         AddToGroup(CombatGroups.Enemies);
         EnsureHealthLabel();
         UpdateHealthLabel();

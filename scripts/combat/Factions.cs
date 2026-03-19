@@ -34,18 +34,31 @@ public static class Factions
         return key != null && ByKey.TryGetValue(key, out var faction) ? faction : null;
     }
 
-    public static Faction ResolveForNode(Node node)
+    public static Faction ResolveExplicitForNode(Node node)
     {
         if (node is IFactionMember factionMember && factionMember.Faction != null)
             return factionMember.Faction;
 
-        if (node != null && node.IsInGroup(CombatGroups.Allies))
+        return null;
+    }
+
+    public static Faction ResolveCompatibilityForNode(Node node)
+    {
+        if (node == null)
+            return null;
+
+        if (node.IsInGroup(CombatGroups.Allies))
             return Allies;
 
-        if (node != null && node.IsInGroup(CombatGroups.Enemies))
+        if (node.IsInGroup(CombatGroups.Enemies))
             return Enemies;
 
         return null;
+    }
+
+    public static Faction ResolveForNode(Node node)
+    {
+        return ResolveExplicitForNode(node) ?? ResolveCompatibilityForNode(node);
     }
 
     public static void ApplyCombatGroup(Node node, Faction faction)
