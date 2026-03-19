@@ -81,7 +81,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     private bool _isAttacking;
     private float _healthRegenTimer;
     private float _healthRegenDelayTimer;
-    private PlayerTargetMarker _targetMarker;
+    private ActorHUD _activeTargetHud;
 
     public int CurrentHealth => _health;
     public bool CanBeTargeted => !_isDead;
@@ -97,8 +97,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Allies);
-        _targetMarker = new PlayerTargetMarker();
-        AddChild(_targetMarker);
 
         EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
     }
@@ -303,7 +301,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         {
             _isDead = true;
             Targeting.ClearAllTargets();
-            UpdateTargetMarker();
+            UpdateTargetBracket();
             EmitSignal(SignalName.PlayerDied);
             QueueFree();
         }
@@ -313,7 +311,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     {
         ValidateTabTarget();
         UpdateSoftTarget();
-        UpdateTargetMarker();
+        UpdateTargetBracket();
     }
 
     private void UpdateSoftTarget()
@@ -380,7 +378,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     private void ClearTabTarget()
     {
         Targeting.ClearTabTarget();
-        UpdateTargetMarker();
+        UpdateTargetBracket();
     }
 
     private void CycleTabTarget(int direction)
@@ -398,7 +396,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         {
             var initialIndex = direction < 0 ? candidates.Count - 1 : 0;
             Targeting.SetTabTarget(candidates[initialIndex]);
-            UpdateTargetMarker();
+            UpdateTargetBracket();
             return;
         }
 
@@ -411,7 +409,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         var step = direction < 0 ? -1 : 1;
         var nextIndex = (currentIndex + step + candidates.Count) % candidates.Count;
         Targeting.SetTabTarget(candidates[nextIndex]);
-        UpdateTargetMarker();
+        UpdateTargetBracket();
     }
 
     private void ValidateTabTarget()
@@ -491,16 +489,27 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         return (alignmentScore * 0.7f) + (distanceScore * 0.3f);
     }
 
-    private void UpdateTargetMarker()
+    private void UpdateTargetBracket()
     {
-        if (_targetMarker == null)
+        var activeTarget = Targeting.ActiveTarget;
+        var nextTargetHud = ResolveActorHud(activeTarget);
+        if (_activeTargetHud == nextTargetHud)
             return;
 
-        var activeTarget = Targeting.ActiveTarget;
-        if (activeTarget != null && IsInstanceValid(activeTarget) && activeTarget.IsInsideTree())
-            _targetMarker.SetTarget(activeTarget);
-        else
-            _targetMarker.ClearTarget();
+        if (_activeTargetHud != null && GodotObject.IsInstanceValid(_activeTargetHud))
+            _activeTargetHud.SetTargetBracketVisible(false);
+
+        _activeTargetHud = nextTargetHud;
+        if (_activeTargetHud != null)
+            _activeTargetHud.SetTargetBracketVisible(true);
+    }
+
+    private static ActorHUD ResolveActorHud(Node2D actor)
+    {
+        if (actor == null || !GodotObject.IsInstanceValid(actor) || !actor.IsInsideTree())
+            return null;
+
+        return actor.GetNodeOrNull<ActorHUD>("ActorHUD");
     }
 
     private void ApplySlashDamage()
