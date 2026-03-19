@@ -50,6 +50,9 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
     [Export]
     public float FormationVerticalOffset { get; set; } = 42.0f;
 
+    [Export]
+    public float RecoveryTeleportTimeoutSeconds { get; set; } = 2.5f;
+
     private Faction _faction = Factions.Allies;
     private ISummoner _summoner;
     private Node2D _summonerNode;
@@ -81,7 +84,9 @@ public partial class SummonedSkeleton : ActorBase, IAttackable, ITargetable, ISu
             LeashReturnDistance,
             IdleAnchorTolerance,
             LeashCatchupSpeedMultiplier,
-            followWhenIdle: true);
+            followWhenIdle: true,
+            teleportDestinationGetter: actor => GetIdleAnchor(),
+            teleportRecoveryTimeout: RecoveryTeleportTimeoutSeconds);
 
         ConfigureBehaviors(
             new CommandedTargetBehavior(actor => GetCommandedTarget()),

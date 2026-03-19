@@ -1,6 +1,7 @@
 using Godot;
 
 using System;
+using System.Collections.Generic;
 
 public static class TargetingHelper
 {
@@ -18,6 +19,31 @@ public static class TargetingHelper
         Node2D closest = null;
         var closestDistance = float.MaxValue;
 
+        foreach (var targetNode in EnumerateCandidateTargets(source))
+        {
+            if (!sourceFaction.IsHostileTo(Factions.ResolveForNode(targetNode)))
+                continue;
+
+            if (shouldConsiderTarget != null && !shouldConsiderTarget(targetNode))
+                continue;
+
+            var distance = (targetNode.GlobalPosition - source.GlobalPosition).Length();
+            if (distance >= closestDistance)
+                continue;
+
+            closestDistance = distance;
+            closest = targetNode;
+        }
+
+        return closest;
+    }
+
+    public static IEnumerable<Node2D> EnumerateCandidateTargets(Node2D source)
+    {
+        if (source == null || !source.IsInsideTree() || source.GetTree() == null)
+            yield break;
+
+        var seenInstanceIds = new HashSet<ulong>();
         foreach (var targetGroup in CandidateFactionGroups)
         {
             foreach (var node in source.GetTree().GetNodesInGroup(targetGroup))
@@ -25,24 +51,50 @@ public static class TargetingHelper
                 if (node == source || !IsValidTargetNode(node, source))
                     continue;
 
-                var targetFaction = Factions.ResolveForNode(node);
-                if (!sourceFaction.IsHostileTo(targetFaction))
-                    continue;
-
-                if (shouldConsiderTarget != null && !shouldConsiderTarget(node))
-                    continue;
-
                 var targetNode = (Node2D)node;
-                var distance = (targetNode.GlobalPosition - source.GlobalPosition).Length();
-                if (distance >= closestDistance)
+                if (!seenInstanceIds.Add(targetNode.GetInstanceId()))
                     continue;
 
-                closestDistance = distance;
-                closest = targetNode;
+                yield return targetNode;
             }
         }
+    }
 
-        return closest;
+    public static bool CanBeExplicitlyTargetedByFaction(Faction sourceFaction, Node target)
+    {
+        if (sourceFaction == null || target == null)
+            return false;
+
+        var targetFaction = Factions.ResolveForNode(target);
+        if (targetFaction == null)
+            return false;
+
+        return !ReferenceEquals(sourceFaction, targetFaction);
+    }
+
+    public static bool CanProjectileHitTarget(Node source, Node2D target, StringName compatibilityTargetGroup = default)
+    {
+        if (target == null ||
+            !GodotObject.IsInstanceValid(target) ||
+            !target.IsInsideTree() ||
+            target is not IAttackable ||
+            target is not ITargetable targetable ||
+            !targetable.CanBeTargeted)
+        {
+            return false;
+        }
+
+        var sourceFaction = Factions.ResolveForNode(source);
+        var targetFaction = Factions.ResolveForNode(target);
+        if (sourceFaction != null && targetFaction != null)
+        {
+            if (source is Player)
+                return !ReferenceEquals(sourceFaction, targetFaction);
+
+            return sourceFaction.IsHostileTo(targetFaction);
+        }
+
+        return !compatibilityTargetGroup.IsEmpty && target.IsInGroup(compatibilityTargetGroup);
     }
 
     public static Node2D FindClosestTarget(Node2D source, string targetGroup, Func<Node, bool> shouldConsiderTarget = null)

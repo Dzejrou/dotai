@@ -62,10 +62,13 @@ public sealed class AcquireHostileTargetBehavior : IActorBehavior
 
     private Node2D ResolveInitialTarget(ActorBase actor)
     {
-        if (_initialTargetPath != null && !_initialTargetPath.IsEmpty && actor.HasNode(_initialTargetPath))
+        if (_initialTargetPath == null || _initialTargetPath.IsEmpty)
+            return null;
+
+        if (actor.HasNode(_initialTargetPath))
             return actor.GetNodeOrNull<Node2D>(_initialTargetPath);
 
-        return actor.GetParent()?.GetNodeOrNull<Node2D>("Player");
+        return null;
     }
 
     private bool CanAcquireTarget(ActorBase actor, Node2D target)

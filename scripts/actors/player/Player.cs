@@ -237,7 +237,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             FireballSpeed,
             FireballLifetime,
             FireballMaxDistance,
-            CombatGroups.Enemies);
+            string.Empty);
     }
 
     private void SummonSkeleton()
@@ -332,9 +332,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         Node2D bestTarget = null;
         var bestScore = float.NegativeInfinity;
 
-        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Enemies))
+        foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
         {
-            if (!IsValidSoftTargetCandidate(node, out var targetNode))
+            if (!IsValidPlayerTargetCandidate(node, out var targetNode))
                 continue;
 
             var toTarget = targetNode.GlobalPosition - GlobalPosition;
@@ -360,7 +360,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             Targeting.ClearSoftTarget();
     }
 
-    private static bool IsValidSoftTargetCandidate(Node node, out Node2D targetNode)
+    private bool IsValidPlayerTargetCandidate(Node node, out Node2D targetNode)
     {
         targetNode = null;
 
@@ -368,6 +368,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             return false;
 
         if (node is not IAttackable || node is not ITargetable targetable || !targetable.CanBeTargeted)
+            return false;
+
+        if (!TargetingHelper.CanBeExplicitlyTargetedByFaction(Faction, node2D))
             return false;
 
         targetNode = node2D;
@@ -427,6 +430,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (target is not IAttackable || target is not ITargetable targetable || !targetable.CanBeTargeted)
             return false;
 
+        if (!TargetingHelper.CanBeExplicitlyTargetedByFaction(Faction, target))
+            return false;
+
         return GlobalPosition.DistanceTo(target.GlobalPosition) <= Math.Max(0.0f, TabTargetRange);
     }
 
@@ -441,9 +447,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (facingDirection == Vector2.Zero)
             facingDirection = Vector2.Down;
 
-        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Enemies))
+        foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
         {
-            if (!IsValidSoftTargetCandidate(node, out var targetNode))
+            if (!IsValidPlayerTargetCandidate(node, out var targetNode))
                 continue;
 
             var distance = GlobalPosition.DistanceTo(targetNode.GlobalPosition);
@@ -505,12 +511,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         var facingVector = DirectionHelper.GetDirectionVector(_lastDirection);
         var minimumDot = Mathf.Cos(Mathf.DegToRad(AttackArcDegrees / 2.0f));
 
-        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Enemies))
+        foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
         {
-            if (_hitThisAttack.Contains(node) || node is not IAttackable attackable || node is not ITargetable targetable || !targetable.CanBeTargeted)
-                continue;
-
-            if (!IsInstanceValid(node) || node is not Node2D enemyNode || !enemyNode.IsInsideTree())
+            if (_hitThisAttack.Contains(node) || node is not IAttackable attackable || !IsValidPlayerTargetCandidate(node, out var enemyNode))
                 continue;
 
             var toEnemy = enemyNode.GlobalPosition - GlobalPosition;

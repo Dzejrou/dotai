@@ -27,9 +27,6 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
     public int MaxAttackDamage { get; set; } = 3;
 
     [Export]
-    public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
-
-    [Export]
     public float AggroAcquisitionRange { get; set; } = 150.0f;
 
     [Export]
@@ -99,7 +96,7 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
                 }),
             new AcquireHostileTargetBehavior(
                 AggroAcquisitionRange,
-                InitialTargetPath,
+                null,
                 "WolfSummon",
                 actor => !leashBehavior.IsReturningHome && !_followSummonerBehavior.IsRecovering,
                 additionalTargetFilter: (actor, target) => CanAcquireTarget(target)),

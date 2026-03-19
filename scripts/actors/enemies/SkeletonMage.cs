@@ -63,7 +63,7 @@ public partial class SkeletonMage : ActorBase, IAttackable, ITargetable
     public float ProjectileMaxTravelDistance { get; set; } = 320.0f;
 
     [Export]
-    public string ProjectileTargetGroup { get; set; } = CombatGroups.Allies;
+    public string ProjectileTargetGroup { get; set; } = string.Empty;
 
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => Factions.Enemies;
@@ -93,29 +93,17 @@ public partial class SkeletonMage : ActorBase, IAttackable, ITargetable
                 ProjectileMaxTravelDistance,
                 ProjectileTargetGroup));
 
-        var leashBehavior = new LeashBehavior(
+        var preset = ActorBehaviorPresets.CreateHostileRangedPreset(
+            AggroAcquisitionRange,
+            InitialTargetPath,
+            "SkeletonMage",
             AggroLossRange,
             EvadeOnAggroLoss,
             IgnoreDamageWhileEvading,
-            actor => actor.HomePosition,
-            actor => actor.IsAtHome());
-        ConfigureBehaviors(
-            leashBehavior,
-            new PursuitStuckRecoveryBehavior(
-                1.0f,
-                0.6f,
-                8.0f,
-                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
-                actor => leashBehavior.BeginReturnHome(actor, true)),
-            new AcquireHostileTargetBehavior(
-                AggroAcquisitionRange,
-                InitialTargetPath,
-                "SkeletonMage",
-                actor => !leashBehavior.IsReturningHome),
-            new TargetCombatBehavior(),
-            new ReturnHomeBehavior(actor => actor.HomePosition, actor => actor.IsAtHome()),
-            new ReturnHomeRegenerationBehavior(ReturnHomeRegenerationFractionPerSecond),
-            new IdleRegenerationBehavior(IdleRegenerationFractionPerSecond, IdleRegenerationIntervalSeconds));
+            ReturnHomeRegenerationFractionPerSecond,
+            IdleRegenerationFractionPerSecond,
+            IdleRegenerationIntervalSeconds);
+        ConfigureBehaviors(preset.Behaviors);
 
         PlayIdleIfAvailable();
     }

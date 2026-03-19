@@ -56,29 +56,17 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable
         ApplyFactionCombatGroup();
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, 1, 5));
 
-        var leashBehavior = new LeashBehavior(
+        var preset = ActorBehaviorPresets.CreateHostileMeleePreset(
+            AggroAcquisitionRange,
+            InitialTargetPath,
+            "Skeleton",
             AggroLossRange,
             EvadeOnAggroLoss,
             IgnoreDamageWhileEvading,
-            actor => actor.HomePosition,
-            actor => actor.IsAtHome());
-        ConfigureBehaviors(
-            leashBehavior,
-            new PursuitStuckRecoveryBehavior(
-                1.0f,
-                0.6f,
-                8.0f,
-                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
-                actor => leashBehavior.BeginReturnHome(actor, true)),
-            new AcquireHostileTargetBehavior(
-                AggroAcquisitionRange,
-                InitialTargetPath,
-                "Skeleton",
-                actor => !leashBehavior.IsReturningHome),
-            new TargetCombatBehavior(),
-            new ReturnHomeBehavior(actor => actor.HomePosition, actor => actor.IsAtHome()),
-            new ReturnHomeRegenerationBehavior(ReturnHomeRegenerationFractionPerSecond),
-            new IdleRegenerationBehavior(IdleRegenerationFractionPerSecond, IdleRegenerationIntervalSeconds));
+            ReturnHomeRegenerationFractionPerSecond,
+            IdleRegenerationFractionPerSecond,
+            IdleRegenerationIntervalSeconds);
+        ConfigureBehaviors(preset.Behaviors);
         PlayIdleIfAvailable();
     }
 

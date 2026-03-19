@@ -132,6 +132,13 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember
             LastDirection = DirectionHelper.GetDirectionName(direction);
     }
 
+    public void TeleportTo(Vector2 position)
+    {
+        GlobalPosition = position;
+        Velocity = Vector2.Zero;
+        ResetNavigationPathState();
+    }
+
     public void FinishAttackState()
     {
         if (CurrentState != CombatUnitState.Attacking)

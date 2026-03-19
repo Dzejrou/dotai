@@ -61,7 +61,7 @@ public partial class Projectile : Area2D
         float? overrideSpeed = null,
         float? overrideLifetime = null,
         float? overrideMaxTravelDistance = null,
-        string overrideTargetGroup = "")
+        string overrideTargetGroup = null)
     {
         _source = source;
         _direction = direction.Length() > 0.0f ? direction.Normalized() : Vector2.Right;
@@ -76,7 +76,7 @@ public partial class Projectile : Area2D
 
         if (overrideMaxTravelDistance.HasValue)
             MaxTravelDistance = Mathf.Max(0.0f, overrideMaxTravelDistance.Value);
-        if (!string.IsNullOrWhiteSpace(overrideTargetGroup))
+        if (overrideTargetGroup != null)
             TargetGroup = overrideTargetGroup;
 
         _traveledDistance = 0.0f;
@@ -99,16 +99,11 @@ public partial class Projectile : Area2D
         if (_source != null && _source == targetNode)
             return;
 
-        if (!string.IsNullOrWhiteSpace(TargetGroup))
-        {
-            if (!targetNode.IsInGroup(TargetGroup))
-                return;
-        }
-
-        if (targetNode is not IAttackable attackable || targetNode is not ITargetable targetable || !targetable.CanBeTargeted)
+        if (!TargetingHelper.CanProjectileHitTarget(_source, targetNode, TargetGroup))
             return;
 
         _hasHitTarget = true;
+        var attackable = (IAttackable)targetNode;
         attackable.ApplyDamage(new DamageInfo(Damage, _source));
         CallDeferred(nameof(Despawn));
     }

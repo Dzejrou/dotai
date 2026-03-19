@@ -13,7 +13,10 @@ public sealed class FollowSummonerBehavior : IActorBehavior
     private readonly bool _followWhenIdle;
     private readonly CombatUnitState _leashState;
     private readonly CombatUnitState _followState;
+    private readonly Func<ActorBase, Vector2> _teleportDestinationGetter;
+    private readonly float _teleportRecoveryTimeout;
     private bool _recoveryRequested;
+    private float _recoveryTimer;
 
     public FollowSummonerBehavior(
         Func<ActorBase, Node2D> summonerGetter,
@@ -24,7 +27,9 @@ public sealed class FollowSummonerBehavior : IActorBehavior
         float leashSpeedMultiplier,
         bool followWhenIdle,
         CombatUnitState leashState = CombatUnitState.Leashing,
-        CombatUnitState followState = CombatUnitState.FollowingOwner)
+        CombatUnitState followState = CombatUnitState.FollowingOwner,
+        Func<ActorBase, Vector2> teleportDestinationGetter = null,
+        float teleportRecoveryTimeout = 0.0f)
     {
         _summonerGetter = summonerGetter ?? throw new ArgumentNullException(nameof(summonerGetter));
         _anchorGetter = anchorGetter ?? throw new ArgumentNullException(nameof(anchorGetter));
@@ -35,6 +40,8 @@ public sealed class FollowSummonerBehavior : IActorBehavior
         _followWhenIdle = followWhenIdle;
         _leashState = leashState;
         _followState = followState;
+        _teleportDestinationGetter = teleportDestinationGetter;
+        _teleportRecoveryTimeout = Math.Max(0.0f, teleportRecoveryTimeout);
     }
 
     public bool IsRecovering => _recoveryRequested;
@@ -42,11 +49,13 @@ public sealed class FollowSummonerBehavior : IActorBehavior
     public void BeginRecovery()
     {
         _recoveryRequested = true;
+        _recoveryTimer = 0.0f;
     }
 
     public void CancelRecovery()
     {
         _recoveryRequested = false;
+        _recoveryTimer = 0.0f;
     }
 
     public bool ShouldPrioritizeLeashReturn(ActorBase actor)
@@ -76,8 +85,25 @@ public sealed class FollowSummonerBehavior : IActorBehavior
             if (distanceToSummoner <= _stopLeashDistance)
             {
                 _recoveryRequested = false;
+                _recoveryTimer = 0.0f;
                 intent = ActorIntent.Hold(CombatUnitState.Idle);
                 return true;
+            }
+
+            if (_recoveryRequested &&
+                _teleportDestinationGetter != null &&
+                _teleportRecoveryTimeout > 0.0f &&
+                !actor.IsDead)
+            {
+                _recoveryTimer += Math.Max(0.0f, (float)delta);
+                if (_recoveryTimer >= _teleportRecoveryTimeout)
+                {
+                    actor.TeleportTo(_teleportDestinationGetter(actor));
+                    _recoveryRequested = false;
+                    _recoveryTimer = 0.0f;
+                    intent = ActorIntent.Hold(CombatUnitState.Idle);
+                    return true;
+                }
             }
 
             intent = new ActorIntent
@@ -90,6 +116,8 @@ public sealed class FollowSummonerBehavior : IActorBehavior
             };
             return true;
         }
+
+        _recoveryTimer = 0.0f;
 
         if (!_followWhenIdle || actor.CurrentTarget != null)
             return false;
