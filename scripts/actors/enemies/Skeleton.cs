@@ -35,15 +35,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable
     [Export]
     public bool IgnoreDamageWhileEvading { get; set; } = true;
 
-    [Export]
-    public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
-
-    [Export]
-    public float IdleRegenerationFractionPerSecond { get; set; } = 0.01f;
-
-    [Export]
-    public float IdleRegenerationIntervalSeconds { get; set; } = 5.0f;
-
     public override Faction Faction => Factions.Enemies;
 
     public override void _Ready()
@@ -62,10 +53,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable
             "Skeleton",
             AggroLossRange,
             EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading,
-            ReturnHomeRegenerationFractionPerSecond,
-            IdleRegenerationFractionPerSecond,
-            IdleRegenerationIntervalSeconds);
+            IgnoreDamageWhileEvading);
         ConfigureBehaviors(preset.Behaviors);
         PlayIdleIfAvailable();
     }

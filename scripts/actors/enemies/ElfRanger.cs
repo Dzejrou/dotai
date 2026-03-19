@@ -39,15 +39,6 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
     public bool IgnoreDamageWhileEvading { get; set; } = true;
 
     [Export]
-    public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
-
-    [Export]
-    public float IdleRegenerationFractionPerSecond { get; set; } = 0.01f;
-
-    [Export]
-    public float IdleRegenerationIntervalSeconds { get; set; } = 5.0f;
-
-    [Export]
     public float MinimumRange { get; set; } = 70.0f;
 
     [Export]
@@ -115,9 +106,6 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
             AggroLossRange,
             EvadeOnAggroLoss,
             IgnoreDamageWhileEvading,
-            ReturnHomeRegenerationFractionPerSecond,
-            IdleRegenerationFractionPerSecond,
-            IdleRegenerationIntervalSeconds,
             extraBehaviors: new SingleOwnedSummonBehavior(
                 WolfSummonScene,
                 WolfSummonSpawnOffset,

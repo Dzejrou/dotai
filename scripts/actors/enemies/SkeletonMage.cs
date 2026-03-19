@@ -27,15 +27,6 @@ public partial class SkeletonMage : ActorBase, IAttackable, ITargetable
     public bool IgnoreDamageWhileEvading { get; set; } = true;
 
     [Export]
-    public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
-
-    [Export]
-    public float IdleRegenerationFractionPerSecond { get; set; } = 0.01f;
-
-    [Export]
-    public float IdleRegenerationIntervalSeconds { get; set; } = 5.0f;
-
-    [Export]
     public float MinimumRange { get; set; } = 70.0f;
 
     [Export]
@@ -99,10 +90,7 @@ public partial class SkeletonMage : ActorBase, IAttackable, ITargetable
             "SkeletonMage",
             AggroLossRange,
             EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading,
-            ReturnHomeRegenerationFractionPerSecond,
-            IdleRegenerationFractionPerSecond,
-            IdleRegenerationIntervalSeconds);
+            IgnoreDamageWhileEvading);
         ConfigureBehaviors(preset.Behaviors);
 
         PlayIdleIfAvailable();

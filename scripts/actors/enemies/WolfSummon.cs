@@ -39,15 +39,6 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
     public bool IgnoreDamageWhileEvading { get; set; } = true;
 
     [Export]
-    public float ReturnHomeRegenerationFractionPerSecond { get; set; } = 0.1f;
-
-    [Export]
-    public float IdleRegenerationFractionPerSecond { get; set; } = 0.01f;
-
-    [Export]
-    public float IdleRegenerationIntervalSeconds { get; set; } = 5.0f;
-
-    [Export]
     public float SummonerRecoveryTolerance { get; set; } = 32.0f;
 
     public bool CanBeTargeted => !IsDead;
@@ -103,8 +94,8 @@ public partial class WolfSummon : ActorBase, IAttackable, ITargetable, ISummoned
             new TargetCombatBehavior(),
             _followSummonerBehavior,
             new ReturnHomeBehavior(actor => actor.HomePosition, actor => actor.IsAtHome()),
-            new ReturnHomeRegenerationBehavior(ReturnHomeRegenerationFractionPerSecond),
-            new IdleRegenerationBehavior(IdleRegenerationFractionPerSecond, IdleRegenerationIntervalSeconds));
+            ActorBehaviorPresets.CreateStandardHostileReturnHomeRegenerationBehavior(),
+            ActorBehaviorPresets.CreateStandardHostileIdleRegenerationBehavior());
         PlayIdleIfAvailable();
     }
 

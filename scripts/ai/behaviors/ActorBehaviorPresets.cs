@@ -17,6 +17,10 @@ public readonly struct ActorBehaviorPreset
 
 public static class ActorBehaviorPresets
 {
+    public const float StandardHostileReturnHomeRegenerationFractionPerSecond = 0.1f;
+    public const float StandardHostileIdleRegenerationFractionPerSecond = 0.01f;
+    public const float StandardHostileIdleRegenerationIntervalSeconds = 5.0f;
+
     public static ActorBehaviorPreset CreateHostileMeleePreset(
         float aggroAcquisitionRange,
         NodePath initialTargetPath,
@@ -24,9 +28,6 @@ public static class ActorBehaviorPresets
         float aggroLossRange,
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
-        float returnHomeRegenerationFractionPerSecond,
-        float idleRegenerationFractionPerSecond,
-        float idleRegenerationIntervalSeconds,
         Func<ActorBase, bool> canAttemptAcquisition = null,
         Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
         Action<ActorBase> onPursuitStuck = null,
@@ -39,9 +40,6 @@ public static class ActorBehaviorPresets
             aggroLossRange,
             evadeOnAggroLoss,
             ignoreDamageWhileEvading,
-            returnHomeRegenerationFractionPerSecond,
-            idleRegenerationFractionPerSecond,
-            idleRegenerationIntervalSeconds,
             canAttemptAcquisition,
             additionalTargetFilter,
             onPursuitStuck,
@@ -55,9 +53,6 @@ public static class ActorBehaviorPresets
         float aggroLossRange,
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
-        float returnHomeRegenerationFractionPerSecond,
-        float idleRegenerationFractionPerSecond,
-        float idleRegenerationIntervalSeconds,
         Func<ActorBase, bool> canAttemptAcquisition = null,
         Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
         Action<ActorBase> onPursuitStuck = null,
@@ -70,9 +65,6 @@ public static class ActorBehaviorPresets
             aggroLossRange,
             evadeOnAggroLoss,
             ignoreDamageWhileEvading,
-            returnHomeRegenerationFractionPerSecond,
-            idleRegenerationFractionPerSecond,
-            idleRegenerationIntervalSeconds,
             canAttemptAcquisition,
             additionalTargetFilter,
             onPursuitStuck,
@@ -86,9 +78,6 @@ public static class ActorBehaviorPresets
         float aggroLossRange,
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
-        float returnHomeRegenerationFractionPerSecond,
-        float idleRegenerationFractionPerSecond,
-        float idleRegenerationIntervalSeconds,
         Func<ActorBase, bool> canAttemptAcquisition,
         Func<ActorBase, Node2D, bool> additionalTargetFilter,
         Action<ActorBase> onPursuitStuck,
@@ -130,9 +119,21 @@ public static class ActorBehaviorPresets
         }
 
         behaviors.Add(new ReturnHomeBehavior(actor => actor.HomePosition, actor => actor.IsAtHome()));
-        behaviors.Add(new ReturnHomeRegenerationBehavior(returnHomeRegenerationFractionPerSecond));
-        behaviors.Add(new IdleRegenerationBehavior(idleRegenerationFractionPerSecond, idleRegenerationIntervalSeconds));
+        behaviors.Add(CreateStandardHostileReturnHomeRegenerationBehavior());
+        behaviors.Add(CreateStandardHostileIdleRegenerationBehavior());
 
         return new ActorBehaviorPreset(leashBehavior, behaviors.ToArray());
+    }
+
+    public static ReturnHomeRegenerationBehavior CreateStandardHostileReturnHomeRegenerationBehavior()
+    {
+        return new ReturnHomeRegenerationBehavior(StandardHostileReturnHomeRegenerationFractionPerSecond);
+    }
+
+    public static IdleRegenerationBehavior CreateStandardHostileIdleRegenerationBehavior()
+    {
+        return new IdleRegenerationBehavior(
+            StandardHostileIdleRegenerationFractionPerSecond,
+            StandardHostileIdleRegenerationIntervalSeconds);
     }
 }
