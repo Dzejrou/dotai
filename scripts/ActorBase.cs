@@ -6,7 +6,9 @@ using System.Collections.Generic;
 public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable, ICombatStateOwner
 {
     private const string BehaviorNodeTargetingPath = "Behaviors/Tier10_Targeting";
+    private const string BehaviorNodeLeashPath = "Behaviors/Tier20_Leash";
     private const string BehaviorNodeCombatPath = "Behaviors/Tier50_Combat";
+    private const string BehaviorNodeReturnHomePath = "Behaviors/Tier80_ReturnHome";
     private const string BehaviorNodeRecoveryPath = "Behaviors/Tier90_Recovery";
     private const float NavigationTargetUpdateThreshold = 8.0f;
     private const float DefaultPathDesiredDistance = 6.0f;
@@ -270,12 +272,14 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         _damageInterceptors.Clear();
 
         AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeTargetingPath));
+        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeLeashPath));
 
         foreach (var behavior in behaviors)
             AppendBehavior(behavior);
 
         AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeCombatPath));
         AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeRecoveryPath));
+        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeReturnHomePath));
     }
 
     protected void SetPrimaryActionController(ICombatActionController actionController)

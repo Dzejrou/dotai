@@ -2,18 +2,32 @@ using Godot;
 
 using System;
 
-public sealed class LeashBehavior : IActorBehavior, IActorDamageInterceptor
+[GlobalClass]
+public partial class LeashBehavior : Node, IActorBehavior, IActorDamageInterceptor
 {
-    private static readonly Color EvadeColor = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+    private static readonly Color EvadeColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+    private const string ScenePath = "Behaviors/Tier20_Leash/LeashBehavior";
 
-    private readonly float _lossRange;
-    private readonly bool _evadeOnAggroLoss;
-    private readonly bool _ignoreDamageWhileReturning;
+    [Export]
+    public float LossRange { get; set; } = 220.0f;
+
+    [Export]
+    public bool EvadeOnAggroLoss { get; set; } = true;
+
+    [Export]
+    public bool IgnoreDamageWhileReturning { get; set; } = true;
+
+    [Export]
+    public CombatUnitState ReturnState { get; set; } = CombatUnitState.ReturningHome;
+
+    [Export]
+    public float SpeedMultiplier { get; set; } = 1.0f;
+
     private readonly Func<ActorBase, Vector2> _returnDestinationGetter;
     private readonly Func<ActorBase, bool> _hasRecovered;
-    private readonly CombatUnitState _returnState;
-    private readonly float _speedMultiplier;
     private bool _isReturningHome;
+
+    public LeashBehavior() { }
 
     public LeashBehavior(
         float lossRange,
@@ -24,13 +38,13 @@ public sealed class LeashBehavior : IActorBehavior, IActorDamageInterceptor
         CombatUnitState returnState = CombatUnitState.ReturningHome,
         float speedMultiplier = 1.0f)
     {
-        _lossRange = Math.Max(0.0f, lossRange);
-        _evadeOnAggroLoss = evadeOnAggroLoss;
-        _ignoreDamageWhileReturning = ignoreDamageWhileReturning;
+        LossRange = Math.Max(0.0f, lossRange);
+        EvadeOnAggroLoss = evadeOnAggroLoss;
+        IgnoreDamageWhileReturning = ignoreDamageWhileReturning;
         _returnDestinationGetter = returnDestinationGetter ?? throw new ArgumentNullException(nameof(returnDestinationGetter));
         _hasRecovered = hasRecovered ?? throw new ArgumentNullException(nameof(hasRecovered));
-        _returnState = returnState;
-        _speedMultiplier = Math.Max(0.0f, speedMultiplier);
+        ReturnState = returnState;
+        SpeedMultiplier = Math.Max(0.0f, speedMultiplier);
     }
 
     public bool IsReturningHome => _isReturningHome;
@@ -50,7 +64,7 @@ public sealed class LeashBehavior : IActorBehavior, IActorDamageInterceptor
 
         if (!_isReturningHome && actor.CurrentTarget != null && !IsTargetWithinLossRange(actor, actor.CurrentTarget))
         {
-            if (_evadeOnAggroLoss)
+            if (EvadeOnAggroLoss)
             {
                 BeginReturnHome(actor, false);
             }
@@ -64,14 +78,14 @@ public sealed class LeashBehavior : IActorBehavior, IActorDamageInterceptor
         if (!_isReturningHome)
             return false;
 
-        if (_hasRecovered(actor))
+        if (HasRecovered(actor))
         {
             _isReturningHome = false;
             intent = ActorIntent.Hold(CombatUnitState.Idle);
             return true;
         }
 
-        intent = ActorIntent.MoveTo(_returnDestinationGetter(actor), _returnState, _speedMultiplier);
+        intent = ActorIntent.MoveTo(GetReturnDestination(actor), ReturnState, Math.Max(0.0f, SpeedMultiplier));
         return true;
     }
 
@@ -79,7 +93,7 @@ public sealed class LeashBehavior : IActorBehavior, IActorDamageInterceptor
     {
         decision = default;
 
-        if (_isReturningHome && _ignoreDamageWhileReturning)
+        if (_isReturningHome && IgnoreDamageWhileReturning)
         {
             decision = IncomingDamageDecision.Deny("EVADE", EvadeColor);
             return true;
@@ -105,11 +119,26 @@ public sealed class LeashBehavior : IActorBehavior, IActorDamageInterceptor
         return true;
     }
 
+    public static LeashBehavior ResolveFor(ActorBase actor)
+    {
+        return actor?.GetNodeOrNull<LeashBehavior>(ScenePath);
+    }
+
+    private bool HasRecovered(ActorBase actor)
+    {
+        return _hasRecovered?.Invoke(actor) ?? actor.IsAtHome();
+    }
+
+    private Vector2 GetReturnDestination(ActorBase actor)
+    {
+        return _returnDestinationGetter?.Invoke(actor) ?? actor.HomePosition;
+    }
+
     private bool IsTargetWithinLossRange(ActorBase actor, Node2D target)
     {
         if (target == null)
             return false;
 
-        return actor.GlobalPosition.DistanceTo(target.GlobalPosition) <= _lossRange;
+        return actor.GlobalPosition.DistanceTo(target.GlobalPosition) <= Math.Max(0.0f, LossRange);
     }
 }

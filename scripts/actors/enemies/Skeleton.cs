@@ -33,21 +33,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     public int MaxAttackDamage { get; set; } = 5;
 
     [Export]
-    public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
-
-    [Export]
-    public float AggroAcquisitionRange { get; set; } = 150.0f;
-
-    [Export]
-    public float AggroLossRange { get; set; } = 220.0f;
-
-    [Export]
-    public bool EvadeOnAggroLoss { get; set; } = true;
-
-    [Export]
-    public bool IgnoreDamageWhileEvading { get; set; } = true;
-
-    [Export]
     public float LeashDistance { get; set; } = 220.0f;
 
     public bool CanBeTargeted => !IsDead;
@@ -165,14 +150,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
     private IActorBehavior[] CreateDefaultBehaviors()
     {
-        var preset = ActorBehaviorPresets.CreateHostileMeleePreset(
-            AggroAcquisitionRange,
-            InitialTargetPath,
-            "Skeleton",
-            AggroLossRange,
-            EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading,
-            includeNodeMigratedBehaviors: false);
+        var preset = ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
         return preset.Behaviors;
     }
 

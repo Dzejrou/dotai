@@ -21,6 +21,36 @@ public static class ActorBehaviorPresets
     public const float StandardHostileIdleRegenerationFractionPerSecond = 0.01f;
     public const float StandardHostileIdleRegenerationIntervalSeconds = 5.0f;
 
+    public static ActorBehaviorPreset CreateSceneBackedHostileMeleePreset(
+        Action<ActorBase> onPursuitStuck = null,
+        params IActorBehavior[] extraBehaviors)
+    {
+        var pursuitStuckCallback = onPursuitStuck ?? (actor => LeashBehavior.ResolveFor(actor)?.BeginReturnHome(actor, true));
+        var behaviors = new List<IActorBehavior>
+        {
+            new PursuitStuckRecoveryBehavior(
+                1.0f,
+                0.6f,
+                8.0f,
+                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
+                pursuitStuckCallback),
+        };
+
+        if (extraBehaviors != null)
+        {
+            foreach (var behavior in extraBehaviors)
+            {
+                if (behavior != null)
+                    behaviors.Add(behavior);
+            }
+        }
+
+        behaviors.Add(CreateStandardHostileReturnHomeRegenerationBehavior());
+        behaviors.Add(CreateStandardHostileIdleRegenerationBehavior());
+
+        return new ActorBehaviorPreset(null, behaviors.ToArray());
+    }
+
     public static ActorBehaviorPreset CreateHostileMeleePreset(
         float aggroAcquisitionRange,
         NodePath initialTargetPath,
@@ -88,17 +118,30 @@ public static class ActorBehaviorPresets
         Action<ActorBase> onPursuitStuck,
         params IActorBehavior[] extraBehaviors)
     {
-        var leashBehavior = new LeashBehavior(
-            aggroLossRange,
-            evadeOnAggroLoss,
-            ignoreDamageWhileEvading,
-            actor => actor.HomePosition,
-            actor => actor.IsAtHome());
+        LeashBehavior leashBehavior = null;
+        if (includeNodeMigratedBehaviors)
+        {
+            leashBehavior = new LeashBehavior(
+                aggroLossRange,
+                evadeOnAggroLoss,
+                ignoreDamageWhileEvading,
+                actor => actor.HomePosition,
+                actor => actor.IsAtHome());
+        }
 
-        var pursuitStuckCallback = onPursuitStuck ?? (actor => leashBehavior.BeginReturnHome(actor, true));
+        var pursuitStuckCallback = onPursuitStuck ?? (actor =>
+        {
+            if (leashBehavior != null)
+            {
+                leashBehavior.BeginReturnHome(actor, true);
+                return;
+            }
+
+            LeashBehavior.ResolveFor(actor)?.BeginReturnHome(actor, true);
+        });
+
         var behaviors = new List<IActorBehavior>
         {
-            leashBehavior,
             new PursuitStuckRecoveryBehavior(
                 1.0f,
                 0.6f,
@@ -106,6 +149,9 @@ public static class ActorBehaviorPresets
                 actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
                 pursuitStuckCallback),
         };
+
+        if (leashBehavior != null)
+            behaviors.Insert(0, leashBehavior);
 
         if (includeNodeMigratedBehaviors)
         {
@@ -127,7 +173,8 @@ public static class ActorBehaviorPresets
             }
         }
 
-        behaviors.Add(new ReturnHomeBehavior(actor => actor.HomePosition, actor => actor.IsAtHome()));
+        if (includeNodeMigratedBehaviors)
+            behaviors.Add(new ReturnHomeBehavior(actor => actor.HomePosition, actor => actor.IsAtHome()));
         behaviors.Add(CreateStandardHostileReturnHomeRegenerationBehavior());
         behaviors.Add(CreateStandardHostileIdleRegenerationBehavior());
 

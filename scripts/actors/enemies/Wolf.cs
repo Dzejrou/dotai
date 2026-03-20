@@ -28,18 +28,6 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     [Export]
     public int MaxAttackDamage { get; set; } = 3;
 
-    [Export]
-    public float AggroAcquisitionRange { get; set; } = 150.0f;
-
-    [Export]
-    public float AggroLossRange { get; set; } = 220.0f;
-
-    [Export]
-    public bool EvadeOnAggroLoss { get; set; } = true;
-
-    [Export]
-    public bool IgnoreDamageWhileEvading { get; set; } = true;
-
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
     public ISummoner Summoner => ResolveSummonState()?.Summoner;
@@ -129,14 +117,7 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     private IActorBehavior[] CreateDefaultBehaviors()
     {
-        var preset = ActorBehaviorPresets.CreateHostileMeleePreset(
-            AggroAcquisitionRange,
-            null,
-            nameof(Wolf),
-            AggroLossRange,
-            EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading,
-            includeNodeMigratedBehaviors: false);
+        var preset = ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
         return preset.Behaviors;
     }
 
@@ -163,19 +144,6 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
             GD.PushError($"{GetPath()}: missing required SummonState child.");
 
         return _summonState;
-    }
-
-    private bool CanAcquireTarget(Node2D target)
-    {
-        return target != null && IsHostileTo(target);
-    }
-
-    private static bool IsValidAssistTarget(Node2D target)
-    {
-        return ActorBase.IsStructurallyValidTarget(target) &&
-               target is IAttackable &&
-               target is ITargetable targetable &&
-               targetable.CanBeTargeted;
     }
 
     protected override int MaxHealthValue => Health;

@@ -10,6 +10,8 @@
 [ext_resource type="Script" path="res://scripts/ai/behaviors/FollowSummonerBehavior.cs" id="8_follow_summoner"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="9_acquire_hostile"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="10_target_combat"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="11_leash_behavior"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="12_return_home"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
 radius = 5.0
@@ -62,11 +64,24 @@ SuppressWhileSummonRecovering = true
 SuppressWhileSummonerNeedsLeashReturn = true
 MaxSummonTargetDistanceFromSummoner = 220.0
 
+[node name="Tier20_Leash" type="Node" parent="Behaviors"]
+
+[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash"]
+script = ExtResource("11_leash_behavior")
+LossRange = 220.0
+EvadeOnAggroLoss = true
+IgnoreDamageWhileReturning = true
+
 [node name="Tier50_Combat" type="Node" parent="Behaviors"]
 
 [node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat"]
 script = ExtResource("10_target_combat")
 DropTargetWhileSummonerNeedsLeashReturn = true
+
+[node name="Tier80_ReturnHome" type="Node" parent="Behaviors"]
+
+[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome"]
+script = ExtResource("12_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors"]
 

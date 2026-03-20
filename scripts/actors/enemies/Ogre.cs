@@ -26,21 +26,6 @@ public partial class Ogre : ActorBase, IAttackable, ITargetable
     [Export]
     public int MaxAttackDamage { get; set; } = 4;
 
-    [Export]
-    public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
-
-    [Export]
-    public float AggroAcquisitionRange { get; set; } = 150.0f;
-
-    [Export]
-    public float AggroLossRange { get; set; } = 220.0f;
-
-    [Export]
-    public bool EvadeOnAggroLoss { get; set; } = true;
-
-    [Export]
-    public bool IgnoreDamageWhileEvading { get; set; } = true;
-
     public override Faction Faction => Factions.Enemies;
 
     public override void _Ready()
@@ -53,14 +38,7 @@ public partial class Ogre : ActorBase, IAttackable, ITargetable
         ApplyFactionCombatGroup();
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
 
-        var preset = ActorBehaviorPresets.CreateHostileMeleePreset(
-            AggroAcquisitionRange,
-            InitialTargetPath,
-            "Ogre",
-            AggroLossRange,
-            EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading,
-            includeNodeMigratedBehaviors: false);
+        var preset = ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
         ConfigureBehaviors(preset.Behaviors);
 
         PlayIdleIfAvailable();

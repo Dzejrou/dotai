@@ -2,12 +2,19 @@ using Godot;
 
 using System;
 
-public sealed class ReturnHomeBehavior : IActorBehavior
+[GlobalClass]
+public partial class ReturnHomeBehavior : Node, IActorBehavior
 {
+    [Export]
+    public CombatUnitState MoveState { get; set; } = CombatUnitState.ReturningHome;
+
+    [Export]
+    public float SpeedMultiplier { get; set; } = 1.0f;
+
     private readonly Func<ActorBase, Vector2> _destinationGetter;
     private readonly Func<ActorBase, bool> _isAtDestination;
-    private readonly CombatUnitState _moveState;
-    private readonly float _speedMultiplier;
+
+    public ReturnHomeBehavior() { }
 
     public ReturnHomeBehavior(
         Func<ActorBase, Vector2> destinationGetter,
@@ -17,8 +24,8 @@ public sealed class ReturnHomeBehavior : IActorBehavior
     {
         _destinationGetter = destinationGetter ?? throw new ArgumentNullException(nameof(destinationGetter));
         _isAtDestination = isAtDestination ?? throw new ArgumentNullException(nameof(isAtDestination));
-        _moveState = moveState;
-        _speedMultiplier = Math.Max(0.0f, speedMultiplier);
+        MoveState = moveState;
+        SpeedMultiplier = Math.Max(0.0f, speedMultiplier);
     }
 
     public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
@@ -28,13 +35,23 @@ public sealed class ReturnHomeBehavior : IActorBehavior
         if (actor.CurrentTarget != null)
             return false;
 
-        if (_isAtDestination(actor))
+        if (IsAtDestination(actor))
         {
             intent = ActorIntent.Hold(CombatUnitState.Idle);
             return true;
         }
 
-        intent = ActorIntent.MoveTo(_destinationGetter(actor), _moveState, _speedMultiplier);
+        intent = ActorIntent.MoveTo(GetDestination(actor), MoveState, Math.Max(0.0f, SpeedMultiplier));
         return true;
+    }
+
+    private bool IsAtDestination(ActorBase actor)
+    {
+        return _isAtDestination?.Invoke(actor) ?? actor.IsAtHome();
+    }
+
+    private Vector2 GetDestination(ActorBase actor)
+    {
+        return _destinationGetter?.Invoke(actor) ?? actor.HomePosition;
     }
 }

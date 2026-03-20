@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="5_target_combat"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="6_leash_behavior"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="7_return_home"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ogre"]
 radius = 6.0
@@ -14,8 +16,6 @@ height = 24.0
 script = ExtResource("1_ogre")
 Speed = 60.0
 MaxHealth = 28
-HealthRegenerationInterval = 5.0
-HealthRegenerationAmount = 1
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = ExtResource("2_ogre_frames")
@@ -40,9 +40,22 @@ AcquisitionRange = 150.0
 InitialTargetPath = NodePath("../Player")
 DebugActorName = "Ogre"
 
+[node name="Tier20_Leash" type="Node" parent="Behaviors"]
+
+[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash"]
+script = ExtResource("6_leash_behavior")
+LossRange = 220.0
+EvadeOnAggroLoss = true
+IgnoreDamageWhileReturning = true
+
 [node name="Tier50_Combat" type="Node" parent="Behaviors"]
 
 [node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat"]
 script = ExtResource("5_target_combat")
+
+[node name="Tier80_ReturnHome" type="Node" parent="Behaviors"]
+
+[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome"]
+script = ExtResource("7_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors"]
