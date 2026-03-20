@@ -41,7 +41,7 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     public bool IgnoreDamageWhileEvading { get; set; } = true;
 
     [Export]
-    public float SummonerRecoveryTolerance { get; set; } = 32.0f;
+    public float SummonerRecoveryTolerance { get; set; } = 220.0f;
 
     [Export]
     public float FormationHorizontalOffset { get; set; } = 28.0f;
