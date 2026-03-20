@@ -12,21 +12,6 @@ public partial class SkeletonMage : ActorBase, IAttackable, ITargetable
     public int Health { get; set; } = 22;
 
     [Export]
-    public NodePath InitialTargetPath { get; set; } = new NodePath("../Player");
-
-    [Export]
-    public float AggroAcquisitionRange { get; set; } = 150.0f;
-
-    [Export]
-    public float AggroLossRange { get; set; } = 220.0f;
-
-    [Export]
-    public bool EvadeOnAggroLoss { get; set; } = true;
-
-    [Export]
-    public bool IgnoreDamageWhileEvading { get; set; } = true;
-
-    [Export]
     public float MinimumRange { get; set; } = 70.0f;
 
     [Export]
@@ -84,13 +69,7 @@ public partial class SkeletonMage : ActorBase, IAttackable, ITargetable
                 ProjectileMaxTravelDistance,
                 ProjectileTargetGroup));
 
-        var preset = ActorBehaviorPresets.CreateHostileRangedPreset(
-            AggroAcquisitionRange,
-            InitialTargetPath,
-            "SkeletonMage",
-            AggroLossRange,
-            EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading);
+        var preset = ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset();
         ConfigureBehaviors(preset.Behaviors);
 
         PlayIdleIfAvailable();

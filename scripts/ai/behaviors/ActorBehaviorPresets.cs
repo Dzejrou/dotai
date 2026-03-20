@@ -51,6 +51,13 @@ public static class ActorBehaviorPresets
         return new ActorBehaviorPreset(null, behaviors.ToArray());
     }
 
+    public static ActorBehaviorPreset CreateSceneBackedHostileRangedPreset(
+        Action<ActorBase> onPursuitStuck = null,
+        params IActorBehavior[] extraBehaviors)
+    {
+        return CreateSceneBackedHostileMeleePreset(onPursuitStuck, extraBehaviors);
+    }
+
     public static ActorBehaviorPreset CreateHostileMeleePreset(
         float aggroAcquisitionRange,
         NodePath initialTargetPath,
