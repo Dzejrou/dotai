@@ -1,8 +1,10 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/enemies/Ogre.cs" id="1_ogre"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/ogre_spriteframes.tres" id="2_ogre_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="5_target_combat"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ogre"]
 radius = 6.0
@@ -27,3 +29,20 @@ position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_ogre")
 
 [node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]
+
+[node name="Behaviors" type="Node" parent="."]
+
+[node name="Tier10_Targeting" type="Node" parent="Behaviors"]
+
+[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting"]
+script = ExtResource("4_acquire_hostile")
+AcquisitionRange = 150.0
+InitialTargetPath = NodePath("../Player")
+DebugActorName = "Ogre"
+
+[node name="Tier50_Combat" type="Node" parent="Behaviors"]
+
+[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat"]
+script = ExtResource("5_target_combat")
+
+[node name="Tier90_Recovery" type="Node" parent="Behaviors"]

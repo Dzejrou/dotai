@@ -2,12 +2,24 @@ using Godot;
 
 using System;
 
-public sealed class TargetCombatBehavior : IActorBehavior
+[GlobalClass]
+public partial class TargetCombatBehavior : Node, IActorBehavior
 {
+    [Export]
+    public bool DropTargetWhileSummonerNeedsLeashReturn { get; set; } = false;
+
+    [Export]
+    public CombatUnitState MoveState { get; set; } = CombatUnitState.PursuingTarget;
+
+    [Export]
+    public CombatUnitState HoldState { get; set; } = CombatUnitState.Engaged;
+
+    [Export]
+    public float MovementSpeedMultiplier { get; set; } = 1.0f;
+
     private readonly Func<ActorBase, Node2D, bool> _shouldDropTarget;
-    private readonly CombatUnitState _moveState;
-    private readonly CombatUnitState _holdState;
-    private readonly float _movementSpeedMultiplier;
+
+    public TargetCombatBehavior() { }
 
     public TargetCombatBehavior(
         Func<ActorBase, Node2D, bool> shouldDropTarget = null,
@@ -16,9 +28,9 @@ public sealed class TargetCombatBehavior : IActorBehavior
         float movementSpeedMultiplier = 1.0f)
     {
         _shouldDropTarget = shouldDropTarget;
-        _moveState = moveState;
-        _holdState = holdState;
-        _movementSpeedMultiplier = Math.Max(0.0f, movementSpeedMultiplier);
+        MoveState = moveState;
+        HoldState = holdState;
+        MovementSpeedMultiplier = Math.Max(0.0f, movementSpeedMultiplier);
     }
 
     public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
@@ -34,7 +46,7 @@ public sealed class TargetCombatBehavior : IActorBehavior
             target is not IAttackable ||
             target is not ITargetable targetable ||
             !targetable.CanBeTargeted ||
-            (_shouldDropTarget != null && _shouldDropTarget(actor, target)))
+            ShouldDropTarget(actor, target))
         {
             intent = ActorIntent.ClearTarget();
             return true;
@@ -51,21 +63,33 @@ public sealed class TargetCombatBehavior : IActorBehavior
 
         if (distance > actionController.PreferredRange)
         {
-            intent = ActorIntent.MoveTo(target.GlobalPosition, _moveState, _movementSpeedMultiplier);
+            intent = ActorIntent.MoveTo(target.GlobalPosition, MoveState, Math.Max(0.0f, MovementSpeedMultiplier));
             return true;
         }
 
         if (distance < actionController.MinimumRange && toTarget != Vector2.Zero)
         {
             var destination = actor.GlobalPosition + -toTarget.Normalized() * actionController.PreferredRange;
-            intent = ActorIntent.MoveTo(destination, _moveState, _movementSpeedMultiplier);
+            intent = ActorIntent.MoveTo(destination, MoveState, Math.Max(0.0f, MovementSpeedMultiplier));
             return true;
         }
 
         if (toTarget != Vector2.Zero)
             actor.SetFacingDirection(toTarget);
 
-        intent = ActorIntent.Hold(_holdState);
+        intent = ActorIntent.Hold(HoldState);
         return true;
+    }
+
+    private bool ShouldDropTarget(ActorBase actor, Node2D target)
+    {
+        if (_shouldDropTarget != null)
+            return _shouldDropTarget(actor, target);
+
+        if (!DropTargetWhileSummonerNeedsLeashReturn)
+            return false;
+
+        var followSummonerBehavior = actor.GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_Recovery/FollowSummonerBehavior");
+        return followSummonerBehavior != null && followSummonerBehavior.ShouldPrioritizeLeashReturn(actor);
     }
 }

@@ -135,13 +135,14 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
             nameof(Wolf),
             AggroLossRange,
             EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading);
+            IgnoreDamageWhileEvading,
+            includeNodeMigratedBehaviors: false);
         return preset.Behaviors;
     }
 
     private void RefreshSummonRoleComposition()
     {
-        _followSummonerBehavior = GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_PostCode/FollowSummonerBehavior");
+        _followSummonerBehavior = GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_Recovery/FollowSummonerBehavior");
         _followSummonerBehavior = _summonRoleComposer?.Refresh();
     }
 
@@ -149,9 +150,10 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     {
         return SummonBehaviorPresets.CreateSummonedMeleePreset(
             _followSummonerBehavior,
-            canAttemptAcquisition: actor => _followSummonerBehavior == null || !_followSummonerBehavior.IsRecovering,
-            additionalTargetFilter: (actor, target) => CanAcquireTarget(target),
-            shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor));
+            stuckCondition: actor =>
+                actor.CurrentState == CombatUnitState.PursuingTarget ||
+                actor.CurrentState == CombatUnitState.FollowingOwner ||
+                actor.CurrentState == CombatUnitState.Leashing);
     }
 
     private SummonState ResolveSummonState()

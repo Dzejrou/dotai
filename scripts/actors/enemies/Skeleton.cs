@@ -171,13 +171,14 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
             "Skeleton",
             AggroLossRange,
             EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading);
+            IgnoreDamageWhileEvading,
+            includeNodeMigratedBehaviors: false);
         return preset.Behaviors;
     }
 
     private void RefreshSummonRoleComposition()
     {
-        _followSummonerBehavior = GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_PostCode/FollowSummonerBehavior");
+        _followSummonerBehavior = GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_Recovery/FollowSummonerBehavior");
         _followSummonerBehavior = _summonRoleComposer?.Refresh();
     }
 
@@ -185,12 +186,10 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     {
         return SummonBehaviorPresets.CreateSummonedMeleePreset(
             _followSummonerBehavior,
-            canAttemptAcquisition: actor =>
-                actor.CurrentState != CombatUnitState.Leashing &&
-                (_followSummonerBehavior == null || !_followSummonerBehavior.IsRecovering) &&
-                (_followSummonerBehavior == null || !_followSummonerBehavior.ShouldPrioritizeLeashReturn(actor)),
-            additionalTargetFilter: (actor, target) => CanAcquireTargetAsSummon(target),
-            shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor));
+            stuckCondition: actor =>
+                actor.CurrentState == CombatUnitState.PursuingTarget ||
+                actor.CurrentState == CombatUnitState.FollowingOwner ||
+                actor.CurrentState == CombatUnitState.Leashing);
     }
 
     private void OnSummonRoleModeChanged(bool isSummoned)

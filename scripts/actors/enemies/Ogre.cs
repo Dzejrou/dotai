@@ -59,7 +59,8 @@ public partial class Ogre : ActorBase, IAttackable, ITargetable
             "Ogre",
             AggroLossRange,
             EvadeOnAggroLoss,
-            IgnoreDamageWhileEvading);
+            IgnoreDamageWhileEvading,
+            includeNodeMigratedBehaviors: false);
         ConfigureBehaviors(preset.Behaviors);
 
         PlayIdleIfAvailable();

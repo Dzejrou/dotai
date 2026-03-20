@@ -2,14 +2,32 @@ using Godot;
 
 using System;
 
-public sealed class AcquireHostileTargetBehavior : IActorBehavior
+[GlobalClass]
+public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
 {
-    private readonly float _acquisitionRange;
-    private readonly NodePath _initialTargetPath;
-    private readonly string _actorName;
+    [Export]
+    public float AcquisitionRange { get; set; } = 150.0f;
+
+    [Export]
+    public NodePath InitialTargetPath { get; set; } = new NodePath();
+
+    [Export]
+    public string DebugActorName { get; set; }
+
+    [Export]
+    public bool SuppressWhileSummonRecovering { get; set; } = false;
+
+    [Export]
+    public bool SuppressWhileSummonerNeedsLeashReturn { get; set; } = false;
+
+    [Export]
+    public float MaxSummonTargetDistanceFromSummoner { get; set; } = -1.0f;
+
     private readonly Func<ActorBase, bool> _canAttemptAcquisition;
     private readonly Func<ActorBase, Node2D, bool> _additionalTargetFilter;
     private bool _initialTargetChecked;
+
+    public AcquireHostileTargetBehavior() { }
 
     public AcquireHostileTargetBehavior(
         float acquisitionRange,
@@ -18,9 +36,9 @@ public sealed class AcquireHostileTargetBehavior : IActorBehavior
         Func<ActorBase, bool> canAttemptAcquisition = null,
         Func<ActorBase, Node2D, bool> additionalTargetFilter = null)
     {
-        _acquisitionRange = Math.Max(0.0f, acquisitionRange);
-        _initialTargetPath = initialTargetPath;
-        _actorName = actorName;
+        AcquisitionRange = Math.Max(0.0f, acquisitionRange);
+        InitialTargetPath = initialTargetPath;
+        DebugActorName = actorName;
         _canAttemptAcquisition = canAttemptAcquisition;
         _additionalTargetFilter = additionalTargetFilter;
     }
@@ -32,8 +50,15 @@ public sealed class AcquireHostileTargetBehavior : IActorBehavior
         if (actor.CurrentTarget != null)
             return false;
 
-        if (_canAttemptAcquisition != null && !_canAttemptAcquisition(actor))
+        if (_canAttemptAcquisition != null)
+        {
+            if (!_canAttemptAcquisition(actor))
+                return false;
+        }
+        else if (!CanAttemptNodeDrivenAcquisition(actor))
+        {
             return false;
+        }
 
         if (!_initialTargetChecked)
         {
@@ -45,8 +70,8 @@ public sealed class AcquireHostileTargetBehavior : IActorBehavior
                 return true;
             }
 
-            if (initialTarget != null && _actorName != null)
-                GD.PrintErr($"{_actorName} did not acquire initial target (not in aggro range).");
+            if (initialTarget != null && !string.IsNullOrEmpty(DebugActorName))
+                GD.PrintErr($"{DebugActorName} did not acquire initial target (not in aggro range).");
         }
 
         var candidate = TargetingHelper.FindClosestHostileTarget(
@@ -60,13 +85,28 @@ public sealed class AcquireHostileTargetBehavior : IActorBehavior
         return true;
     }
 
+    private bool CanAttemptNodeDrivenAcquisition(ActorBase actor)
+    {
+        var followSummonerBehavior = ResolveFollowSummonerBehavior(actor);
+        if (followSummonerBehavior == null)
+            return true;
+
+        if (SuppressWhileSummonRecovering && followSummonerBehavior.IsRecovering)
+            return false;
+
+        if (SuppressWhileSummonerNeedsLeashReturn && followSummonerBehavior.ShouldPrioritizeLeashReturn(actor))
+            return false;
+
+        return true;
+    }
+
     private Node2D ResolveInitialTarget(ActorBase actor)
     {
-        if (_initialTargetPath == null || _initialTargetPath.IsEmpty)
+        if (InitialTargetPath == null || InitialTargetPath.IsEmpty)
             return null;
 
-        if (actor.HasNode(_initialTargetPath))
-            return actor.GetNodeOrNull<Node2D>(_initialTargetPath);
+        if (actor.HasNode(InitialTargetPath))
+            return actor.GetNodeOrNull<Node2D>(InitialTargetPath);
 
         return null;
     }
@@ -84,9 +124,33 @@ public sealed class AcquireHostileTargetBehavior : IActorBehavior
         if (!actor.IsHostileTo(target))
             return false;
 
-        if (actor.GlobalPosition.DistanceTo(target.GlobalPosition) > _acquisitionRange)
+        if (actor.GlobalPosition.DistanceTo(target.GlobalPosition) > Math.Max(0.0f, AcquisitionRange))
+            return false;
+
+        if (!PassesSummonTargetFilter(actor, target))
             return false;
 
         return _additionalTargetFilter == null || _additionalTargetFilter(actor, target);
+    }
+
+    private bool PassesSummonTargetFilter(ActorBase actor, Node2D target)
+    {
+        if (MaxSummonTargetDistanceFromSummoner < 0.0f)
+            return true;
+
+        var summonState = SummonState.ResolveFor(actor);
+        if (summonState?.SummonerNode == null || !summonState.IsSummoned)
+            return true;
+
+        var summonerNode = summonState.SummonerNode;
+        if (!GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
+            return false;
+
+        return summonerNode.GlobalPosition.DistanceTo(target.GlobalPosition) <= MaxSummonTargetDistanceFromSummoner;
+    }
+
+    private static FollowSummonerBehavior ResolveFollowSummonerBehavior(ActorBase actor)
+    {
+        return actor?.GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_Recovery/FollowSummonerBehavior");
     }
 }

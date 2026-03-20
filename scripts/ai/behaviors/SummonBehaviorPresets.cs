@@ -19,9 +19,6 @@ public static class SummonBehaviorPresets
 {
     public static SummonBehaviorPreset CreateSummonedMeleePreset(
         FollowSummonerBehavior followSummonerBehavior,
-        Func<ActorBase, bool> canAttemptAcquisition = null,
-        Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
-        Func<ActorBase, Node2D, bool> shouldDropTarget = null,
         Func<ActorBase, bool> stuckCondition = null,
         params IActorBehavior[] extraBehaviors)
     {
@@ -29,11 +26,6 @@ public static class SummonBehaviorPresets
             throw new ArgumentNullException(nameof(followSummonerBehavior));
 
         var behaviors = new List<IActorBehavior>();
-
-        behaviors.Add(new AcquireHostileTargetBehavior(
-            float.MaxValue,
-            canAttemptAcquisition: canAttemptAcquisition ?? (actor => !followSummonerBehavior.IsRecovering),
-            additionalTargetFilter: additionalTargetFilter));
         behaviors.Add(new PursuitStuckRecoveryBehavior(
             1.0f,
             0.6f,
@@ -47,7 +39,6 @@ public static class SummonBehaviorPresets
                 actor.ClearTarget();
                 followSummonerBehavior.BeginRecovery();
             }));
-        behaviors.Add(new TargetCombatBehavior(shouldDropTarget));
 
         if (extraBehaviors != null)
         {

@@ -5,8 +5,9 @@ using System.Collections.Generic;
 
 public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable, ICombatStateOwner
 {
-    private const string BehaviorNodePreCodePath = "Behaviors/Tier10_PreCode";
-    private const string BehaviorNodePostCodePath = "Behaviors/Tier90_PostCode";
+    private const string BehaviorNodeTargetingPath = "Behaviors/Tier10_Targeting";
+    private const string BehaviorNodeCombatPath = "Behaviors/Tier50_Combat";
+    private const string BehaviorNodeRecoveryPath = "Behaviors/Tier90_Recovery";
     private const float NavigationTargetUpdateThreshold = 8.0f;
     private const float DefaultPathDesiredDistance = 6.0f;
     private const float DefaultTargetDesiredDistance = 8.0f;
@@ -268,12 +269,13 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         _tickBehaviors.Clear();
         _damageInterceptors.Clear();
 
-        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodePreCodePath));
+        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeTargetingPath));
 
         foreach (var behavior in behaviors)
             AppendBehavior(behavior);
 
-        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodePostCodePath));
+        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeCombatPath));
+        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeRecoveryPath));
     }
 
     protected void SetPrimaryActionController(ICombatActionController actionController)

@@ -28,6 +28,7 @@ public static class ActorBehaviorPresets
         float aggroLossRange,
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
+        bool includeNodeMigratedBehaviors = true,
         Func<ActorBase, bool> canAttemptAcquisition = null,
         Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
         Action<ActorBase> onPursuitStuck = null,
@@ -40,6 +41,7 @@ public static class ActorBehaviorPresets
             aggroLossRange,
             evadeOnAggroLoss,
             ignoreDamageWhileEvading,
+            includeNodeMigratedBehaviors,
             canAttemptAcquisition,
             additionalTargetFilter,
             onPursuitStuck,
@@ -53,6 +55,7 @@ public static class ActorBehaviorPresets
         float aggroLossRange,
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
+        bool includeNodeMigratedBehaviors = true,
         Func<ActorBase, bool> canAttemptAcquisition = null,
         Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
         Action<ActorBase> onPursuitStuck = null,
@@ -65,6 +68,7 @@ public static class ActorBehaviorPresets
             aggroLossRange,
             evadeOnAggroLoss,
             ignoreDamageWhileEvading,
+            includeNodeMigratedBehaviors,
             canAttemptAcquisition,
             additionalTargetFilter,
             onPursuitStuck,
@@ -78,6 +82,7 @@ public static class ActorBehaviorPresets
         float aggroLossRange,
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
+        bool includeNodeMigratedBehaviors,
         Func<ActorBase, bool> canAttemptAcquisition,
         Func<ActorBase, Node2D, bool> additionalTargetFilter,
         Action<ActorBase> onPursuitStuck,
@@ -100,14 +105,18 @@ public static class ActorBehaviorPresets
                 8.0f,
                 actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
                 pursuitStuckCallback),
-            new AcquireHostileTargetBehavior(
+        };
+
+        if (includeNodeMigratedBehaviors)
+        {
+            behaviors.Add(new AcquireHostileTargetBehavior(
                 aggroAcquisitionRange,
                 initialTargetPath,
                 actorName,
                 canAttemptAcquisition ?? (actor => !leashBehavior.IsReturningHome),
-                additionalTargetFilter),
-            new TargetCombatBehavior(),
-        };
+                additionalTargetFilter));
+            behaviors.Add(new TargetCombatBehavior());
+        }
 
         if (extraBehaviors != null)
         {
