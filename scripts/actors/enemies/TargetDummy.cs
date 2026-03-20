@@ -66,6 +66,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
 
         var damage = Math.Max(1, damageInfo.Amount);
         _currentHealth = Math.Max(0, _currentHealth - damage);
+        damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
         UpdateHud();
         _actorHud?.ShowFloatingText(damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
 

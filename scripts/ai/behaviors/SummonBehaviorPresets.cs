@@ -25,6 +25,7 @@ public static class SummonBehaviorPresets
         float idleAnchorTolerance,
         float leashCatchupSpeedMultiplier,
         bool followWhenIdle,
+        Func<ActorBase, Node2D> ownerCombatAssistTargetGetter = null,
         Func<ActorBase, Node2D> commandedTargetGetter = null,
         Func<ActorBase, bool> canAttemptAcquisition = null,
         Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
@@ -46,6 +47,9 @@ public static class SummonBehaviorPresets
             teleportRecoveryTimeout: teleportRecoveryTimeout);
 
         var behaviors = new List<IActorBehavior>();
+        if (ownerCombatAssistTargetGetter != null)
+            behaviors.Add(new OwnerCombatAssistBehavior(ownerCombatAssistTargetGetter));
+
         if (commandedTargetGetter != null)
             behaviors.Add(new CommandedTargetBehavior(commandedTargetGetter));
 
@@ -79,6 +83,28 @@ public static class SummonBehaviorPresets
 
         behaviors.Add(followSummonerBehavior);
         return new SummonBehaviorPreset(followSummonerBehavior, behaviors.ToArray());
+    }
+
+    public static Node2D GetOwnerCombatAssistTarget(
+        ActorBase actor,
+        SummonRoleState summonRole,
+        Func<Node2D, bool> targetValidator)
+    {
+        if (actor == null || summonRole == null || targetValidator == null)
+            return null;
+
+        if (!ReferenceEquals(actor.Faction, Factions.Allies))
+            return null;
+
+        if (summonRole.Summoner is not ICombatStateOwner combatStateOwner)
+            return null;
+
+        var ownerCombat = combatStateOwner.Combat;
+        if (!ownerCombat.IsInCombat)
+            return null;
+
+        var ownerCombatTarget = ownerCombat.CurrentTarget;
+        return targetValidator(ownerCombatTarget) ? ownerCombatTarget : null;
     }
 
     public static Vector2 GetFormationAnchor(

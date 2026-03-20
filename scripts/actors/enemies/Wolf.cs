@@ -165,6 +165,7 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
             summonIdleTolerance,
             1.0f,
             followWhenIdle: true,
+            ownerCombatAssistTargetGetter: actor => SummonBehaviorPresets.GetOwnerCombatAssistTarget(actor, _summonRole, IsValidAssistTarget),
             canAttemptAcquisition: actor => _followSummonerBehavior == null || !_followSummonerBehavior.IsRecovering,
             additionalTargetFilter: (actor, target) => CanAcquireTarget(target),
             shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor));
@@ -188,6 +189,14 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     private bool CanAcquireTarget(Node2D target)
     {
         return target != null && IsHostileTo(target);
+    }
+
+    private static bool IsValidAssistTarget(Node2D target)
+    {
+        return ActorBase.IsStructurallyValidTarget(target) &&
+               target is IAttackable &&
+               target is ITargetable targetable &&
+               targetable.CanBeTargeted;
     }
 
     protected override int MaxHealthValue => Health;

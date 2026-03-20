@@ -207,6 +207,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
             IdleAnchorTolerance,
             LeashCatchupSpeedMultiplier,
             followWhenIdle: true,
+            ownerCombatAssistTargetGetter: actor => SummonBehaviorPresets.GetOwnerCombatAssistTarget(actor, _summonRole, IsValidCommandedTarget),
             commandedTargetGetter: actor => GetCommandedTarget(),
             canAttemptAcquisition: actor =>
                 actor.CurrentState != CombatUnitState.Leashing &&

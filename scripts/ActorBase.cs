@@ -329,9 +329,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
         damage = Math.Max(1, damageInfo.Amount);
         SetCurrentHealth(CurrentHealth - damage);
-        Combat.RegisterIncomingDamage(damageInfo.Source as Node2D);
-        if (damageInfo.Source is ICombatStateOwner combatStateOwner)
-            combatStateOwner.Combat.RegisterOutgoingDamage(this);
+        damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
 
         died = CurrentHealth <= 0;
         if (died)

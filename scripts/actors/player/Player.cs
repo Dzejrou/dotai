@@ -218,8 +218,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             var toTarget = activeTarget.GlobalPosition - GlobalPosition;
             if (toTarget != Vector2.Zero)
                 fireDirection = toTarget.Normalized();
-
-            CommandOwnedOffensiveSummons(activeTarget);
         }
 
         var fireball = FireballScene.Instantiate<Projectile>();
@@ -295,9 +293,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
 
         var damage = Math.Max(1, damageInfo.Amount);
         _health = Math.Max(0, _health - damage);
-        Combat.RegisterIncomingDamage(damageInfo.Source as Node2D, setTargetToSource: true);
-        if (damageInfo.Source is ICombatStateOwner combatStateOwner)
-            combatStateOwner.Combat.RegisterOutgoingDamage(this);
+        damageInfo.RegisterHit(this, setReceiverTargetToSource: true);
 
         ShowFloatingDamageNumber(damage);
         EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
@@ -574,35 +570,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
         var damage = _random.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
         enemy.ApplyDamage(new DamageInfo(damage, this));
-        if (node is Node2D targetNode)
-            CommandOwnedOffensiveSummons(targetNode);
-    }
-
-    private void CommandOwnedOffensiveSummons(Node2D target, bool forceRetarget = false)
-    {
-        if (target == null || !IsInstanceValid(target) || !target.IsInsideTree())
-            return;
-
-        var parent = GetParent();
-        if (parent == null)
-            return;
-
-        foreach (var child in parent.GetChildren())
-        {
-            if (child is not Node summonNode || !IsInstanceValid(summonNode))
-                continue;
-
-            if (summonNode is not ISummonedUnit summonedUnit || !ReferenceEquals(summonedUnit.Summoner, this))
-                continue;
-
-            if (summonNode is not IFactionMember factionMember || !ReferenceEquals(factionMember.Faction, Faction))
-                continue;
-
-            if (summonNode is not IOffensiveSummon offensiveSummon)
-                continue;
-
-            offensiveSummon.CommandAttackTarget(target, forceRetarget);
-        }
     }
 
     private void SetAnimationSafe(string animationName)

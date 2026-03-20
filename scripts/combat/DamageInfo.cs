@@ -16,4 +16,13 @@ public struct DamageInfo
         : this(amount, (Node)source)
     {
     }
+
+    public void RegisterHit(Node2D receiver, bool setReceiverTargetToSource = true)
+    {
+        if (receiver is ICombatStateOwner receiverCombatOwner)
+            receiverCombatOwner.Combat.RegisterIncomingDamage(Source as Node2D, setReceiverTargetToSource);
+
+        if (Source is ICombatStateOwner sourceCombatOwner)
+            sourceCombatOwner.Combat.RegisterOutgoingDamage(receiver);
+    }
 }
