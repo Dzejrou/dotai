@@ -13,6 +13,9 @@ public sealed class SummonRoleState
 
     public void SetSummoner(ISummoner summoner, Action<Faction> inheritFaction = null)
     {
+        if (!ReferenceEquals(_summoner, summoner))
+            _commandedTarget = null;
+
         _summoner = summoner;
         if (summoner is IFactionMember factionMember)
             inheritFaction?.Invoke(factionMember.Faction);

@@ -80,4 +80,64 @@ public static class SummonBehaviorPresets
         behaviors.Add(followSummonerBehavior);
         return new SummonBehaviorPreset(followSummonerBehavior, behaviors.ToArray());
     }
+
+    public static Vector2 GetFormationAnchor(
+        ActorBase actor,
+        SummonRoleState summonRole,
+        float horizontalOffset,
+        float verticalOffset,
+        int maxSlots = 4)
+    {
+        if (actor == null)
+            throw new ArgumentNullException(nameof(actor));
+        if (summonRole == null)
+            throw new ArgumentNullException(nameof(summonRole));
+
+        var summonerNode = summonRole.SummonerNode;
+        if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode))
+            return actor.GlobalPosition;
+
+        var summonSlot = GetSummonSlotIndex(actor, summonRole, maxSlots);
+        return summonerNode.GlobalPosition + GetFormationOffset(summonSlot, horizontalOffset, verticalOffset);
+    }
+
+    private static int GetSummonSlotIndex(ActorBase actor, SummonRoleState summonRole, int maxSlots)
+    {
+        var summonerNode = summonRole.SummonerNode;
+        if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode))
+            return 0;
+
+        var parent = actor.GetParent();
+        if (parent == null)
+            return 0;
+
+        var clampedMaxSlots = Math.Max(1, maxSlots);
+        var slot = 0;
+        foreach (var node in parent.GetChildren())
+        {
+            if (node is not ISummonedUnit summonedUnit || !ReferenceEquals(summonedUnit.Summoner, summonRole.Summoner))
+                continue;
+
+            if (node == actor)
+                return Math.Min(slot, clampedMaxSlots - 1);
+
+            slot++;
+            if (slot >= clampedMaxSlots)
+                return clampedMaxSlots - 1;
+        }
+
+        return 0;
+    }
+
+    private static Vector2 GetFormationOffset(int slot, float horizontalOffset, float verticalOffset)
+    {
+        return slot switch
+        {
+            0 => new Vector2(-horizontalOffset, -verticalOffset),
+            1 => new Vector2(horizontalOffset, -verticalOffset),
+            2 => new Vector2(-horizontalOffset, verticalOffset),
+            3 => new Vector2(horizontalOffset, verticalOffset),
+            _ => Vector2.Zero,
+        };
+    }
 }

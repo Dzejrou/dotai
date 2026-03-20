@@ -77,6 +77,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     private bool _sameFactionCollisionExceptionApplied;
     private bool _deathFallbackQueued;
     private FollowSummonerBehavior _followSummonerBehavior;
+    private SummonRoleComposer _summonRoleComposer;
 
     public override void _Ready()
     {
@@ -87,7 +88,13 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
 
-        ConfigureBehaviorRole();
+        _summonRoleComposer = new SummonRoleComposer(
+            _summonRole,
+            ConfigureBehaviors,
+            CreateDefaultBehaviors,
+            CreateSummonBehaviorPreset,
+            OnSummonRoleModeChanged);
+        RefreshSummonRoleComposition();
 
         PlayIdleIfAvailable();
     }
@@ -114,7 +121,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
     protected override void OnDeathAnimationFinalized()
     {
-        if (!IsSummonedRole)
+        if (!_summonRole.IsSummoned)
             return;
 
         ClearSameFactionCollisionExceptions();
@@ -140,7 +147,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     {
         _summonRole.SetSummoner(summoner, SetFaction);
         if (IsInsideTree())
-            ConfigureBehaviorRole();
+            RefreshSummonRoleComposition();
     }
 
     public void SetFaction(Faction faction)
@@ -151,7 +158,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
         ClearSameFactionCollisionExceptions();
         ApplyFactionCombatGroup();
-        if (IsSummonedRole)
+        if (_summonRole.IsSummoned)
             ApplySameFactionCollisionExceptions();
         RefreshHealthLabel();
     }
@@ -163,7 +170,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
     public void CommandAttackTarget(Node2D target, bool forceRetarget = false)
     {
-        if (!IsSummonedRole || !IsValidCommandedTarget(target))
+        if (!_summonRole.IsSummoned || !IsValidCommandedTarget(target))
             return;
 
         _summonRole.SetCommandedTarget(target);
@@ -173,12 +180,8 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
             SetTarget(target);
     }
 
-    private void ConfigureHostileRole()
+    private IActorBehavior[] CreateDefaultBehaviors()
     {
-        _followSummonerBehavior = null;
-        ClearSameFactionCollisionExceptions();
-        ApplyFactionCombatGroup();
-
         var preset = ActorBehaviorPresets.CreateHostileMeleePreset(
             AggroAcquisitionRange,
             InitialTargetPath,
@@ -186,23 +189,17 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
             AggroLossRange,
             EvadeOnAggroLoss,
             IgnoreDamageWhileEvading);
-        ConfigureBehaviors(preset.Behaviors);
+        return preset.Behaviors;
     }
 
-    private void ConfigureBehaviorRole()
+    private void RefreshSummonRoleComposition()
     {
-        if (IsSummonedRole)
-            ConfigureSummonedRole();
-        else
-            ConfigureHostileRole();
+        _followSummonerBehavior = _summonRoleComposer?.Refresh();
     }
 
-    private void ConfigureSummonedRole()
+    private SummonBehaviorPreset CreateSummonBehaviorPreset()
     {
-        ApplyFactionCombatGroup();
-        ApplySameFactionCollisionExceptions();
-
-        var preset = SummonBehaviorPresets.CreateSummonedMeleePreset(
+        return SummonBehaviorPresets.CreateSummonedMeleePreset(
             actor => GetSummonerNode(),
             actor => GetIdleAnchor(),
             LeashDistance,
@@ -219,8 +216,14 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
             shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor),
             teleportDestinationGetter: actor => GetIdleAnchor(),
             teleportRecoveryTimeout: RecoveryTeleportTimeoutSeconds);
-        _followSummonerBehavior = preset.FollowSummonerBehavior;
-        ConfigureBehaviors(preset.Behaviors);
+    }
+
+    private void OnSummonRoleModeChanged(bool isSummoned)
+    {
+        ClearSameFactionCollisionExceptions();
+        ApplyFactionCombatGroup();
+        if (isSummoned)
+            ApplySameFactionCollisionExceptions();
     }
 
     private void StartDeath()
@@ -233,7 +236,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         ClearTarget();
         ResetPrimaryActionController();
 
-        if (IsSummonedRole)
+        if (_summonRole.IsSummoned)
         {
             ClearSameFactionCollisionExceptions();
             if (NavigationAgent != null)
@@ -302,55 +305,12 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
     private Vector2 GetIdleAnchor()
     {
-        var summonerNode = GetSummonerNode();
-        if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode))
-            return GlobalPosition;
-
-        return summonerNode.GlobalPosition + GetSummonSpreadOffset();
-    }
-
-    private Vector2 GetSummonSpreadOffset()
-    {
-        var summonSlot = GetSummonSlotIndex();
-        if (summonSlot < 0)
-            return Vector2.Zero;
-
-        summonSlot = Math.Min(summonSlot, MaxFormationSlots - 1);
-        return summonSlot switch
-        {
-            0 => new Vector2(-FormationHorizontalOffset, -FormationVerticalOffset),
-            1 => new Vector2(FormationHorizontalOffset, -FormationVerticalOffset),
-            2 => new Vector2(-FormationHorizontalOffset, FormationVerticalOffset),
-            3 => new Vector2(FormationHorizontalOffset, FormationVerticalOffset),
-            _ => Vector2.Zero,
-        };
-    }
-
-    private int GetSummonSlotIndex()
-    {
-        var summonerNode = GetSummonerNode();
-        if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode))
-            return 0;
-
-        var parent = GetParent();
-        if (parent == null)
-            return 0;
-
-        var slot = 0;
-        foreach (var node in parent.GetChildren())
-        {
-            if (node is not Skeleton summon || summon.GetSummonerNode() != summonerNode)
-                continue;
-
-            if (summon == this)
-                return slot;
-
-            slot++;
-            if (slot >= MaxFormationSlots)
-                return MaxFormationSlots - 1;
-        }
-
-        return 0;
+        return SummonBehaviorPresets.GetFormationAnchor(
+            this,
+            _summonRole,
+            FormationHorizontalOffset,
+            FormationVerticalOffset,
+            MaxFormationSlots);
     }
 
     private Node2D GetSummonerNode()
@@ -417,7 +377,5 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         _sameFactionCollisionExceptionApplied = false;
     }
 
-    protected override int MaxHealthValue => IsSummonedRole ? SummonedHealth : Health;
-
-    private bool IsSummonedRole => _summonRole.IsSummoned;
+    protected override int MaxHealthValue => _summonRole.IsSummoned ? SummonedHealth : Health;
 }

@@ -5,6 +5,8 @@ using System;
 [GlobalClass]
 public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionAssignable
 {
+    private const int MaxFormationSlots = 4;
+
     [Export]
     public float Speed { get; set; } = 76.0f;
 
@@ -41,6 +43,12 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     [Export]
     public float SummonerRecoveryTolerance { get; set; } = 32.0f;
 
+    [Export]
+    public float FormationHorizontalOffset { get; set; } = 28.0f;
+
+    [Export]
+    public float FormationVerticalOffset { get; set; } = 18.0f;
+
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
     public ISummoner Summoner => _summonRole.Summoner;
@@ -48,6 +56,7 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     private Faction _faction = Factions.Enemies;
     private readonly SummonRoleState _summonRole = new();
     private FollowSummonerBehavior _followSummonerBehavior;
+    private SummonRoleComposer _summonRoleComposer;
 
     public override void _Ready()
     {
@@ -57,7 +66,13 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
-        ConfigureBehaviorRole();
+        _summonRoleComposer = new SummonRoleComposer(
+            _summonRole,
+            ConfigureBehaviors,
+            CreateDefaultBehaviors,
+            CreateSummonBehaviorPreset,
+            isSummoned => ApplyFactionCombatGroup());
+        RefreshSummonRoleComposition();
         PlayIdleIfAvailable();
     }
 
@@ -76,7 +91,7 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     {
         _summonRole.SetSummoner(summoner, SetFaction);
         if (IsInsideTree())
-            ConfigureBehaviorRole();
+            RefreshSummonRoleComposition();
     }
 
     public void SetFaction(Faction faction)
@@ -120,19 +135,8 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
         TryPlayDeathAnimation();
     }
 
-    private void ConfigureBehaviorRole()
+    private IActorBehavior[] CreateDefaultBehaviors()
     {
-        if (IsSummonedRole)
-            ConfigureSummonedRole();
-        else
-            ConfigureHostileRole();
-    }
-
-    private void ConfigureHostileRole()
-    {
-        _followSummonerBehavior = null;
-        ApplyFactionCombatGroup();
-
         var preset = ActorBehaviorPresets.CreateHostileMeleePreset(
             AggroAcquisitionRange,
             null,
@@ -140,17 +144,20 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
             AggroLossRange,
             EvadeOnAggroLoss,
             IgnoreDamageWhileEvading);
-        ConfigureBehaviors(preset.Behaviors);
+        return preset.Behaviors;
     }
 
-    private void ConfigureSummonedRole()
+    private void RefreshSummonRoleComposition()
     {
-        ApplyFactionCombatGroup();
+        _followSummonerBehavior = _summonRoleComposer?.Refresh();
+    }
 
+    private SummonBehaviorPreset CreateSummonBehaviorPreset()
+    {
         var summonLeashDistance = Math.Max(0.0f, SummonerRecoveryTolerance);
         var summonReturnDistance = Math.Min(summonLeashDistance, 18.0f);
         var summonIdleTolerance = Math.Min(summonLeashDistance, 12.0f);
-        var preset = SummonBehaviorPresets.CreateSummonedMeleePreset(
+        return SummonBehaviorPresets.CreateSummonedMeleePreset(
             actor => GetSummonerNode(),
             actor => GetSummonerAnchor(),
             summonLeashDistance,
@@ -161,8 +168,6 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
             canAttemptAcquisition: actor => _followSummonerBehavior == null || !_followSummonerBehavior.IsRecovering,
             additionalTargetFilter: (actor, target) => CanAcquireTarget(target),
             shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor));
-        _followSummonerBehavior = preset.FollowSummonerBehavior;
-        ConfigureBehaviors(preset.Behaviors);
     }
 
     private Node2D GetSummonerNode()
@@ -172,11 +177,12 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     private Vector2 GetSummonerAnchor()
     {
-        var summonerNode = GetSummonerNode();
-        if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode))
-            return GlobalPosition;
-
-        return summonerNode.GlobalPosition;
+        return SummonBehaviorPresets.GetFormationAnchor(
+            this,
+            _summonRole,
+            FormationHorizontalOffset,
+            FormationVerticalOffset,
+            MaxFormationSlots);
     }
 
     private bool CanAcquireTarget(Node2D target)
@@ -185,6 +191,4 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     }
 
     protected override int MaxHealthValue => Health;
-
-    private bool IsSummonedRole => _summonRole.IsSummoned;
 }
