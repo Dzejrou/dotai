@@ -4,7 +4,6 @@ using System;
 
 public sealed class FollowSummonerBehavior : IActorBehavior
 {
-    private readonly Func<ActorBase, Node2D> _summonerGetter;
     private readonly Func<ActorBase, Vector2> _anchorGetter;
     private readonly float _startLeashDistance;
     private readonly float _stopLeashDistance;
@@ -19,7 +18,6 @@ public sealed class FollowSummonerBehavior : IActorBehavior
     private float _recoveryTimer;
 
     public FollowSummonerBehavior(
-        Func<ActorBase, Node2D> summonerGetter,
         Func<ActorBase, Vector2> anchorGetter,
         float startLeashDistance,
         float stopLeashDistance,
@@ -31,7 +29,6 @@ public sealed class FollowSummonerBehavior : IActorBehavior
         Func<ActorBase, Vector2> teleportDestinationGetter = null,
         float teleportRecoveryTimeout = 0.0f)
     {
-        _summonerGetter = summonerGetter ?? throw new ArgumentNullException(nameof(summonerGetter));
         _anchorGetter = anchorGetter ?? throw new ArgumentNullException(nameof(anchorGetter));
         _startLeashDistance = Math.Max(0.0f, startLeashDistance);
         _stopLeashDistance = Math.Clamp(stopLeashDistance, 0.0f, _startLeashDistance);
@@ -60,7 +57,7 @@ public sealed class FollowSummonerBehavior : IActorBehavior
 
     public bool ShouldPrioritizeLeashReturn(ActorBase actor)
     {
-        var summonerNode = _summonerGetter(actor);
+        var summonerNode = SummonState.ResolveFor(actor)?.SummonerNode;
         if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
             return false;
 
@@ -75,7 +72,7 @@ public sealed class FollowSummonerBehavior : IActorBehavior
     {
         intent = ActorIntent.None;
 
-        var summonerNode = _summonerGetter(actor);
+        var summonerNode = SummonState.ResolveFor(actor)?.SummonerNode;
         if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
             return false;
 

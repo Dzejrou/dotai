@@ -18,15 +18,14 @@ public readonly struct SummonBehaviorPreset
 public static class SummonBehaviorPresets
 {
     public static SummonBehaviorPreset CreateSummonedMeleePreset(
-        Func<ActorBase, Node2D> summonerGetter,
         Func<ActorBase, Vector2> anchorGetter,
         float leashDistance,
         float leashReturnDistance,
         float idleAnchorTolerance,
         float leashCatchupSpeedMultiplier,
         bool followWhenIdle,
-        Func<ActorBase, Node2D> ownerCombatAssistTargetGetter = null,
-        Func<ActorBase, Node2D> commandedTargetGetter = null,
+        Func<ActorBase, Node2D, bool> ownerCombatAssistTargetValidator = null,
+        Func<ActorBase, Node2D, bool> commandedTargetValidator = null,
         Func<ActorBase, bool> canAttemptAcquisition = null,
         Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
         Func<ActorBase, Node2D, bool> shouldDropTarget = null,
@@ -36,7 +35,6 @@ public static class SummonBehaviorPresets
         params IActorBehavior[] extraBehaviors)
     {
         var followSummonerBehavior = new FollowSummonerBehavior(
-            summonerGetter,
             anchorGetter,
             leashDistance,
             leashReturnDistance,
@@ -47,11 +45,11 @@ public static class SummonBehaviorPresets
             teleportRecoveryTimeout: teleportRecoveryTimeout);
 
         var behaviors = new List<IActorBehavior>();
-        if (ownerCombatAssistTargetGetter != null)
-            behaviors.Add(new OwnerCombatAssistBehavior(ownerCombatAssistTargetGetter));
+        if (ownerCombatAssistTargetValidator != null)
+            behaviors.Add(new OwnerCombatAssistBehavior(ownerCombatAssistTargetValidator));
 
-        if (commandedTargetGetter != null)
-            behaviors.Add(new CommandedTargetBehavior(commandedTargetGetter));
+        if (commandedTargetValidator != null)
+            behaviors.Add(new CommandedTargetBehavior(commandedTargetValidator));
 
         behaviors.Add(new AcquireHostileTargetBehavior(
             float.MaxValue,
@@ -87,16 +85,16 @@ public static class SummonBehaviorPresets
 
     public static Node2D GetOwnerCombatAssistTarget(
         ActorBase actor,
-        SummonRoleState summonRole,
-        Func<Node2D, bool> targetValidator)
+        Func<ActorBase, Node2D, bool> targetValidator)
     {
-        if (actor == null || summonRole == null || targetValidator == null)
+        if (actor == null || targetValidator == null)
             return null;
 
         if (!ReferenceEquals(actor.Faction, Factions.Allies))
             return null;
 
-        if (summonRole.Summoner is not ICombatStateOwner combatStateOwner)
+        var summonState = SummonState.ResolveFor(actor);
+        if (summonState?.Summoner is not ICombatStateOwner combatStateOwner)
             return null;
 
         var ownerCombat = combatStateOwner.Combat;
@@ -104,32 +102,33 @@ public static class SummonBehaviorPresets
             return null;
 
         var ownerCombatTarget = ownerCombat.CurrentTarget;
-        return targetValidator(ownerCombatTarget) ? ownerCombatTarget : null;
+        return targetValidator(actor, ownerCombatTarget) ? ownerCombatTarget : null;
     }
 
     public static Vector2 GetFormationAnchor(
         ActorBase actor,
-        SummonRoleState summonRole,
         float horizontalOffset,
         float verticalOffset,
         int maxSlots = 4)
     {
         if (actor == null)
             throw new ArgumentNullException(nameof(actor));
-        if (summonRole == null)
-            throw new ArgumentNullException(nameof(summonRole));
 
-        var summonerNode = summonRole.SummonerNode;
+        var summonState = SummonState.ResolveFor(actor);
+        if (summonState == null)
+            return actor.GlobalPosition;
+
+        var summonerNode = summonState.SummonerNode;
         if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode))
             return actor.GlobalPosition;
 
-        var summonSlot = GetSummonSlotIndex(actor, summonRole, maxSlots);
+        var summonSlot = GetSummonSlotIndex(actor, summonState, maxSlots);
         return summonerNode.GlobalPosition + GetFormationOffset(summonSlot, horizontalOffset, verticalOffset);
     }
 
-    private static int GetSummonSlotIndex(ActorBase actor, SummonRoleState summonRole, int maxSlots)
+    private static int GetSummonSlotIndex(ActorBase actor, SummonState summonState, int maxSlots)
     {
-        var summonerNode = summonRole.SummonerNode;
+        var summonerNode = summonState.SummonerNode;
         if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode))
             return 0;
 
@@ -141,7 +140,11 @@ public static class SummonBehaviorPresets
         var slot = 0;
         foreach (var node in parent.GetChildren())
         {
-            if (node is not ISummonedUnit summonedUnit || !ReferenceEquals(summonedUnit.Summoner, summonRole.Summoner))
+            if (node is not ActorBase siblingActor)
+                continue;
+
+            var siblingSummonState = SummonState.ResolveFor(siblingActor);
+            if (siblingSummonState == null || !ReferenceEquals(siblingSummonState.Summoner, summonState.Summoner))
                 continue;
 
             if (node == actor)

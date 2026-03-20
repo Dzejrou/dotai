@@ -51,12 +51,12 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
-    public ISummoner Summoner => _summonRole.Summoner;
+    public ISummoner Summoner => ResolveSummonState()?.Summoner;
 
     private Faction _faction = Factions.Enemies;
-    private readonly SummonRoleState _summonRole = new();
     private FollowSummonerBehavior _followSummonerBehavior;
     private SummonRoleComposer _summonRoleComposer;
+    private SummonState _summonState;
 
     public override void _Ready()
     {
@@ -64,10 +64,11 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
+        _summonState = ResolveSummonState();
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
         _summonRoleComposer = new SummonRoleComposer(
-            _summonRole,
+            _summonState,
             ConfigureBehaviors,
             CreateDefaultBehaviors,
             CreateSummonBehaviorPreset,
@@ -89,7 +90,7 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     public void SetSummoner(ISummoner summoner)
     {
-        _summonRole.SetSummoner(summoner, SetFaction);
+        ResolveSummonState()?.SetSummoner(summoner, SetFaction);
         if (IsInsideTree())
             RefreshSummonRoleComposition();
     }
@@ -106,12 +107,12 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     public bool HasValidSummoner()
     {
-        return _summonRole.HasValidSummoner();
+        return ResolveSummonState()?.HasValidSummoner() == true;
     }
 
     public bool IsOwnedBy(Node2D owner)
     {
-        return _summonRole.IsOwnedBy(owner);
+        return ResolveSummonState()?.IsOwnedBy(owner) == true;
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -158,14 +159,13 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
         var summonReturnDistance = Math.Min(summonLeashDistance, 18.0f);
         var summonIdleTolerance = Math.Min(summonLeashDistance, 12.0f);
         return SummonBehaviorPresets.CreateSummonedMeleePreset(
-            actor => GetSummonerNode(),
             actor => GetSummonerAnchor(),
             summonLeashDistance,
             summonReturnDistance,
             summonIdleTolerance,
             1.0f,
             followWhenIdle: true,
-            ownerCombatAssistTargetGetter: actor => SummonBehaviorPresets.GetOwnerCombatAssistTarget(actor, _summonRole, IsValidAssistTarget),
+            ownerCombatAssistTargetValidator: (actor, target) => IsValidAssistTarget(target),
             canAttemptAcquisition: actor => _followSummonerBehavior == null || !_followSummonerBehavior.IsRecovering,
             additionalTargetFilter: (actor, target) => CanAcquireTarget(target),
             shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor));
@@ -173,17 +173,25 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     private Node2D GetSummonerNode()
     {
-        return _summonRole.SummonerNode;
+        return ResolveSummonState()?.SummonerNode;
     }
 
     private Vector2 GetSummonerAnchor()
     {
         return SummonBehaviorPresets.GetFormationAnchor(
             this,
-            _summonRole,
             FormationHorizontalOffset,
             FormationVerticalOffset,
             MaxFormationSlots);
+    }
+
+    private SummonState ResolveSummonState()
+    {
+        _summonState ??= GetNodeOrNull<SummonState>("SummonState");
+        if (_summonState == null && IsInsideTree())
+            GD.PushError($"{GetPath()}: missing required SummonState child.");
+
+        return _summonState;
     }
 
     private bool CanAcquireTarget(Node2D target)

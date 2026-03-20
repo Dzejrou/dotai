@@ -2,7 +2,8 @@ using Godot;
 
 using System;
 
-public sealed class SummonRoleState
+[GlobalClass]
+public partial class SummonState : Node
 {
     private ISummoner _summoner;
     private Node2D _commandedTarget;
@@ -52,5 +53,13 @@ public sealed class SummonRoleState
     public void ClearCommandedTarget()
     {
         _commandedTarget = null;
+    }
+
+    public static SummonState ResolveFor(ActorBase actor)
+    {
+        if (actor == null || !GodotObject.IsInstanceValid(actor))
+            return null;
+
+        return actor.GetNodeOrNull<SummonState>("SummonState");
     }
 }
