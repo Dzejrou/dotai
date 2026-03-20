@@ -5,10 +5,10 @@
 [ext_resource type="PackedScene" uid="uid://c47bnjp8ugxap" path="res://scenes/actors/enemies/skeleton.tscn" id="3_skeleton_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/ogre.tscn" id="4_ogre_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="5_skeleton_mage_scene"]
-[ext_resource type="PackedScene" path="res://scenes/actors/allies/summoned_skeleton.tscn" id="6_summoned_skeleton_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/target_dummy.tscn" id="7_target_dummy_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/elf_ranger.tscn" id="8_elf_ranger_scene"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/wolf_summon.tscn" id="9_wolf_summon_scene"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/wolf.tscn" id="9_wolf_scene"]
+[ext_resource type="PackedScene" path="res://scenes/actors/neutrals/dryad.tscn" id="10_dryad_scene"]
 
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_skeleton"]
 script = ExtResource("2_spawn_catalog_entry_script")
@@ -16,6 +16,7 @@ Id = "skeleton"
 DisplayName = "Skeleton"
 Category = "Melee"
 SpawnScene = ExtResource("3_skeleton_scene")
+SupportsSummonMode = true
 SortOrder = 10
 
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_wolf"]
@@ -23,7 +24,8 @@ script = ExtResource("2_spawn_catalog_entry_script")
 Id = "wolf"
 DisplayName = "Wolf"
 Category = "Melee"
-SpawnScene = ExtResource("9_wolf_summon_scene")
+SpawnScene = ExtResource("9_wolf_scene")
+SupportsSummonMode = true
 SortOrder = 15
 
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_ogre"]
@@ -42,14 +44,6 @@ Category = "Ranged"
 SpawnScene = ExtResource("5_skeleton_mage_scene")
 SortOrder = 30
 
-[sub_resource type="Resource" id="Resource_spawn_catalog_entry_summoned_skeleton"]
-script = ExtResource("2_spawn_catalog_entry_script")
-Id = "summoned_skeleton"
-DisplayName = "Summoned Skeleton"
-Category = "Allies"
-SpawnScene = ExtResource("6_summoned_skeleton_scene")
-SortOrder = 40
-
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_target_dummy"]
 script = ExtResource("2_spawn_catalog_entry_script")
 Id = "target_dummy"
@@ -66,6 +60,14 @@ Category = "Ranged"
 SpawnScene = ExtResource("8_elf_ranger_scene")
 SortOrder = 35
 
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_dryad"]
+script = ExtResource("2_spawn_catalog_entry_script")
+Id = "dryad"
+DisplayName = "Dryad"
+Category = "Support"
+SpawnScene = ExtResource("10_dryad_scene")
+SortOrder = 45
+
 [resource]
 script = ExtResource("1_spawn_catalog_script")
-Entries = Array[ExtResource("2_spawn_catalog_entry_script")]([SubResource("Resource_spawn_catalog_entry_skeleton"), SubResource("Resource_spawn_catalog_entry_wolf"), SubResource("Resource_spawn_catalog_entry_ogre"), SubResource("Resource_spawn_catalog_entry_skeleton_mage"), SubResource("Resource_spawn_catalog_entry_summoned_skeleton"), SubResource("Resource_spawn_catalog_entry_target_dummy"), SubResource("Resource_spawn_catalog_entry_elf_ranger")])
+Entries = Array[ExtResource("2_spawn_catalog_entry_script")]([SubResource("Resource_spawn_catalog_entry_skeleton"), SubResource("Resource_spawn_catalog_entry_wolf"), SubResource("Resource_spawn_catalog_entry_ogre"), SubResource("Resource_spawn_catalog_entry_skeleton_mage"), SubResource("Resource_spawn_catalog_entry_elf_ranger"), SubResource("Resource_spawn_catalog_entry_dryad"), SubResource("Resource_spawn_catalog_entry_target_dummy")])

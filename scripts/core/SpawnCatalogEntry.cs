@@ -16,6 +16,9 @@ public partial class SpawnCatalogEntry : Resource
     public PackedScene SpawnScene { get; set; }
 
     [Export]
+    public bool SupportsSummonMode { get; set; }
+
+    [Export]
     public bool Enabled { get; set; } = true;
 
     [Export]

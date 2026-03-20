@@ -1,6 +1,7 @@
 using Godot;
 
 using System.Collections.Generic;
+using System.Globalization;
 
 public partial class DebugSpawner : Node2D
 {
@@ -25,10 +26,16 @@ public partial class DebugSpawner : Node2D
     private Node2D _target;
     private string _pendingSpawnId;
     private Sprite2D _placementGhost;
+    private Faction _selectedFaction = Factions.Enemies;
+    private bool _spawnAsSummon;
+    private string _lastSpawnFeedback = string.Empty;
 
     public bool HasPendingPlacement => !string.IsNullOrEmpty(_pendingSpawnId);
 
     public string PendingSpawnId => _pendingSpawnId;
+    public Faction SelectedFaction => _selectedFaction;
+    public bool SpawnAsSummon => _spawnAsSummon;
+    public string LastSpawnFeedback => _lastSpawnFeedback;
 
     public override void _Ready()
     {
@@ -72,6 +79,7 @@ public partial class DebugSpawner : Node2D
         if (!_entriesById.ContainsKey(spawnId))
             return;
 
+        _lastSpawnFeedback = string.Empty;
         _pendingSpawnId = spawnId;
         UpdatePlacementGhost(spawnId);
     }
@@ -80,6 +88,16 @@ public partial class DebugSpawner : Node2D
     {
         _pendingSpawnId = null;
         HidePlacementGhost();
+    }
+
+    public void SetSelectedFaction(string factionKey)
+    {
+        _selectedFaction = Factions.Get(factionKey) ?? Factions.Enemies;
+    }
+
+    public void SetSpawnAsSummon(bool spawnAsSummon)
+    {
+        _spawnAsSummon = spawnAsSummon;
     }
 
     public bool PlacePendingAtCursor(bool preservePlacement = false)
@@ -141,6 +159,7 @@ public partial class DebugSpawner : Node2D
 
     private Node2D SpawnNode(string spawnId, Vector2 spawnPosition)
     {
+        _lastSpawnFeedback = string.Empty;
         if (!_entriesById.TryGetValue(spawnId, out var entry))
             return null;
 
@@ -148,8 +167,21 @@ public partial class DebugSpawner : Node2D
         if (spawnedNode == null)
             return null;
 
-        spawnedNode.GlobalPosition = spawnPosition;
-        spawnedNode.ZIndex = -1;
+        if (spawnedNode is IFactionAssignable factionAssignable)
+            factionAssignable.SetFaction(_selectedFaction);
+
+        if (_spawnAsSummon && entry.SupportsSummonMode && spawnedNode is ISummonedUnit summonedUnit)
+        {
+            var summoner = FindClosestSummoner(spawnPosition, _selectedFaction);
+            if (summoner != null)
+            {
+                summonedUnit.SetSummoner(summoner);
+            }
+            else
+            {
+                _lastSpawnFeedback = $"No {ToDisplayCase(_selectedFaction?.Key ?? Factions.Enemies.Key)} summoner found; spawned unsummoned.";
+            }
+        }
 
         if (spawnedNode is ActorBase actor &&
             _target != null &&
@@ -161,9 +193,50 @@ public partial class DebugSpawner : Node2D
 
         var parent = GetParent();
         if (parent != null)
+        {
+            spawnedNode.GlobalPosition = spawnPosition;
+            spawnedNode.ZIndex = -1;
             parent.AddChild(spawnedNode);
+        }
 
         return spawnedNode;
+    }
+
+    private ISummoner FindClosestSummoner(Vector2 spawnPosition, Faction faction)
+    {
+        var parent = GetParent();
+        if (parent == null || faction == null)
+            return null;
+
+        ISummoner closestSummoner = null;
+        var closestDistance = float.MaxValue;
+        foreach (var child in parent.GetChildren())
+        {
+            if (child is not Node2D node2D ||
+                child is not ISummoner summoner ||
+                !summoner.IsSummonerActive ||
+                !ReferenceEquals(Factions.ResolveForNode(node2D), faction))
+            {
+                continue;
+            }
+
+            var distance = node2D.GlobalPosition.DistanceTo(spawnPosition);
+            if (distance >= closestDistance)
+                continue;
+
+            closestDistance = distance;
+            closestSummoner = summoner;
+        }
+
+        return closestSummoner;
+    }
+
+    private static string ToDisplayCase(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return "Unknown";
+
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(key);
     }
 
     private void BuildCatalogCache()

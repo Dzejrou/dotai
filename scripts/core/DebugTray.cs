@@ -15,6 +15,12 @@ public partial class DebugTray : Control
     public NodePath CardsContainerPath { get; set; } = new NodePath("Bottom/Panel/VBox/Scroll/Cards");
 
     [Export]
+    public NodePath FactionSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/FactionSelector");
+
+    [Export]
+    public NodePath SummonTogglePath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/SummonToggle");
+
+    [Export]
     public NodePath DebugSpawnerPath { get; set; } = new NodePath("../../World/DebugSpawner");
 
     private const float DragThreshold = 12.0f;
@@ -24,6 +30,8 @@ public partial class DebugTray : Control
     private Control _trayPanel;
     private Label _statusLabel;
     private HBoxContainer _cardsContainer;
+    private OptionButton _factionSelector;
+    private CheckButton _summonToggle;
     private readonly Dictionary<string, Button> _cardsById = new();
     private readonly Dictionary<Button, Control.GuiInputEventHandler> _cardInputHandlers = new();
     private string _pressedCardId;
@@ -42,7 +50,10 @@ public partial class DebugTray : Control
         _trayPanel = GetNodeOrNull<Control>(TrayPanelPath);
         _statusLabel = GetNodeOrNull<Label>(StatusLabelPath);
         _cardsContainer = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
+        _factionSelector = GetNodeOrNull<OptionButton>(FactionSelectorPath);
+        _summonToggle = GetNodeOrNull<CheckButton>(SummonTogglePath);
 
+        ConfigureControls();
         BuildCardsFromCatalog();
 
         Visible = false;
@@ -155,6 +166,43 @@ public partial class DebugTray : Control
             card.GuiInput += inputHandler;
             _cardInputHandlers[card] = inputHandler;
         }
+    }
+
+    private void ConfigureControls()
+    {
+        if (_factionSelector != null)
+        {
+            _factionSelector.Clear();
+            AddFactionOption("Enemies", Factions.Enemies.Key);
+            AddFactionOption("Allies", Factions.Allies.Key);
+            AddFactionOption("Neutral", Factions.Neutral.Key);
+            _factionSelector.ItemSelected += OnFactionSelected;
+
+            var selectedKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
+            for (var index = 0; index < _factionSelector.ItemCount; index++)
+            {
+                if (_factionSelector.GetItemMetadata(index).AsString() != selectedKey)
+                    continue;
+
+                _factionSelector.Select(index);
+                break;
+            }
+        }
+
+        if (_summonToggle != null)
+        {
+            _summonToggle.Toggled += OnSummonToggleChanged;
+            _summonToggle.ButtonPressed = _debugSpawner?.SpawnAsSummon ?? false;
+        }
+    }
+
+    private void AddFactionOption(string label, string factionKey)
+    {
+        if (_factionSelector == null)
+            return;
+
+        _factionSelector.AddItem(label);
+        _factionSelector.SetItemMetadata(_factionSelector.ItemCount - 1, factionKey);
     }
 
     private HBoxContainer GetOrCreateCategoryRow(string category, Dictionary<string, HBoxContainer> rowsByCategory)
@@ -381,19 +429,34 @@ public partial class DebugTray : Control
         if (_statusLabel == null)
             return;
 
+        var modeSummary = GetModeSummary();
+        var spawnerFeedback = _debugSpawner?.LastSpawnFeedback;
+        if (!string.IsNullOrWhiteSpace(spawnerFeedback))
+        {
+            _statusLabel.Text = $"{modeSummary} {spawnerFeedback}";
+            return;
+        }
+
         if (_draggingFromCard)
         {
-            _statusLabel.Text = "Release in the world to place. Release over tray, right click, or Esc to cancel.";
+            _statusLabel.Text = $"{modeSummary} Release in the world to place. Release over tray, right click, or Esc to cancel.";
             return;
         }
 
         if (HasPendingPlacement)
         {
-            _statusLabel.Text = "Click in the world to place. Right click or Esc cancels.";
+            _statusLabel.Text = $"{modeSummary} Click in the world to place. Right click or Esc cancels.";
             return;
         }
 
-        _statusLabel.Text = "Click a card to arm placement, or drag it out into the world.";
+        _statusLabel.Text = $"{modeSummary} Click a card to arm placement, or drag it out into the world.";
+    }
+
+    private string GetModeSummary()
+    {
+        var factionKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
+        var summonState = _debugSpawner?.SpawnAsSummon == true ? "on" : "off";
+        return $"Faction: {Capitalize(factionKey)} | Summon: {summonState}.";
     }
 
     private bool IsMouseOverTray(Vector2 screenPosition)
@@ -415,5 +478,28 @@ public partial class DebugTray : Control
         _pressStartScreenPosition = mouseButton.GlobalPosition;
         _draggingFromCard = false;
         GetViewport().SetInputAsHandled();
+    }
+
+    private void OnFactionSelected(long index)
+    {
+        if (_debugSpawner == null || _factionSelector == null)
+            return;
+
+        _debugSpawner.SetSelectedFaction(_factionSelector.GetItemMetadata((int)index).AsString());
+        UpdateStatusLabel();
+    }
+
+    private void OnSummonToggleChanged(bool pressed)
+    {
+        _debugSpawner?.SetSpawnAsSummon(pressed);
+        UpdateStatusLabel();
+    }
+
+    private static string Capitalize(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "Unknown";
+
+        return char.ToUpperInvariant(value[0]) + value[1..];
     }
 }

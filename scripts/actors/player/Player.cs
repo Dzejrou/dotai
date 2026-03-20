@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummoner, IFactionMember
+public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummoner, IFactionMember, IHealable
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -58,7 +58,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     public float FireballMaxDistance { get; set; } = 320.0f;
 
     [Export]
-    public PackedScene SummonedSkeletonScene { get; set; }
+    public PackedScene SkeletonScene { get; set; }
 
     [Export]
     public float SummonSkeletonSpawnOffset { get; set; } = 24.0f;
@@ -84,6 +84,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     private ActorHUD _activeTargetHud;
 
     public int CurrentHealth => _health;
+    public int MaxHealableHealth => MaxHealth;
+    public bool CanReceiveHealing => !_isDead && _health < MaxHealth;
     public bool CanBeTargeted => !_isDead;
     public Faction Faction => Factions.Allies;
     public Node2D SummonerNode => this;
@@ -240,7 +242,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
 
     private void SummonSkeleton()
     {
-        if (_isDead || SummonedSkeletonScene == null)
+        if (_isDead || SkeletonScene == null)
             return;
 
         var parent = GetParent();
@@ -250,7 +252,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (!CanSummonAdditionalSkeleton(parent))
             return;
 
-        var summonedSkeleton = SummonedSkeletonScene.Instantiate<SummonedSkeleton>();
+        var summonedSkeleton = SkeletonScene.Instantiate<Skeleton>();
         if (summonedSkeleton == null)
             return;
 
@@ -271,7 +273,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         var count = 0;
         foreach (var node in parent.GetChildren())
         {
-            if (node is not SummonedSkeleton summon)
+            if (node is not Skeleton summon)
                 continue;
 
             if (!summon.IsInsideTree() || summon.IsQueuedForDeletion())
@@ -305,6 +307,21 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             EmitSignal(SignalName.PlayerDied);
             QueueFree();
         }
+    }
+
+    public void ApplyHealing(int amount)
+    {
+        if (_isDead || amount <= 0)
+            return;
+
+        var recovered = Math.Clamp(amount, 0, MaxHealth - _health);
+        if (recovered <= 0)
+            return;
+
+        _health += recovered;
+        ShowFloatingHealingNumber(recovered);
+        EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
+        _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
     private void UpdateTargetingState()

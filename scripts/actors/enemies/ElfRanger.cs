@@ -3,7 +3,7 @@ using Godot;
 [GlobalClass]
 public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner, IFactionMember
 {
-    private const string DefaultWolfSummonScenePath = "res://scenes/actors/enemies/wolf_summon.tscn";
+    private const string DefaultWolfScenePath = "res://scenes/actors/enemies/wolf.tscn";
 
     [Export]
     public float Speed { get; set; } = 62.0f;
@@ -12,7 +12,7 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
     public int Health { get; set; } = 18;
 
     [Export]
-    public PackedScene WolfSummonScene { get; set; }
+    public PackedScene WolfScene { get; set; }
 
     [Export]
     public float WolfSummonSpawnOffset { get; set; } = 28.0f;
@@ -77,8 +77,8 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
     {
         if (ProjectileScene == null)
             ProjectileScene = GD.Load<PackedScene>("res://scenes/projectiles/projectile.tscn");
-        if (WolfSummonScene == null)
-            WolfSummonScene = GD.Load<PackedScene>(DefaultWolfSummonScenePath);
+        if (WolfScene == null)
+            WolfScene = GD.Load<PackedScene>(DefaultWolfScenePath);
 
         InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
@@ -107,7 +107,7 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
             EvadeOnAggroLoss,
             IgnoreDamageWhileEvading,
             extraBehaviors: new SingleOwnedSummonBehavior(
-                WolfSummonScene,
+                WolfScene,
                 WolfSummonSpawnOffset,
                 WolfSummonTriggerRange,
                 WolfResummonDelaySeconds,

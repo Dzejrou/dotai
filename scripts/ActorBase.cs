@@ -3,7 +3,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public abstract partial class ActorBase : CharacterBody2D, IFactionMember
+public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable
 {
     private const float NavigationTargetUpdateThreshold = 8.0f;
     private const float DefaultPathDesiredDistance = 6.0f;
@@ -30,6 +30,8 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember
     public int CurrentHealth { get; private set; }
     public bool IsDead { get; private set; }
     public int ResolvedMaxHealth => Math.Max(1, MaxHealthValue);
+    public int MaxHealableHealth => ResolvedMaxHealth;
+    public bool CanReceiveHealing => !IsDead && CurrentHealth < ResolvedMaxHealth;
     public ICombatActionController PrimaryActionController { get; private set; }
 
     [Export]

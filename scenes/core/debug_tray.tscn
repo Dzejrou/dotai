@@ -54,6 +54,22 @@ size_flags_horizontal = 3
 text = "Click a card to arm placement, or drag it out into the world."
 horizontal_alignment = 2
 
+[node name="Controls" type="HBoxContainer" parent="Root/Bottom/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="FactionLabel" type="Label" parent="Root/Bottom/Panel/VBox/Controls"]
+layout_mode = 2
+text = "Faction"
+
+[node name="FactionSelector" type="OptionButton" parent="Root/Bottom/Panel/VBox/Controls"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+
+[node name="SummonToggle" type="CheckButton" parent="Root/Bottom/Panel/VBox/Controls"]
+layout_mode = 2
+text = "Spawn As Summon"
+
 [node name="Scroll" type="ScrollContainer" parent="Root/Bottom/Panel/VBox"]
 custom_minimum_size = Vector2(0, 166)
 layout_mode = 2

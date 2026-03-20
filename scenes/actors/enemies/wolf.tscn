@@ -1,21 +1,21 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://scripts/actors/enemies/WolfSummon.cs" id="1_wolf_summon_script"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/wolf_summon_spriteframes.tres" id="2_wolf_summon_frames"]
+[ext_resource type="Script" path="res://scripts/actors/enemies/Wolf.cs" id="1_wolf_script"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/wolf_summon_spriteframes.tres" id="2_wolf_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wolf_summon"]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wolf"]
 radius = 6.0
 height = 18.0
 
-[node name="WolfSummon" type="CharacterBody2D"]
+[node name="Wolf" type="CharacterBody2D"]
 z_index = -1
-script = ExtResource("1_wolf_summon_script")
+script = ExtResource("1_wolf_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, 4)
 scale = Vector2(1.05, 1.05)
-sprite_frames = ExtResource("2_wolf_summon_frames")
+sprite_frames = ExtResource("2_wolf_frames")
 animation = &"breathing-idle_south"
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
@@ -23,6 +23,6 @@ avoidance_enabled = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 10)
-shape = SubResource("CapsuleShape2D_wolf_summon")
+shape = SubResource("CapsuleShape2D_wolf")
 
 [node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]
