@@ -40,15 +40,6 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     [Export]
     public bool IgnoreDamageWhileEvading { get; set; } = true;
 
-    [Export]
-    public float SummonerRecoveryTolerance { get; set; } = 220.0f;
-
-    [Export]
-    public float FormationHorizontalOffset { get; set; } = 28.0f;
-
-    [Export]
-    public float FormationVerticalOffset { get; set; } = 18.0f;
-
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
     public ISummoner Summoner => ResolveSummonState()?.Summoner;
@@ -150,39 +141,17 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     private void RefreshSummonRoleComposition()
     {
+        _followSummonerBehavior = GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_PostCode/FollowSummonerBehavior");
         _followSummonerBehavior = _summonRoleComposer?.Refresh();
     }
 
     private SummonBehaviorPreset CreateSummonBehaviorPreset()
     {
-        var summonLeashDistance = Math.Max(0.0f, SummonerRecoveryTolerance);
-        var summonReturnDistance = Math.Min(summonLeashDistance, 18.0f);
-        var summonIdleTolerance = Math.Min(summonLeashDistance, 12.0f);
         return SummonBehaviorPresets.CreateSummonedMeleePreset(
-            actor => GetSummonerAnchor(),
-            summonLeashDistance,
-            summonReturnDistance,
-            summonIdleTolerance,
-            1.0f,
-            followWhenIdle: true,
-            ownerCombatAssistTargetValidator: (actor, target) => IsValidAssistTarget(target),
+            _followSummonerBehavior,
             canAttemptAcquisition: actor => _followSummonerBehavior == null || !_followSummonerBehavior.IsRecovering,
             additionalTargetFilter: (actor, target) => CanAcquireTarget(target),
             shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor));
-    }
-
-    private Node2D GetSummonerNode()
-    {
-        return ResolveSummonState()?.SummonerNode;
-    }
-
-    private Vector2 GetSummonerAnchor()
-    {
-        return SummonBehaviorPresets.GetFormationAnchor(
-            this,
-            FormationHorizontalOffset,
-            FormationVerticalOffset,
-            MaxFormationSlots);
     }
 
     private SummonState ResolveSummonState()

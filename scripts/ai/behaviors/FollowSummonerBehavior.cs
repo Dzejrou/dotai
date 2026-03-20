@@ -2,46 +2,52 @@ using Godot;
 
 using System;
 
-public sealed class FollowSummonerBehavior : IActorBehavior
+[GlobalClass]
+public partial class FollowSummonerBehavior : Node, IActorBehavior
 {
-    private readonly Func<ActorBase, Vector2> _anchorGetter;
-    private readonly float _startLeashDistance;
-    private readonly float _stopLeashDistance;
-    private readonly float _idleAnchorTolerance;
-    private readonly float _leashSpeedMultiplier;
-    private readonly bool _followWhenIdle;
-    private readonly CombatUnitState _leashState;
-    private readonly CombatUnitState _followState;
-    private readonly Func<ActorBase, Vector2> _teleportDestinationGetter;
-    private readonly float _teleportRecoveryTimeout;
+    [Export]
+    public float StartLeashDistance { get; set; } = 220.0f;
+
+    [Export]
+    public float StopLeashDistance { get; set; } = 72.0f;
+
+    [Export]
+    public float IdleAnchorTolerance { get; set; } = 10.0f;
+
+    [Export]
+    public float LeashSpeedMultiplier { get; set; } = 1.0f;
+
+    [Export]
+    public bool FollowWhenIdle { get; set; } = true;
+
+    [Export]
+    public CombatUnitState LeashState { get; set; } = CombatUnitState.Leashing;
+
+    [Export]
+    public CombatUnitState FollowState { get; set; } = CombatUnitState.FollowingOwner;
+
+    [Export]
+    public float TeleportRecoveryTimeout { get; set; } = 0.0f;
+
+    [Export]
+    public float FormationHorizontalOffset { get; set; } = 24.0f;
+
+    [Export]
+    public float FormationVerticalOffset { get; set; } = 24.0f;
+
+    [Export]
+    public int MaxFormationSlots { get; set; } = 4;
+
     private bool _recoveryRequested;
     private float _recoveryTimer;
 
-    public FollowSummonerBehavior(
-        Func<ActorBase, Vector2> anchorGetter,
-        float startLeashDistance,
-        float stopLeashDistance,
-        float idleAnchorTolerance,
-        float leashSpeedMultiplier,
-        bool followWhenIdle,
-        CombatUnitState leashState = CombatUnitState.Leashing,
-        CombatUnitState followState = CombatUnitState.FollowingOwner,
-        Func<ActorBase, Vector2> teleportDestinationGetter = null,
-        float teleportRecoveryTimeout = 0.0f)
-    {
-        _anchorGetter = anchorGetter ?? throw new ArgumentNullException(nameof(anchorGetter));
-        _startLeashDistance = Math.Max(0.0f, startLeashDistance);
-        _stopLeashDistance = Math.Clamp(stopLeashDistance, 0.0f, _startLeashDistance);
-        _idleAnchorTolerance = Math.Max(0.0f, idleAnchorTolerance);
-        _leashSpeedMultiplier = Math.Max(0.0f, leashSpeedMultiplier);
-        _followWhenIdle = followWhenIdle;
-        _leashState = leashState;
-        _followState = followState;
-        _teleportDestinationGetter = teleportDestinationGetter;
-        _teleportRecoveryTimeout = Math.Max(0.0f, teleportRecoveryTimeout);
-    }
-
     public bool IsRecovering => _recoveryRequested;
+
+    private float ResolvedStartLeashDistance => Math.Max(0.0f, StartLeashDistance);
+    private float ResolvedStopLeashDistance => Math.Clamp(StopLeashDistance, 0.0f, ResolvedStartLeashDistance);
+    private float ResolvedIdleAnchorTolerance => Math.Max(0.0f, IdleAnchorTolerance);
+    private float ResolvedLeashSpeedMultiplier => Math.Max(0.0f, LeashSpeedMultiplier);
+    private float ResolvedTeleportRecoveryTimeout => Math.Max(0.0f, TeleportRecoveryTimeout);
 
     public void BeginRecovery()
     {
@@ -62,10 +68,10 @@ public sealed class FollowSummonerBehavior : IActorBehavior
             return false;
 
         var distanceToSummoner = actor.GlobalPosition.DistanceTo(summonerNode.GlobalPosition);
-        if (_recoveryRequested || actor.CurrentState == _leashState)
-            return distanceToSummoner > _stopLeashDistance;
+        if (_recoveryRequested || actor.CurrentState == LeashState)
+            return distanceToSummoner > ResolvedStopLeashDistance;
 
-        return distanceToSummoner > _startLeashDistance;
+        return distanceToSummoner > ResolvedStartLeashDistance;
     }
 
     public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
@@ -79,7 +85,7 @@ public sealed class FollowSummonerBehavior : IActorBehavior
         var distanceToSummoner = actor.GlobalPosition.DistanceTo(summonerNode.GlobalPosition);
         if ((actor.CurrentTarget != null && ShouldPrioritizeLeashReturn(actor)) || _recoveryRequested)
         {
-            if (distanceToSummoner <= _stopLeashDistance)
+            if (distanceToSummoner <= ResolvedStopLeashDistance)
             {
                 _recoveryRequested = false;
                 _recoveryTimer = 0.0f;
@@ -88,14 +94,13 @@ public sealed class FollowSummonerBehavior : IActorBehavior
             }
 
             if (_recoveryRequested &&
-                _teleportDestinationGetter != null &&
-                _teleportRecoveryTimeout > 0.0f &&
+                ResolvedTeleportRecoveryTimeout > 0.0f &&
                 !actor.IsDead)
             {
                 _recoveryTimer += Math.Max(0.0f, (float)delta);
-                if (_recoveryTimer >= _teleportRecoveryTimeout)
+                if (_recoveryTimer >= ResolvedTeleportRecoveryTimeout)
                 {
-                    actor.TeleportTo(_teleportDestinationGetter(actor));
+                    actor.TeleportTo(GetAnchor(actor));
                     _recoveryRequested = false;
                     _recoveryTimer = 0.0f;
                     intent = ActorIntent.Hold(CombatUnitState.Idle);
@@ -108,25 +113,34 @@ public sealed class FollowSummonerBehavior : IActorBehavior
                 ChangeTarget = actor.CurrentTarget != null,
                 Target = null,
                 Destination = summonerNode.GlobalPosition,
-                SpeedMultiplier = _leashSpeedMultiplier,
-                State = _leashState,
+                SpeedMultiplier = ResolvedLeashSpeedMultiplier,
+                State = LeashState,
             };
             return true;
         }
 
         _recoveryTimer = 0.0f;
 
-        if (!_followWhenIdle || actor.CurrentTarget != null)
+        if (!FollowWhenIdle || actor.CurrentTarget != null)
             return false;
 
-        var idleAnchor = _anchorGetter(actor);
-        if (actor.GlobalPosition.DistanceTo(idleAnchor) <= _idleAnchorTolerance)
+        var idleAnchor = GetAnchor(actor);
+        if (actor.GlobalPosition.DistanceTo(idleAnchor) <= ResolvedIdleAnchorTolerance)
         {
             intent = ActorIntent.Hold(CombatUnitState.Idle);
             return true;
         }
 
-        intent = ActorIntent.MoveTo(idleAnchor, _followState, 1.0f);
+        intent = ActorIntent.MoveTo(idleAnchor, FollowState, 1.0f);
         return true;
+    }
+
+    private Vector2 GetAnchor(ActorBase actor)
+    {
+        return SummonBehaviorPresets.GetFormationAnchor(
+            actor,
+            FormationHorizontalOffset,
+            FormationVerticalOffset,
+            MaxFormationSlots);
     }
 }

@@ -18,38 +18,17 @@ public readonly struct SummonBehaviorPreset
 public static class SummonBehaviorPresets
 {
     public static SummonBehaviorPreset CreateSummonedMeleePreset(
-        Func<ActorBase, Vector2> anchorGetter,
-        float leashDistance,
-        float leashReturnDistance,
-        float idleAnchorTolerance,
-        float leashCatchupSpeedMultiplier,
-        bool followWhenIdle,
-        Func<ActorBase, Node2D, bool> ownerCombatAssistTargetValidator = null,
-        Func<ActorBase, Node2D, bool> commandedTargetValidator = null,
+        FollowSummonerBehavior followSummonerBehavior,
         Func<ActorBase, bool> canAttemptAcquisition = null,
         Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
         Func<ActorBase, Node2D, bool> shouldDropTarget = null,
-        Func<ActorBase, Vector2> teleportDestinationGetter = null,
-        float teleportRecoveryTimeout = 0.0f,
         Func<ActorBase, bool> stuckCondition = null,
         params IActorBehavior[] extraBehaviors)
     {
-        var followSummonerBehavior = new FollowSummonerBehavior(
-            anchorGetter,
-            leashDistance,
-            leashReturnDistance,
-            idleAnchorTolerance,
-            leashCatchupSpeedMultiplier,
-            followWhenIdle,
-            teleportDestinationGetter: teleportDestinationGetter,
-            teleportRecoveryTimeout: teleportRecoveryTimeout);
+        if (followSummonerBehavior == null)
+            throw new ArgumentNullException(nameof(followSummonerBehavior));
 
         var behaviors = new List<IActorBehavior>();
-        if (ownerCombatAssistTargetValidator != null)
-            behaviors.Add(new OwnerCombatAssistBehavior(ownerCombatAssistTargetValidator));
-
-        if (commandedTargetValidator != null)
-            behaviors.Add(new CommandedTargetBehavior(commandedTargetValidator));
 
         behaviors.Add(new AcquireHostileTargetBehavior(
             float.MaxValue,
@@ -79,7 +58,6 @@ public static class SummonBehaviorPresets
             }
         }
 
-        behaviors.Add(followSummonerBehavior);
         return new SummonBehaviorPreset(followSummonerBehavior, behaviors.ToArray());
     }
 

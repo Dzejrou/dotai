@@ -5,6 +5,8 @@ using System.Collections.Generic;
 
 public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable, ICombatStateOwner
 {
+    private const string BehaviorNodePreCodePath = "Behaviors/Tier10_PreCode";
+    private const string BehaviorNodePostCodePath = "Behaviors/Tier90_PostCode";
     private const float NavigationTargetUpdateThreshold = 8.0f;
     private const float DefaultPathDesiredDistance = 6.0f;
     private const float DefaultTargetDesiredDistance = 8.0f;
@@ -225,23 +227,53 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         return target != null && GodotObject.IsInstanceValid(target) && target.IsInsideTree();
     }
 
+    private void AppendBehaviorNodes(Node root)
+    {
+        if (root == null)
+            return;
+
+        foreach (var child in root.GetChildren())
+        {
+            if (child is Node childNode)
+                AppendBehaviorNodesRecursive(childNode);
+        }
+    }
+
+    private void AppendBehaviorNodesRecursive(Node node)
+    {
+        AppendBehavior(node as IActorBehavior);
+
+        foreach (var child in node.GetChildren())
+        {
+            if (child is Node childNode)
+                AppendBehaviorNodesRecursive(childNode);
+        }
+    }
+
+    private void AppendBehavior(IActorBehavior behavior)
+    {
+        if (behavior == null)
+            return;
+
+        _behaviors.Add(behavior);
+        if (behavior is IActorTickBehavior tickBehavior)
+            _tickBehaviors.Add(tickBehavior);
+        if (behavior is IActorDamageInterceptor damageInterceptor)
+            _damageInterceptors.Add(damageInterceptor);
+    }
+
     protected void ConfigureBehaviors(params IActorBehavior[] behaviors)
     {
         _behaviors.Clear();
         _tickBehaviors.Clear();
         _damageInterceptors.Clear();
 
-        foreach (var behavior in behaviors)
-        {
-            if (behavior == null)
-                continue;
+        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodePreCodePath));
 
-            _behaviors.Add(behavior);
-            if (behavior is IActorTickBehavior tickBehavior)
-                _tickBehaviors.Add(tickBehavior);
-            if (behavior is IActorDamageInterceptor damageInterceptor)
-                _damageInterceptors.Add(damageInterceptor);
-        }
+        foreach (var behavior in behaviors)
+            AppendBehavior(behavior);
+
+        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodePostCodePath));
     }
 
     protected void SetPrimaryActionController(ICombatActionController actionController)

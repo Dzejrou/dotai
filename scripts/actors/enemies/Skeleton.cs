@@ -50,24 +50,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     [Export]
     public float LeashDistance { get; set; } = 220.0f;
 
-    [Export]
-    public float LeashReturnDistance { get; set; } = 72.0f;
-
-    [Export]
-    public float LeashCatchupSpeedMultiplier { get; set; } = 1.35f;
-
-    [Export]
-    public float IdleAnchorTolerance { get; set; } = 10.0f;
-
-    [Export]
-    public float FormationHorizontalOffset { get; set; } = 24.0f;
-
-    [Export]
-    public float FormationVerticalOffset { get; set; } = 42.0f;
-
-    [Export]
-    public float RecoveryTeleportTimeoutSeconds { get; set; } = 2.5f;
-
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
     public ISummoner Summoner => ResolveSummonState()?.Summoner;
@@ -195,28 +177,20 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
     private void RefreshSummonRoleComposition()
     {
+        _followSummonerBehavior = GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_PostCode/FollowSummonerBehavior");
         _followSummonerBehavior = _summonRoleComposer?.Refresh();
     }
 
     private SummonBehaviorPreset CreateSummonBehaviorPreset()
     {
         return SummonBehaviorPresets.CreateSummonedMeleePreset(
-            actor => GetIdleAnchor(),
-            LeashDistance,
-            LeashReturnDistance,
-            IdleAnchorTolerance,
-            LeashCatchupSpeedMultiplier,
-            followWhenIdle: true,
-            ownerCombatAssistTargetValidator: (actor, target) => IsValidCommandedTarget(target),
-            commandedTargetValidator: (actor, target) => IsValidCommandedTarget(target),
+            _followSummonerBehavior,
             canAttemptAcquisition: actor =>
                 actor.CurrentState != CombatUnitState.Leashing &&
                 (_followSummonerBehavior == null || !_followSummonerBehavior.IsRecovering) &&
                 (_followSummonerBehavior == null || !_followSummonerBehavior.ShouldPrioritizeLeashReturn(actor)),
             additionalTargetFilter: (actor, target) => CanAcquireTargetAsSummon(target),
-            shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor),
-            teleportDestinationGetter: actor => GetIdleAnchor(),
-            teleportRecoveryTimeout: RecoveryTeleportTimeoutSeconds);
+            shouldDropTarget: (actor, target) => _followSummonerBehavior != null && _followSummonerBehavior.ShouldPrioritizeLeashReturn(actor));
     }
 
     private void OnSummonRoleModeChanged(bool isSummoned)
@@ -297,15 +271,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
             return false;
 
         return CanAcquireTargetAsSummon(target);
-    }
-
-    private Vector2 GetIdleAnchor()
-    {
-        return SummonBehaviorPresets.GetFormationAnchor(
-            this,
-            FormationHorizontalOffset,
-            FormationVerticalOffset,
-            MaxFormationSlots);
     }
 
     private Node2D GetSummonerNode()
