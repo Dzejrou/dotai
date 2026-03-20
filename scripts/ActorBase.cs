@@ -3,7 +3,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable
+public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable, ICombatStateOwner
 {
     private const float NavigationTargetUpdateThreshold = 8.0f;
     private const float DefaultPathDesiredDistance = 6.0f;
@@ -21,7 +21,9 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     public AnimatedSprite2D AnimatedSprite { get; private set; }
     public CollisionShape2D CollisionShape { get; private set; }
     public NavigationAgent2D NavigationAgent { get; private set; }
-    public Node2D CurrentTarget { get; private set; }
+    public CombatState Combat { get; } = new();
+    public Node2D CurrentTarget => Combat.CurrentTarget;
+    public bool IsInCombat => Combat.IsInCombat;
     public bool IsUsingNavigationPath { get; private set; }
     public Vector2 LastNavigationPathPosition { get; private set; }
     public float MovementSpeed { get; private set; } = 1.0f;
@@ -66,6 +68,8 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         CurrentHealth = ResolvedMaxHealth;
         IsDead = false;
         HomePosition = GlobalPosition;
+        Combat.ClearTarget();
+        Combat.ExitCombat();
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
@@ -84,6 +88,8 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
             Velocity = Vector2.Zero;
             return;
         }
+
+        Combat.Update(delta);
 
         PrimaryActionController?.Update(this, delta);
         foreach (var tickBehavior in _tickBehaviors)
@@ -117,12 +123,12 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
     public void SetTarget(Node2D target)
     {
-        CurrentTarget = target;
+        Combat.SetTarget(target);
     }
 
     public void ClearTarget()
     {
-        CurrentTarget = null;
+        Combat.ClearTarget();
     }
 
     public void SetState(CombatUnitState state)
@@ -262,6 +268,11 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     protected void SetIsDead(bool value)
     {
         IsDead = value;
+        if (value)
+        {
+            Combat.ClearTarget();
+            Combat.ExitCombat();
+        }
     }
 
     protected void MarkDead()
@@ -318,6 +329,10 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
         damage = Math.Max(1, damageInfo.Amount);
         SetCurrentHealth(CurrentHealth - damage);
+        Combat.RegisterIncomingDamage(damageInfo.Source as Node2D);
+        if (damageInfo.Source is ICombatStateOwner combatStateOwner)
+            combatStateOwner.Combat.RegisterOutgoingDamage(this);
+
         died = CurrentHealth <= 0;
         if (died)
             SetIsDead(true);

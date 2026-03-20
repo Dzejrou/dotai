@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummoner, IFactionMember, IHealable
+public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummoner, IFactionMember, IHealable, ICombatStateOwner
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -88,6 +88,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     public bool CanReceiveHealing => !_isDead && _health < MaxHealth;
     public bool CanBeTargeted => !_isDead;
     public Faction Faction => Factions.Allies;
+    public CombatState Combat { get; } = new();
     public Node2D SummonerNode => this;
     public bool IsSummonerActive => !_isDead && IsInsideTree();
     public PlayerTargetingState Targeting { get; } = new();
@@ -108,6 +109,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (_isDead)
             return;
 
+        Combat.Update(delta);
         HandleHealthRegenerationDelay((float)delta);
         HandleHealthRegeneration((float)delta);
         if (Input.IsActionJustPressed("tab_target"))
@@ -293,6 +295,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
 
         var damage = Math.Max(1, damageInfo.Amount);
         _health = Math.Max(0, _health - damage);
+        Combat.RegisterIncomingDamage(damageInfo.Source as Node2D, setTargetToSource: true);
+        if (damageInfo.Source is ICombatStateOwner combatStateOwner)
+            combatStateOwner.Combat.RegisterOutgoingDamage(this);
 
         ShowFloatingDamageNumber(damage);
         EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
@@ -302,6 +307,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (_health <= 0)
         {
             _isDead = true;
+            Combat.ClearTarget();
+            Combat.ExitCombat();
             Targeting.ClearAllTargets();
             UpdateTargetBracket();
             EmitSignal(SignalName.PlayerDied);
