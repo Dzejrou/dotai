@@ -71,6 +71,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     {
         if (Summoner != null && !HasValidSummoner())
         {
+            PrepareForRemoval();
             QueueFree();
             return;
         }
@@ -191,8 +192,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         if (IsSummoned())
         {
             ClearSameFactionCollisionExceptions();
-            if (NavigationAgent != null)
-                NavigationAgent.SetPhysicsProcess(false);
             TryPlayDeathAnimation(queueFreeOnMissingAnimation: true);
             ScheduleDeathCleanupFallback();
             return;

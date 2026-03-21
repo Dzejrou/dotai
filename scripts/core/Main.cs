@@ -108,6 +108,9 @@ public partial class Main : Node2D
         if (TryHandleWindowResizeInput(@event))
             return;
 
+        if (TryHandleNavigationDebugInput(@event))
+            return;
+
         if (_gameOverActive && !_restartingFromGameOver)
         {
             if (@event is InputEventKey keyEvent && keyEvent.Pressed)
@@ -305,6 +308,19 @@ public partial class Main : Node2D
         else
             OpenPauseMenu();
 
+        return true;
+    }
+
+    private bool TryHandleNavigationDebugInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+            return false;
+
+        if (keyEvent.PhysicalKeycode != Key.Key8)
+            return false;
+
+        var enabled = NavigationDebugSettings.Toggle();
+        GD.Print($"Navigation debug {(enabled ? "enabled" : "disabled")}");
         return true;
     }
 

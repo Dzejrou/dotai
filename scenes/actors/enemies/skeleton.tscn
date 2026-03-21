@@ -33,7 +33,6 @@ animation = &"breathing-idle_south"
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1135505834]
 avoidance_enabled = true
-debug_enabled = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=434218639]
 position = Vector2(0, 12)

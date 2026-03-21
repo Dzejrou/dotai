@@ -64,6 +64,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     private ActorHUD _actorHud;
     private HealthState _healthState;
     private bool _attemptedHealthStateResolve;
+    private bool _subscribedToNavigationDebug;
 
     protected abstract int MaxHealthValue { get; }
 
@@ -80,6 +81,8 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         {
             NavigationAgent.PathDesiredDistance = DefaultPathDesiredDistance;
             NavigationAgent.TargetDesiredDistance = DefaultTargetDesiredDistance;
+            ApplyNavigationDebugState(NavigationDebugSettings.Enabled);
+            SubscribeToNavigationDebug();
         }
 
         HomePosition = GlobalPosition;
@@ -141,6 +144,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         if (AnimatedSprite != null)
             AnimatedSprite.AnimationFinished -= OnAnimatedSpriteAnimationFinished;
 
+        UnsubscribeFromNavigationDebug();
         OnActorExitTree();
     }
 
@@ -320,6 +324,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         ResolveHealthState()?.SetDead(value);
         if (value)
         {
+            CleanupNavigationForInactiveState();
             Combat.ClearTarget();
             Combat.ExitCombat();
         }
@@ -333,6 +338,11 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     protected void ResetPrimaryActionController()
     {
         PrimaryActionController?.Cancel(this);
+    }
+
+    protected void PrepareForRemoval()
+    {
+        CleanupNavigationForInactiveState();
     }
 
     protected void RefreshHealthLabel()
@@ -403,6 +413,48 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         _attemptedHealthStateResolve = true;
         _healthState = GetNodeOrNull<HealthState>("HealthState");
         return _healthState;
+    }
+
+    private void ApplyNavigationDebugState(bool enabled)
+    {
+        if (NavigationAgent == null)
+            return;
+
+        NavigationAgent.DebugEnabled = enabled;
+    }
+
+    private void SubscribeToNavigationDebug()
+    {
+        if (_subscribedToNavigationDebug || NavigationAgent == null)
+            return;
+
+        NavigationDebugSettings.Changed += ApplyNavigationDebugState;
+        _subscribedToNavigationDebug = true;
+    }
+
+    private void UnsubscribeFromNavigationDebug()
+    {
+        if (!_subscribedToNavigationDebug)
+            return;
+
+        NavigationDebugSettings.Changed -= ApplyNavigationDebugState;
+        _subscribedToNavigationDebug = false;
+    }
+
+    private void CleanupNavigationForInactiveState()
+    {
+        ResetNavigationPathState();
+        Velocity = Vector2.Zero;
+
+        if (NavigationAgent == null)
+            return;
+
+        if (NavigationAgent.IsInsideTree())
+            NavigationAgent.TargetPosition = GlobalPosition;
+
+        NavigationAgent.SetPhysicsProcess(false);
+        ApplyNavigationDebugState(false);
+        UnsubscribeFromNavigationDebug();
     }
 
     protected bool TryFinalizeDeathAnimation()

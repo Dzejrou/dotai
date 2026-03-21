@@ -60,6 +60,7 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     {
         if (Summoner != null && !HasValidSummoner())
         {
+            PrepareForRemoval();
             QueueFree();
             return;
         }
