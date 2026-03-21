@@ -109,9 +109,7 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
     {
         SetIsDead(true);
         MarkDead();
-        Velocity = Vector2.Zero;
-        ResetPrimaryActionController();
-        TryPlayDeathAnimation();
+        SpawnCorpseAndFree();
     }
 
     protected override int MaxHealthValue => Health;

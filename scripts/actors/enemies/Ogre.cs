@@ -67,9 +67,7 @@ public partial class Ogre : ActorBase, IAttackable, ITargetable
     {
         SetIsDead(true);
         MarkDead();
-        Velocity = Vector2.Zero;
-        ResetPrimaryActionController();
-        TryPlayDeathAnimation();
+        SpawnCorpseAndFree();
     }
 
     protected override int MaxHealthValue => MaxHealth;

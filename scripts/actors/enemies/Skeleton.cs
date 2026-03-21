@@ -5,7 +5,6 @@ using System;
 [GlobalClass]
 public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUnit, IOffensiveSummon, IFactionAssignable
 {
-    private const float DeathFallbackDelay = 2.0f;
     private const int MaxFormationSlots = 4;
 
     [Export]
@@ -41,7 +40,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
     private Faction _faction = Factions.Enemies;
     private bool _sameFactionCollisionExceptionApplied;
-    private bool _deathFallbackQueued;
     private FollowSummonerBehavior _followSummonerBehavior;
     private SummonRoleComposer _summonRoleComposer;
     private SummonState _summonState;
@@ -84,17 +82,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
     protected override void OnActorExitTree()
     {
-        _deathFallbackQueued = false;
         ClearSameFactionCollisionExceptions();
-    }
-
-    protected override void OnDeathAnimationFinalized()
-    {
-        if (!IsSummoned())
-            return;
-
-        ClearSameFactionCollisionExceptions();
-        QueueFree();
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -183,39 +171,11 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     {
         SetIsDead(true);
         MarkDead();
-        Velocity = Vector2.Zero;
         ResolveSummonState()?.ClearCommandedTarget();
         _followSummonerBehavior?.CancelRecovery();
         ClearTarget();
-        ResetPrimaryActionController();
-
-        if (IsSummoned())
-        {
-            ClearSameFactionCollisionExceptions();
-            TryPlayDeathAnimation(queueFreeOnMissingAnimation: true);
-            ScheduleDeathCleanupFallback();
-            return;
-        }
-
-        TryPlayDeathAnimation();
-    }
-
-    private void ScheduleDeathCleanupFallback()
-    {
-        if (_deathFallbackQueued || GetTree() == null || !IsInsideTree())
-            return;
-
-        _deathFallbackQueued = true;
-        var timer = GetTree().CreateTimer(DeathFallbackDelay);
-        timer.Timeout += OnDeathCleanupTimeout;
-    }
-
-    private void OnDeathCleanupTimeout()
-    {
-        if (!IsInstanceValid(this) || IsQueuedForDeletion())
-            return;
-
-        QueueFree();
+        ClearSameFactionCollisionExceptions();
+        SpawnCorpseAndFree();
     }
 
     private bool HasUsableCurrentTarget()

@@ -109,11 +109,9 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     {
         SetIsDead(true);
         MarkDead();
-        Velocity = Vector2.Zero;
         ClearTarget();
         _followSummonerBehavior?.CancelRecovery();
-        ResetPrimaryActionController();
-        TryPlayDeathAnimation();
+        SpawnCorpseAndFree();
     }
 
     private IActorBehavior[] CreateDefaultBehaviors()

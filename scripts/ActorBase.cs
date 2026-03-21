@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable
 {
+    private const string DefaultCorpseScenePath = "res://scenes/world/corpse.tscn";
     private const string BehaviorNodeTargetingPath = "Behaviors/Tier10_Targeting";
     private const string BehaviorNodeLeashPath = "Behaviors/Tier20_Leash";
     private const string BehaviorNodeCombatPath = "Behaviors/Tier50_Combat";
@@ -65,6 +66,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     private HealthState _healthState;
     private bool _attemptedHealthStateResolve;
     private bool _subscribedToNavigationDebug;
+    private static PackedScene _corpseScene;
 
     protected abstract int MaxHealthValue { get; }
 
@@ -345,6 +347,18 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         CleanupNavigationForInactiveState();
     }
 
+    protected void SpawnCorpseAndFree()
+    {
+        PrepareForRemoval();
+        if (DisableCollisionOnDeath && CollisionShape != null)
+            CollisionShape.SetDeferred("disabled", true);
+
+        Velocity = Vector2.Zero;
+        ResetPrimaryActionController();
+        SpawnCorpse();
+        QueueFree();
+    }
+
     protected void RefreshHealthLabel()
     {
         if (_actorHud == null)
@@ -457,47 +471,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         UnsubscribeFromNavigationDebug();
     }
 
-    protected bool TryFinalizeDeathAnimation()
-    {
-        if (AnimatedSprite?.SpriteFrames == null)
-            return false;
-
-        var animationName = AnimatedSprite.Animation.ToString();
-        if (!animationName.StartsWith(DeathAnimation.ToString(), StringComparison.Ordinal))
-            return false;
-
-        var finalFrame = Math.Max(0, AnimatedSprite.SpriteFrames.GetFrameCount(animationName) - 1);
-        AnimatedSprite.Stop();
-        AnimatedSprite.SetFrame(finalFrame);
-        SetPhysicsProcess(false);
-        return true;
-    }
-
-    protected bool TryPlayDeathAnimation(bool queueFreeOnMissingAnimation = false)
-    {
-        if (DisableCollisionOnDeath && CollisionShape != null)
-            CollisionShape.CallDeferred("set", "disabled", true);
-
-        var animationName = $"{DeathAnimation}_{LastDirection}";
-        if (AnimatedSprite?.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(animationName) &&
-            AnimatedSprite.SpriteFrames.GetFrameCount(animationName) > 0)
-        {
-            AnimatedSprite.Play(animationName);
-            return true;
-        }
-
-        if (queueFreeOnMissingAnimation)
-            QueueFree();
-        else
-            SetPhysicsProcess(false);
-
-        return false;
-    }
-
     protected virtual void OnActorExitTree() { }
-
-    protected virtual void OnDeathAnimationFinalized() { }
 
     private void OnAnimatedSpriteAnimationFinished()
     {
@@ -505,11 +479,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
             return;
 
         var animationName = AnimatedSprite.Animation;
-        if (PrimaryActionController?.HandleAnimationFinished(this, animationName) == true)
-            return;
-
-        if (TryFinalizeDeathAnimation())
-            OnDeathAnimationFinalized();
+        PrimaryActionController?.HandleAnimationFinished(this, animationName);
     }
 
     private bool TryResolveBehaviorIntent(double delta, out ActorIntent winningIntent)
@@ -636,6 +606,39 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         _hasNavigationDestination = false;
         IsUsingNavigationPath = false;
         LastNavigationPathPosition = Vector2.Zero;
+    }
+
+    private void SpawnCorpse()
+    {
+        if (AnimatedSprite?.SpriteFrames == null)
+            return;
+
+        var parent = GetParent();
+        var corpseScene = ResolveCorpseScene();
+        if (parent == null || corpseScene == null)
+            return;
+
+        var corpse = corpseScene.Instantiate<Corpse>();
+        if (corpse == null)
+            return;
+
+        parent.AddChild(corpse);
+        corpse.Initialize(
+            AnimatedSprite.SpriteFrames,
+            DeathAnimation,
+            LastDirection,
+            GlobalPosition,
+            AnimatedSprite.Position,
+            AnimatedSprite.Scale,
+            AnimatedSprite.FlipH,
+            AnimatedSprite.FlipV,
+            ZIndex);
+    }
+
+    private static PackedScene ResolveCorpseScene()
+    {
+        _corpseScene ??= GD.Load<PackedScene>(DefaultCorpseScenePath);
+        return _corpseScene;
     }
 
 }
