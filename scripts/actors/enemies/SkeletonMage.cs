@@ -88,7 +88,6 @@ public partial class SkeletonMage : ActorBase, IAttackable, ITargetable
     private void StartDeath()
     {
         SetIsDead(true);
-        MarkDead();
         SpawnCorpseAndFree();
     }
 

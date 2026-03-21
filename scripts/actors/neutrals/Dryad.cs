@@ -49,7 +49,6 @@ public partial class Dryad : ActorBase, IAttackable, ITargetable
     private void StartDeath()
     {
         SetIsDead(true);
-        MarkDead();
         SpawnCorpseAndFree();
     }
 

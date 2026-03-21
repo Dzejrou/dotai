@@ -108,7 +108,6 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
     private void StartDeath()
     {
         SetIsDead(true);
-        MarkDead();
         SpawnCorpseAndFree();
     }
 

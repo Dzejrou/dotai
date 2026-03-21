@@ -19,9 +19,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     public StringName DeathAnimation { get; set; } = "falling-back-death";
 
     [Export]
-    public bool DisableCollisionOnDeath { get; set; } = true;
-
-    [Export]
     public float HomeReturnTolerance { get; set; } = 4.0f;
 
     public AnimatedSprite2D AnimatedSprite { get; private set; }
@@ -332,11 +329,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         }
     }
 
-    protected void MarkDead()
-    {
-        CurrentState = CombatUnitState.Dead;
-    }
-
     protected void ResetPrimaryActionController()
     {
         PrimaryActionController?.Cancel(this);
@@ -350,9 +342,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     protected void SpawnCorpseAndFree()
     {
         PrepareForRemoval();
-        if (DisableCollisionOnDeath && CollisionShape != null)
-            CollisionShape.SetDeferred("disabled", true);
-
         Velocity = Vector2.Zero;
         ResetPrimaryActionController();
         SpawnCorpse();

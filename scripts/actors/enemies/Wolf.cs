@@ -108,7 +108,6 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     private void StartDeath()
     {
         SetIsDead(true);
-        MarkDead();
         ClearTarget();
         _followSummonerBehavior?.CancelRecovery();
         SpawnCorpseAndFree();

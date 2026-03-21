@@ -170,7 +170,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     private void StartDeath()
     {
         SetIsDead(true);
-        MarkDead();
         ResolveSummonState()?.ClearCommandedTarget();
         _followSummonerBehavior?.CancelRecovery();
         ClearTarget();
