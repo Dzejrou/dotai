@@ -3,10 +3,10 @@ using Godot;
 [GlobalClass]
 public partial class Dryad : ActorBase, IAttackable, ITargetable
 {
-    private static readonly StringName HealAnimation = "slash";
+    private static readonly StringName HealAnimation = "cast";
 
     [Export]
-    public float HealRange { get; set; } = 48.0f;
+    public float HealRange { get; set; } = 148.0f;
 
     [Export]
     public float HealAcquisitionRange { get; set; } = 96.0f;

@@ -7,6 +7,7 @@ public sealed class HealActionController : ICombatActionController
     private readonly StringName _healAnimation;
     private readonly int _healAmount;
     private float _cooldownTimer;
+    private Node2D _pendingHealTarget;
 
     public HealActionController(float preferredRange, float actionCooldown, StringName healAnimation, int healAmount)
     {
@@ -62,14 +63,14 @@ public sealed class HealActionController : ICombatActionController
             actor.AnimatedSprite.SpriteFrames.HasAnimation(animationName) &&
             actor.AnimatedSprite.SpriteFrames.GetFrameCount(animationName) > 0)
         {
+            _pendingHealTarget = target;
             actor.AnimatedSprite.Play(animationName);
         }
         else
         {
-            actor.SetState(CombatUnitState.Idle);
+            ApplyPendingHeal(healable);
+            actor.FinishAttackState();
         }
-
-        healable.ApplyHealing(_healAmount);
     }
 
     public bool HandleAnimationFinished(ActorBase actor, StringName animationName)
@@ -77,6 +78,14 @@ public sealed class HealActionController : ICombatActionController
         if (!animationName.ToString().StartsWith(_healAnimation.ToString(), StringComparison.Ordinal))
             return false;
 
+        if (_pendingHealTarget is IHealable healable &&
+            ActorBase.IsStructurallyValidTarget(_pendingHealTarget) &&
+            healable.CanReceiveHealing)
+        {
+            ApplyPendingHeal(healable);
+        }
+
+        _pendingHealTarget = null;
         actor.FinishAttackState();
         return true;
     }
@@ -84,5 +93,14 @@ public sealed class HealActionController : ICombatActionController
     public void Cancel(ActorBase actor)
     {
         _cooldownTimer = 0.0f;
+        _pendingHealTarget = null;
+    }
+
+    private void ApplyPendingHeal(IHealable healable)
+    {
+        if (healable == null || !healable.CanReceiveHealing)
+            return;
+
+        healable.ApplyHealing(_healAmount);
     }
 }

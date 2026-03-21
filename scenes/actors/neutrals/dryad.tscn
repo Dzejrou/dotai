@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/neutrals/Dryad.cs" id="1_dryad_script"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/player_spriteframes.tres" id="2_player_frames"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/dryad_spriteframes.tres" id="2_dryad_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
 [ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="5_health_state"]
@@ -12,9 +12,10 @@ size = Vector2(16, 12)
 [node name="Dryad" type="CharacterBody2D"]
 z_index = -1
 script = ExtResource("1_dryad_script")
+DeathAnimation = &"death"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-sprite_frames = ExtResource("2_player_frames")
+sprite_frames = ExtResource("2_dryad_frames")
 animation = &"breathing-idle_south"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
