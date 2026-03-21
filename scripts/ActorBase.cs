@@ -3,7 +3,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable, ICombatStateOwner
+public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable
 {
     private const string BehaviorNodeTargetingPath = "Behaviors/Tier10_Targeting";
     private const string BehaviorNodeLeashPath = "Behaviors/Tier20_Leash";
@@ -26,7 +26,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     public AnimatedSprite2D AnimatedSprite { get; private set; }
     public CollisionShape2D CollisionShape { get; private set; }
     public NavigationAgent2D NavigationAgent { get; private set; }
-    public CombatState Combat { get; } = new();
+    public CombatState Combat { get; private set; }
     public Node2D CurrentTarget => Combat.CurrentTarget;
     public bool IsInCombat => Combat.IsInCombat;
     public bool IsUsingNavigationPath { get; private set; }
@@ -73,6 +73,9 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         CurrentHealth = ResolvedMaxHealth;
         IsDead = false;
         HomePosition = GlobalPosition;
+        Combat = GetNodeOrNull<CombatState>("CombatState");
+        if (Combat == null)
+            GD.PushError($"{GetPath()}: missing required CombatState child.");
         Combat.ClearTarget();
         Combat.ExitCombat();
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");

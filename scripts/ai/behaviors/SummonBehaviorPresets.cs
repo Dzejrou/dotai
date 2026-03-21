@@ -63,10 +63,9 @@ public static class SummonBehaviorPresets
             return null;
 
         var summonState = SummonState.ResolveFor(actor);
-        if (summonState?.Summoner is not ICombatStateOwner combatStateOwner)
+        var ownerCombat = CombatState.ResolveFor(summonState?.SummonerNode);
+        if (ownerCombat == null)
             return null;
-
-        var ownerCombat = combatStateOwner.Combat;
         if (!ownerCombat.IsInCombat)
             return null;
 

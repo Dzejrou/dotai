@@ -17,13 +17,9 @@ public partial class DebugSpawner : Node2D
     [Export]
     public SpawnCatalog SpawnCatalog { get; set; }
 
-    [Export]
-    public NodePath TargetPath { get; set; } = new NodePath("../Player");
-
     private readonly Dictionary<string, SpawnCatalogEntry> _entriesById = new();
     private readonly List<SpawnCatalogEntry> _orderedEntries = new();
     private readonly Dictionary<string, PreviewData> _previewById = new();
-    private Node2D _target;
     private string _pendingSpawnId;
     private Sprite2D _placementGhost;
     private Faction _selectedFaction = Factions.Enemies;
@@ -39,13 +35,6 @@ public partial class DebugSpawner : Node2D
 
     public override void _Ready()
     {
-        _target = GetNodeOrNull<Node2D>(TargetPath);
-        if (_target == null)
-            _target = GetParentOrNull<Node>()?.GetNodeOrNull<Node2D>("Player");
-
-        if (_target == null)
-            GD.PrintErr("DebugSpawner could not find target node.");
-
         BuildCatalogCache();
         BuildPreviewCache();
         EnsurePlacementGhost();
@@ -181,14 +170,6 @@ public partial class DebugSpawner : Node2D
             {
                 _lastSpawnFeedback = $"No {ToDisplayCase(_selectedFaction?.Key ?? Factions.Enemies.Key)} summoner found; spawned unsummoned.";
             }
-        }
-
-        if (spawnedNode is ActorBase actor &&
-            _target != null &&
-            actor.Faction != null &&
-            actor.Faction.IsHostileTo(Factions.ResolveForNode(_target)))
-        {
-            actor.SetTarget(_target);
         }
 
         var parent = GetParent();

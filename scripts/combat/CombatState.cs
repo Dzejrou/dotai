@@ -2,7 +2,8 @@ using Godot;
 
 using System;
 
-public sealed class CombatState
+[GlobalClass]
+public partial class CombatState : Node
 {
     public const float DefaultCombatTimeoutSeconds = 5.0f;
 
@@ -55,6 +56,17 @@ public sealed class CombatState
     public void ExitCombat()
     {
         _combatTimeRemaining = 0.0f;
+    }
+
+    public static CombatState ResolveFor(Node node)
+    {
+        if (node == null || !GodotObject.IsInstanceValid(node))
+            return null;
+
+        if (node is CombatState combatState)
+            return combatState;
+
+        return node.GetNodeOrNull<CombatState>("CombatState");
     }
 
     private static bool IsStructurallyValidTarget(Node2D target)

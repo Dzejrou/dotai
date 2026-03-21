@@ -19,10 +19,10 @@ public struct DamageInfo
 
     public void RegisterHit(Node2D receiver, bool setReceiverTargetToSource = true)
     {
-        if (receiver is ICombatStateOwner receiverCombatOwner)
-            receiverCombatOwner.Combat.RegisterIncomingDamage(Source as Node2D, setReceiverTargetToSource);
+        var receiverCombatState = CombatState.ResolveFor(receiver);
+        receiverCombatState?.RegisterIncomingDamage(Source as Node2D, setReceiverTargetToSource);
 
-        if (Source is ICombatStateOwner sourceCombatOwner)
-            sourceCombatOwner.Combat.RegisterOutgoingDamage(receiver);
+        var sourceCombatState = CombatState.ResolveFor(Source);
+        sourceCombatState?.RegisterOutgoingDamage(receiver);
     }
 }

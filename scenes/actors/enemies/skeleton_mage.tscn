@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/enemies/SkeletonMage.cs" id="1_skeleton_mage"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/skeleton_mage_spriteframes.tres" id="2_skeleton_mage_frames"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="5_leash_behavior"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="6_target_combat"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="7_return_home"]
+[ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -29,6 +30,9 @@ position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_l5f1m")
 
 [node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]
+
+[node name="CombatState" type="Node" parent="."]
+script = ExtResource("8_combat_state")
 
 [node name="Behaviors" type="Node" parent="."]
 

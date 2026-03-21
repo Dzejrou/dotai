@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummoner, IFactionMember, IHealable, ICombatStateOwner
+public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummoner, IFactionMember, IHealable
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -88,7 +88,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     public bool CanReceiveHealing => !_isDead && _health < MaxHealth;
     public bool CanBeTargeted => !_isDead;
     public Faction Faction => Factions.Allies;
-    public CombatState Combat { get; } = new();
+    public CombatState Combat { get; private set; }
     public Node2D SummonerNode => this;
     public bool IsSummonerActive => !_isDead && IsInsideTree();
     public PlayerTargetingState Targeting { get; } = new();
@@ -97,6 +97,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     {
         _health = Math.Max(1, MaxHealth);
         _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+        Combat = GetNodeOrNull<CombatState>("CombatState");
+        if (Combat == null)
+            GD.PushError($"{GetPath()}: missing required CombatState child.");
         SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Allies);
