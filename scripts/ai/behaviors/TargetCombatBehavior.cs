@@ -37,7 +37,7 @@ public partial class TargetCombatBehavior : Node, IActorBehavior
     {
         intent = ActorIntent.None;
 
-        var target = actor.CurrentTarget;
+        var target = actor.Target;
         var actionController = actor.PrimaryActionController;
         if (target == null || actionController == null)
             return false;

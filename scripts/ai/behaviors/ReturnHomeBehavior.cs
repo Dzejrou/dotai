@@ -32,7 +32,7 @@ public partial class ReturnHomeBehavior : Node, IActorBehavior
     {
         intent = ActorIntent.None;
 
-        if (actor.CurrentTarget != null)
+        if (actor.Target != null)
             return false;
 
         if (IsAtDestination(actor))

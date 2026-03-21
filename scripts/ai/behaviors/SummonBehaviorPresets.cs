@@ -66,10 +66,10 @@ public static class SummonBehaviorPresets
         var ownerCombat = CombatState.ResolveFor(summonState?.SummonerNode);
         if (ownerCombat == null)
             return null;
-        if (!ownerCombat.IsInCombat)
+        if (!ownerCombat.InCombat)
             return null;
 
-        var ownerCombatTarget = ownerCombat.CurrentTarget;
+        var ownerCombatTarget = ownerCombat.Target;
         return targetValidator(actor, ownerCombatTarget) ? ownerCombatTarget : null;
     }
 

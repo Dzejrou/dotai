@@ -13,7 +13,7 @@ public partial class OwnerCombatAssistBehavior : Node, IActorBehavior
     {
         intent = ActorIntent.None;
 
-        if (actor.CurrentTarget != null)
+        if (actor.Target != null)
             return false;
 
         var ownerCombatTarget = SummonBehaviorPresets.GetOwnerCombatAssistTarget(actor, ValidateTarget);

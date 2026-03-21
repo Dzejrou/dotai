@@ -24,25 +24,24 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     public AnimatedSprite2D AnimatedSprite { get; private set; }
     public CollisionShape2D CollisionShape { get; private set; }
     public NavigationAgent2D NavigationAgent { get; private set; }
-    public CombatState Combat { get; private set; }
-    public Node2D CurrentTarget => Combat.CurrentTarget;
-    public bool IsInCombat => Combat.IsInCombat;
+    public CombatState Combat => _combat;
+    public Node2D Target => _combat.Target;
+    public bool InCombat => _combat.InCombat;
     public bool IsUsingNavigationPath { get; private set; }
     public Vector2 LastNavigationPathPosition { get; private set; }
     public float MovementSpeed { get; private set; } = 1.0f;
     public string LastDirection { get; private set; } = "south";
     public Vector2 HomePosition { get; private set; }
-    public int CurrentHealth => ResolveHealthState()?.Current ?? 0;
-    public bool IsDead => ResolveHealthState()?.IsDead == true;
+    public int CurrentHealth => _health.Current;
+    public bool IsDead => _health.IsDead;
     public int ResolvedMaxHealth
     {
         get
         {
             var desiredMaxHealth = Math.Max(1, MaxHealthValue);
-            var healthState = ResolveHealthState();
-            if (healthState != null && healthState.Max != desiredMaxHealth)
-                healthState.SetMax(desiredMaxHealth);
-            return healthState?.Max ?? desiredMaxHealth;
+            if (_health.Max != desiredMaxHealth)
+                _health.SetMax(desiredMaxHealth);
+            return _health.Max;
         }
     }
     public int MaxHealableHealth => ResolvedMaxHealth;
@@ -60,8 +59,8 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     private bool _hasNavigationDestination;
     private Vector2 _lastNavigationDestination;
     private ActorHUD _actorHud;
-    private HealthState _healthState;
-    private bool _attemptedHealthStateResolve;
+    private HealthState _health;
+    private CombatState _combat;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
 
@@ -85,16 +84,11 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         }
 
         HomePosition = GlobalPosition;
-        Combat = GetNodeOrNull<CombatState>("CombatState");
-        if (Combat == null)
-            GD.PushError($"{GetPath()}: missing required CombatState child.");
-        Combat.ClearTarget();
-        Combat.ExitCombat();
-        var healthState = ResolveHealthState();
-        if (healthState == null)
-            GD.PushError($"{GetPath()}: missing required HealthState child.");
-        else
-            healthState.Initialize(Math.Max(1, MaxHealthValue));
+        _combat = GetNode<CombatState>("CombatState");
+        _combat.ClearTarget();
+        _combat.ExitCombat();
+        _health = GetNode<HealthState>("HealthState");
+        _health.Initialize(Math.Max(1, MaxHealthValue));
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
@@ -114,13 +108,13 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
             return;
         }
 
-        Combat.Update(delta);
+        _combat.Update(delta);
 
         PrimaryActionController?.Update(this, delta);
         foreach (var tickBehavior in _tickBehaviors)
             tickBehavior.Update(this, delta);
 
-        if (!IsStructurallyValidTarget(CurrentTarget))
+        if (!IsStructurallyValidTarget(Target))
             ClearTarget();
 
         if (CurrentState == CombatUnitState.Attacking)
@@ -149,12 +143,12 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
     public void SetTarget(Node2D target)
     {
-        Combat.SetTarget(target);
+        _combat.SetTarget(target);
     }
 
     public void ClearTarget()
     {
-        Combat.ClearTarget();
+        _combat.ClearTarget();
     }
 
     public void SetState(CombatUnitState state)
@@ -180,7 +174,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         if (CurrentState != CombatUnitState.Attacking)
             return;
 
-        SetState(CurrentTarget != null ? CombatUnitState.PursuingTarget : CombatUnitState.Idle);
+        SetState(Target != null ? CombatUnitState.PursuingTarget : CombatUnitState.Idle);
     }
 
     public bool IsAtHome()
@@ -198,7 +192,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         if (amount <= 0 || IsDead)
             return;
 
-        var healedAmount = ResolveHealthState()?.ApplyHealing(amount) ?? 0;
+        var healedAmount = _health.ApplyHealing(amount);
         if (healedAmount <= 0)
             return;
 
@@ -320,12 +314,12 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
     protected void SetIsDead(bool value)
     {
-        ResolveHealthState()?.SetDead(value);
+        _health.SetDead(value);
         if (value)
         {
             CleanupNavigationForInactiveState();
-            Combat.ClearTarget();
-            Combat.ExitCombat();
+            _combat.ClearTarget();
+            _combat.ExitCombat();
         }
     }
 
@@ -390,32 +384,15 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
             break;
         }
 
-        var healthState = ResolveHealthState();
-        if (healthState == null)
-            return false;
-
-        damage = healthState.ApplyDamage(damageInfo.Amount);
+        damage = _health.ApplyDamage(damageInfo.Amount);
         RefreshHealthLabel();
         damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
 
-        died = healthState.IsDead;
+        died = _health.IsDead;
         if (died)
             SetIsDead(true);
 
         return true;
-    }
-
-    private HealthState ResolveHealthState()
-    {
-        if (_healthState != null)
-            return _healthState;
-
-        if (_attemptedHealthStateResolve)
-            return null;
-
-        _attemptedHealthStateResolve = true;
-        _healthState = GetNodeOrNull<HealthState>("HealthState");
-        return _healthState;
     }
 
     private void ApplyNavigationDebugState(bool enabled)
@@ -500,10 +477,10 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
     private void ExecuteIntent(ActorIntent intent, double delta)
     {
-        if (intent.UsePrimaryAction && PrimaryActionController != null && CurrentTarget != null)
+        if (intent.UsePrimaryAction && PrimaryActionController != null && Target != null)
         {
             Velocity = Vector2.Zero;
-            PrimaryActionController.StartAction(this, CurrentTarget);
+            PrimaryActionController.StartAction(this, Target);
             return;
         }
 

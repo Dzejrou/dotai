@@ -32,7 +32,7 @@ public static class ActorBehaviorPresets
                 1.0f,
                 0.6f,
                 8.0f,
-                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
+                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.Target != null,
                 pursuitStuckCallback),
         };
 
@@ -153,7 +153,7 @@ public static class ActorBehaviorPresets
                 1.0f,
                 0.6f,
                 8.0f,
-                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.CurrentTarget != null,
+                actor => actor.CurrentState == CombatUnitState.PursuingTarget && actor.Target != null,
                 pursuitStuckCallback),
         };
 

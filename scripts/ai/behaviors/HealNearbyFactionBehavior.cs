@@ -26,7 +26,7 @@ public sealed class HealNearbyFactionBehavior : IActorBehavior
         {
             intent = new ActorIntent
             {
-                ChangeTarget = actor.CurrentTarget != null,
+                ChangeTarget = actor.Target != null,
                 Target = null,
                 StopMovement = true,
                 State = CombatUnitState.Idle,
@@ -34,7 +34,7 @@ public sealed class HealNearbyFactionBehavior : IActorBehavior
             return true;
         }
 
-        if (target != actor.CurrentTarget)
+        if (target != actor.Target)
         {
             intent = new ActorIntent
             {
@@ -62,7 +62,7 @@ public sealed class HealNearbyFactionBehavior : IActorBehavior
 
     private Node2D ResolveHealingTarget(ActorBase actor)
     {
-        var currentTarget = actor.CurrentTarget;
+        var currentTarget = actor.Target;
         if (IsValidHealingTarget(actor, currentTarget))
             return currentTarget;
 

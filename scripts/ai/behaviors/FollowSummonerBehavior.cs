@@ -83,7 +83,7 @@ public partial class FollowSummonerBehavior : Node, IActorBehavior
             return false;
 
         var distanceToSummoner = actor.GlobalPosition.DistanceTo(summonerNode.GlobalPosition);
-        if ((actor.CurrentTarget != null && ShouldPrioritizeLeashReturn(actor)) || _recoveryRequested)
+        if ((actor.Target != null && ShouldPrioritizeLeashReturn(actor)) || _recoveryRequested)
         {
             if (distanceToSummoner <= ResolvedStopLeashDistance)
             {
@@ -110,7 +110,7 @@ public partial class FollowSummonerBehavior : Node, IActorBehavior
 
             intent = new ActorIntent
             {
-                ChangeTarget = actor.CurrentTarget != null,
+                ChangeTarget = actor.Target != null,
                 Target = null,
                 Destination = summonerNode.GlobalPosition,
                 SpeedMultiplier = ResolvedLeashSpeedMultiplier,
@@ -121,7 +121,7 @@ public partial class FollowSummonerBehavior : Node, IActorBehavior
 
         _recoveryTimer = 0.0f;
 
-        if (!FollowWhenIdle || actor.CurrentTarget != null)
+        if (!FollowWhenIdle || actor.Target != null)
             return false;
 
         var idleAnchor = GetAnchor(actor);

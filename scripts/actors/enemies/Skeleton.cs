@@ -133,7 +133,7 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         ResolveSummonState()?.SetCommandedTarget(target);
         _followSummonerBehavior?.CancelRecovery();
 
-        if (forceRetarget || !HasUsableCurrentTarget())
+        if (forceRetarget || !HasUsableTarget())
             SetTarget(target);
     }
 
@@ -177,11 +177,11 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         SpawnCorpseAndFree();
     }
 
-    private bool HasUsableCurrentTarget()
+    private bool HasUsableTarget()
     {
-        return CurrentTarget != null &&
-               IsStructurallyValidTarget(CurrentTarget) &&
-               CurrentTarget is ITargetable targetable &&
+        return Target != null &&
+               IsStructurallyValidTarget(Target) &&
+               Target is ITargetable targetable &&
                targetable.CanBeTargeted;
     }
 

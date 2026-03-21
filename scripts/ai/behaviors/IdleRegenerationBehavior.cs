@@ -24,7 +24,7 @@ public sealed class IdleRegenerationBehavior : IActorBehavior, IActorTickBehavio
             actor.IsDead ||
             actor.CurrentHealth >= actor.ResolvedMaxHealth ||
             actor.CurrentState != CombatUnitState.Idle ||
-            actor.CurrentTarget != null)
+            actor.Target != null)
         {
             _timer = 0.0f;
             return;

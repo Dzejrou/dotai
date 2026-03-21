@@ -45,9 +45,9 @@ public sealed class PursuitStuckRecoveryBehavior : IActorBehavior, IActorTickBeh
             return;
         }
 
-        if (!ReferenceEquals(_trackedTarget, actor.CurrentTarget))
+        if (!ReferenceEquals(_trackedTarget, actor.Target))
         {
-            _trackedTarget = actor.CurrentTarget;
+            _trackedTarget = actor.Target;
             _hasProgressPosition = true;
             _lastProgressPosition = actor.GlobalPosition;
             _stuckTimer = 0.0f;

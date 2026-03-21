@@ -51,10 +51,10 @@ public sealed class SingleOwnedSummonBehavior : IActorBehavior, IActorTickBehavi
 
         if (_resummonCooldownTimer > 0.0f ||
             actor.CurrentState == CombatUnitState.Attacking ||
-            actor.CurrentTarget == null ||
-            actor.CurrentTarget is not ITargetable targetable ||
+            actor.Target == null ||
+            actor.Target is not ITargetable targetable ||
             !targetable.CanBeTargeted ||
-            actor.GlobalPosition.DistanceTo(actor.CurrentTarget.GlobalPosition) > _triggerRange)
+            actor.GlobalPosition.DistanceTo(actor.Target.GlobalPosition) > _triggerRange)
         {
             return;
         }
@@ -69,8 +69,8 @@ public sealed class SingleOwnedSummonBehavior : IActorBehavior, IActorTickBehavi
             return;
 
         var summonDirection = DirectionHelper.GetDirectionVector(actor.LastDirection);
-        if (summonDirection == Vector2.Zero && actor.CurrentTarget.GlobalPosition != actor.GlobalPosition)
-            summonDirection = (actor.CurrentTarget.GlobalPosition - actor.GlobalPosition).Normalized();
+        if (summonDirection == Vector2.Zero && actor.Target.GlobalPosition != actor.GlobalPosition)
+            summonDirection = (actor.Target.GlobalPosition - actor.GlobalPosition).Normalized();
         if (summonDirection == Vector2.Zero)
             summonDirection = Vector2.Right;
 

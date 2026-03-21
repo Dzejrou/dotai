@@ -62,7 +62,7 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
     {
         intent = ActorIntent.None;
 
-        if (!_isReturningHome && actor.CurrentTarget != null && !IsTargetWithinLossRange(actor, actor.CurrentTarget))
+        if (!_isReturningHome && actor.Target != null && !IsTargetWithinLossRange(actor, actor.Target))
         {
             if (EvadeOnAggroLoss)
             {

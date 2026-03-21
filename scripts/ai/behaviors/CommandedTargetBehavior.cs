@@ -12,7 +12,7 @@ public partial class CommandedTargetBehavior : Node, IActorBehavior
     {
         intent = ActorIntent.None;
 
-        if (actor.CurrentTarget != null)
+        if (actor.Target != null)
             return false;
 
         var summonState = SummonState.ResolveFor(actor);

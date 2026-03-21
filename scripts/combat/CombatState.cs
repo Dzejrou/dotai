@@ -9,14 +9,14 @@ public partial class CombatState : Node
 
     private float _combatTimeRemaining;
 
-    public Node2D CurrentTarget { get; private set; }
-    public bool IsInCombat => _combatTimeRemaining > 0.0f;
+    public Node2D Target { get; private set; }
+    public bool InCombat => _combatTimeRemaining > 0.0f;
     public float CombatTimeRemaining => _combatTimeRemaining;
 
     public void Update(double delta)
     {
-        if (!IsStructurallyValidTarget(CurrentTarget))
-            CurrentTarget = null;
+        if (!IsStructurallyValidTarget(Target))
+            Target = null;
 
         if (_combatTimeRemaining <= 0.0f)
             return;
@@ -26,12 +26,12 @@ public partial class CombatState : Node
 
     public void SetTarget(Node2D target)
     {
-        CurrentTarget = IsStructurallyValidTarget(target) ? target : null;
+        Target = IsStructurallyValidTarget(target) ? target : null;
     }
 
     public void ClearTarget()
     {
-        CurrentTarget = null;
+        Target = null;
     }
 
     public void RefreshCombat(float durationSeconds = DefaultCombatTimeoutSeconds)
