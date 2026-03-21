@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUnit, IOffensiveSummon, IFactionAssignable
+public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionAssignable
 {
     private const int MaxFormationSlots = 4;
 
@@ -125,18 +125,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         return ResolveSummonState()?.HasValidSummoner() == true;
     }
 
-    public void CommandAttackTarget(Node2D target, bool forceRetarget = false)
-    {
-        if (!IsSummoned() || !IsValidCommandedTarget(target))
-            return;
-
-        ResolveSummonState()?.SetCommandedTarget(target);
-        _followSummonerBehavior?.CancelRecovery();
-
-        if (forceRetarget || !HasUsableTarget())
-            SetTarget(target);
-    }
-
     private IActorBehavior[] CreateDefaultBehaviors()
     {
         var preset = ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
@@ -170,7 +158,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     private void StartDeath()
     {
         SetIsDead(true);
-        ResolveSummonState()?.ClearCommandedTarget();
         _followSummonerBehavior?.CancelRecovery();
         ClearTarget();
         ClearSameFactionCollisionExceptions();
@@ -195,17 +182,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
             return true;
 
         return summonerNode.GlobalPosition.DistanceTo(target.GlobalPosition) <= Math.Max(LeashDistance, 0.0f);
-    }
-
-    private bool IsValidCommandedTarget(Node2D target)
-    {
-        if (!IsStructurallyValidTarget(target))
-            return false;
-
-        if (target is not IAttackable || target is not ITargetable targetable || !targetable.CanBeTargeted)
-            return false;
-
-        return CanAcquireTargetAsSummon(target);
     }
 
     private Node2D GetSummonerNode()
