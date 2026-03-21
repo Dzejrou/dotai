@@ -71,8 +71,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     [Export]
     public float TabTargetRange { get; set; } = 220.0f;
 
-    private int _health;
     private bool _isDead;
+    private HealthState _healthState;
     private AnimatedSprite2D _animatedSprite;
     private string _lastDirection = "south";
     private readonly RandomNumberGenerator _random = new();
@@ -83,9 +83,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     private float _healthRegenDelayTimer;
     private ActorHUD _activeTargetHud;
 
-    public int CurrentHealth => _health;
-    public int MaxHealableHealth => MaxHealth;
-    public bool CanReceiveHealing => !_isDead && _health < MaxHealth;
+    public int CurrentHealth => ResolveHealthState()?.Current ?? 0;
+    public int MaxHealableHealth => ResolveHealthState()?.Max ?? Math.Max(1, MaxHealth);
+    public bool CanReceiveHealing => !_isDead && CurrentHealth < MaxHealableHealth;
     public bool CanBeTargeted => !_isDead;
     public Faction Faction => Factions.Allies;
     public CombatState Combat { get; private set; }
@@ -95,16 +95,20 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
 
     public override void _Ready()
     {
-        _health = Math.Max(1, MaxHealth);
         _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
         Combat = GetNodeOrNull<CombatState>("CombatState");
         if (Combat == null)
             GD.PushError($"{GetPath()}: missing required CombatState child.");
+        var healthState = ResolveHealthState();
+        if (healthState == null)
+            GD.PushError($"{GetPath()}: missing required HealthState child.");
+        else
+            healthState.Initialize(Math.Max(1, MaxHealth));
         SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Allies);
 
-        EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
+        EmitHealthChanged();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -294,16 +298,19 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (_isDead)
             return;
 
-        var damage = Math.Max(1, damageInfo.Amount);
-        _health = Math.Max(0, _health - damage);
+        var healthState = ResolveHealthState();
+        if (healthState == null)
+            return;
+
+        var damage = healthState.ApplyDamage(damageInfo.Amount);
         damageInfo.RegisterHit(this, setReceiverTargetToSource: true);
 
         ShowFloatingDamageNumber(damage);
-        EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
+        EmitHealthChanged();
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
-        GD.Print($"Player health: {_health}/{MaxHealth} (took {damage})");
+        GD.Print($"Player health: {CurrentHealth}/{MaxHealableHealth} (took {damage})");
 
-        if (_health <= 0)
+        if (healthState.IsDead)
         {
             _isDead = true;
             Combat.ClearTarget();
@@ -320,13 +327,12 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (_isDead || amount <= 0)
             return;
 
-        var recovered = Math.Clamp(amount, 0, MaxHealth - _health);
+        var recovered = ResolveHealthState()?.ApplyHealing(amount) ?? 0;
         if (recovered <= 0)
             return;
 
-        _health += recovered;
         ShowFloatingHealingNumber(recovered);
-        EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
+        EmitHealthChanged();
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
@@ -588,7 +594,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
 
     private void HandleHealthRegeneration(float delta)
     {
-        if (_health >= MaxHealth)
+        if (CurrentHealth >= MaxHealableHealth)
         {
             _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
             return;
@@ -598,13 +604,13 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (_healthRegenTimer > 0.0f)
             return;
 
-        if (_health < MaxHealth)
+        if (CurrentHealth < MaxHealableHealth)
         {
-            var missingHealth = MaxHealth - _health;
+            var missingHealth = MaxHealableHealth - CurrentHealth;
             var recovered = Math.Clamp(HealthRegenerationAmount, 1, missingHealth);
             ShowFloatingHealingNumber(recovered);
-            _health += recovered;
-            EmitSignal(SignalName.HealthChanged, _health, MaxHealth);
+            ResolveHealthState()?.ApplyHealing(recovered);
+            EmitHealthChanged();
         }
 
         var interval = Math.Max(HealthRegenerationInterval, 0.0f);
@@ -635,6 +641,17 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             return;
 
         FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+    }
+
+    private HealthState ResolveHealthState()
+    {
+        _healthState ??= GetNodeOrNull<HealthState>("HealthState");
+        return _healthState;
+    }
+
+    private void EmitHealthChanged()
+    {
+        EmitSignal(SignalName.HealthChanged, CurrentHealth, MaxHealableHealth);
     }
 
 }

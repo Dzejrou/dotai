@@ -46,7 +46,7 @@ public partial class World : Node2D
         {
             _player.Connect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
             _player.Connect(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
-            EmitSignal(SignalName.PlayerHealthChanged, _player.CurrentHealth, _player.MaxHealth);
+            EmitSignal(SignalName.PlayerHealthChanged, _player.CurrentHealth, _player.MaxHealableHealth);
         }
     }
 

@@ -32,7 +32,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     public float MovementSpeed { get; private set; } = 1.0f;
     public string LastDirection { get; private set; } = "south";
     public Vector2 HomePosition { get; private set; }
-    public int CurrentHealth => ResolveHealthState()?.CurrentHealth ?? 0;
+    public int CurrentHealth => ResolveHealthState()?.Current ?? 0;
     public bool IsDead => ResolveHealthState()?.IsDead == true;
     public int ResolvedMaxHealth
     {
@@ -40,9 +40,9 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         {
             var desiredMaxHealth = Math.Max(1, MaxHealthValue);
             var healthState = ResolveHealthState();
-            if (healthState != null && healthState.MaxHealth != desiredMaxHealth)
-                healthState.SetMaxHealth(desiredMaxHealth);
-            return healthState?.MaxHealth ?? desiredMaxHealth;
+            if (healthState != null && healthState.Max != desiredMaxHealth)
+                healthState.SetMax(desiredMaxHealth);
+            return healthState?.Max ?? desiredMaxHealth;
         }
     }
     public int MaxHealableHealth => ResolvedMaxHealth;

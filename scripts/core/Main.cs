@@ -78,7 +78,7 @@ public partial class Main : Node2D
         var playerPath = _world != null && !_world.PlayerPath.IsEmpty ? _world.PlayerPath : new NodePath("Player");
         var player = _world?.GetNodeOrNull<Player>(playerPath);
         if (player != null)
-            UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealth);
+            UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealableHealth);
         else
             UpdatePlayerHealthHud(0, 0);
 
