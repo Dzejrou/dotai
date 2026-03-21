@@ -34,9 +34,19 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     public float MovementSpeed { get; private set; } = 1.0f;
     public string LastDirection { get; private set; } = "south";
     public Vector2 HomePosition { get; private set; }
-    public int CurrentHealth { get; private set; }
-    public bool IsDead { get; private set; }
-    public int ResolvedMaxHealth => Math.Max(1, MaxHealthValue);
+    public int CurrentHealth => ResolveHealthState()?.CurrentHealth ?? 0;
+    public bool IsDead => ResolveHealthState()?.IsDead == true;
+    public int ResolvedMaxHealth
+    {
+        get
+        {
+            var desiredMaxHealth = Math.Max(1, MaxHealthValue);
+            var healthState = ResolveHealthState();
+            if (healthState != null && healthState.MaxHealth != desiredMaxHealth)
+                healthState.SetMaxHealth(desiredMaxHealth);
+            return healthState?.MaxHealth ?? desiredMaxHealth;
+        }
+    }
     public int MaxHealableHealth => ResolvedMaxHealth;
     public bool CanReceiveHealing => !IsDead && CurrentHealth < ResolvedMaxHealth;
     public ICombatActionController PrimaryActionController { get; private set; }
@@ -52,6 +62,8 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     private bool _hasNavigationDestination;
     private Vector2 _lastNavigationDestination;
     private ActorHUD _actorHud;
+    private HealthState _healthState;
+    private bool _attemptedHealthStateResolve;
 
     protected abstract int MaxHealthValue { get; }
 
@@ -70,14 +82,17 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
             NavigationAgent.TargetDesiredDistance = DefaultTargetDesiredDistance;
         }
 
-        CurrentHealth = ResolvedMaxHealth;
-        IsDead = false;
         HomePosition = GlobalPosition;
         Combat = GetNodeOrNull<CombatState>("CombatState");
         if (Combat == null)
             GD.PushError($"{GetPath()}: missing required CombatState child.");
         Combat.ClearTarget();
         Combat.ExitCombat();
+        var healthState = ResolveHealthState();
+        if (healthState == null)
+            GD.PushError($"{GetPath()}: missing required HealthState child.");
+        else
+            healthState.Initialize(Math.Max(1, MaxHealthValue));
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
@@ -180,12 +195,12 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         if (amount <= 0 || IsDead)
             return;
 
-        var clampedHealing = Math.Min(amount, ResolvedMaxHealth - CurrentHealth);
-        if (clampedHealing <= 0)
+        var healedAmount = ResolveHealthState()?.ApplyHealing(amount) ?? 0;
+        if (healedAmount <= 0)
             return;
 
-        SetCurrentHealth(CurrentHealth + clampedHealing);
-        ShowFloatingHealingNumber(clampedHealing);
+        RefreshHealthLabel();
+        ShowFloatingHealingNumber(healedAmount);
     }
 
     public void PlayIdleIfAvailable()
@@ -300,15 +315,9 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         Factions.ApplyCombatGroup(this, Faction);
     }
 
-    protected void SetCurrentHealth(int value)
-    {
-        CurrentHealth = Math.Clamp(value, 0, ResolvedMaxHealth);
-        RefreshHealthLabel();
-    }
-
     protected void SetIsDead(bool value)
     {
-        IsDead = value;
+        ResolveHealthState()?.SetDead(value);
         if (value)
         {
             Combat.ClearTarget();
@@ -368,15 +377,32 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
             break;
         }
 
-        damage = Math.Max(1, damageInfo.Amount);
-        SetCurrentHealth(CurrentHealth - damage);
+        var healthState = ResolveHealthState();
+        if (healthState == null)
+            return false;
+
+        damage = healthState.ApplyDamage(damageInfo.Amount);
+        RefreshHealthLabel();
         damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
 
-        died = CurrentHealth <= 0;
+        died = healthState.IsDead;
         if (died)
             SetIsDead(true);
 
         return true;
+    }
+
+    private HealthState ResolveHealthState()
+    {
+        if (_healthState != null)
+            return _healthState;
+
+        if (_attemptedHealthStateResolve)
+            return null;
+
+        _attemptedHealthStateResolve = true;
+        _healthState = GetNodeOrNull<HealthState>("HealthState");
+        return _healthState;
     }
 
     protected bool TryFinalizeDeathAnimation()

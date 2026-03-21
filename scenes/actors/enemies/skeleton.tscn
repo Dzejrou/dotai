@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="11_leash_behavior"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="12_return_home"]
 [ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="13_combat_state"]
+[ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="14_health_state"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
 radius = 5.0
@@ -43,6 +44,9 @@ script = ExtResource("4_r8f5n")
 
 [node name="CombatState" type="Node" parent="."]
 script = ExtResource("13_combat_state")
+
+[node name="HealthState" type="Node" parent="."]
+script = ExtResource("14_health_state")
 
 [node name="SummonState" type="Node" parent="." unique_id=463069521]
 script = ExtResource("5_summon_state")

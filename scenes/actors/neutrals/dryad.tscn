@@ -4,6 +4,7 @@
 [ext_resource type="SpriteFrames" path="res://resources/animations/player_spriteframes.tres" id="2_player_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
+[ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="5_health_state"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
@@ -24,3 +25,6 @@ shape = SubResource("RectangleShape2D_dryad")
 
 [node name="CombatState" type="Node" parent="."]
 script = ExtResource("4_combat_state")
+
+[node name="HealthState" type="Node" parent="."]
+script = ExtResource("5_health_state")
