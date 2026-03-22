@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/enemies/Ogre.cs" id="1_ogre"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/ogre_spriteframes.tres" id="2_ogre_frames"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="7_return_home"]
 [ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
 [ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
+[ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ogre"]
 radius = 6.0
@@ -37,6 +38,10 @@ script = ExtResource("8_combat_state")
 
 [node name="HealthState" type="Node" parent="."]
 script = ExtResource("9_health_state")
+
+[node name="FactionState" type="Node" parent="."]
+script = ExtResource("10_faction_state")
+FactionKey = "enemies"
 
 [node name="Behaviors" type="Node" parent="."]
 

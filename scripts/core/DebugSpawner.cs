@@ -148,8 +148,8 @@ public partial class DebugSpawner : Node2D
         if (spawnedNode == null)
             return null;
 
-        if (spawnedNode is IFactionAssignable factionAssignable)
-            factionAssignable.SetFaction(_selectedFaction);
+        var factionState = FactionState.ResolveFor(spawnedNode);
+        factionState?.SetFaction(_selectedFaction);
 
         var parent = GetParent();
         if (parent != null)

@@ -26,8 +26,6 @@ public partial class Ogre : ActorBase, IAttackable, ITargetable
     [Export]
     public int MaxAttackDamage { get; set; } = 4;
 
-    public override Faction Faction => Factions.Enemies;
-
     public override void _Ready()
     {
         InitializeActor(
@@ -35,7 +33,6 @@ public partial class Ogre : ActorBase, IAttackable, ITargetable
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
-        ApplyFactionCombatGroup();
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
 
         var preset = ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();

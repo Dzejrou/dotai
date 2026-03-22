@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class Wolf : ActorBase, IAttackable, ITargetable, IFactionAssignable
+public partial class Wolf : ActorBase, IAttackable, ITargetable
 {
     [Export]
     public float Speed { get; set; } = 76.0f;
@@ -25,8 +25,6 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, IFactionAssigna
     public int MaxAttackDamage { get; set; } = 3;
 
     public bool CanBeTargeted => !IsDead;
-    public override Faction Faction => _faction;
-    private Faction _faction = Factions.Enemies;
 
     public override void _Ready()
     {
@@ -34,21 +32,10 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, IFactionAssigna
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
-        SetFaction(_faction);
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
         ConfigureBehaviors(CreateDefaultBehaviors());
         PlayIdleIfAvailable();
-    }
-
-    public void SetFaction(Faction faction)
-    {
-        _faction = faction ?? Factions.Enemies;
-        if (IsInsideTree())
-        {
-            ApplyFactionCombatGroup();
-            RefreshHealthLabel();
-        }
     }
 
     public void ApplyDamage(DamageInfo damageInfo)

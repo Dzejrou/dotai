@@ -21,14 +21,12 @@ public partial class Dryad : ActorBase, IAttackable, ITargetable
     public int Health { get; set; } = 18;
 
     public bool CanBeTargeted => !IsDead;
-    public override Faction Faction => Factions.Neutral;
 
     public override void _Ready()
     {
         InitializeActor(
             GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"));
-        ApplyFactionCombatGroup();
         SetPrimaryActionController(new HealActionController(HealRange, HealCooldown, HealAnimation, HealAmount));
 
         // TODO: Add wandering/support positioning once the first healer pass is stable.

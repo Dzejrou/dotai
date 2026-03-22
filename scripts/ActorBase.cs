@@ -35,6 +35,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     public Vector2 HomePosition { get; private set; }
     public int CurrentHealth => _health.Current;
     public bool IsDead => _health.IsDead;
+    public Faction Faction => _faction.Current;
     public int ResolvedMaxHealth
     {
         get
@@ -52,8 +53,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     [Export]
     public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
-    public abstract Faction Faction { get; }
-
     private readonly List<IActorBehavior> _behaviors = new();
     private readonly List<IActorTickBehavior> _tickBehaviors = new();
     private readonly List<IActorDamageInterceptor> _damageInterceptors = new();
@@ -62,6 +61,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     private ActorHUD _actorHud;
     private HealthState _health;
     private CombatState _combat;
+    private FactionState _faction;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
 
@@ -90,6 +90,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         _combat.ExitCombat();
         _health = GetNode<HealthState>("HealthState");
         _health.Initialize(Math.Max(1, MaxHealthValue));
+        _faction = GetNode<FactionState>("FactionState");
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
@@ -185,7 +186,12 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
     public bool IsHostileTo(Node target)
     {
-        return Faction != null && Faction.IsHostileTo(Factions.ResolveForNode(target));
+        return _faction.IsHostileTo(target);
+    }
+
+    public bool IsFriendlyTo(Node target)
+    {
+        return _faction.IsFriendlyTo(target);
     }
 
     public void ApplyHealing(int amount)
@@ -306,11 +312,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     protected void SetMovementSpeed(float speed)
     {
         MovementSpeed = Math.Max(0.0f, speed);
-    }
-
-    protected void ApplyFactionCombatGroup()
-    {
-        Factions.ApplyCombatGroup(this, Faction);
     }
 
     protected void SetIsDead(bool value)

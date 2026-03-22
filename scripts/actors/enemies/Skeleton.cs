@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class Skeleton : ActorBase, IAttackable, ITargetable, IFactionAssignable
+public partial class Skeleton : ActorBase, IAttackable, ITargetable
 {
     [Export]
     public float Speed { get; set; } = 52.0f;
@@ -25,8 +25,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, IFactionAss
     public int MaxAttackDamage { get; set; } = 5;
 
     public bool CanBeTargeted => !IsDead;
-    public override Faction Faction => _faction;
-    private Faction _faction = Factions.Enemies;
 
     public override void _Ready()
     {
@@ -34,7 +32,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, IFactionAss
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
-        SetFaction(_faction);
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
         ConfigureBehaviors(CreateDefaultBehaviors());
@@ -50,16 +47,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, IFactionAss
         ShowFloatingDamageNumber(damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
         if (died)
             StartDeath();
-    }
-
-    public void SetFaction(Faction faction)
-    {
-        _faction = faction ?? Factions.Enemies;
-        if (!IsInsideTree())
-            return;
-
-        ApplyFactionCombatGroup();
-        RefreshHealthLabel();
     }
 
     private IActorBehavior[] CreateDefaultBehaviors()

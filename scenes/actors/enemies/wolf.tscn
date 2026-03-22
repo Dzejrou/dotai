@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="11_return_home"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="12_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="13_health_state"]
+[ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="14_faction_state"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wolf"]
 radius = 6.0
@@ -38,6 +39,10 @@ script = ExtResource("12_combat_state")
 
 [node name="HealthState" type="Node" parent="." unique_id=1503073352]
 script = ExtResource("13_health_state")
+
+[node name="FactionState" type="Node" parent="."]
+script = ExtResource("14_faction_state")
+FactionKey = "enemies"
 
 [node name="Behaviors" type="Node" parent="." unique_id=24580142]
 

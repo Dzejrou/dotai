@@ -40,7 +40,6 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable
     public string ProjectileTargetGroup { get; set; } = string.Empty;
 
     public bool CanBeTargeted => !IsDead;
-    public override Faction Faction => Factions.Enemies;
 
     public override void _Ready()
     {
@@ -52,7 +51,6 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
-        ApplyFactionCombatGroup();
         SetPrimaryActionController(
             new RangedAttackController(
                 MinimumRange,
