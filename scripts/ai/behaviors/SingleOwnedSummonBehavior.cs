@@ -75,8 +75,11 @@ public sealed class SingleOwnedSummonBehavior : IActorBehavior, IActorTickBehavi
             summonDirection = Vector2.Right;
 
         summonedNode.GlobalPosition = actor.GlobalPosition + summonDirection.Normalized() * _spawnOffset;
-        if (summonedNode is ISummonedUnit summonedUnit)
+        if (!SummonState.TryAssignToNode(summonedNode, summoner) &&
+            summonedNode is ISummonedUnit summonedUnit)
+        {
             summonedUnit.SetSummoner(summoner);
+        }
         parent.AddChild(summonedNode);
         _activeSummon = summonedNode;
     }
@@ -88,6 +91,10 @@ public sealed class SingleOwnedSummonBehavior : IActorBehavior, IActorTickBehavi
 
         if (summonedNode is not ITargetable targetable || !targetable.CanBeTargeted)
             return false;
+
+        var summonState = SummonState.ResolveFor(summonedNode);
+        if (summonState != null)
+            return summonState.HasValidSummoner();
 
         return summonedNode is not ISummonedUnit summonedUnit || summonedUnit.HasValidSummoner();
     }

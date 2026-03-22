@@ -15,12 +15,6 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
     public string DebugActorName { get; set; }
 
     [Export]
-    public bool SuppressWhileSummonRecovering { get; set; } = false;
-
-    [Export]
-    public bool SuppressWhileSummonerNeedsLeashReturn { get; set; } = false;
-
-    [Export]
     public float MaxSummonTargetDistanceFromSummoner { get; set; } = -1.0f;
 
     private readonly Func<ActorBase, bool> _canAttemptAcquisition;
@@ -50,15 +44,8 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
         if (actor.Target != null)
             return false;
 
-        if (_canAttemptAcquisition != null)
-        {
-            if (!_canAttemptAcquisition(actor))
-                return false;
-        }
-        else if (!CanAttemptNodeDrivenAcquisition(actor))
-        {
+        if (_canAttemptAcquisition != null && !_canAttemptAcquisition(actor))
             return false;
-        }
 
         if (!_initialTargetChecked)
         {
@@ -82,21 +69,6 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
             return false;
 
         intent = ActorIntent.WithTarget(candidate);
-        return true;
-    }
-
-    private bool CanAttemptNodeDrivenAcquisition(ActorBase actor)
-    {
-        var followSummonerBehavior = ResolveFollowSummonerBehavior(actor);
-        if (followSummonerBehavior == null)
-            return true;
-
-        if (SuppressWhileSummonRecovering && followSummonerBehavior.IsRecovering)
-            return false;
-
-        if (SuppressWhileSummonerNeedsLeashReturn && followSummonerBehavior.ShouldPrioritizeLeashReturn(actor))
-            return false;
-
         return true;
     }
 
@@ -149,8 +121,4 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
         return summonerNode.GlobalPosition.DistanceTo(target.GlobalPosition) <= MaxSummonTargetDistanceFromSummoner;
     }
 
-    private static FollowSummonerBehavior ResolveFollowSummonerBehavior(ActorBase actor)
-    {
-        return actor?.GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_Recovery/FollowSummonerBehavior");
-    }
 }

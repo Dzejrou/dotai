@@ -1,12 +1,8 @@
 using Godot;
 
-using System;
-
 [GlobalClass]
 public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionAssignable
 {
-    private const int MaxFormationSlots = 4;
-
     [Export]
     public float Speed { get; set; } = 52.0f;
 
@@ -31,53 +27,26 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
     [Export]
     public int MaxAttackDamage { get; set; } = 5;
 
-    [Export]
-    public float LeashDistance { get; set; } = 220.0f;
-
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
-    public ISummoner Summoner => ResolveSummonState()?.Summoner;
+    public ISummoner Summoner => ResolveSummonState().Summoner;
 
     private Faction _faction = Factions.Enemies;
     private bool _sameFactionCollisionExceptionApplied;
-    private FollowSummonerBehavior _followSummonerBehavior;
-    private SummonRoleComposer _summonRoleComposer;
-    private SummonState _summonState;
+    private SummonState _summon;
 
     public override void _Ready()
     {
+        _summon = GetNode<SummonState>("SummonState");
         InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
-        _summonState = ResolveSummonState();
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
-
-        _summonRoleComposer = new SummonRoleComposer(
-            _summonState,
-            ConfigureBehaviors,
-            CreateDefaultBehaviors,
-            CreateSummonBehaviorPreset,
-            OnSummonRoleModeChanged);
-        RefreshSummonRoleComposition();
+        ConfigureBehaviors(CreateDefaultBehaviors());
 
         PlayIdleIfAvailable();
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        if (Summoner != null && !HasValidSummoner())
-        {
-            PrepareForRemoval();
-            QueueFree();
-            return;
-        }
-
-        if (IsDead)
-            return;
-
-        base._PhysicsProcess(delta);
     }
 
     protected override void OnActorExitTree()
@@ -95,18 +64,6 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
             StartDeath();
     }
 
-    public bool IsOwnedBy(Node2D owner)
-    {
-        return ResolveSummonState()?.IsOwnedBy(owner) == true;
-    }
-
-    public void SetSummoner(ISummoner summoner)
-    {
-        ResolveSummonState()?.SetSummoner(summoner, SetFaction);
-        if (IsInsideTree())
-            RefreshSummonRoleComposition();
-    }
-
     public void SetFaction(Faction faction)
     {
         _faction = faction ?? Factions.Enemies;
@@ -115,14 +72,32 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
 
         ClearSameFactionCollisionExceptions();
         ApplyFactionCombatGroup();
-        if (IsSummoned())
+        if (ResolveSummonState().IsSummoned)
             ApplySameFactionCollisionExceptions();
         RefreshHealthLabel();
     }
 
+    public void SetSummoner(ISummoner summoner)
+    {
+        var summonState = ResolveSummonState();
+        var wasSummoned = summonState.IsSummoned;
+        summonState.SetSummoner(summoner, SetFaction);
+        if (wasSummoned && !summonState.IsSummoned)
+        {
+            ClearSameFactionCollisionExceptions();
+            ApplyFactionCombatGroup();
+            RefreshHealthLabel();
+        }
+    }
+
     public bool HasValidSummoner()
     {
-        return ResolveSummonState()?.HasValidSummoner() == true;
+        return ResolveSummonState().HasValidSummoner();
+    }
+
+    public bool IsOwnedBy(Node2D owner)
+    {
+        return ResolveSummonState().IsOwnedBy(owner);
     }
 
     private IActorBehavior[] CreateDefaultBehaviors()
@@ -131,76 +106,12 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         return preset.Behaviors;
     }
 
-    private void RefreshSummonRoleComposition()
-    {
-        _followSummonerBehavior = GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_Recovery/FollowSummonerBehavior");
-        _followSummonerBehavior = _summonRoleComposer?.Refresh();
-    }
-
-    private SummonBehaviorPreset CreateSummonBehaviorPreset()
-    {
-        return SummonBehaviorPresets.CreateSummonedMeleePreset(
-            _followSummonerBehavior,
-            stuckCondition: actor =>
-                actor.CurrentState == CombatUnitState.PursuingTarget ||
-                actor.CurrentState == CombatUnitState.FollowingOwner ||
-                actor.CurrentState == CombatUnitState.Leashing);
-    }
-
-    private void OnSummonRoleModeChanged(bool isSummoned)
-    {
-        ClearSameFactionCollisionExceptions();
-        ApplyFactionCombatGroup();
-        if (isSummoned)
-            ApplySameFactionCollisionExceptions();
-    }
-
     private void StartDeath()
     {
         SetIsDead(true);
-        _followSummonerBehavior?.CancelRecovery();
         ClearTarget();
         ClearSameFactionCollisionExceptions();
         SpawnCorpseAndFree();
-    }
-
-    private bool HasUsableTarget()
-    {
-        return Target != null &&
-               IsStructurallyValidTarget(Target) &&
-               Target is ITargetable targetable &&
-               targetable.CanBeTargeted;
-    }
-
-    private bool CanAcquireTargetAsSummon(Node2D target)
-    {
-        if (target == null)
-            return false;
-
-        var summonerNode = GetSummonerNode();
-        if (summonerNode == null || !GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
-            return true;
-
-        return summonerNode.GlobalPosition.DistanceTo(target.GlobalPosition) <= Math.Max(LeashDistance, 0.0f);
-    }
-
-    private Node2D GetSummonerNode()
-    {
-        return ResolveSummonState()?.SummonerNode;
-    }
-
-    private SummonState ResolveSummonState()
-    {
-        _summonState ??= GetNodeOrNull<SummonState>("SummonState");
-        if (_summonState == null && IsInsideTree())
-            GD.PushError($"{GetPath()}: missing required SummonState child.");
-
-        return _summonState;
-    }
-
-    private bool IsSummoned()
-    {
-        return ResolveSummonState()?.IsSummoned == true;
     }
 
     private void ApplySameFactionCollisionExceptions()
@@ -262,5 +173,11 @@ public partial class Skeleton : ActorBase, IAttackable, ITargetable, ISummonedUn
         _sameFactionCollisionExceptionApplied = false;
     }
 
-    protected override int MaxHealthValue => IsSummoned() ? SummonedHealth : Health;
+    protected override int MaxHealthValue => _summon?.IsSummoned == true ? SummonedHealth : Health;
+
+    private SummonState ResolveSummonState()
+    {
+        _summon ??= GetNode<SummonState>("SummonState");
+        return _summon;
+    }
 }

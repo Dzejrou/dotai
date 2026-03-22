@@ -5,8 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" path="res://scripts/ui/ActorHUD.cs" id="4_8op0n"]
 [ext_resource type="Script" path="res://scripts/shared/SummonState.cs" id="5_summon_state"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/OwnerCombatAssistBehavior.cs" id="6_owner_assist"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/FollowSummonerBehavior.cs" id="7_follow_summoner"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="8_acquire_hostile"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="9_target_combat"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="10_leash_behavior"]
@@ -46,20 +44,20 @@ script = ExtResource("13_health_state")
 
 [node name="SummonState" type="Node" parent="." unique_id=799258416]
 script = ExtResource("5_summon_state")
+StartLeashDistance = 220.0
+StopLeashDistance = 18.0
+IdleAnchorTolerance = 12.0
+FormationHorizontalOffset = 28.0
+FormationVerticalOffset = 18.0
 
 [node name="Behaviors" type="Node" parent="."]
 
 [node name="Tier10_Targeting" type="Node" parent="Behaviors"]
 
-[node name="OwnerCombatAssistBehavior" type="Node" parent="Behaviors/Tier10_Targeting"]
-script = ExtResource("6_owner_assist")
-
 [node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting"]
 script = ExtResource("8_acquire_hostile")
 AcquisitionRange = 150.0
 DebugActorName = "Wolf"
-SuppressWhileSummonRecovering = true
-SuppressWhileSummonerNeedsLeashReturn = true
 MaxSummonTargetDistanceFromSummoner = 220.0
 
 [node name="Tier20_Leash" type="Node" parent="Behaviors"]
@@ -74,7 +72,6 @@ IgnoreDamageWhileReturning = true
 
 [node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat"]
 script = ExtResource("9_target_combat")
-DropTargetWhileSummonerNeedsLeashReturn = true
 
 [node name="Tier80_ReturnHome" type="Node" parent="Behaviors"]
 
@@ -82,12 +79,3 @@ DropTargetWhileSummonerNeedsLeashReturn = true
 script = ExtResource("11_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors"]
-
-[node name="FollowSummonerBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
-script = ExtResource("7_follow_summoner")
-StartLeashDistance = 220.0
-StopLeashDistance = 18.0
-IdleAnchorTolerance = 12.0
-LeashSpeedMultiplier = 1.0
-FormationHorizontalOffset = 28.0
-FormationVerticalOffset = 18.0

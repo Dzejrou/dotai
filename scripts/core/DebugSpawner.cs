@@ -159,12 +159,16 @@ public partial class DebugSpawner : Node2D
         if (spawnedNode is IFactionAssignable factionAssignable)
             factionAssignable.SetFaction(_selectedFaction);
 
-        if (_spawnAsSummon && entry.SupportsSummonMode && spawnedNode is ISummonedUnit summonedUnit)
+        if (_spawnAsSummon && entry.SupportsSummonMode)
         {
             var summoner = FindClosestSummoner(spawnPosition, _selectedFaction);
             if (summoner != null)
             {
-                summonedUnit.SetSummoner(summoner);
+                if (!SummonState.TryAssignToNode(spawnedNode, summoner) &&
+                    spawnedNode is ISummonedUnit summonedUnit)
+                {
+                    summonedUnit.SetSummoner(summoner);
+                }
             }
             else
             {

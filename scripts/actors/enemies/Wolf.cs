@@ -5,8 +5,6 @@ using System;
 [GlobalClass]
 public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionAssignable
 {
-    private const int MaxFormationSlots = 4;
-
     [Export]
     public float Speed { get; set; } = 76.0f;
 
@@ -30,49 +28,22 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
-    public ISummoner Summoner => ResolveSummonState()?.Summoner;
+    public ISummoner Summoner => ResolveSummonState().Summoner;
 
     private Faction _faction = Factions.Enemies;
-    private FollowSummonerBehavior _followSummonerBehavior;
-    private SummonRoleComposer _summonRoleComposer;
-    private SummonState _summonState;
+    private SummonState _summon;
 
     public override void _Ready()
     {
+        _summon = GetNode<SummonState>("SummonState");
         InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
-        _summonState = ResolveSummonState();
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
-        _summonRoleComposer = new SummonRoleComposer(
-            _summonState,
-            ConfigureBehaviors,
-            CreateDefaultBehaviors,
-            CreateSummonBehaviorPreset,
-            isSummoned => ApplyFactionCombatGroup());
-        RefreshSummonRoleComposition();
+        ConfigureBehaviors(CreateDefaultBehaviors());
         PlayIdleIfAvailable();
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        if (Summoner != null && !HasValidSummoner())
-        {
-            PrepareForRemoval();
-            QueueFree();
-            return;
-        }
-
-        base._PhysicsProcess(delta);
-    }
-
-    public void SetSummoner(ISummoner summoner)
-    {
-        ResolveSummonState()?.SetSummoner(summoner, SetFaction);
-        if (IsInsideTree())
-            RefreshSummonRoleComposition();
     }
 
     public void SetFaction(Faction faction)
@@ -85,14 +56,19 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
         }
     }
 
+    public void SetSummoner(ISummoner summoner)
+    {
+        ResolveSummonState().SetSummoner(summoner, SetFaction);
+    }
+
     public bool HasValidSummoner()
     {
-        return ResolveSummonState()?.HasValidSummoner() == true;
+        return ResolveSummonState().HasValidSummoner();
     }
 
     public bool IsOwnedBy(Node2D owner)
     {
-        return ResolveSummonState()?.IsOwnedBy(owner) == true;
+        return ResolveSummonState().IsOwnedBy(owner);
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -109,7 +85,6 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     {
         SetIsDead(true);
         ClearTarget();
-        _followSummonerBehavior?.CancelRecovery();
         SpawnCorpseAndFree();
     }
 
@@ -119,30 +94,11 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
         return preset.Behaviors;
     }
 
-    private void RefreshSummonRoleComposition()
-    {
-        _followSummonerBehavior = GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_Recovery/FollowSummonerBehavior");
-        _followSummonerBehavior = _summonRoleComposer?.Refresh();
-    }
-
-    private SummonBehaviorPreset CreateSummonBehaviorPreset()
-    {
-        return SummonBehaviorPresets.CreateSummonedMeleePreset(
-            _followSummonerBehavior,
-            stuckCondition: actor =>
-                actor.CurrentState == CombatUnitState.PursuingTarget ||
-                actor.CurrentState == CombatUnitState.FollowingOwner ||
-                actor.CurrentState == CombatUnitState.Leashing);
-    }
+    protected override int MaxHealthValue => Health;
 
     private SummonState ResolveSummonState()
     {
-        _summonState ??= GetNodeOrNull<SummonState>("SummonState");
-        if (_summonState == null && IsInsideTree())
-            GD.PushError($"{GetPath()}: missing required SummonState child.");
-
-        return _summonState;
+        _summon ??= GetNode<SummonState>("SummonState");
+        return _summon;
     }
-
-    protected override int MaxHealthValue => Health;
 }

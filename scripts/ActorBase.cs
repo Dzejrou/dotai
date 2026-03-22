@@ -61,6 +61,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     private ActorHUD _actorHud;
     private HealthState _health;
     private CombatState _combat;
+    private SummonState _summon;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
 
@@ -89,6 +90,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         _combat.ExitCombat();
         _health = GetNode<HealthState>("HealthState");
         _health.Initialize(Math.Max(1, MaxHealthValue));
+        _summon = GetNodeOrNull<SummonState>("SummonState");
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
@@ -116,6 +118,13 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
         if (!IsStructurallyValidTarget(Target))
             ClearTarget();
+
+        if (_summon != null && _summon.TryCreateIntent(this, delta, out var summonIntent))
+        {
+            ApplyIntentTargetChange(summonIntent);
+            ExecuteIntent(summonIntent, delta);
+            return;
+        }
 
         if (CurrentState == CombatUnitState.Attacking)
         {
@@ -475,8 +484,34 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         return false;
     }
 
+    private void ApplyIntentTargetChange(ActorIntent intent)
+    {
+        if (!intent.ChangeTarget)
+            return;
+
+        if (intent.Target == null)
+            ClearTarget();
+        else
+            SetTarget(intent.Target);
+    }
+
     private void ExecuteIntent(ActorIntent intent, double delta)
     {
+        if (intent.FacingDirection.HasValue && intent.FacingDirection.Value != Vector2.Zero)
+            SetFacingDirection(intent.FacingDirection.Value);
+
+        if (intent.RemoveNow)
+        {
+            PrepareForRemoval();
+            QueueFree();
+            return;
+        }
+
+        if (intent.TeleportDestination.HasValue)
+        {
+            TeleportTo(intent.TeleportDestination.Value);
+        }
+
         if (intent.UsePrimaryAction && PrimaryActionController != null && Target != null)
         {
             Velocity = Vector2.Zero;

@@ -6,9 +6,6 @@ using System;
 public partial class TargetCombatBehavior : Node, IActorBehavior
 {
     [Export]
-    public bool DropTargetWhileSummonerNeedsLeashReturn { get; set; } = false;
-
-    [Export]
     public CombatUnitState MoveState { get; set; } = CombatUnitState.PursuingTarget;
 
     [Export]
@@ -17,17 +14,13 @@ public partial class TargetCombatBehavior : Node, IActorBehavior
     [Export]
     public float MovementSpeedMultiplier { get; set; } = 1.0f;
 
-    private readonly Func<ActorBase, Node2D, bool> _shouldDropTarget;
-
     public TargetCombatBehavior() { }
 
     public TargetCombatBehavior(
-        Func<ActorBase, Node2D, bool> shouldDropTarget = null,
         CombatUnitState moveState = CombatUnitState.PursuingTarget,
         CombatUnitState holdState = CombatUnitState.Engaged,
         float movementSpeedMultiplier = 1.0f)
     {
-        _shouldDropTarget = shouldDropTarget;
         MoveState = moveState;
         HoldState = holdState;
         MovementSpeedMultiplier = Math.Max(0.0f, movementSpeedMultiplier);
@@ -38,15 +31,38 @@ public partial class TargetCombatBehavior : Node, IActorBehavior
         intent = ActorIntent.None;
 
         var target = actor.Target;
-        var actionController = actor.PrimaryActionController;
-        if (target == null || actionController == null)
+        if (target == null)
+            return false;
+
+        return TryCreateCombatIntentForTarget(
+            actor,
+            target,
+            out intent,
+            changeTarget: false,
+            MoveState,
+            HoldState,
+            MovementSpeedMultiplier);
+    }
+
+    public static bool TryCreateCombatIntentForTarget(
+        ActorBase actor,
+        Node2D target,
+        out ActorIntent intent,
+        bool changeTarget = false,
+        CombatUnitState moveState = CombatUnitState.PursuingTarget,
+        CombatUnitState holdState = CombatUnitState.Engaged,
+        float movementSpeedMultiplier = 1.0f)
+    {
+        intent = ActorIntent.None;
+
+        var actionController = actor?.PrimaryActionController;
+        if (actor == null || target == null || actionController == null)
             return false;
 
         if (!ActorBase.IsStructurallyValidTarget(target) ||
             target is not IAttackable ||
             target is not ITargetable targetable ||
-            !targetable.CanBeTargeted ||
-            ShouldDropTarget(actor, target))
+            !targetable.CanBeTargeted)
         {
             intent = ActorIntent.ClearTarget();
             return true;
@@ -54,42 +70,49 @@ public partial class TargetCombatBehavior : Node, IActorBehavior
 
         var toTarget = target.GlobalPosition - actor.GlobalPosition;
         var distance = toTarget.Length();
+        var facingDirection = toTarget != Vector2.Zero ? toTarget : (Vector2?)null;
+        var clampedSpeedMultiplier = Math.Max(0.0f, movementSpeedMultiplier);
 
         if (actionController.CanStartAction(actor, target))
         {
-            intent = ActorIntent.UseAction();
+            intent = changeTarget
+                ? ActorIntent.RetargetAndUseAction(target, facingDirection)
+                : ActorIntent.UseAction(facingDirection);
             return true;
         }
 
         if (distance > actionController.PreferredRange)
         {
-            intent = ActorIntent.MoveTo(target.GlobalPosition, MoveState, Math.Max(0.0f, MovementSpeedMultiplier));
+            intent = changeTarget
+                ? ActorIntent.RetargetAndMoveTo(target, target.GlobalPosition, moveState, clampedSpeedMultiplier, facingDirection)
+                : new ActorIntent
+                {
+                    FacingDirection = facingDirection,
+                    Destination = target.GlobalPosition,
+                    SpeedMultiplier = clampedSpeedMultiplier,
+                    State = moveState,
+                };
             return true;
         }
 
         if (distance < actionController.MinimumRange && toTarget != Vector2.Zero)
         {
             var destination = actor.GlobalPosition + -toTarget.Normalized() * actionController.PreferredRange;
-            intent = ActorIntent.MoveTo(destination, MoveState, Math.Max(0.0f, MovementSpeedMultiplier));
+            intent = changeTarget
+                ? ActorIntent.RetargetAndMoveTo(target, destination, moveState, clampedSpeedMultiplier, facingDirection)
+                : new ActorIntent
+                {
+                    FacingDirection = facingDirection,
+                    Destination = destination,
+                    SpeedMultiplier = clampedSpeedMultiplier,
+                    State = moveState,
+                };
             return true;
         }
 
-        if (toTarget != Vector2.Zero)
-            actor.SetFacingDirection(toTarget);
-
-        intent = ActorIntent.Hold(HoldState);
+        intent = changeTarget
+            ? ActorIntent.RetargetAndHold(target, holdState, facingDirection)
+            : ActorIntent.Hold(holdState, facingDirection);
         return true;
-    }
-
-    private bool ShouldDropTarget(ActorBase actor, Node2D target)
-    {
-        if (_shouldDropTarget != null)
-            return _shouldDropTarget(actor, target);
-
-        if (!DropTargetWhileSummonerNeedsLeashReturn)
-            return false;
-
-        var followSummonerBehavior = actor.GetNodeOrNull<FollowSummonerBehavior>("Behaviors/Tier90_Recovery/FollowSummonerBehavior");
-        return followSummonerBehavior != null && followSummonerBehavior.ShouldPrioritizeLeashReturn(actor);
     }
 }

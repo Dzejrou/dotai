@@ -263,7 +263,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
         if (summonDirection == Vector2.Zero)
             summonDirection = Vector2.Right;
 
-        summonedSkeleton.SetSummoner(this);
+        SummonState.TryAssignToNode(summonedSkeleton, this);
         summonedSkeleton.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, SummonSkeletonSpawnOffset);
         parent.AddChild(summonedSkeleton);
     }
@@ -282,7 +282,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             if (!summon.IsInsideTree() || summon.IsQueuedForDeletion())
                 continue;
 
-            if (summon.IsOwnedBy(this) && summon.CanBeTargeted)
+            if (SummonState.IsOwnedByNode(summon, this) && summon.CanBeTargeted)
                 count++;
         }
 
