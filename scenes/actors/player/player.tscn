@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://scripts/actors/player/Player.cs" id="1_t1u7h"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="2_gx9kq"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/player_spriteframes.tres" id="3_player_frames"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton.tscn" id="4_skeleton"]
 [ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="5_combat_state"]
 [ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="6_health_state"]
 
@@ -16,7 +15,6 @@ MaxAttackDamage = 20
 MinAttackDamage = 4
 HealthRegenerationAmount = 2
 FireballScene = ExtResource("2_gx9kq")
-SkeletonScene = ExtResource("4_skeleton")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=122948576]
 current = true

@@ -16,7 +16,6 @@ Id = "skeleton"
 DisplayName = "Skeleton"
 Category = "Melee"
 SpawnScene = ExtResource("3_skeleton_scene")
-SupportsSummonMode = true
 SortOrder = 10
 
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_wolf"]
@@ -25,7 +24,6 @@ Id = "wolf"
 DisplayName = "Wolf"
 Category = "Melee"
 SpawnScene = ExtResource("9_wolf_scene")
-SupportsSummonMode = true
 SortOrder = 15
 
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_ogre"]

@@ -18,9 +18,6 @@ public partial class DebugTray : Control
     public NodePath FactionSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/FactionSelector");
 
     [Export]
-    public NodePath SummonTogglePath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/SummonToggle");
-
-    [Export]
     public NodePath DebugSpawnerPath { get; set; } = new NodePath("../../World/DebugSpawner");
 
     private const float DragThreshold = 12.0f;
@@ -31,7 +28,6 @@ public partial class DebugTray : Control
     private Label _statusLabel;
     private HBoxContainer _cardsContainer;
     private OptionButton _factionSelector;
-    private CheckButton _summonToggle;
     private readonly Dictionary<string, Button> _cardsById = new();
     private readonly Dictionary<Button, Control.GuiInputEventHandler> _cardInputHandlers = new();
     private string _pressedCardId;
@@ -51,8 +47,6 @@ public partial class DebugTray : Control
         _statusLabel = GetNodeOrNull<Label>(StatusLabelPath);
         _cardsContainer = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
         _factionSelector = GetNodeOrNull<OptionButton>(FactionSelectorPath);
-        _summonToggle = GetNodeOrNull<CheckButton>(SummonTogglePath);
-
         ConfigureControls();
         BuildCardsFromCatalog();
 
@@ -189,11 +183,6 @@ public partial class DebugTray : Control
             }
         }
 
-        if (_summonToggle != null)
-        {
-            _summonToggle.Toggled += OnSummonToggleChanged;
-            _summonToggle.ButtonPressed = _debugSpawner?.SpawnAsSummon ?? false;
-        }
     }
 
     private void AddFactionOption(string label, string factionKey)
@@ -455,8 +444,7 @@ public partial class DebugTray : Control
     private string GetModeSummary()
     {
         var factionKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
-        var summonState = _debugSpawner?.SpawnAsSummon == true ? "on" : "off";
-        return $"Faction: {Capitalize(factionKey)} | Summon: {summonState}.";
+        return $"Faction: {Capitalize(factionKey)}.";
     }
 
     private bool IsMouseOverTray(Vector2 screenPosition)
@@ -486,12 +474,6 @@ public partial class DebugTray : Control
             return;
 
         _debugSpawner.SetSelectedFaction(_factionSelector.GetItemMetadata((int)index).AsString());
-        UpdateStatusLabel();
-    }
-
-    private void OnSummonToggleChanged(bool pressed)
-    {
-        _debugSpawner?.SetSpawnAsSummon(pressed);
         UpdateStatusLabel();
     }
 

@@ -14,9 +14,6 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
     [Export]
     public string DebugActorName { get; set; }
 
-    [Export]
-    public float MaxSummonTargetDistanceFromSummoner { get; set; } = -1.0f;
-
     private readonly Func<ActorBase, bool> _canAttemptAcquisition;
     private readonly Func<ActorBase, Node2D, bool> _additionalTargetFilter;
     private bool _initialTargetChecked;
@@ -99,26 +96,6 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
         if (actor.GlobalPosition.DistanceTo(target.GlobalPosition) > Math.Max(0.0f, AcquisitionRange))
             return false;
 
-        if (!PassesSummonTargetFilter(actor, target))
-            return false;
-
         return _additionalTargetFilter == null || _additionalTargetFilter(actor, target);
     }
-
-    private bool PassesSummonTargetFilter(ActorBase actor, Node2D target)
-    {
-        if (MaxSummonTargetDistanceFromSummoner < 0.0f)
-            return true;
-
-        var summonState = SummonState.ResolveFor(actor);
-        if (summonState?.SummonerNode == null || !summonState.IsSummoned)
-            return true;
-
-        var summonerNode = summonState.SummonerNode;
-        if (!GodotObject.IsInstanceValid(summonerNode) || !summonerNode.IsInsideTree())
-            return false;
-
-        return summonerNode.GlobalPosition.DistanceTo(target.GlobalPosition) <= MaxSummonTargetDistanceFromSummoner;
-    }
-
 }

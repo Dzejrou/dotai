@@ -1,9 +1,7 @@
 using Godot;
 
-using System;
-
 [GlobalClass]
-public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, IFactionAssignable
+public partial class Wolf : ActorBase, IAttackable, ITargetable, IFactionAssignable
 {
     [Export]
     public float Speed { get; set; } = 76.0f;
@@ -28,18 +26,15 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
 
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => _faction;
-    public ISummoner Summoner => ResolveSummonState().Summoner;
-
     private Faction _faction = Factions.Enemies;
-    private SummonState _summon;
 
     public override void _Ready()
     {
-        _summon = GetNode<SummonState>("SummonState");
         InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
+        SetFaction(_faction);
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
         ConfigureBehaviors(CreateDefaultBehaviors());
@@ -54,21 +49,6 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
             ApplyFactionCombatGroup();
             RefreshHealthLabel();
         }
-    }
-
-    public void SetSummoner(ISummoner summoner)
-    {
-        ResolveSummonState().SetSummoner(summoner, SetFaction);
-    }
-
-    public bool HasValidSummoner()
-    {
-        return ResolveSummonState().HasValidSummoner();
-    }
-
-    public bool IsOwnedBy(Node2D owner)
-    {
-        return ResolveSummonState().IsOwnedBy(owner);
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -95,10 +75,4 @@ public partial class Wolf : ActorBase, IAttackable, ITargetable, ISummonedUnit, 
     }
 
     protected override int MaxHealthValue => Health;
-
-    private SummonState ResolveSummonState()
-    {
-        _summon ??= GetNode<SummonState>("SummonState");
-        return _summon;
-    }
 }

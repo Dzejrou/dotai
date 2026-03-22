@@ -66,10 +66,6 @@ text = "Faction"
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 
-[node name="SummonToggle" type="CheckButton" parent="Root/Bottom/Panel/VBox/Controls"]
-layout_mode = 2
-text = "Spawn As Summon"
-
 [node name="Scroll" type="ScrollContainer" parent="Root/Bottom/Panel/VBox"]
 custom_minimum_size = Vector2(0, 166)
 layout_mode = 2

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummoner, IFactionMember, IHealable
+public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactionMember, IHealable
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -16,7 +16,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     public float Speed { get; set; } = 140.0f;
 
     [Export]
-    public int MaxHealth { get; set; } = 20;
+    public int MaxHealth { get; set; } = 200;
 
     [Export]
     public float AttackRange { get; set; } = 28.0f;
@@ -58,14 +58,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     public float FireballMaxDistance { get; set; } = 320.0f;
 
     [Export]
-    public PackedScene SkeletonScene { get; set; }
-
-    [Export]
-    public float SummonSkeletonSpawnOffset { get; set; } = 24.0f;
-    [Export]
-    public int MaxSummonedSkeletonsPerOwner { get; set; } = 4;
-
-    [Export]
     public float SoftTargetRange { get; set; } = 180.0f;
 
     [Export]
@@ -90,8 +82,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
     public bool CanBeTargeted => !_isDead;
     public Faction Faction => Factions.Allies;
     public CombatState Combat => _combat;
-    public Node2D SummonerNode => this;
-    public bool IsSummonerActive => !_isDead && IsInsideTree();
     public PlayerTargetingState Targeting { get; } = new();
 
     public override void _Ready()
@@ -123,9 +113,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             ClearTabTarget();
         if (Input.IsActionJustPressed("cast_spell"))
             CastFireball();
-        if (Input.IsActionJustPressed("summon_skeleton"))
-            SummonSkeleton();
-
         var direction = Vector2.Zero;
         if (Input.IsActionPressed("move_left"))
             direction.X -= 1.0f;
@@ -241,52 +228,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, ISummon
             FireballLifetime,
             FireballMaxDistance,
             string.Empty);
-    }
-
-    private void SummonSkeleton()
-    {
-        if (_isDead || SkeletonScene == null)
-            return;
-
-        var parent = GetParent();
-        if (parent == null)
-            return;
-
-        if (!CanSummonAdditionalSkeleton(parent))
-            return;
-
-        var summonedSkeleton = SkeletonScene.Instantiate<Skeleton>();
-        if (summonedSkeleton == null)
-            return;
-
-        var summonDirection = DirectionHelper.GetDirectionVector(_lastDirection);
-        if (summonDirection == Vector2.Zero)
-            summonDirection = Vector2.Right;
-
-        SummonState.TryAssignToNode(summonedSkeleton, this);
-        summonedSkeleton.GlobalPosition = GlobalPosition + summonDirection.Normalized() * Math.Max(0.0f, SummonSkeletonSpawnOffset);
-        parent.AddChild(summonedSkeleton);
-    }
-
-    private bool CanSummonAdditionalSkeleton(Node parent)
-    {
-        if (parent == null)
-            return false;
-
-        var count = 0;
-        foreach (var node in parent.GetChildren())
-        {
-            if (node is not Skeleton summon)
-                continue;
-
-            if (!summon.IsInsideTree() || summon.IsQueuedForDeletion())
-                continue;
-
-            if (SummonState.IsOwnedByNode(summon, this) && summon.CanBeTargeted)
-                count++;
-        }
-
-        return count < Math.Max(1, MaxSummonedSkeletonsPerOwner);
     }
 
     public void ApplyDamage(DamageInfo damageInfo)

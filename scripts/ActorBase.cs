@@ -14,6 +14,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     private const float NavigationTargetUpdateThreshold = 8.0f;
     private const float DefaultPathDesiredDistance = 6.0f;
     private const float DefaultTargetDesiredDistance = 8.0f;
+    private const float ShortRangeDirectMovementDistance = 24.0f;
 
     [Export]
     public StringName DeathAnimation { get; set; } = "falling-back-death";
@@ -61,7 +62,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
     private ActorHUD _actorHud;
     private HealthState _health;
     private CombatState _combat;
-    private SummonState _summon;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
 
@@ -90,7 +90,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
         _combat.ExitCombat();
         _health = GetNode<HealthState>("HealthState");
         _health.Initialize(Math.Max(1, MaxHealthValue));
-        _summon = GetNodeOrNull<SummonState>("SummonState");
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
@@ -118,13 +117,6 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
         if (!IsStructurallyValidTarget(Target))
             ClearTarget();
-
-        if (_summon != null && _summon.TryCreateIntent(this, delta, out var summonIntent))
-        {
-            ApplyIntentTargetChange(summonIntent);
-            ExecuteIntent(summonIntent, delta);
-            return;
-        }
 
         if (CurrentState == CombatUnitState.Attacking)
         {
@@ -551,23 +543,32 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
     private Vector2 ResolveMovementDirection(Vector2 desiredDestination, double delta)
     {
-        if (desiredDestination == GlobalPosition)
+        var movementToDestination = desiredDestination - GlobalPosition;
+        if (movementToDestination == Vector2.Zero)
         {
             ResetNavigationPathState();
             return Vector2.Zero;
+        }
+
+        if (movementToDestination.Length() <= ShortRangeDirectMovementDistance)
+        {
+            ResetNavigationPathState();
+            if (NavigationAgent != null && NavigationAgent.IsInsideTree())
+                NavigationAgent.TargetPosition = GlobalPosition;
+            return movementToDestination;
         }
 
         var agentInsideTree = NavigationAgent != null && NavigationAgent.IsInsideTree();
         if (!agentInsideTree)
         {
             ResetNavigationPathState();
-            return desiredDestination - GlobalPosition;
+            return movementToDestination;
         }
 
         if (!NavigationAgent.GetNavigationMap().IsValid)
         {
             ResetNavigationPathState();
-            return desiredDestination - GlobalPosition;
+            return movementToDestination;
         }
 
         if (ShouldRefreshNavigationTarget(desiredDestination))
@@ -579,7 +580,7 @@ public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHeal
 
         var movementToPath = nextPathPosition - GlobalPosition;
         if (movementToPath == Vector2.Zero)
-            movementToPath = desiredDestination - GlobalPosition;
+            movementToPath = movementToDestination;
 
         return movementToPath;
     }

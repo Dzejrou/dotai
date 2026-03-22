@@ -1,16 +1,14 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dvt5dfelupt64"]
 
-[ext_resource type="Script" path="res://scripts/actors/enemies/Wolf.cs" id="1_wolf_script"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/wolf_summon_spriteframes.tres" id="2_wolf_frames"]
+[ext_resource type="Script" uid="uid://bjgo72j1y14ov" path="res://scripts/actors/enemies/Wolf.cs" id="1_wolf_script"]
+[ext_resource type="SpriteFrames" uid="uid://ci878vl3onm8s" path="res://resources/animations/wolf_summon_spriteframes.tres" id="2_wolf_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
-[ext_resource type="Script" path="res://scripts/ui/ActorHUD.cs" id="4_8op0n"]
-[ext_resource type="Script" path="res://scripts/shared/SummonState.cs" id="5_summon_state"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="8_acquire_hostile"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="9_target_combat"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="10_leash_behavior"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="11_return_home"]
-[ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="12_combat_state"]
-[ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="13_health_state"]
+[ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="8_acquire_hostile"]
+[ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="9_target_combat"]
+[ext_resource type="Script" uid="uid://b7mqwlipopylh" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="10_leash_behavior"]
+[ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="11_return_home"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="12_combat_state"]
+[ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="13_health_state"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wolf"]
 radius = 6.0
@@ -33,49 +31,35 @@ avoidance_enabled = true
 position = Vector2(0, 10)
 shape = SubResource("CapsuleShape2D_wolf")
 
-[node name="ActorHUD" type="Node2D" parent="." unique_id=1379259388 instance=ExtResource("3_actor_hud")]
-script = ExtResource("4_8op0n")
+[node name="ActorHUD" parent="." unique_id=1379259388 instance=ExtResource("3_actor_hud")]
 
-[node name="CombatState" type="Node" parent="."]
+[node name="CombatState" type="Node" parent="." unique_id=691522938]
 script = ExtResource("12_combat_state")
 
-[node name="HealthState" type="Node" parent="."]
+[node name="HealthState" type="Node" parent="." unique_id=1503073352]
 script = ExtResource("13_health_state")
 
-[node name="SummonState" type="Node" parent="." unique_id=799258416]
-script = ExtResource("5_summon_state")
-StartLeashDistance = 220.0
-StopLeashDistance = 18.0
-IdleAnchorTolerance = 12.0
-FormationHorizontalOffset = 28.0
-FormationVerticalOffset = 18.0
+[node name="Behaviors" type="Node" parent="." unique_id=24580142]
 
-[node name="Behaviors" type="Node" parent="."]
+[node name="Tier10_Targeting" type="Node" parent="Behaviors" unique_id=660311503]
 
-[node name="Tier10_Targeting" type="Node" parent="Behaviors"]
-
-[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting"]
+[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting" unique_id=1404781318]
 script = ExtResource("8_acquire_hostile")
-AcquisitionRange = 150.0
 DebugActorName = "Wolf"
-MaxSummonTargetDistanceFromSummoner = 220.0
 
-[node name="Tier20_Leash" type="Node" parent="Behaviors"]
+[node name="Tier20_Leash" type="Node" parent="Behaviors" unique_id=148279523]
 
-[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash"]
+[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash" unique_id=1540079501]
 script = ExtResource("10_leash_behavior")
-LossRange = 220.0
-EvadeOnAggroLoss = true
-IgnoreDamageWhileReturning = true
 
-[node name="Tier50_Combat" type="Node" parent="Behaviors"]
+[node name="Tier50_Combat" type="Node" parent="Behaviors" unique_id=1506248770]
 
-[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat"]
+[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat" unique_id=452822101]
 script = ExtResource("9_target_combat")
 
-[node name="Tier80_ReturnHome" type="Node" parent="Behaviors"]
+[node name="Tier80_ReturnHome" type="Node" parent="Behaviors" unique_id=1321511979]
 
-[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome"]
+[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome" unique_id=250874604]
 script = ExtResource("11_return_home")
 
-[node name="Tier90_Recovery" type="Node" parent="Behaviors"]
+[node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=1273776635]

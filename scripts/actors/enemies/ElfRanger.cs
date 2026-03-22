@@ -1,27 +1,13 @@
 using Godot;
 
 [GlobalClass]
-public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner, IFactionMember
+public partial class ElfRanger : ActorBase, IAttackable, ITargetable
 {
-    private const string DefaultWolfScenePath = "res://scenes/actors/enemies/wolf.tscn";
-
     [Export]
     public float Speed { get; set; } = 62.0f;
 
     [Export]
     public int Health { get; set; } = 18;
-
-    [Export]
-    public PackedScene WolfScene { get; set; }
-
-    [Export]
-    public float WolfSummonSpawnOffset { get; set; } = 28.0f;
-
-    [Export]
-    public float WolfSummonTriggerRange { get; set; } = 180.0f;
-
-    [Export]
-    public float WolfResummonDelaySeconds { get; set; } = 10.0f;
 
     [Export]
     public float MinimumRange { get; set; } = 70.0f;
@@ -55,15 +41,11 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
 
     public bool CanBeTargeted => !IsDead;
     public override Faction Faction => Factions.Enemies;
-    public Node2D SummonerNode => this;
-    public bool IsSummonerActive => !IsDead && IsInsideTree();
 
     public override void _Ready()
     {
         if (ProjectileScene == null)
             ProjectileScene = GD.Load<PackedScene>("res://scenes/projectiles/projectile.tscn");
-        if (WolfScene == null)
-            WolfScene = GD.Load<PackedScene>(DefaultWolfScenePath);
 
         InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
@@ -83,14 +65,7 @@ public partial class ElfRanger : ActorBase, IAttackable, ITargetable, ISummoner,
                 ProjectileLifetime,
                 ProjectileMaxTravelDistance,
                 ProjectileTargetGroup));
-
-        var preset = ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset(
-            extraBehaviors: new SingleOwnedSummonBehavior(
-                WolfScene,
-                WolfSummonSpawnOffset,
-                WolfSummonTriggerRange,
-                WolfResummonDelaySeconds,
-                actor => actor as ISummoner));
+        var preset = ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset();
         ConfigureBehaviors(preset.Behaviors);
         PlayIdleIfAvailable();
     }
