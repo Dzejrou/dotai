@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bkdo0ru5s0m8n" path="res://scripts/core/SpawnCatalog.cs" id="1_spawn_catalog_script"]
 [ext_resource type="Script" uid="uid://4as3gc2efjj4" path="res://scripts/core/SpawnCatalogEntry.cs" id="2_spawn_catalog_entry_script"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton.tscn" id="3_skeleton_scene"]
+[ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="3_skeleton_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/ogre.tscn" id="4_ogre_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="5_skeleton_mage_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/target_dummy.tscn" id="7_target_dummy_scene"]
@@ -44,14 +44,6 @@ Category = "Ranged"
 SpawnScene = ExtResource("5_skeleton_mage_scene")
 SortOrder = 30
 
-[sub_resource type="Resource" id="Resource_spawn_catalog_entry_target_dummy"]
-script = ExtResource("2_spawn_catalog_entry_script")
-Id = "target_dummy"
-DisplayName = "Target Dummy"
-Category = "Practice"
-SpawnScene = ExtResource("7_target_dummy_scene")
-SortOrder = 50
-
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_elf_ranger"]
 script = ExtResource("2_spawn_catalog_entry_script")
 Id = "elf_ranger"
@@ -67,6 +59,14 @@ DisplayName = "Dryad"
 Category = "Support"
 SpawnScene = ExtResource("10_dryad_scene")
 SortOrder = 45
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_target_dummy"]
+script = ExtResource("2_spawn_catalog_entry_script")
+Id = "target_dummy"
+DisplayName = "Target Dummy"
+Category = "Practice"
+SpawnScene = ExtResource("7_target_dummy_scene")
+SortOrder = 50
 
 [resource]
 script = ExtResource("1_spawn_catalog_script")
