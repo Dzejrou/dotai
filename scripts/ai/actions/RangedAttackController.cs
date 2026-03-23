@@ -10,7 +10,6 @@ public sealed class RangedAttackController : ICombatActionController
     private readonly float _projectileSpeed;
     private readonly float _projectileLifetime;
     private readonly float _projectileMaxTravelDistance;
-    private readonly string _projectileTargetGroup;
     private float _cooldownTimer;
     private bool _hasPendingProjectileShot;
     private Vector2 _pendingProjectileDirection;
@@ -24,8 +23,7 @@ public sealed class RangedAttackController : ICombatActionController
         int projectileDamage,
         float projectileSpeed,
         float projectileLifetime,
-        float projectileMaxTravelDistance,
-        string projectileTargetGroup)
+        float projectileMaxTravelDistance)
     {
         MinimumRange = Math.Max(0.0f, minimumRange);
         PreferredRange = Math.Max(MinimumRange, preferredRange);
@@ -36,7 +34,6 @@ public sealed class RangedAttackController : ICombatActionController
         _projectileSpeed = projectileSpeed;
         _projectileLifetime = projectileLifetime;
         _projectileMaxTravelDistance = projectileMaxTravelDistance;
-        _projectileTargetGroup = projectileTargetGroup;
     }
 
     public float MinimumRange { get; }
@@ -143,7 +140,6 @@ public sealed class RangedAttackController : ICombatActionController
             _projectileDamage,
             _projectileSpeed,
             _projectileLifetime,
-            _projectileMaxTravelDistance,
-            _projectileTargetGroup);
+            _projectileMaxTravelDistance);
     }
 }

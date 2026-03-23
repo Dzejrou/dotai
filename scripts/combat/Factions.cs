@@ -1,5 +1,3 @@
-using Godot;
-
 using System;
 using System.Collections.Generic;
 
@@ -9,9 +7,9 @@ public static class Factions
 
     static Factions()
     {
-        Allies = new Faction("allies", CombatGroups.Allies);
-        Enemies = new Faction("enemies", CombatGroups.Enemies);
-        Neutral = new Faction("neutral", null);
+        Allies = new Faction("allies");
+        Enemies = new Faction("enemies");
+        Neutral = new Faction("neutral");
 
         Allies.SetHostileFactions(Enemies);
         Enemies.SetHostileFactions(Allies);
@@ -32,22 +30,5 @@ public static class Factions
     public static Faction Get(string key)
     {
         return key != null && ByKey.TryGetValue(key, out var faction) ? faction : null;
-    }
-
-    public static Faction ResolveForNode(Node node)
-    {
-        if (node is IFactionMember factionMember && factionMember.Faction != null)
-            return factionMember.Faction;
-
-        if (node == null)
-            return null;
-
-        if (node.IsInGroup(CombatGroups.Allies))
-            return Allies;
-
-        if (node.IsInGroup(CombatGroups.Enemies))
-            return Enemies;
-
-        return null;
     }
 }

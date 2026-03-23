@@ -14,25 +14,28 @@ public partial class FactionState : Node
             Current = ResolveConfiguredFaction();
         else
             FactionKey = Current.Key;
-
-        ApplyParentCombatGroup();
     }
 
     public void SetFaction(Faction faction)
     {
         Current = faction ?? ResolveConfiguredFaction();
         FactionKey = Current.Key;
-        ApplyParentCombatGroup();
     }
 
     public bool IsHostileTo(Node node)
     {
-        return Current != null && Current.IsHostileTo(Factions.ResolveForNode(node));
+        return Current != null &&
+               node is IFactionMember factionMember &&
+               factionMember.Faction != null &&
+               Current.IsHostileTo(factionMember.Faction);
     }
 
     public bool IsFriendlyTo(Node node)
     {
-        return Current != null && Current.IsFriendlyTo(Factions.ResolveForNode(node));
+        return Current != null &&
+               node is IFactionMember factionMember &&
+               factionMember.Faction != null &&
+               Current.IsFriendlyTo(factionMember.Faction);
     }
 
     public static FactionState ResolveFor(Node node)
@@ -49,18 +52,5 @@ public partial class FactionState : Node
     private Faction ResolveConfiguredFaction()
     {
         return Factions.Get(FactionKey) ?? Factions.Enemies;
-    }
-
-    private void ApplyParentCombatGroup()
-    {
-        var parentNode = GetParent();
-        if (parentNode == null || !parentNode.IsInsideTree())
-            return;
-
-        parentNode.RemoveFromGroup(CombatGroups.Allies);
-        parentNode.RemoveFromGroup(CombatGroups.Enemies);
-
-        if (!string.IsNullOrEmpty(Current?.CombatGroup))
-            parentNode.AddToGroup(Current.CombatGroup);
     }
 }

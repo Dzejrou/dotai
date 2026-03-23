@@ -4,14 +4,12 @@ public sealed class Faction
 {
     private readonly HashSet<Faction> _hostileFactions = new();
 
-    internal Faction(string key, string combatGroup)
+    internal Faction(string key)
     {
         Key = key;
-        CombatGroup = combatGroup;
     }
 
     public string Key { get; }
-    public string CombatGroup { get; }
 
     public bool IsHostileTo(Faction other)
     {

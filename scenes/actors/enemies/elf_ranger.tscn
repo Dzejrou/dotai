@@ -26,7 +26,6 @@ ProjectileDamage = 3
 ProjectileSpeed = 320.0
 ProjectileLifetime = 2.4
 ProjectileMaxTravelDistance = 360.0
-ProjectileTargetGroup = "allies"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -2)

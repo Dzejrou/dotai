@@ -38,9 +38,6 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable
     [Export]
     public float ProjectileMaxTravelDistance { get; set; } = 320.0f;
 
-    [Export]
-    public string ProjectileTargetGroup { get; set; } = string.Empty;
-
     public bool CanBeTargeted => !IsDead;
 
     public override void _Ready()
@@ -64,8 +61,7 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable
                 ProjectileDamage,
                 ProjectileSpeed,
                 ProjectileLifetime,
-                ProjectileMaxTravelDistance,
-                ProjectileTargetGroup));
+                ProjectileMaxTravelDistance));
 
         var preset = ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset();
         ConfigureBehaviors(preset.Behaviors);

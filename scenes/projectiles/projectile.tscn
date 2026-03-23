@@ -11,7 +11,6 @@ Speed = 280
 Damage = 4
 Lifetime = 2.5
 MaxTravelDistance = 320
-TargetGroup = "enemies"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_f2l1j")

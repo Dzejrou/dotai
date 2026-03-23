@@ -92,7 +92,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         _health.Initialize(Math.Max(1, MaxHealth));
         SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
-        AddToGroup(CombatGroups.Allies);
+        AddToGroup(CombatGroups.Actors);
 
         EmitHealthChanged();
     }
@@ -226,8 +226,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             FireballDamage,
             FireballSpeed,
             FireballLifetime,
-            FireballMaxDistance,
-            string.Empty);
+            FireballMaxDistance);
     }
 
     public void ApplyDamage(DamageInfo damageInfo)

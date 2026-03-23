@@ -40,8 +40,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         else
             _actorHud.Bind(this);
 
-        // Compatibility only: keep the neutral dummy discoverable by existing target enumeration.
-        AddToGroup(CombatGroups.Enemies);
+        AddToGroup(CombatGroups.Actors);
         UpdateHud();
         ApplyActiveVisualState();
 

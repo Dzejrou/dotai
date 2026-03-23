@@ -84,6 +84,7 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
             SubscribeToNavigationDebug();
         }
 
+        AddToGroup(CombatGroups.Actors);
         HomePosition = GlobalPosition;
         _combat = GetNode<CombatState>("CombatState");
         _combat.ClearTarget();

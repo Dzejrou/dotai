@@ -14,9 +14,6 @@ public partial class Projectile : Area2D
     [Export]
     public float MaxTravelDistance { get; set; } = 320.0f;
 
-    [Export]
-    public StringName TargetGroup { get; set; } = CombatGroups.Enemies;
-
     private Vector2 _direction = Vector2.Right;
     private float _lifetimeTimer;
     private float _traveledDistance;
@@ -60,8 +57,7 @@ public partial class Projectile : Area2D
         int? overrideDamage = null,
         float? overrideSpeed = null,
         float? overrideLifetime = null,
-        float? overrideMaxTravelDistance = null,
-        string overrideTargetGroup = null)
+        float? overrideMaxTravelDistance = null)
     {
         _source = source;
         _direction = direction.Length() > 0.0f ? direction.Normalized() : Vector2.Right;
@@ -76,8 +72,6 @@ public partial class Projectile : Area2D
 
         if (overrideMaxTravelDistance.HasValue)
             MaxTravelDistance = Mathf.Max(0.0f, overrideMaxTravelDistance.Value);
-        if (overrideTargetGroup != null)
-            TargetGroup = overrideTargetGroup;
 
         _traveledDistance = 0.0f;
         _hasHitTarget = false;
@@ -99,7 +93,7 @@ public partial class Projectile : Area2D
         if (_source != null && _source == targetNode)
             return;
 
-        if (!TargetingHelper.CanProjectileHitTarget(_source, targetNode, TargetGroup))
+        if (!TargetingHelper.CanProjectileHitTarget(_source, targetNode))
             return;
 
         _hasHitTarget = true;
