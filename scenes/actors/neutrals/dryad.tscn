@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/neutrals/Dryad.cs" id="1_dryad_script"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/dryad_spriteframes.tres" id="2_dryad_frames"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
 [ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="5_health_state"]
 [ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="6_faction_state"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="7_wander_behavior"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
@@ -34,3 +35,16 @@ script = ExtResource("5_health_state")
 [node name="FactionState" type="Node" parent="."]
 script = ExtResource("6_faction_state")
 FactionKey = "neutral"
+
+[node name="Behaviors" type="Node" parent="."]
+
+[node name="Tier90_Recovery" type="Node" parent="Behaviors"]
+
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+script = ExtResource("7_wander_behavior")
+WanderRadius = 56.0
+MoveDurationMin = 0.9
+MoveDurationMax = 1.8
+PauseDurationMin = 0.7
+PauseDurationMax = 1.6
+SpeedMultiplier = 0.55

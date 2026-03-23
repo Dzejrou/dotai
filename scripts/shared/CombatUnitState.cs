@@ -1,6 +1,7 @@
 public enum CombatUnitState
 {
     Idle,
+    Wandering,
     FollowingOwner,
     ReturningHome,
     Leashing,

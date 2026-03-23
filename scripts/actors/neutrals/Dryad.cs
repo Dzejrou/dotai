@@ -15,6 +15,9 @@ public partial class Dryad : Actor, IAttackable, ITargetable
     public float HealCooldown { get; set; } = 1.4f;
 
     [Export]
+    public float Speed { get; set; } = 44.0f;
+
+    [Export]
     public int HealAmount { get; set; } = 3;
 
     [Export]
@@ -27,6 +30,7 @@ public partial class Dryad : Actor, IAttackable, ITargetable
         InitializeActor(
             GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<CollisionShape2D>("CollisionShape2D"));
+        SetMovementSpeed(Speed);
         SetPrimaryActionController(new HealActionController(HealRange, HealCooldown, HealAnimation, HealAmount));
 
         // TODO: Add wandering/support positioning once the first healer pass is stable.

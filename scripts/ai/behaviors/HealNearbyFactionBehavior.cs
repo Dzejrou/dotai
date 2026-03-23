@@ -24,14 +24,19 @@ public sealed class HealNearbyFactionBehavior : IActorBehavior
         var target = ResolveHealingTarget(actor);
         if (target == null)
         {
-            intent = new ActorIntent
+            if (actor.Target != null)
             {
-                ChangeTarget = actor.Target != null,
-                Target = null,
-                StopMovement = true,
-                State = CombatUnitState.Idle,
-            };
-            return true;
+                intent = new ActorIntent
+                {
+                    ChangeTarget = true,
+                    Target = null,
+                    StopMovement = true,
+                    State = CombatUnitState.Idle,
+                };
+                return true;
+            }
+
+            return false;
         }
 
         if (target != actor.Target)
