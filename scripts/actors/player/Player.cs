@@ -182,7 +182,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             return;
         }
 
-        _animatedSprite.Play(attackAnimation);
+        _animatedSprite.Play(attackAnimation, customSpeed: 6.0f);
         ApplySlashDamage();
     }
 

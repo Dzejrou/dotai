@@ -6,16 +6,23 @@ public sealed class HealActionController : ICombatActionController
 {
     private readonly StringName _healAnimation;
     private readonly int _healAmount;
+    private readonly float _animationSpeedMultiplier;
     private float _cooldownTimer;
     private Node2D _pendingHealTarget;
 
-    public HealActionController(float preferredRange, float actionCooldown, StringName healAnimation, int healAmount)
+    public HealActionController(
+        float preferredRange,
+        float actionCooldown,
+        StringName healAnimation,
+        int healAmount,
+        float animationSpeedMultiplier = 1.0f)
     {
         PreferredRange = Math.Max(0.0f, preferredRange);
         MinimumRange = 0.0f;
         ActionCooldown = Math.Max(0.0f, actionCooldown);
         _healAnimation = healAnimation;
         _healAmount = Math.Max(1, healAmount);
+        _animationSpeedMultiplier = Math.Max(0.0f, animationSpeedMultiplier);
     }
 
     public float MinimumRange { get; }
@@ -64,7 +71,7 @@ public sealed class HealActionController : ICombatActionController
             actor.AnimatedSprite.SpriteFrames.GetFrameCount(animationName) > 0)
         {
             _pendingHealTarget = target;
-            actor.AnimatedSprite.Play(animationName);
+            actor.AnimatedSprite.Play(animationName, customSpeed: _animationSpeedMultiplier);
         }
         else
         {
