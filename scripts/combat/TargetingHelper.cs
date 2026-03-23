@@ -21,7 +21,7 @@ public static class TargetingHelper
 
         foreach (var targetNode in EnumerateCandidateTargets(source))
         {
-            var targetFaction = Factions.ResolveExplicitForNode(targetNode) ?? Factions.ResolveCompatibilityForNode(targetNode);
+            var targetFaction = Factions.ResolveForNode(targetNode);
             if (!sourceFaction.IsHostileTo(targetFaction))
                 continue;
 
@@ -66,7 +66,7 @@ public static class TargetingHelper
         if (sourceFaction == null || target == null)
             return false;
 
-        var targetFaction = Factions.ResolveExplicitForNode(target) ?? Factions.ResolveCompatibilityForNode(target);
+        var targetFaction = Factions.ResolveForNode(target);
         if (targetFaction == null)
             return false;
 
@@ -85,8 +85,8 @@ public static class TargetingHelper
             return false;
         }
 
-        var sourceFaction = Factions.ResolveExplicitForNode(source) ?? Factions.ResolveCompatibilityForNode(source);
-        var targetFaction = Factions.ResolveExplicitForNode(target) ?? Factions.ResolveCompatibilityForNode(target);
+        var sourceFaction = Factions.ResolveForNode(source);
+        var targetFaction = Factions.ResolveForNode(target);
         if (sourceFaction != null && targetFaction != null)
         {
             if (source is Player)

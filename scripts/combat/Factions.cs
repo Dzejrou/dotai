@@ -9,9 +9,9 @@ public static class Factions
 
     static Factions()
     {
-        Allies = new Faction("allies");
-        Enemies = new Faction("enemies");
-        Neutral = new Faction("neutral");
+        Allies = new Faction("allies", CombatGroups.Allies);
+        Enemies = new Faction("enemies", CombatGroups.Enemies);
+        Neutral = new Faction("neutral", null);
 
         Allies.SetHostileFactions(Enemies);
         Enemies.SetHostileFactions(Allies);
@@ -34,16 +34,11 @@ public static class Factions
         return key != null && ByKey.TryGetValue(key, out var faction) ? faction : null;
     }
 
-    public static Faction ResolveExplicitForNode(Node node)
+    public static Faction ResolveForNode(Node node)
     {
         if (node is IFactionMember factionMember && factionMember.Faction != null)
             return factionMember.Faction;
 
-        return null;
-    }
-
-    public static Faction ResolveCompatibilityForNode(Node node)
-    {
         if (node == null)
             return null;
 
@@ -52,35 +47,6 @@ public static class Factions
 
         if (node.IsInGroup(CombatGroups.Enemies))
             return Enemies;
-
-        return null;
-    }
-
-    public static Faction ResolveForNode(Node node)
-    {
-        return ResolveExplicitForNode(node) ?? ResolveCompatibilityForNode(node);
-    }
-
-    public static void ApplyCombatGroup(Node node, Faction faction)
-    {
-        if (node == null)
-            return;
-
-        node.RemoveFromGroup(CombatGroups.Allies);
-        node.RemoveFromGroup(CombatGroups.Enemies);
-
-        var group = GetCombatGroup(faction);
-        if (!string.IsNullOrEmpty(group))
-            node.AddToGroup(group);
-    }
-
-    public static string GetCombatGroup(Faction faction)
-    {
-        if (ReferenceEquals(faction, Allies))
-            return CombatGroups.Allies;
-
-        if (ReferenceEquals(faction, Enemies))
-            return CombatGroups.Enemies;
 
         return null;
     }

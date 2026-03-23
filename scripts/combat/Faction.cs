@@ -4,16 +4,26 @@ public sealed class Faction
 {
     private readonly HashSet<Faction> _hostileFactions = new();
 
-    internal Faction(string key)
+    internal Faction(string key, string combatGroup)
     {
         Key = key;
+        CombatGroup = combatGroup;
     }
 
     public string Key { get; }
+    public string CombatGroup { get; }
 
     public bool IsHostileTo(Faction other)
     {
         return other != null && _hostileFactions.Contains(other);
+    }
+
+    public bool IsFriendlyTo(Faction other)
+    {
+        if (other == null)
+            return false;
+
+        return ReferenceEquals(other, this) || (!IsHostileTo(other) && !other.IsHostileTo(this));
     }
 
     internal void SetHostileFactions(params Faction[] hostileFactions)

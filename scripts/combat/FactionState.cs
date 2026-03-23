@@ -32,11 +32,7 @@ public partial class FactionState : Node
 
     public bool IsFriendlyTo(Node node)
     {
-        var otherFaction = Factions.ResolveForNode(node);
-        return Current != null &&
-               otherFaction != null &&
-               !Current.IsHostileTo(otherFaction) &&
-               !otherFaction.IsHostileTo(Current);
+        return Current != null && Current.IsFriendlyTo(Factions.ResolveForNode(node));
     }
 
     public static FactionState ResolveFor(Node node)
@@ -61,6 +57,10 @@ public partial class FactionState : Node
         if (parentNode == null || !parentNode.IsInsideTree())
             return;
 
-        Factions.ApplyCombatGroup(parentNode, Current);
+        parentNode.RemoveFromGroup(CombatGroups.Allies);
+        parentNode.RemoveFromGroup(CombatGroups.Enemies);
+
+        if (!string.IsNullOrEmpty(Current?.CombatGroup))
+            parentNode.AddToGroup(Current.CombatGroup);
     }
 }
