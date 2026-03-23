@@ -22,7 +22,7 @@ public static class ActorBehaviorPresets
     public const float StandardHostileIdleRegenerationIntervalSeconds = 5.0f;
 
     public static ActorBehaviorPreset CreateSceneBackedHostileMeleePreset(
-        Action<ActorBase> onPursuitStuck = null,
+        Action<Actor> onPursuitStuck = null,
         params IActorBehavior[] extraBehaviors)
     {
         var pursuitStuckCallback = onPursuitStuck ?? (actor => LeashBehavior.ResolveFor(actor)?.BeginReturnHome(actor, true));
@@ -52,7 +52,7 @@ public static class ActorBehaviorPresets
     }
 
     public static ActorBehaviorPreset CreateSceneBackedHostileRangedPreset(
-        Action<ActorBase> onPursuitStuck = null,
+        Action<Actor> onPursuitStuck = null,
         params IActorBehavior[] extraBehaviors)
     {
         return CreateSceneBackedHostileMeleePreset(onPursuitStuck, extraBehaviors);
@@ -66,9 +66,9 @@ public static class ActorBehaviorPresets
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
         bool includeNodeMigratedBehaviors = true,
-        Func<ActorBase, bool> canAttemptAcquisition = null,
-        Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
-        Action<ActorBase> onPursuitStuck = null,
+        Func<Actor, bool> canAttemptAcquisition = null,
+        Func<Actor, Node2D, bool> additionalTargetFilter = null,
+        Action<Actor> onPursuitStuck = null,
         params IActorBehavior[] extraBehaviors)
     {
         return CreateHostileCombatPreset(
@@ -93,9 +93,9 @@ public static class ActorBehaviorPresets
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
         bool includeNodeMigratedBehaviors = true,
-        Func<ActorBase, bool> canAttemptAcquisition = null,
-        Func<ActorBase, Node2D, bool> additionalTargetFilter = null,
-        Action<ActorBase> onPursuitStuck = null,
+        Func<Actor, bool> canAttemptAcquisition = null,
+        Func<Actor, Node2D, bool> additionalTargetFilter = null,
+        Action<Actor> onPursuitStuck = null,
         params IActorBehavior[] extraBehaviors)
     {
         return CreateHostileCombatPreset(
@@ -120,9 +120,9 @@ public static class ActorBehaviorPresets
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileEvading,
         bool includeNodeMigratedBehaviors,
-        Func<ActorBase, bool> canAttemptAcquisition,
-        Func<ActorBase, Node2D, bool> additionalTargetFilter,
-        Action<ActorBase> onPursuitStuck,
+        Func<Actor, bool> canAttemptAcquisition,
+        Func<Actor, Node2D, bool> additionalTargetFilter,
+        Action<Actor> onPursuitStuck,
         params IActorBehavior[] extraBehaviors)
     {
         LeashBehavior leashBehavior = null;

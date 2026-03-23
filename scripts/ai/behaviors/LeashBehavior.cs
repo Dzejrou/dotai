@@ -23,8 +23,8 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
     [Export]
     public float SpeedMultiplier { get; set; } = 1.0f;
 
-    private readonly Func<ActorBase, Vector2> _returnDestinationGetter;
-    private readonly Func<ActorBase, bool> _hasRecovered;
+    private readonly Func<Actor, Vector2> _returnDestinationGetter;
+    private readonly Func<Actor, bool> _hasRecovered;
     private bool _isReturningHome;
 
     public LeashBehavior() { }
@@ -33,8 +33,8 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
         float lossRange,
         bool evadeOnAggroLoss,
         bool ignoreDamageWhileReturning,
-        Func<ActorBase, Vector2> returnDestinationGetter,
-        Func<ActorBase, bool> hasRecovered,
+        Func<Actor, Vector2> returnDestinationGetter,
+        Func<Actor, bool> hasRecovered,
         CombatUnitState returnState = CombatUnitState.ReturningHome,
         float speedMultiplier = 1.0f)
     {
@@ -49,7 +49,7 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
 
     public bool IsReturningHome => _isReturningHome;
 
-    public void BeginReturnHome(ActorBase actor, bool showEvadeText)
+    public void BeginReturnHome(Actor actor, bool showEvadeText)
     {
         if (showEvadeText)
             actor.ShowFloatingDamageNumber("EVADE", EvadeColor);
@@ -58,7 +58,7 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
         actor.ClearTarget();
     }
 
-    public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
+    public bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent)
     {
         intent = ActorIntent.None;
 
@@ -89,7 +89,7 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
         return true;
     }
 
-    public bool TryHandleIncomingDamage(ActorBase actor, DamageInfo damageInfo, out IncomingDamageDecision decision)
+    public bool TryHandleIncomingDamage(Actor actor, DamageInfo damageInfo, out IncomingDamageDecision decision)
     {
         decision = default;
 
@@ -119,22 +119,22 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
         return true;
     }
 
-    public static LeashBehavior ResolveFor(ActorBase actor)
+    public static LeashBehavior ResolveFor(Actor actor)
     {
         return actor?.GetNodeOrNull<LeashBehavior>(ScenePath);
     }
 
-    private bool HasRecovered(ActorBase actor)
+    private bool HasRecovered(Actor actor)
     {
         return _hasRecovered?.Invoke(actor) ?? actor.IsAtHome();
     }
 
-    private Vector2 GetReturnDestination(ActorBase actor)
+    private Vector2 GetReturnDestination(Actor actor)
     {
         return _returnDestinationGetter?.Invoke(actor) ?? actor.HomePosition;
     }
 
-    private bool IsTargetWithinLossRange(ActorBase actor, Node2D target)
+    private bool IsTargetWithinLossRange(Actor actor, Node2D target)
     {
         if (target == null)
             return false;

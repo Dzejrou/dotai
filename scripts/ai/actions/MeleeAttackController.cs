@@ -25,18 +25,18 @@ public sealed class MeleeAttackController : ICombatActionController
     public float PreferredRange { get; }
     public float AttackCooldown { get; }
 
-    public void Update(ActorBase actor, double delta)
+    public void Update(Actor actor, double delta)
     {
         if (_cooldownTimer > 0.0f)
             _cooldownTimer -= (float)delta;
     }
 
-    public bool CanStartAction(ActorBase actor, Node2D target)
+    public bool CanStartAction(Actor actor, Node2D target)
     {
         if (_cooldownTimer > 0.0f)
             return false;
 
-        if (target == null || !ActorBase.IsStructurallyValidTarget(target))
+        if (target == null || !Actor.IsStructurallyValidTarget(target))
             return false;
 
         if (target is not ITargetable targetable || !targetable.CanBeTargeted)
@@ -45,7 +45,7 @@ public sealed class MeleeAttackController : ICombatActionController
         return actor.GlobalPosition.DistanceTo(target.GlobalPosition) <= PreferredRange;
     }
 
-    public void StartAction(ActorBase actor, Node2D target)
+    public void StartAction(Actor actor, Node2D target)
     {
         if (!CanStartAction(actor, target) ||
             target is not IAttackable attackable ||
@@ -79,7 +79,7 @@ public sealed class MeleeAttackController : ICombatActionController
         attackable.ApplyDamage(new DamageInfo(damage, actor));
     }
 
-    public bool HandleAnimationFinished(ActorBase actor, StringName animationName)
+    public bool HandleAnimationFinished(Actor actor, StringName animationName)
     {
         if (!animationName.ToString().StartsWith(_attackAnimation.ToString(), StringComparison.Ordinal))
             return false;
@@ -88,7 +88,7 @@ public sealed class MeleeAttackController : ICombatActionController
         return true;
     }
 
-    public void Cancel(ActorBase actor)
+    public void Cancel(Actor actor)
     {
         _cooldownTimer = 0.0f;
     }

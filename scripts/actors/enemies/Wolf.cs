@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class Wolf : ActorBase, IAttackable, ITargetable
+public partial class Wolf : Actor, IAttackable, ITargetable
 {
     [Export]
     public float Speed { get; set; } = 76.0f;

@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class ElfRanger : ActorBase, IAttackable, ITargetable
+public partial class ElfRanger : Actor, IAttackable, ITargetable
 {
     [Export]
     public float Speed { get; set; } = 62.0f;

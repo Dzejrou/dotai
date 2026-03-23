@@ -14,8 +14,8 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
     [Export]
     public string DebugActorName { get; set; }
 
-    private readonly Func<ActorBase, bool> _canAttemptAcquisition;
-    private readonly Func<ActorBase, Node2D, bool> _additionalTargetFilter;
+    private readonly Func<Actor, bool> _canAttemptAcquisition;
+    private readonly Func<Actor, Node2D, bool> _additionalTargetFilter;
     private bool _initialTargetChecked;
 
     public AcquireHostileTargetBehavior() { }
@@ -24,8 +24,8 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
         float acquisitionRange,
         NodePath initialTargetPath = default,
         string actorName = null,
-        Func<ActorBase, bool> canAttemptAcquisition = null,
-        Func<ActorBase, Node2D, bool> additionalTargetFilter = null)
+        Func<Actor, bool> canAttemptAcquisition = null,
+        Func<Actor, Node2D, bool> additionalTargetFilter = null)
     {
         AcquisitionRange = Math.Max(0.0f, acquisitionRange);
         InitialTargetPath = initialTargetPath;
@@ -34,7 +34,7 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
         _additionalTargetFilter = additionalTargetFilter;
     }
 
-    public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
+    public bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent)
     {
         intent = ActorIntent.None;
 
@@ -69,7 +69,7 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
         return true;
     }
 
-    private Node2D ResolveInitialTarget(ActorBase actor)
+    private Node2D ResolveInitialTarget(Actor actor)
     {
         if (InitialTargetPath == null || InitialTargetPath.IsEmpty)
             return null;
@@ -80,7 +80,7 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
         return null;
     }
 
-    private bool CanAcquireTarget(ActorBase actor, Node2D target)
+    private bool CanAcquireTarget(Actor actor, Node2D target)
     {
         if (target == null)
             return false;

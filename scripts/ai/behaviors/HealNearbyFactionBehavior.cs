@@ -13,7 +13,7 @@ public sealed class HealNearbyFactionBehavior : IActorBehavior
         _acquisitionRange = Math.Max(0.0f, acquisitionRange);
     }
 
-    public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
+    public bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent)
     {
         intent = ActorIntent.None;
 
@@ -60,7 +60,7 @@ public sealed class HealNearbyFactionBehavior : IActorBehavior
         return true;
     }
 
-    private Node2D ResolveHealingTarget(ActorBase actor)
+    private Node2D ResolveHealingTarget(Actor actor)
     {
         var currentTarget = actor.Target;
         if (IsValidHealingTarget(actor, currentTarget))
@@ -84,9 +84,9 @@ public sealed class HealNearbyFactionBehavior : IActorBehavior
         return closest;
     }
 
-    private bool IsValidHealingTarget(ActorBase actor, Node2D target)
+    private bool IsValidHealingTarget(Actor actor, Node2D target)
     {
-        if (!ActorBase.IsStructurallyValidTarget(target))
+        if (!Actor.IsStructurallyValidTarget(target))
             return false;
 
         if (target is not ITargetable targetable || !targetable.CanBeTargeted)

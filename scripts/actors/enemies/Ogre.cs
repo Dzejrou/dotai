@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Ogre : ActorBase, IAttackable, ITargetable
+public partial class Ogre : Actor, IAttackable, ITargetable
 {
     [Export]
     public float Speed { get; set; } = 64.0f;

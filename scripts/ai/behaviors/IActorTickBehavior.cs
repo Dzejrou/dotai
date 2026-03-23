@@ -1,4 +1,4 @@
 public interface IActorTickBehavior
 {
-    void Update(ActorBase actor, double delta);
+    void Update(Actor actor, double delta);
 }

@@ -26,7 +26,7 @@ public partial class TargetCombatBehavior : Node, IActorBehavior
         MovementSpeedMultiplier = Math.Max(0.0f, movementSpeedMultiplier);
     }
 
-    public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
+    public bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent)
     {
         intent = ActorIntent.None;
 
@@ -45,7 +45,7 @@ public partial class TargetCombatBehavior : Node, IActorBehavior
     }
 
     public static bool TryCreateCombatIntentForTarget(
-        ActorBase actor,
+        Actor actor,
         Node2D target,
         out ActorIntent intent,
         bool changeTarget = false,
@@ -59,7 +59,7 @@ public partial class TargetCombatBehavior : Node, IActorBehavior
         if (actor == null || target == null || actionController == null)
             return false;
 
-        if (!ActorBase.IsStructurallyValidTarget(target) ||
+        if (!Actor.IsStructurallyValidTarget(target) ||
             target is not IAttackable ||
             target is not ITargetable targetable ||
             !targetable.CanBeTargeted)

@@ -43,18 +43,18 @@ public sealed class RangedAttackController : ICombatActionController
     public float PreferredRange { get; }
     public float AttackCooldown { get; }
 
-    public void Update(ActorBase actor, double delta)
+    public void Update(Actor actor, double delta)
     {
         if (_cooldownTimer > 0.0f)
             _cooldownTimer -= (float)delta;
     }
 
-    public bool CanStartAction(ActorBase actor, Node2D target)
+    public bool CanStartAction(Actor actor, Node2D target)
     {
         if (_cooldownTimer > 0.0f || _projectileScene == null)
             return false;
 
-        if (target == null || !ActorBase.IsStructurallyValidTarget(target))
+        if (target == null || !Actor.IsStructurallyValidTarget(target))
             return false;
 
         if (target is not ITargetable targetable || !targetable.CanBeTargeted)
@@ -64,11 +64,11 @@ public sealed class RangedAttackController : ICombatActionController
         return distance >= MinimumRange && distance <= PreferredRange;
     }
 
-    public void StartAction(ActorBase actor, Node2D target)
+    public void StartAction(Actor actor, Node2D target)
     {
         if (!CanStartAction(actor, target))
         {
-            if (target == null || !ActorBase.IsStructurallyValidTarget(target))
+            if (target == null || !Actor.IsStructurallyValidTarget(target))
                 actor.ClearTarget();
             return;
         }
@@ -98,7 +98,7 @@ public sealed class RangedAttackController : ICombatActionController
         LaunchProjectile(actor, projectileDirection);
     }
 
-    public bool HandleAnimationFinished(ActorBase actor, StringName animationName)
+    public bool HandleAnimationFinished(Actor actor, StringName animationName)
     {
         if (!animationName.ToString().StartsWith(_attackAnimation.ToString(), StringComparison.Ordinal))
             return false;
@@ -113,7 +113,7 @@ public sealed class RangedAttackController : ICombatActionController
         return true;
     }
 
-    public void Cancel(ActorBase actor)
+    public void Cancel(Actor actor)
     {
         _cooldownTimer = 0.0f;
         ClearPendingProjectileShot();
@@ -125,7 +125,7 @@ public sealed class RangedAttackController : ICombatActionController
         _pendingProjectileDirection = Vector2.Zero;
     }
 
-    private void LaunchProjectile(ActorBase actor, Vector2 direction)
+    private void LaunchProjectile(Actor actor, Vector2 direction)
     {
         var projectile = _projectileScene?.Instantiate<Projectile>();
         if (projectile == null)

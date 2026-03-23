@@ -10,13 +10,13 @@ public sealed class ReturnHomeRegenerationBehavior : IActorBehavior, IActorTickB
         _fractionPerSecond = Math.Max(0.0f, fractionPerSecond);
     }
 
-    public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
+    public bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent)
     {
         intent = ActorIntent.None;
         return false;
     }
 
-    public void Update(ActorBase actor, double delta)
+    public void Update(Actor actor, double delta)
     {
         if (_fractionPerSecond <= 0.0f ||
             actor.IsDead ||

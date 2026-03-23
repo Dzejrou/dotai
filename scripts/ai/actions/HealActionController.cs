@@ -22,18 +22,18 @@ public sealed class HealActionController : ICombatActionController
     public float PreferredRange { get; }
     public float ActionCooldown { get; }
 
-    public void Update(ActorBase actor, double delta)
+    public void Update(Actor actor, double delta)
     {
         if (_cooldownTimer > 0.0f)
             _cooldownTimer -= (float)delta;
     }
 
-    public bool CanStartAction(ActorBase actor, Node2D target)
+    public bool CanStartAction(Actor actor, Node2D target)
     {
         if (_cooldownTimer > 0.0f)
             return false;
 
-        if (target == null || !ActorBase.IsStructurallyValidTarget(target))
+        if (target == null || !Actor.IsStructurallyValidTarget(target))
             return false;
 
         if (target is not IHealable healable || !healable.CanReceiveHealing)
@@ -42,11 +42,11 @@ public sealed class HealActionController : ICombatActionController
         return actor.GlobalPosition.DistanceTo(target.GlobalPosition) <= PreferredRange;
     }
 
-    public void StartAction(ActorBase actor, Node2D target)
+    public void StartAction(Actor actor, Node2D target)
     {
         if (!CanStartAction(actor, target) || target is not IHealable healable)
         {
-            if (target == null || !ActorBase.IsStructurallyValidTarget(target))
+            if (target == null || !Actor.IsStructurallyValidTarget(target))
                 actor.ClearTarget();
             return;
         }
@@ -73,13 +73,13 @@ public sealed class HealActionController : ICombatActionController
         }
     }
 
-    public bool HandleAnimationFinished(ActorBase actor, StringName animationName)
+    public bool HandleAnimationFinished(Actor actor, StringName animationName)
     {
         if (!animationName.ToString().StartsWith(_healAnimation.ToString(), StringComparison.Ordinal))
             return false;
 
         if (_pendingHealTarget is IHealable healable &&
-            ActorBase.IsStructurallyValidTarget(_pendingHealTarget) &&
+            Actor.IsStructurallyValidTarget(_pendingHealTarget) &&
             healable.CanReceiveHealing)
         {
             ApplyPendingHeal(healable);
@@ -90,7 +90,7 @@ public sealed class HealActionController : ICombatActionController
         return true;
     }
 
-    public void Cancel(ActorBase actor)
+    public void Cancel(Actor actor)
     {
         _cooldownTimer = 0.0f;
         _pendingHealTarget = null;

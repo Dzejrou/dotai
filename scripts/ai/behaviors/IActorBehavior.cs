@@ -1,4 +1,4 @@
 public interface IActorBehavior
 {
-    bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent);
+    bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent);
 }

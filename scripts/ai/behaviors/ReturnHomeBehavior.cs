@@ -11,14 +11,14 @@ public partial class ReturnHomeBehavior : Node, IActorBehavior
     [Export]
     public float SpeedMultiplier { get; set; } = 1.0f;
 
-    private readonly Func<ActorBase, Vector2> _destinationGetter;
-    private readonly Func<ActorBase, bool> _isAtDestination;
+    private readonly Func<Actor, Vector2> _destinationGetter;
+    private readonly Func<Actor, bool> _isAtDestination;
 
     public ReturnHomeBehavior() { }
 
     public ReturnHomeBehavior(
-        Func<ActorBase, Vector2> destinationGetter,
-        Func<ActorBase, bool> isAtDestination,
+        Func<Actor, Vector2> destinationGetter,
+        Func<Actor, bool> isAtDestination,
         CombatUnitState moveState = CombatUnitState.ReturningHome,
         float speedMultiplier = 1.0f)
     {
@@ -28,7 +28,7 @@ public partial class ReturnHomeBehavior : Node, IActorBehavior
         SpeedMultiplier = Math.Max(0.0f, speedMultiplier);
     }
 
-    public bool TryCreateIntent(ActorBase actor, double delta, out ActorIntent intent)
+    public bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent)
     {
         intent = ActorIntent.None;
 
@@ -45,12 +45,12 @@ public partial class ReturnHomeBehavior : Node, IActorBehavior
         return true;
     }
 
-    private bool IsAtDestination(ActorBase actor)
+    private bool IsAtDestination(Actor actor)
     {
         return _isAtDestination?.Invoke(actor) ?? actor.IsAtHome();
     }
 
-    private Vector2 GetDestination(ActorBase actor)
+    private Vector2 GetDestination(Actor actor)
     {
         return _destinationGetter?.Invoke(actor) ?? actor.HomePosition;
     }

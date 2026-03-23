@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class SkeletonMage : ActorBase, IAttackable, ITargetable
+public partial class SkeletonMage : Actor, IAttackable, ITargetable
 {
     private static readonly StringName CastSpellAnimation = "cast_spell";
 

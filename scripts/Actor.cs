@@ -3,7 +3,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public abstract partial class ActorBase : CharacterBody2D, IFactionMember, IHealable
+public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
 {
     private const string DefaultCorpseScenePath = "res://scenes/world/corpse.tscn";
     private const string BehaviorNodeTargetingPath = "Behaviors/Tier10_Targeting";

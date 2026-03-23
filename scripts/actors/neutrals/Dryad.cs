@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class Dryad : ActorBase, IAttackable, ITargetable
+public partial class Dryad : Actor, IAttackable, ITargetable
 {
     private static readonly StringName HealAnimation = "cast";
 
