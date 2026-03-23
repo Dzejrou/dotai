@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public partial class DebugSpawner : Node2D
 {
+    private const float FactionPickRadius = 20.0f;
+
     private sealed class PreviewData
     {
         public SpriteFrames SpriteFrames { get; init; }
@@ -11,6 +13,7 @@ public partial class DebugSpawner : Node2D
         public Texture2D Texture { get; init; }
         public Vector2 Scale { get; init; } = Vector2.One;
         public Vector2 Offset { get; init; } = Vector2.Zero;
+        public Faction DefaultFaction { get; init; }
     }
 
     [Export]
@@ -66,6 +69,8 @@ public partial class DebugSpawner : Node2D
             return;
 
         _lastSpawnFeedback = string.Empty;
+        if (_previewById.TryGetValue(spawnId, out var previewData) && previewData.DefaultFaction != null)
+            _selectedFaction = previewData.DefaultFaction;
         _pendingSpawnId = spawnId;
         UpdatePlacementGhost(spawnId);
     }
@@ -79,6 +84,32 @@ public partial class DebugSpawner : Node2D
     public void SetSelectedFaction(string factionKey)
     {
         _selectedFaction = Factions.Get(factionKey) ?? Factions.Enemies;
+    }
+
+    public bool TryBeginPlacementFromActorAtScreenPosition(Vector2 screenPosition)
+    {
+        var closestFactionMember = FindClosestFactionMemberAtScreenPosition(screenPosition);
+        if (closestFactionMember?.Faction == null)
+            return false;
+
+        _selectedFaction = closestFactionMember.Faction;
+
+        var spawnId = ResolveSpawnIdForNode(closestFactionMember as Node);
+        if (string.IsNullOrEmpty(spawnId) || !_entriesById.ContainsKey(spawnId))
+            return false;
+
+        BeginPlacement(spawnId);
+        return true;
+    }
+
+    public bool TrySelectFactionAtScreenPosition(Vector2 screenPosition)
+    {
+        var closestFactionMember = FindClosestFactionMemberAtScreenPosition(screenPosition);
+        if (closestFactionMember?.Faction == null)
+            return false;
+
+        _selectedFaction = closestFactionMember.Faction;
+        return true;
     }
 
     public bool PlacePendingAtCursor(bool preservePlacement = false)
@@ -161,6 +192,56 @@ public partial class DebugSpawner : Node2D
 
         return spawnedNode;
     }
+
+    private IFactionMember FindClosestFactionMemberAtScreenPosition(Vector2 screenPosition)
+    {
+        var viewport = GetViewport();
+        if (viewport == null || GetTree() == null)
+            return null;
+
+        var worldPosition = viewport.GetCanvasTransform().AffineInverse() * screenPosition;
+        IFactionMember closestFactionMember = null;
+        var closestDistance = FactionPickRadius;
+
+        foreach (var node in GetTree().GetNodesInGroup(CombatGroups.Actors))
+        {
+            if (node is not Node2D node2D ||
+                node is not IFactionMember factionMember ||
+                factionMember.Faction == null ||
+                !node2D.IsInsideTree())
+            {
+                continue;
+            }
+
+            var distance = node2D.GlobalPosition.DistanceTo(worldPosition);
+            if (distance > closestDistance)
+                continue;
+
+            closestDistance = distance;
+            closestFactionMember = factionMember;
+        }
+
+        return closestFactionMember;
+    }
+
+    private string ResolveSpawnIdForNode(Node node)
+    {
+        if (node == null)
+            return null;
+
+        var sceneFilePath = node.SceneFilePath;
+        if (string.IsNullOrEmpty(sceneFilePath))
+            return null;
+
+        foreach (var entry in _orderedEntries)
+        {
+            if (entry?.SpawnScene?.ResourcePath == sceneFilePath)
+                return entry.Id;
+        }
+
+        return null;
+    }
+
     private void BuildCatalogCache()
     {
         _orderedEntries.Clear();
@@ -217,10 +298,20 @@ public partial class DebugSpawner : Node2D
             Texture = texture,
             Scale = animatedSprite.Scale,
             Offset = animatedSprite.Position,
+            DefaultFaction = ResolvePreviewFaction(enemy),
         };
 
         enemy.Free();
         return previewData;
+    }
+
+    private static Faction ResolvePreviewFaction(Node enemy)
+    {
+        var factionState = FactionState.ResolveFor(enemy);
+        if (factionState == null)
+            return null;
+
+        return Factions.Get(factionState.FactionKey);
     }
 
     private void EnsurePlacementGhost()

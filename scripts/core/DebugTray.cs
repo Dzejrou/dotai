@@ -92,6 +92,7 @@ public partial class DebugTray : Control
     public void Open()
     {
         Visible = true;
+        SyncFactionSelector();
         UpdateCardSelection();
         UpdateStatusLabel();
     }
@@ -171,16 +172,7 @@ public partial class DebugTray : Control
             AddFactionOption("Allies", Factions.Allies.Key);
             AddFactionOption("Neutral", Factions.Neutral.Key);
             _factionSelector.ItemSelected += OnFactionSelected;
-
-            var selectedKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
-            for (var index = 0; index < _factionSelector.ItemCount; index++)
-            {
-                if (_factionSelector.GetItemMetadata(index).AsString() != selectedKey)
-                    continue;
-
-                _factionSelector.Select(index);
-                break;
-            }
+            SyncFactionSelector();
         }
 
     }
@@ -336,6 +328,7 @@ public partial class DebugTray : Control
 
         _draggingFromCard = true;
         _debugSpawner?.BeginPlacement(_pressedCardId);
+        SyncFactionSelector();
         UpdateCardSelection();
         UpdateStatusLabel();
         GetViewport().SetInputAsHandled();
@@ -370,6 +363,21 @@ public partial class DebugTray : Control
             UpdateCardSelection();
             UpdateStatusLabel();
             GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (!HasPendingPlacement &&
+            !IsMouseOverTray(screenPosition) &&
+            _debugSpawner != null)
+        {
+            if (_debugSpawner.TryBeginPlacementFromActorAtScreenPosition(screenPosition) ||
+                _debugSpawner.TrySelectFactionAtScreenPosition(screenPosition))
+            {
+                SyncFactionSelector();
+                UpdateCardSelection();
+                UpdateStatusLabel();
+                GetViewport().SetInputAsHandled();
+            }
         }
     }
 
@@ -388,6 +396,7 @@ public partial class DebugTray : Control
         else if (IsMouseOverCard(_pressedCardId, screenPosition))
         {
             _debugSpawner?.BeginPlacement(_pressedCardId);
+            SyncFactionSelector();
         }
 
         ClearPressedCardState();
@@ -475,6 +484,22 @@ public partial class DebugTray : Control
 
         _debugSpawner.SetSelectedFaction(_factionSelector.GetItemMetadata((int)index).AsString());
         UpdateStatusLabel();
+    }
+
+    private void SyncFactionSelector()
+    {
+        if (_factionSelector == null)
+            return;
+
+        var selectedKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
+        for (var index = 0; index < _factionSelector.ItemCount; index++)
+        {
+            if (_factionSelector.GetItemMetadata(index).AsString() != selectedKey)
+                continue;
+
+            _factionSelector.Select(index);
+            break;
+        }
     }
 
     private static string Capitalize(string value)
