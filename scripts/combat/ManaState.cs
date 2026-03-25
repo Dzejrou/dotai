@@ -6,11 +6,12 @@ using System;
 public partial class ManaState : Node
 {
     public int Current { get; private set; }
-    public int Max { get; private set; } = 1;
+    [Export]
+    public int Max { get; set; } = 1;
 
-    public void Initialize(int maxMana)
+    public void Initialize()
     {
-        Max = Math.Max(1, maxMana);
+        Max = Math.Max(1, Max);
         Current = Max;
     }
 

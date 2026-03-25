@@ -20,7 +20,6 @@ height = 26.0
 z_index = -1
 position = Vector2(240, 80)
 script = ExtResource("1_8g1m3")
-Health = 10
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2100045633]
 position = Vector2(0, -2)
@@ -42,6 +41,7 @@ script = ExtResource("13_combat_state")
 
 [node name="HealthState" type="Node" parent="." unique_id=1668152086]
 script = ExtResource("14_health_state")
+Max = 10
 
 [node name="FactionState" type="Node" parent="." unique_id=734064014]
 script = ExtResource("15_faction_state")

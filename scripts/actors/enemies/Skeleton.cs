@@ -6,9 +6,6 @@ public partial class Skeleton : Actor, IAttackable, ITargetable
     [Export]
     public float Speed { get; set; } = 52.0f;
 
-    [Export]
-    public int Health { get; set; } = 24;
-
     public bool CanBeTargeted => !IsDead;
 
     public override void _Ready()
@@ -43,5 +40,4 @@ public partial class Skeleton : Actor, IAttackable, ITargetable
         ClearTarget();
         SpawnCorpseAndFree();
     }
-    protected override int MaxHealthValue => Health;
 }

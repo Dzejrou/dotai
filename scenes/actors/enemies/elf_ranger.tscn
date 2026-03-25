@@ -40,6 +40,7 @@ script = ExtResource("8_combat_state")
 
 [node name="HealthState" type="Node" parent="."]
 script = ExtResource("9_health_state")
+Max = 18
 
 [node name="FactionState" type="Node" parent="."]
 script = ExtResource("10_faction_state")

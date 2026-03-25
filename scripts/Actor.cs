@@ -36,16 +36,7 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
     public int CurrentHealth => _health.Current;
     public bool IsDead => _health.IsDead;
     public Faction Faction => _faction.Current;
-    public int ResolvedMaxHealth
-    {
-        get
-        {
-            var desiredMaxHealth = Math.Max(1, MaxHealthValue);
-            if (_health.Max != desiredMaxHealth)
-                _health.SetMax(desiredMaxHealth);
-            return _health.Max;
-        }
-    }
+    public int ResolvedMaxHealth => _health.Max;
     public int MaxHealableHealth => ResolvedMaxHealth;
     public bool CanReceiveHealing => !IsDead && CurrentHealth < ResolvedMaxHealth;
     public ICombatActionController PrimaryActionController { get; private set; }
@@ -64,8 +55,6 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
     private FactionState _faction;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
-
-    protected abstract int MaxHealthValue { get; }
 
     protected void InitializeActor(
         AnimatedSprite2D animatedSprite,
@@ -88,7 +77,7 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
         _combat.ClearTarget();
         _combat.ExitCombat();
         _health = GetNode<HealthState>("HealthState");
-        _health.Initialize(Math.Max(1, MaxHealthValue));
+        _health.Initialize();
         _faction = GetNode<FactionState>("FactionState");
         var scenePrimaryActionController = GetNodeOrNull<Node>(PrimaryActionControllerPath);
         if (scenePrimaryActionController != null)

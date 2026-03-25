@@ -21,12 +21,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public float Speed { get; set; } = 140.0f;
 
     [Export]
-    public int MaxHealth { get; set; } = 200;
-
-    [Export]
-    public int MaxMana { get; set; } = 100;
-
-    [Export]
     public float AttackRange { get; set; } = 28.0f;
 
     [Export]
@@ -115,9 +109,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
         _combat = GetNode<CombatState>("CombatState");
         _health = GetNode<HealthState>("HealthState");
-        _health.Initialize(Math.Max(1, MaxHealth));
+        _health.Initialize();
         _mana = GetNode<ManaState>("ManaState");
-        _mana.Initialize(Math.Max(1, MaxMana));
+        _mana.Initialize();
         if (FireNovaVfxScene == null)
             FireNovaVfxScene = GD.Load<PackedScene>(DefaultFireNovaVfxScenePath);
         SetAnimationSafe(GetIdleAnimationName());

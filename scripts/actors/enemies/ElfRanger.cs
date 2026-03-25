@@ -6,9 +6,6 @@ public partial class ElfRanger : Actor, IAttackable, ITargetable
     [Export]
     public float Speed { get; set; } = 62.0f;
 
-    [Export]
-    public int Health { get; set; } = 18;
-
     public bool CanBeTargeted => !IsDead;
 
     public override void _Ready()
@@ -36,6 +33,4 @@ public partial class ElfRanger : Actor, IAttackable, ITargetable
         SetIsDead(true);
         SpawnCorpseAndFree();
     }
-
-    protected override int MaxHealthValue => Health;
 }

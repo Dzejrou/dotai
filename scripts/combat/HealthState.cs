@@ -6,12 +6,13 @@ using System;
 public partial class HealthState : Node
 {
     public int Current { get; private set; }
-    public int Max { get; private set; } = 1;
+    [Export]
+    public int Max { get; set; } = 1;
     public bool IsDead { get; private set; }
 
-    public void Initialize(int maxHealth)
+    public void Initialize()
     {
-        Max = Math.Max(1, maxHealth);
+        Max = Math.Max(1, Max);
         Current = Max;
         IsDead = false;
     }

@@ -6,9 +6,6 @@ public partial class Wolf : Actor, IAttackable, ITargetable
     [Export]
     public float Speed { get; set; } = 76.0f;
 
-    [Export]
-    public int Health { get; set; } = 12;
-
     public bool CanBeTargeted => !IsDead;
 
     public override void _Ready()
@@ -42,6 +39,4 @@ public partial class Wolf : Actor, IAttackable, ITargetable
     {
         return ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
     }
-
-    protected override int MaxHealthValue => Health;
 }

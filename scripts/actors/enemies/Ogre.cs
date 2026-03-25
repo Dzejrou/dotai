@@ -6,9 +6,6 @@ public partial class Ogre : Actor, IAttackable, ITargetable
     [Export]
     public float Speed { get; set; } = 64.0f;
 
-    [Export]
-    public int MaxHealth { get; set; } = 40;
-
     public override void _Ready()
     {
         InitializeActor(
@@ -37,6 +34,4 @@ public partial class Ogre : Actor, IAttackable, ITargetable
         SetIsDead(true);
         SpawnCorpseAndFree();
     }
-
-    protected override int MaxHealthValue => MaxHealth;
 }

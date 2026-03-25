@@ -9,9 +9,6 @@ public partial class Dryad : Actor, IAttackable, ITargetable
     [Export]
     public float Speed { get; set; } = 44.0f;
 
-    [Export]
-    public int Health { get; set; } = 18;
-
     public bool CanBeTargeted => !IsDead;
 
     public override void _Ready()
@@ -39,6 +36,4 @@ public partial class Dryad : Actor, IAttackable, ITargetable
         SetIsDead(true);
         SpawnCorpseAndFree();
     }
-
-    protected override int MaxHealthValue => Health;
 }
