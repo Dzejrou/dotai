@@ -33,7 +33,6 @@ public partial class Dryad : Actor, IAttackable, ITargetable
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new HealActionController(HealRange, HealCooldown, HealAnimation, HealAmount, 2.0f));
 
-        // TODO: Add wandering/support positioning once the first healer pass is stable.
         ConfigureBehaviors(new HealNearbyFactionBehavior(Factions.Allies, HealAcquisitionRange));
         PlayIdleIfAvailable();
     }
