@@ -37,6 +37,9 @@ public partial class RangedAttackController : Node, ICombatActionController
     [Export]
     public float ProjectileMaxTravelDistance { get; set; } = 320.0f;
 
+    [Export]
+    public float AnimationSpeedMultiplier { get; set; } = 1.0f;
+
     public override void _Ready()
     {
         MinimumRange = Math.Max(0.0f, MinimumRange);
@@ -46,6 +49,7 @@ public partial class RangedAttackController : Node, ICombatActionController
         ProjectileSpeed = Math.Max(0.0f, ProjectileSpeed);
         ProjectileLifetime = Math.Max(0.0f, ProjectileLifetime);
         ProjectileMaxTravelDistance = Math.Max(0.0f, ProjectileMaxTravelDistance);
+        AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
 
         if (ProjectileScene == null)
             ProjectileScene = GD.Load<PackedScene>(DefaultProjectileScenePath);
@@ -98,7 +102,7 @@ public partial class RangedAttackController : Node, ICombatActionController
         {
             _hasPendingProjectileShot = true;
             _pendingProjectileDirection = projectileDirection;
-            actor.AnimatedSprite.Play(attackAnimationName);
+            actor.AnimatedSprite.Play(attackAnimationName, customSpeed: AnimationSpeedMultiplier);
             return;
         }
 

@@ -23,6 +23,9 @@ public partial class MeleeAttackController : Node, ICombatActionController
     [Export]
     public int MaximumDamage { get; set; } = 1;
 
+    [Export]
+    public float AnimationSpeedMultiplier { get; set; } = 1.0f;
+
     public float MinimumRange => 0.0f;
 
     public override void _Ready()
@@ -30,6 +33,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
         PreferredRange = Math.Max(0.0f, PreferredRange);
         AttackCooldown = Math.Max(0.0f, AttackCooldown);
         MaximumDamage = Math.Max(MinimumDamage, MaximumDamage);
+        AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
         _randomNumberGenerator.Randomize();
     }
 
@@ -76,7 +80,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
             actor.AnimatedSprite.SpriteFrames.HasAnimation(attackAnimation) &&
             actor.AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) > 0)
         {
-            actor.AnimatedSprite.Play(attackAnimation);
+            actor.AnimatedSprite.Play(attackAnimation, customSpeed: AnimationSpeedMultiplier);
         }
         else
         {

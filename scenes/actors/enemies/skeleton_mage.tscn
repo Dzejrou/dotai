@@ -48,6 +48,7 @@ script = ExtResource("10_faction_state")
 script = ExtResource("11_ranged_action")
 AttackAnimation = &"cast_spell"
 ProjectileScene = ExtResource("12_projectile_scene")
+AnimationSpeedMultiplier = 2.0
 
 [node name="Behaviors" type="Node" parent="." unique_id=258315963]
 
