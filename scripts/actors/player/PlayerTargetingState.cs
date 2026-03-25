@@ -1,18 +1,10 @@
 using Godot;
 
-public enum PlayerActiveTargetSource
-{
-    None,
-    SoftTarget,
-    TabTarget,
-}
-
 public sealed class PlayerTargetingState
 {
     public Node2D SoftTarget { get; private set; }
     public Node2D TabTarget { get; private set; }
     public Node2D ActiveTarget { get; private set; }
-    public PlayerActiveTargetSource ActiveTargetSource { get; private set; } = PlayerActiveTargetSource.None;
 
     public void SetSoftTarget(Node2D target)
     {
@@ -48,18 +40,15 @@ public sealed class PlayerTargetingState
         if (TabTarget != null)
         {
             ActiveTarget = TabTarget;
-            ActiveTargetSource = PlayerActiveTargetSource.TabTarget;
             return;
         }
 
         if (SoftTarget != null)
         {
             ActiveTarget = SoftTarget;
-            ActiveTargetSource = PlayerActiveTargetSource.SoftTarget;
             return;
         }
 
         ActiveTarget = null;
-        ActiveTargetSource = PlayerActiveTargetSource.None;
     }
 }

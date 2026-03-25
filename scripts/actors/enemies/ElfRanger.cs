@@ -45,7 +45,6 @@ public partial class ElfRanger : Actor, IAttackable, ITargetable
 
         InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
-            GetNodeOrNull<CollisionShape2D>("CollisionShape2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
         SetPrimaryActionController(

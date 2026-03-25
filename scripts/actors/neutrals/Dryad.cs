@@ -28,8 +28,7 @@ public partial class Dryad : Actor, IAttackable, ITargetable
     public override void _Ready()
     {
         InitializeActor(
-            GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"),
-            GetNodeOrNull<CollisionShape2D>("CollisionShape2D"));
+            GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"));
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new HealActionController(HealRange, HealCooldown, HealAnimation, HealAmount, 2.0f));
 

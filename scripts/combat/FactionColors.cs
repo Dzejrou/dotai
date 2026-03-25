@@ -20,9 +20,4 @@ public static class FactionColors
 
         return UnknownColor;
     }
-
-    public static Color Resolve(Node node)
-    {
-        return Resolve(node is IFactionMember factionMember ? factionMember.Faction : null);
-    }
 }

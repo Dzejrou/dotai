@@ -23,7 +23,6 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
     public float HomeReturnTolerance { get; set; } = 4.0f;
 
     public AnimatedSprite2D AnimatedSprite { get; private set; }
-    public CollisionShape2D CollisionShape { get; private set; }
     public NavigationAgent2D NavigationAgent { get; private set; }
     public CombatState Combat => _combat;
     public Node2D Target => _combat.Target;
@@ -69,11 +68,9 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
 
     protected void InitializeActor(
         AnimatedSprite2D animatedSprite,
-        CollisionShape2D collisionShape,
         NavigationAgent2D navigationAgent = null)
     {
         AnimatedSprite = animatedSprite;
-        CollisionShape = collisionShape;
         NavigationAgent = navigationAgent;
 
         if (NavigationAgent != null)
