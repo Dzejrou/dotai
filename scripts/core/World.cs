@@ -32,6 +32,9 @@ public partial class World : Node2D
     [Signal]
     public delegate void PlayerHealthChangedEventHandler(int health, int maxHealth);
 
+    [Signal]
+    public delegate void PlayerManaChangedEventHandler(int mana, int maxMana);
+
     private Player _player;
     private NavigationRegion2D _worldNavigation;
     private bool _isGameOver;
@@ -46,7 +49,9 @@ public partial class World : Node2D
         {
             _player.Connect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
             _player.Connect(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
+            _player.Connect(Player.SignalName.ManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
             EmitSignal(SignalName.PlayerHealthChanged, _player.CurrentHealth, _player.MaxHealableHealth);
+            EmitSignal(SignalName.PlayerManaChanged, _player.CurrentMana, _player.MaxManaValue);
         }
     }
 
@@ -56,6 +61,12 @@ public partial class World : Node2D
             _player.IsConnected(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
         {
             _player.Disconnect(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
+        }
+
+        if (GodotObject.IsInstanceValid(_player) &&
+            _player.IsConnected(Player.SignalName.ManaChanged, new Callable(this, nameof(OnPlayerManaChanged))))
+        {
+            _player.Disconnect(Player.SignalName.ManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
         }
 
         if (GodotObject.IsInstanceValid(_player) &&
@@ -77,6 +88,11 @@ public partial class World : Node2D
     private void OnPlayerHealthChanged(int health, int maxHealth)
     {
         EmitSignal(SignalName.PlayerHealthChanged, health, maxHealth);
+    }
+
+    private void OnPlayerManaChanged(int mana, int maxMana)
+    {
+        EmitSignal(SignalName.PlayerManaChanged, mana, maxMana);
     }
 
     private void BuildWorldNavigation()

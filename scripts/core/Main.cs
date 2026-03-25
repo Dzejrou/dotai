@@ -36,8 +36,13 @@ public partial class Main : Node2D
     private Label _healthText;
     private ColorRect _healthBackground;
     private ColorRect _healthFill;
+    private Label _manaText;
+    private ColorRect _manaBackground;
+    private ColorRect _manaFill;
     private const int HealthBarWidth = 140;
     private const int HealthBarHeight = 16;
+    private const int ManaBarWidth = 140;
+    private const int ManaBarHeight = 16;
     private int _windowPresetIndex;
 
     public override void _Ready()
@@ -48,6 +53,7 @@ public partial class Main : Node2D
         {
             _world.Connect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
             _world.Connect(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
+            _world.Connect(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
         }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
@@ -78,9 +84,15 @@ public partial class Main : Node2D
         var playerPath = _world != null && !_world.PlayerPath.IsEmpty ? _world.PlayerPath : new NodePath("Player");
         var player = _world?.GetNodeOrNull<Player>(playerPath);
         if (player != null)
+        {
             UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealableHealth);
+            UpdatePlayerManaHud(player.CurrentMana, player.MaxManaValue);
+        }
         else
+        {
             UpdatePlayerHealthHud(0, 0);
+            UpdatePlayerManaHud(0, 0);
+        }
 
         InitializeWindowPreset();
     }
@@ -95,6 +107,9 @@ public partial class Main : Node2D
 
         if (_world.IsConnected(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
             _world.Disconnect(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
+
+        if (_world.IsConnected(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged))))
+            _world.Disconnect(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
 
         if (_pauseMenuRoot != null && _pauseMenuRoot.IsConnected(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested))))
             _pauseMenuRoot.Disconnect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
@@ -143,6 +158,11 @@ public partial class Main : Node2D
         UpdatePlayerHealthHud(health, maxHealth);
     }
 
+    private void OnPlayerManaChanged(int mana, int maxMana)
+    {
+        UpdatePlayerManaHud(mana, maxMana);
+    }
+
     private void RestartFromGameOver()
     {
         _restartingFromGameOver = true;
@@ -171,6 +191,18 @@ public partial class Main : Node2D
         var safeMax = Math.Max(1, maxHealth);
         var healthRatio = Math.Clamp((float)health / safeMax, 0.0f, 1.0f);
         _healthFill.Size = new Vector2(HealthBarWidth * healthRatio, HealthBarHeight);
+    }
+
+    private void UpdatePlayerManaHud(int mana, int maxMana)
+    {
+        if (_manaText == null || _manaFill == null || _manaBackground == null)
+            return;
+
+        _manaText.Text = $"{mana}/{maxMana}";
+
+        var safeMax = Math.Max(1, maxMana);
+        var manaRatio = Math.Clamp((float)mana / safeMax, 0.0f, 1.0f);
+        _manaFill.Size = new Vector2(ManaBarWidth * manaRatio, ManaBarHeight);
     }
 
     private void CreateHud()
@@ -219,6 +251,44 @@ public partial class Main : Node2D
         _healthText.OffsetTop = 1.0f;
         _healthText.AddThemeFontSizeOverride("font_size", 18);
         healthPanel.AddChild(_healthText);
+
+        var manaPanel = new Control
+        {
+            Name = "ManaPanel",
+            CustomMinimumSize = new Vector2(220.0f, 24.0f),
+        };
+        manaPanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
+        manaPanel.OffsetLeft = 8.0f;
+        manaPanel.OffsetTop = 32.0f;
+        hudCanvas.AddChild(manaPanel);
+
+        _manaBackground = new ColorRect
+        {
+            Name = "ManaBarBackground",
+            Color = Colors.Black,
+            Size = new Vector2(ManaBarWidth, ManaBarHeight)
+        };
+        manaPanel.AddChild(_manaBackground);
+
+        _manaFill = new ColorRect
+        {
+            Name = "ManaBarFill",
+            Color = new Color(0.2f, 0.45f, 1.0f, 1.0f),
+            Size = new Vector2(ManaBarWidth, ManaBarHeight)
+        };
+        manaPanel.AddChild(_manaFill);
+
+        _manaText = new Label
+        {
+            Name = "ManaText",
+            Text = "0/0",
+            Modulate = new Color(1.0f, 1.0f, 1.0f, 1.0f)
+        };
+        _manaText.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
+        _manaText.OffsetLeft = ManaBarWidth + 10.0f;
+        _manaText.OffsetTop = 1.0f;
+        _manaText.AddThemeFontSizeOverride("font_size", 18);
+        manaPanel.AddChild(_manaText);
     }
 
     private void InitializeWindowPreset()
