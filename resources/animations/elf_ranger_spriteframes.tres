@@ -1,129 +1,149 @@
 [gd_resource type="SpriteFrames" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_000.png" id="1_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_001.png" id="2_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_002.png" id="3_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_003.png" id="4_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_000.png" id="5_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_001.png" id="6_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_002.png" id="7_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_003.png" id="8_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_000.png" id="9_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_001.png" id="10_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_002.png" id="11_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_003.png" id="12_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_000.png" id="13_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_001.png" id="14_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_002.png" id="15_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_003.png" id="16_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_000.png" id="17_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_001.png" id="18_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_002.png" id="19_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_003.png" id="20_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_000.png" id="21_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_001.png" id="22_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_002.png" id="23_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_003.png" id="24_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_000.png" id="25_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_001.png" id="26_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_002.png" id="27_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_003.png" id="28_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_000.png" id="29_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_001.png" id="30_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_002.png" id="31_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_003.png" id="32_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_000.png" id="33_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_001.png" id="34_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_002.png" id="35_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_003.png" id="36_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_004.png" id="37_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_005.png" id="38_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_006.png" id="39_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_007.png" id="40_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_008.png" id="41_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_009.png" id="42_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_010.png" id="43_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_011.png" id="44_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_012.png" id="45_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_013.png" id="46_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_014.png" id="47_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_015.png" id="48_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_000.png" id="49_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_001.png" id="50_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_002.png" id="51_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_003.png" id="52_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_004.png" id="53_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_005.png" id="54_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_006.png" id="55_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_007.png" id="56_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_008.png" id="57_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_009.png" id="58_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_010.png" id="59_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_011.png" id="60_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_012.png" id="61_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_013.png" id="62_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_014.png" id="63_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_015.png" id="64_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_000.png" id="65_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_001.png" id="66_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_002.png" id="67_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_003.png" id="68_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_004.png" id="69_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_005.png" id="70_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_006.png" id="71_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_007.png" id="72_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_008.png" id="73_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_009.png" id="74_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_010.png" id="75_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_011.png" id="76_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_012.png" id="77_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_013.png" id="78_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_014.png" id="79_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_015.png" id="80_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_000.png" id="81_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_001.png" id="82_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_002.png" id="83_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_003.png" id="84_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_004.png" id="85_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_005.png" id="86_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_006.png" id="87_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_007.png" id="88_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_008.png" id="89_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_009.png" id="90_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_010.png" id="91_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_011.png" id="92_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_012.png" id="93_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_013.png" id="94_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_014.png" id="95_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_015.png" id="96_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_000.png" id="97_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_001.png" id="98_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_002.png" id="99_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_003.png" id="100_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_004.png" id="101_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_005.png" id="102_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_006.png" id="103_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_000.png" id="104_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_001.png" id="105_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_002.png" id="106_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_003.png" id="107_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_004.png" id="108_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_005.png" id="109_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_006.png" id="110_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_000.png" id="111_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_001.png" id="112_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_002.png" id="113_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_003.png" id="114_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_004.png" id="115_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_005.png" id="116_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_006.png" id="117_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_000.png" id="118_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_001.png" id="119_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_002.png" id="120_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_003.png" id="121_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_004.png" id="122_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_005.png" id="123_tex"]
-[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_006.png" id="124_tex"]
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_000.png" id="1_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_001.png" id="2_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_002.png" id="3_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_003.png" id="4_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_004.png" id="5_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_005.png" id="6_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_006.png" id="7_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_007.png" id="8_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_008.png" id="9_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_000.png" id="10_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_001.png" id="11_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_002.png" id="12_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_003.png" id="13_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_004.png" id="14_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_005.png" id="15_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_006.png" id="16_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_007.png" id="17_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_008.png" id="18_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_000.png" id="19_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_001.png" id="20_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_002.png" id="21_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_003.png" id="22_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_004.png" id="23_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_005.png" id="24_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_006.png" id="25_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_007.png" id="26_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_008.png" id="27_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_000.png" id="28_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_001.png" id="29_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_002.png" id="30_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_003.png" id="31_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_004.png" id="32_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_005.png" id="33_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_006.png" id="34_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_007.png" id="35_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_008.png" id="36_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_000.png" id="37_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_001.png" id="38_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_002.png" id="39_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_003.png" id="40_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_004.png" id="41_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_005.png" id="42_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_006.png" id="43_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_007.png" id="44_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_008.png" id="45_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_000.png" id="46_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_001.png" id="47_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_002.png" id="48_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_003.png" id="49_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_004.png" id="50_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_005.png" id="51_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_006.png" id="52_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_007.png" id="53_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_008.png" id="54_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_000.png" id="55_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_001.png" id="56_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_002.png" id="57_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_003.png" id="58_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_004.png" id="59_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_005.png" id="60_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_006.png" id="61_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_007.png" id="62_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_008.png" id="63_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_000.png" id="64_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_001.png" id="65_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_002.png" id="66_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_003.png" id="67_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_004.png" id="68_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_005.png" id="69_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_006.png" id="70_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_007.png" id="71_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_008.png" id="72_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_000.png" id="73_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_001.png" id="74_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_002.png" id="75_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_003.png" id="76_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_004.png" id="77_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_005.png" id="78_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_006.png" id="79_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_007.png" id="80_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_008.png" id="81_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_000.png" id="82_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_001.png" id="83_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_002.png" id="84_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_003.png" id="85_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_004.png" id="86_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_005.png" id="87_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_006.png" id="88_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_007.png" id="89_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_008.png" id="90_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_000.png" id="91_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_001.png" id="92_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_002.png" id="93_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_003.png" id="94_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_004.png" id="95_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_005.png" id="96_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_006.png" id="97_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_007.png" id="98_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_008.png" id="99_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_000.png" id="100_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_001.png" id="101_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_002.png" id="102_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_003.png" id="103_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_004.png" id="104_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_005.png" id="105_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_006.png" id="106_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_007.png" id="107_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_008.png" id="108_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_000.png" id="109_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_001.png" id="110_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_002.png" id="111_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_003.png" id="112_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_004.png" id="113_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_005.png" id="114_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_006.png" id="115_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_007.png" id="116_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_008.png" id="117_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_000.png" id="118_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_001.png" id="119_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_002.png" id="120_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_003.png" id="121_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_004.png" id="122_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_005.png" id="123_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_006.png" id="124_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_007.png" id="125_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_008.png" id="126_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_000.png" id="127_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_001.png" id="128_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_002.png" id="129_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_003.png" id="130_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_004.png" id="131_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_005.png" id="132_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_006.png" id="133_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_007.png" id="134_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_008.png" id="135_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_000.png" id="136_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_001.png" id="137_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_002.png" id="138_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_003.png" id="139_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_004.png" id="140_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_005.png" id="141_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_006.png" id="142_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_007.png" id="143_tex"] 
+ [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_008.png" id="144_tex"] 
 
 [resource]
 animations = [
@@ -135,112 +155,112 @@ animations = [
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("1_tex")}, {"duration": 1.0, "texture": ExtResource("2_tex")}, {"duration": 1.0, "texture": ExtResource("3_tex")}, {"duration": 1.0, "texture": ExtResource("4_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("1_tex")}, {"duration": 1.0, "texture": ExtResource("2_tex")}, {"duration": 1.0, "texture": ExtResource("3_tex")}, {"duration": 1.0, "texture": ExtResource("4_tex")}, {"duration": 1.0, "texture": ExtResource("5_tex")}, {"duration": 1.0, "texture": ExtResource("6_tex")}, {"duration": 1.0, "texture": ExtResource("7_tex")}, {"duration": 1.0, "texture": ExtResource("8_tex")}, {"duration": 1.0, "texture": ExtResource("9_tex")}],
 "loop": true,
 "name": &"breathing-idle_east",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("5_tex")}, {"duration": 1.0, "texture": ExtResource("6_tex")}, {"duration": 1.0, "texture": ExtResource("7_tex")}, {"duration": 1.0, "texture": ExtResource("8_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("10_tex")}, {"duration": 1.0, "texture": ExtResource("11_tex")}, {"duration": 1.0, "texture": ExtResource("12_tex")}, {"duration": 1.0, "texture": ExtResource("13_tex")}, {"duration": 1.0, "texture": ExtResource("14_tex")}, {"duration": 1.0, "texture": ExtResource("15_tex")}, {"duration": 1.0, "texture": ExtResource("16_tex")}, {"duration": 1.0, "texture": ExtResource("17_tex")}, {"duration": 1.0, "texture": ExtResource("18_tex")}],
 "loop": true,
 "name": &"breathing-idle_north",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("9_tex")}, {"duration": 1.0, "texture": ExtResource("10_tex")}, {"duration": 1.0, "texture": ExtResource("11_tex")}, {"duration": 1.0, "texture": ExtResource("12_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("19_tex")}, {"duration": 1.0, "texture": ExtResource("20_tex")}, {"duration": 1.0, "texture": ExtResource("21_tex")}, {"duration": 1.0, "texture": ExtResource("22_tex")}, {"duration": 1.0, "texture": ExtResource("23_tex")}, {"duration": 1.0, "texture": ExtResource("24_tex")}, {"duration": 1.0, "texture": ExtResource("25_tex")}, {"duration": 1.0, "texture": ExtResource("26_tex")}, {"duration": 1.0, "texture": ExtResource("27_tex")}],
 "loop": true,
 "name": &"breathing-idle_south",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("13_tex")}, {"duration": 1.0, "texture": ExtResource("14_tex")}, {"duration": 1.0, "texture": ExtResource("15_tex")}, {"duration": 1.0, "texture": ExtResource("16_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("28_tex")}, {"duration": 1.0, "texture": ExtResource("29_tex")}, {"duration": 1.0, "texture": ExtResource("30_tex")}, {"duration": 1.0, "texture": ExtResource("31_tex")}, {"duration": 1.0, "texture": ExtResource("32_tex")}, {"duration": 1.0, "texture": ExtResource("33_tex")}, {"duration": 1.0, "texture": ExtResource("34_tex")}, {"duration": 1.0, "texture": ExtResource("35_tex")}, {"duration": 1.0, "texture": ExtResource("36_tex")}],
 "loop": true,
 "name": &"breathing-idle_west",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("17_tex")}, {"duration": 1.0, "texture": ExtResource("18_tex")}, {"duration": 1.0, "texture": ExtResource("19_tex")}, {"duration": 1.0, "texture": ExtResource("20_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("37_tex")}, {"duration": 1.0, "texture": ExtResource("38_tex")}, {"duration": 1.0, "texture": ExtResource("39_tex")}, {"duration": 1.0, "texture": ExtResource("40_tex")}, {"duration": 1.0, "texture": ExtResource("41_tex")}, {"duration": 1.0, "texture": ExtResource("42_tex")}, {"duration": 1.0, "texture": ExtResource("43_tex")}, {"duration": 1.0, "texture": ExtResource("44_tex")}, {"duration": 1.0, "texture": ExtResource("45_tex")}],
 "loop": true,
 "name": &"walk_east",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("21_tex")}, {"duration": 1.0, "texture": ExtResource("22_tex")}, {"duration": 1.0, "texture": ExtResource("23_tex")}, {"duration": 1.0, "texture": ExtResource("24_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("46_tex")}, {"duration": 1.0, "texture": ExtResource("47_tex")}, {"duration": 1.0, "texture": ExtResource("48_tex")}, {"duration": 1.0, "texture": ExtResource("49_tex")}, {"duration": 1.0, "texture": ExtResource("50_tex")}, {"duration": 1.0, "texture": ExtResource("51_tex")}, {"duration": 1.0, "texture": ExtResource("52_tex")}, {"duration": 1.0, "texture": ExtResource("53_tex")}, {"duration": 1.0, "texture": ExtResource("54_tex")}],
 "loop": true,
 "name": &"walk_north",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("25_tex")}, {"duration": 1.0, "texture": ExtResource("26_tex")}, {"duration": 1.0, "texture": ExtResource("27_tex")}, {"duration": 1.0, "texture": ExtResource("28_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("55_tex")}, {"duration": 1.0, "texture": ExtResource("56_tex")}, {"duration": 1.0, "texture": ExtResource("57_tex")}, {"duration": 1.0, "texture": ExtResource("58_tex")}, {"duration": 1.0, "texture": ExtResource("59_tex")}, {"duration": 1.0, "texture": ExtResource("60_tex")}, {"duration": 1.0, "texture": ExtResource("61_tex")}, {"duration": 1.0, "texture": ExtResource("62_tex")}, {"duration": 1.0, "texture": ExtResource("63_tex")}],
 "loop": true,
 "name": &"walk_south",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("29_tex")}, {"duration": 1.0, "texture": ExtResource("30_tex")}, {"duration": 1.0, "texture": ExtResource("31_tex")}, {"duration": 1.0, "texture": ExtResource("32_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("64_tex")}, {"duration": 1.0, "texture": ExtResource("65_tex")}, {"duration": 1.0, "texture": ExtResource("66_tex")}, {"duration": 1.0, "texture": ExtResource("67_tex")}, {"duration": 1.0, "texture": ExtResource("68_tex")}, {"duration": 1.0, "texture": ExtResource("69_tex")}, {"duration": 1.0, "texture": ExtResource("70_tex")}, {"duration": 1.0, "texture": ExtResource("71_tex")}, {"duration": 1.0, "texture": ExtResource("72_tex")}],
 "loop": true,
 "name": &"walk_west",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("33_tex")}, {"duration": 1.0, "texture": ExtResource("34_tex")}, {"duration": 1.0, "texture": ExtResource("35_tex")}, {"duration": 1.0, "texture": ExtResource("36_tex")}, {"duration": 1.0, "texture": ExtResource("37_tex")}, {"duration": 1.0, "texture": ExtResource("38_tex")}, {"duration": 1.0, "texture": ExtResource("39_tex")}, {"duration": 1.0, "texture": ExtResource("40_tex")}, {"duration": 1.0, "texture": ExtResource("41_tex")}, {"duration": 1.0, "texture": ExtResource("42_tex")}, {"duration": 1.0, "texture": ExtResource("43_tex")}, {"duration": 1.0, "texture": ExtResource("44_tex")}, {"duration": 1.0, "texture": ExtResource("45_tex")}, {"duration": 1.0, "texture": ExtResource("46_tex")}, {"duration": 1.0, "texture": ExtResource("47_tex")}, {"duration": 1.0, "texture": ExtResource("48_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("73_tex")}, {"duration": 1.0, "texture": ExtResource("74_tex")}, {"duration": 1.0, "texture": ExtResource("75_tex")}, {"duration": 1.0, "texture": ExtResource("76_tex")}, {"duration": 1.0, "texture": ExtResource("77_tex")}, {"duration": 1.0, "texture": ExtResource("78_tex")}, {"duration": 1.0, "texture": ExtResource("79_tex")}, {"duration": 1.0, "texture": ExtResource("80_tex")}, {"duration": 1.0, "texture": ExtResource("81_tex")}],
 "loop": false,
 "name": &"shooting-bow_east",
 "speed": 10.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("49_tex")}, {"duration": 1.0, "texture": ExtResource("50_tex")}, {"duration": 1.0, "texture": ExtResource("51_tex")}, {"duration": 1.0, "texture": ExtResource("52_tex")}, {"duration": 1.0, "texture": ExtResource("53_tex")}, {"duration": 1.0, "texture": ExtResource("54_tex")}, {"duration": 1.0, "texture": ExtResource("55_tex")}, {"duration": 1.0, "texture": ExtResource("56_tex")}, {"duration": 1.0, "texture": ExtResource("57_tex")}, {"duration": 1.0, "texture": ExtResource("58_tex")}, {"duration": 1.0, "texture": ExtResource("59_tex")}, {"duration": 1.0, "texture": ExtResource("60_tex")}, {"duration": 1.0, "texture": ExtResource("61_tex")}, {"duration": 1.0, "texture": ExtResource("62_tex")}, {"duration": 1.0, "texture": ExtResource("63_tex")}, {"duration": 1.0, "texture": ExtResource("64_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("82_tex")}, {"duration": 1.0, "texture": ExtResource("83_tex")}, {"duration": 1.0, "texture": ExtResource("84_tex")}, {"duration": 1.0, "texture": ExtResource("85_tex")}, {"duration": 1.0, "texture": ExtResource("86_tex")}, {"duration": 1.0, "texture": ExtResource("87_tex")}, {"duration": 1.0, "texture": ExtResource("88_tex")}, {"duration": 1.0, "texture": ExtResource("89_tex")}, {"duration": 1.0, "texture": ExtResource("90_tex")}],
 "loop": false,
 "name": &"shooting-bow_north",
 "speed": 10.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("65_tex")}, {"duration": 1.0, "texture": ExtResource("66_tex")}, {"duration": 1.0, "texture": ExtResource("67_tex")}, {"duration": 1.0, "texture": ExtResource("68_tex")}, {"duration": 1.0, "texture": ExtResource("69_tex")}, {"duration": 1.0, "texture": ExtResource("70_tex")}, {"duration": 1.0, "texture": ExtResource("71_tex")}, {"duration": 1.0, "texture": ExtResource("72_tex")}, {"duration": 1.0, "texture": ExtResource("73_tex")}, {"duration": 1.0, "texture": ExtResource("74_tex")}, {"duration": 1.0, "texture": ExtResource("75_tex")}, {"duration": 1.0, "texture": ExtResource("76_tex")}, {"duration": 1.0, "texture": ExtResource("77_tex")}, {"duration": 1.0, "texture": ExtResource("78_tex")}, {"duration": 1.0, "texture": ExtResource("79_tex")}, {"duration": 1.0, "texture": ExtResource("80_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("91_tex")}, {"duration": 1.0, "texture": ExtResource("92_tex")}, {"duration": 1.0, "texture": ExtResource("93_tex")}, {"duration": 1.0, "texture": ExtResource("94_tex")}, {"duration": 1.0, "texture": ExtResource("95_tex")}, {"duration": 1.0, "texture": ExtResource("96_tex")}, {"duration": 1.0, "texture": ExtResource("97_tex")}, {"duration": 1.0, "texture": ExtResource("98_tex")}, {"duration": 1.0, "texture": ExtResource("99_tex")}],
 "loop": false,
 "name": &"shooting-bow_south",
 "speed": 10.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("81_tex")}, {"duration": 1.0, "texture": ExtResource("82_tex")}, {"duration": 1.0, "texture": ExtResource("83_tex")}, {"duration": 1.0, "texture": ExtResource("84_tex")}, {"duration": 1.0, "texture": ExtResource("85_tex")}, {"duration": 1.0, "texture": ExtResource("86_tex")}, {"duration": 1.0, "texture": ExtResource("87_tex")}, {"duration": 1.0, "texture": ExtResource("88_tex")}, {"duration": 1.0, "texture": ExtResource("89_tex")}, {"duration": 1.0, "texture": ExtResource("90_tex")}, {"duration": 1.0, "texture": ExtResource("91_tex")}, {"duration": 1.0, "texture": ExtResource("92_tex")}, {"duration": 1.0, "texture": ExtResource("93_tex")}, {"duration": 1.0, "texture": ExtResource("94_tex")}, {"duration": 1.0, "texture": ExtResource("95_tex")}, {"duration": 1.0, "texture": ExtResource("96_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("100_tex")}, {"duration": 1.0, "texture": ExtResource("101_tex")}, {"duration": 1.0, "texture": ExtResource("102_tex")}, {"duration": 1.0, "texture": ExtResource("103_tex")}, {"duration": 1.0, "texture": ExtResource("104_tex")}, {"duration": 1.0, "texture": ExtResource("105_tex")}, {"duration": 1.0, "texture": ExtResource("106_tex")}, {"duration": 1.0, "texture": ExtResource("107_tex")}, {"duration": 1.0, "texture": ExtResource("108_tex")}],
 "loop": false,
 "name": &"shooting-bow_west",
 "speed": 10.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("97_tex")}, {"duration": 1.0, "texture": ExtResource("98_tex")}, {"duration": 1.0, "texture": ExtResource("99_tex")}, {"duration": 1.0, "texture": ExtResource("100_tex")}, {"duration": 1.0, "texture": ExtResource("101_tex")}, {"duration": 1.0, "texture": ExtResource("102_tex")}, {"duration": 1.0, "texture": ExtResource("103_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("109_tex")}, {"duration": 1.0, "texture": ExtResource("110_tex")}, {"duration": 1.0, "texture": ExtResource("111_tex")}, {"duration": 1.0, "texture": ExtResource("112_tex")}, {"duration": 1.0, "texture": ExtResource("113_tex")}, {"duration": 1.0, "texture": ExtResource("114_tex")}, {"duration": 1.0, "texture": ExtResource("115_tex")}, {"duration": 1.0, "texture": ExtResource("116_tex")}, {"duration": 1.0, "texture": ExtResource("117_tex")}],
 "loop": false,
 "name": &"falling-back-death_east",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("104_tex")}, {"duration": 1.0, "texture": ExtResource("105_tex")}, {"duration": 1.0, "texture": ExtResource("106_tex")}, {"duration": 1.0, "texture": ExtResource("107_tex")}, {"duration": 1.0, "texture": ExtResource("108_tex")}, {"duration": 1.0, "texture": ExtResource("109_tex")}, {"duration": 1.0, "texture": ExtResource("110_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("118_tex")}, {"duration": 1.0, "texture": ExtResource("119_tex")}, {"duration": 1.0, "texture": ExtResource("120_tex")}, {"duration": 1.0, "texture": ExtResource("121_tex")}, {"duration": 1.0, "texture": ExtResource("122_tex")}, {"duration": 1.0, "texture": ExtResource("123_tex")}, {"duration": 1.0, "texture": ExtResource("124_tex")}, {"duration": 1.0, "texture": ExtResource("125_tex")}, {"duration": 1.0, "texture": ExtResource("126_tex")}],
 "loop": false,
 "name": &"falling-back-death_north",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("111_tex")}, {"duration": 1.0, "texture": ExtResource("112_tex")}, {"duration": 1.0, "texture": ExtResource("113_tex")}, {"duration": 1.0, "texture": ExtResource("114_tex")}, {"duration": 1.0, "texture": ExtResource("115_tex")}, {"duration": 1.0, "texture": ExtResource("116_tex")}, {"duration": 1.0, "texture": ExtResource("117_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("127_tex")}, {"duration": 1.0, "texture": ExtResource("128_tex")}, {"duration": 1.0, "texture": ExtResource("129_tex")}, {"duration": 1.0, "texture": ExtResource("130_tex")}, {"duration": 1.0, "texture": ExtResource("131_tex")}, {"duration": 1.0, "texture": ExtResource("132_tex")}, {"duration": 1.0, "texture": ExtResource("133_tex")}, {"duration": 1.0, "texture": ExtResource("134_tex")}, {"duration": 1.0, "texture": ExtResource("135_tex")}],
 "loop": false,
 "name": &"falling-back-death_south",
 "speed": 5.0
 }
 ,
 {
-"frames": [{"duration": 1.0, "texture": ExtResource("118_tex")}, {"duration": 1.0, "texture": ExtResource("119_tex")}, {"duration": 1.0, "texture": ExtResource("120_tex")}, {"duration": 1.0, "texture": ExtResource("121_tex")}, {"duration": 1.0, "texture": ExtResource("122_tex")}, {"duration": 1.0, "texture": ExtResource("123_tex")}, {"duration": 1.0, "texture": ExtResource("124_tex")}],
+"frames": [{"duration": 1.0, "texture": ExtResource("136_tex")}, {"duration": 1.0, "texture": ExtResource("137_tex")}, {"duration": 1.0, "texture": ExtResource("138_tex")}, {"duration": 1.0, "texture": ExtResource("139_tex")}, {"duration": 1.0, "texture": ExtResource("140_tex")}, {"duration": 1.0, "texture": ExtResource("141_tex")}, {"duration": 1.0, "texture": ExtResource("142_tex")}, {"duration": 1.0, "texture": ExtResource("143_tex")}, {"duration": 1.0, "texture": ExtResource("144_tex")}],
 "loop": false,
 "name": &"falling-back-death_west",
 "speed": 5.0
