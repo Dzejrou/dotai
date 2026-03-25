@@ -51,8 +51,7 @@ public partial class Skeleton : Actor, IAttackable, ITargetable
 
     private IActorBehavior[] CreateDefaultBehaviors()
     {
-        var preset = ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
-        return preset.Behaviors;
+        return ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
     }
 
     private void StartDeath()

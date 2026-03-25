@@ -1,7 +1,5 @@
 using Godot;
 
-using System;
-
 [GlobalClass]
 public partial class Ogre : Actor, IAttackable, ITargetable
 {
@@ -35,18 +33,9 @@ public partial class Ogre : Actor, IAttackable, ITargetable
         SetMovementSpeed(Speed);
         SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
 
-        var preset = ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
-        ConfigureBehaviors(preset.Behaviors);
+        ConfigureBehaviors(ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset());
 
         PlayIdleIfAvailable();
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        if (IsDead)
-            return;
-
-        base._PhysicsProcess(delta);
     }
 
     public bool CanBeTargeted => !IsDead;

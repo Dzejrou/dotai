@@ -25,13 +25,11 @@ public partial class DebugSpawner : Node2D
     private string _pendingSpawnId;
     private Sprite2D _placementGhost;
     private Faction _selectedFaction = Factions.Enemies;
-    private string _lastSpawnFeedback = string.Empty;
 
     public bool HasPendingPlacement => !string.IsNullOrEmpty(_pendingSpawnId);
 
     public string PendingSpawnId => _pendingSpawnId;
     public Faction SelectedFaction => _selectedFaction;
-    public string LastSpawnFeedback => _lastSpawnFeedback;
 
     public override void _Ready()
     {
@@ -68,7 +66,6 @@ public partial class DebugSpawner : Node2D
         if (!_entriesById.ContainsKey(spawnId))
             return;
 
-        _lastSpawnFeedback = string.Empty;
         if (_previewById.TryGetValue(spawnId, out var previewData) && previewData.DefaultFaction != null)
             _selectedFaction = previewData.DefaultFaction;
         _pendingSpawnId = spawnId;
@@ -129,12 +126,6 @@ public partial class DebugSpawner : Node2D
         return true;
     }
 
-    public void SpawnFromDebugUi(string spawnId)
-    {
-        var spawnPosition = GetMouseWorldPosition();
-        SpawnNode(spawnId, spawnPosition);
-    }
-
     public SpriteFrames GetPreviewFrames(string spawnId)
     {
         return _previewById.TryGetValue(spawnId, out var previewData) ? previewData.SpriteFrames : null;
@@ -171,7 +162,6 @@ public partial class DebugSpawner : Node2D
 
     private Node2D SpawnNode(string spawnId, Vector2 spawnPosition)
     {
-        _lastSpawnFeedback = string.Empty;
         if (!_entriesById.TryGetValue(spawnId, out var entry))
             return null;
 

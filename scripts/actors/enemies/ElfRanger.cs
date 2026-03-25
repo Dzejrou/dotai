@@ -59,8 +59,7 @@ public partial class ElfRanger : Actor, IAttackable, ITargetable
                 ProjectileSpeed,
                 ProjectileLifetime,
                 ProjectileMaxTravelDistance));
-        var preset = ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset();
-        ConfigureBehaviors(preset.Behaviors);
+        ConfigureBehaviors(ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset());
         PlayIdleIfAvailable();
     }
 

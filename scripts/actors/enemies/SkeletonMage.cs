@@ -42,7 +42,6 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable
 
     public override void _Ready()
     {
-        AttackAnimation = CastSpellAnimation;
         if (ProjectileScene == null)
             ProjectileScene = GD.Load<PackedScene>("res://scenes/projectiles/projectile.tscn");
 
@@ -63,8 +62,7 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable
                 ProjectileLifetime,
                 ProjectileMaxTravelDistance));
 
-        var preset = ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset();
-        ConfigureBehaviors(preset.Behaviors);
+        ConfigureBehaviors(ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset());
 
         PlayIdleIfAvailable();
     }

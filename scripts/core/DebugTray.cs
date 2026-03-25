@@ -428,13 +428,6 @@ public partial class DebugTray : Control
             return;
 
         var modeSummary = GetModeSummary();
-        var spawnerFeedback = _debugSpawner?.LastSpawnFeedback;
-        if (!string.IsNullOrWhiteSpace(spawnerFeedback))
-        {
-            _statusLabel.Text = $"{modeSummary} {spawnerFeedback}";
-            return;
-        }
-
         if (_draggingFromCard)
         {
             _statusLabel.Text = $"{modeSummary} Release in the world to place. Release over tray, right click, or Esc to cancel.";

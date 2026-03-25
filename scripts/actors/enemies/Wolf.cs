@@ -57,8 +57,7 @@ public partial class Wolf : Actor, IAttackable, ITargetable
 
     private IActorBehavior[] CreateDefaultBehaviors()
     {
-        var preset = ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
-        return preset.Behaviors;
+        return ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset();
     }
 
     protected override int MaxHealthValue => Health;
