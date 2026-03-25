@@ -7,22 +7,7 @@ public partial class Ogre : Actor, IAttackable, ITargetable
     public float Speed { get; set; } = 64.0f;
 
     [Export]
-    public float AttackRange { get; set; } = 18.0f;
-
-    [Export]
-    public float AttackCooldown { get; set; } = 1.2f;
-
-    [Export]
-    public StringName AttackAnimation { get; set; } = "cross-punch";
-
-    [Export]
     public int MaxHealth { get; set; } = 40;
-
-    [Export]
-    public int MinAttackDamage { get; set; } = 1;
-
-    [Export]
-    public int MaxAttackDamage { get; set; } = 4;
 
     public override void _Ready()
     {
@@ -30,7 +15,6 @@ public partial class Ogre : Actor, IAttackable, ITargetable
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
-        SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
 
         ConfigureBehaviors(ActorBehaviorPresets.CreateSceneBackedHostileMeleePreset());
 

@@ -2,28 +2,36 @@ using Godot;
 
 using System;
 
-public sealed class MeleeAttackController : ICombatActionController
+[GlobalClass]
+public partial class MeleeAttackController : Node, ICombatActionController
 {
-    private readonly StringName _attackAnimation;
-    private readonly int _minimumDamage;
-    private readonly int _maximumDamage;
     private readonly RandomNumberGenerator _randomNumberGenerator = new();
     private float _cooldownTimer;
 
-    public MeleeAttackController(float preferredRange, float attackCooldown, StringName attackAnimation, int minimumDamage, int maximumDamage)
+    [Export]
+    public float PreferredRange { get; set; } = 18.0f;
+
+    [Export]
+    public float AttackCooldown { get; set; } = 1.0f;
+
+    [Export]
+    public StringName AttackAnimation { get; set; } = "cross-punch";
+
+    [Export]
+    public int MinimumDamage { get; set; } = 1;
+
+    [Export]
+    public int MaximumDamage { get; set; } = 1;
+
+    public float MinimumRange => 0.0f;
+
+    public override void _Ready()
     {
-        PreferredRange = Math.Max(0.0f, preferredRange);
-        MinimumRange = 0.0f;
-        AttackCooldown = Math.Max(0.0f, attackCooldown);
-        _attackAnimation = attackAnimation;
-        _minimumDamage = minimumDamage;
-        _maximumDamage = Math.Max(minimumDamage, maximumDamage);
+        PreferredRange = Math.Max(0.0f, PreferredRange);
+        AttackCooldown = Math.Max(0.0f, AttackCooldown);
+        MaximumDamage = Math.Max(MinimumDamage, MaximumDamage);
         _randomNumberGenerator.Randomize();
     }
-
-    public float MinimumRange { get; }
-    public float PreferredRange { get; }
-    public float AttackCooldown { get; }
 
     public void Update(Actor actor, double delta)
     {
@@ -63,7 +71,7 @@ public sealed class MeleeAttackController : ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         _cooldownTimer = AttackCooldown;
 
-        var attackAnimation = $"{_attackAnimation}_{actor.LastDirection}";
+        var attackAnimation = $"{AttackAnimation}_{actor.LastDirection}";
         if (actor.AnimatedSprite?.SpriteFrames != null &&
             actor.AnimatedSprite.SpriteFrames.HasAnimation(attackAnimation) &&
             actor.AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) > 0)
@@ -75,13 +83,13 @@ public sealed class MeleeAttackController : ICombatActionController
             actor.SetState(CombatUnitState.PursuingTarget);
         }
 
-        var damage = _randomNumberGenerator.RandiRange(Math.Min(_minimumDamage, _maximumDamage), _maximumDamage);
+        var damage = _randomNumberGenerator.RandiRange(Math.Min(MinimumDamage, MaximumDamage), MaximumDamage);
         attackable.ApplyDamage(new DamageInfo(damage, actor));
     }
 
     public bool HandleAnimationFinished(Actor actor, StringName animationName)
     {
-        if (!animationName.ToString().StartsWith(_attackAnimation.ToString(), StringComparison.Ordinal))
+        if (!animationName.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
             return false;
 
         actor.FinishAttackState();

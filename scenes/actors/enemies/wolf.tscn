@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="12_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="13_health_state"]
 [ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="14_faction_state"]
+[ext_resource type="Script" path="res://scripts/ai/actions/MeleeAttackController.cs" id="15_melee_action"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wolf"]
 radius = 6.0
@@ -43,6 +44,14 @@ script = ExtResource("13_health_state")
 [node name="FactionState" type="Node" parent="."]
 script = ExtResource("14_faction_state")
 FactionKey = "enemies"
+
+[node name="PrimaryActionController" type="Node" parent="."]
+script = ExtResource("15_melee_action")
+PreferredRange = 42.0
+AttackCooldown = 0.85
+AttackAnimation = &"bark"
+MinimumDamage = 1
+MaximumDamage = 3
 
 [node name="Behaviors" type="Node" parent="." unique_id=24580142]
 

@@ -7,22 +7,7 @@ public partial class Wolf : Actor, IAttackable, ITargetable
     public float Speed { get; set; } = 76.0f;
 
     [Export]
-    public float AttackRange { get; set; } = 42.0f;
-
-    [Export]
-    public float AttackCooldown { get; set; } = 0.85f;
-
-    [Export]
-    public StringName AttackAnimation { get; set; } = "bark";
-
-    [Export]
     public int Health { get; set; } = 12;
-
-    [Export]
-    public int MinAttackDamage { get; set; } = 1;
-
-    [Export]
-    public int MaxAttackDamage { get; set; } = 3;
 
     public bool CanBeTargeted => !IsDead;
 
@@ -32,7 +17,6 @@ public partial class Wolf : Actor, IAttackable, ITargetable
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
-        SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
         ConfigureBehaviors(CreateDefaultBehaviors());
         PlayIdleIfAvailable();
     }

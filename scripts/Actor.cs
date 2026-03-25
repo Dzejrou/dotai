@@ -11,6 +11,7 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
     private const string BehaviorNodeCombatPath = "Behaviors/Tier50_Combat";
     private const string BehaviorNodeReturnHomePath = "Behaviors/Tier80_ReturnHome";
     private const string BehaviorNodeRecoveryPath = "Behaviors/Tier90_Recovery";
+    private const string PrimaryActionControllerPath = "PrimaryActionController";
     private const float NavigationTargetUpdateThreshold = 8.0f;
     private const float DefaultPathDesiredDistance = 6.0f;
     private const float DefaultTargetDesiredDistance = 8.0f;
@@ -89,6 +90,14 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
         _health = GetNode<HealthState>("HealthState");
         _health.Initialize(Math.Max(1, MaxHealthValue));
         _faction = GetNode<FactionState>("FactionState");
+        var scenePrimaryActionController = GetNodeOrNull<Node>(PrimaryActionControllerPath);
+        if (scenePrimaryActionController != null)
+        {
+            if (scenePrimaryActionController is not ICombatActionController actionController)
+                GD.PushError($"{GetPath()}: PrimaryActionController must implement ICombatActionController.");
+            else
+                PrimaryActionController = actionController;
+        }
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");

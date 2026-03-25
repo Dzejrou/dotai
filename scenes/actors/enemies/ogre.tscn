@@ -1,74 +1,77 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://dqjxrcx1kyxj2"]
 
-[ext_resource type="Script" path="res://scripts/actors/enemies/Ogre.cs" id="1_ogre"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/ogre_spriteframes.tres" id="2_ogre_frames"]
+[ext_resource type="Script" uid="uid://3q3d5wthumcl" path="res://scripts/actors/enemies/Ogre.cs" id="1_ogre"]
+[ext_resource type="SpriteFrames" uid="uid://co10kk7yy8cpe" path="res://resources/animations/ogre_spriteframes.tres" id="2_ogre_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="5_target_combat"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="6_leash_behavior"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="7_return_home"]
-[ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
-[ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
-[ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
+[ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
+[ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="5_target_combat"]
+[ext_resource type="Script" uid="uid://b7mqwlipopylh" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="6_leash_behavior"]
+[ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="7_return_home"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
+[ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
+[ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="11_melee_action"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ogre"]
 radius = 6.0
 height = 24.0
 
-[node name="Ogre" type="CharacterBody2D"]
+[node name="Ogre" type="CharacterBody2D" unique_id=903405357]
 script = ExtResource("1_ogre")
 Speed = 60.0
 MaxHealth = 28
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-sprite_frames = ExtResource("2_ogre_frames")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2010721375]
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
+sprite_frames = ExtResource("2_ogre_frames")
+animation = &"breathing-idle_south"
 
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=697161058]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1239883978]
 position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_ogre")
 
-[node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]
+[node name="ActorHUD" parent="." unique_id=856333492 instance=ExtResource("3_actor_hud")]
 
-[node name="CombatState" type="Node" parent="."]
+[node name="CombatState" type="Node" parent="." unique_id=223682911]
 script = ExtResource("8_combat_state")
 
-[node name="HealthState" type="Node" parent="."]
+[node name="HealthState" type="Node" parent="." unique_id=903885796]
 script = ExtResource("9_health_state")
 
-[node name="FactionState" type="Node" parent="."]
+[node name="FactionState" type="Node" parent="." unique_id=738968319]
 script = ExtResource("10_faction_state")
-FactionKey = "enemies"
 
-[node name="Behaviors" type="Node" parent="."]
+[node name="PrimaryActionController" type="Node" parent="." unique_id=1453893286]
+script = ExtResource("11_melee_action")
+PreferredRange = 46.0
+AttackCooldown = 1.2
+MaximumDamage = 4
 
-[node name="Tier10_Targeting" type="Node" parent="Behaviors"]
+[node name="Behaviors" type="Node" parent="." unique_id=1114967164]
 
-[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting"]
+[node name="Tier10_Targeting" type="Node" parent="Behaviors" unique_id=391331621]
+
+[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting" unique_id=2083468890]
 script = ExtResource("4_acquire_hostile")
-AcquisitionRange = 150.0
 InitialTargetPath = NodePath("../Player")
 DebugActorName = "Ogre"
 
-[node name="Tier20_Leash" type="Node" parent="Behaviors"]
+[node name="Tier20_Leash" type="Node" parent="Behaviors" unique_id=42043005]
 
-[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash"]
+[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash" unique_id=1793378349]
 script = ExtResource("6_leash_behavior")
-LossRange = 220.0
-EvadeOnAggroLoss = true
-IgnoreDamageWhileReturning = true
 
-[node name="Tier50_Combat" type="Node" parent="Behaviors"]
+[node name="Tier50_Combat" type="Node" parent="Behaviors" unique_id=657837092]
 
-[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat"]
+[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat" unique_id=1318199652]
 script = ExtResource("5_target_combat")
 
-[node name="Tier80_ReturnHome" type="Node" parent="Behaviors"]
+[node name="Tier80_ReturnHome" type="Node" parent="Behaviors" unique_id=1299821128]
 
-[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome"]
+[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome" unique_id=604734617]
 script = ExtResource("7_return_home")
 
-[node name="Tier90_Recovery" type="Node" parent="Behaviors"]
+[node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=1837160544]

@@ -7,22 +7,7 @@ public partial class Skeleton : Actor, IAttackable, ITargetable
     public float Speed { get; set; } = 52.0f;
 
     [Export]
-    public float AttackRange { get; set; } = 18.0f;
-
-    [Export]
-    public float AttackCooldown { get; set; } = 1.1f;
-
-    [Export]
-    public StringName AttackAnimation { get; set; } = "cross-punch";
-
-    [Export]
     public int Health { get; set; } = 24;
-
-    [Export]
-    public int MinAttackDamage { get; set; } = 1;
-
-    [Export]
-    public int MaxAttackDamage { get; set; } = 5;
 
     public bool CanBeTargeted => !IsDead;
 
@@ -32,7 +17,6 @@ public partial class Skeleton : Actor, IAttackable, ITargetable
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
-        SetPrimaryActionController(new MeleeAttackController(AttackRange, AttackCooldown, AttackAnimation, MinAttackDamage, MaxAttackDamage));
         ConfigureBehaviors(CreateDefaultBehaviors());
 
         PlayIdleIfAvailable();
