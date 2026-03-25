@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/enemies/ElfRanger.cs" id="1_elf_ranger_script"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/elf_ranger_spriteframes.tres" id="2_elf_ranger_frames"]
@@ -10,6 +10,8 @@
 [ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
 [ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
 [ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
+[ext_resource type="Script" path="res://scripts/ai/actions/RangedAttackController.cs" id="11_ranged_action"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_elf_ranger"]
 radius = 5.0
@@ -18,14 +20,6 @@ height = 26.0
 [node name="ElfRanger" type="CharacterBody2D"]
 z_index = -1
 script = ExtResource("1_elf_ranger_script")
-MinimumRange = 80.0
-PreferredRange = 140.0
-AttackCooldown = 1.35
-AttackAnimation = &"shooting-bow"
-ProjectileDamage = 3
-ProjectileSpeed = 320.0
-ProjectileLifetime = 2.4
-ProjectileMaxTravelDistance = 360.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -2)
@@ -50,6 +44,18 @@ script = ExtResource("9_health_state")
 [node name="FactionState" type="Node" parent="."]
 script = ExtResource("10_faction_state")
 FactionKey = "enemies"
+
+[node name="PrimaryActionController" type="Node" parent="."]
+script = ExtResource("11_ranged_action")
+MinimumRange = 80.0
+PreferredRange = 140.0
+AttackCooldown = 1.35
+AttackAnimation = &"shooting-bow"
+ProjectileScene = ExtResource("12_projectile_scene")
+ProjectileDamage = 3
+ProjectileSpeed = 320.0
+ProjectileLifetime = 2.4
+ProjectileMaxTravelDistance = 360.0
 
 [node name="Behaviors" type="Node" parent="."]
 

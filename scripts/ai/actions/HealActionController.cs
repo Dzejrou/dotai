@@ -2,32 +2,36 @@ using Godot;
 
 using System;
 
-public sealed class HealActionController : ICombatActionController
+[GlobalClass]
+public partial class HealActionController : Node, ICombatActionController
 {
-    private readonly StringName _healAnimation;
-    private readonly int _healAmount;
-    private readonly float _animationSpeedMultiplier;
     private float _cooldownTimer;
     private Node2D _pendingHealTarget;
 
-    public HealActionController(
-        float preferredRange,
-        float actionCooldown,
-        StringName healAnimation,
-        int healAmount,
-        float animationSpeedMultiplier = 1.0f)
-    {
-        PreferredRange = Math.Max(0.0f, preferredRange);
-        MinimumRange = 0.0f;
-        ActionCooldown = Math.Max(0.0f, actionCooldown);
-        _healAnimation = healAnimation;
-        _healAmount = Math.Max(1, healAmount);
-        _animationSpeedMultiplier = Math.Max(0.0f, animationSpeedMultiplier);
-    }
+    [Export]
+    public float PreferredRange { get; set; } = 148.0f;
 
-    public float MinimumRange { get; }
-    public float PreferredRange { get; }
-    public float ActionCooldown { get; }
+    [Export]
+    public float ActionCooldown { get; set; } = 1.4f;
+
+    [Export]
+    public StringName HealAnimation { get; set; } = "cast";
+
+    [Export]
+    public int HealAmount { get; set; } = 3;
+
+    [Export]
+    public float AnimationSpeedMultiplier { get; set; } = 1.0f;
+
+    public float MinimumRange => 0.0f;
+
+    public override void _Ready()
+    {
+        PreferredRange = Math.Max(0.0f, PreferredRange);
+        ActionCooldown = Math.Max(0.0f, ActionCooldown);
+        HealAmount = Math.Max(1, HealAmount);
+        AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
+    }
 
     public void Update(Actor actor, double delta)
     {
@@ -65,13 +69,13 @@ public sealed class HealActionController : ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         _cooldownTimer = ActionCooldown;
 
-        var animationName = $"{_healAnimation}_{actor.LastDirection}";
+        var animationName = $"{HealAnimation}_{actor.LastDirection}";
         if (actor.AnimatedSprite?.SpriteFrames != null &&
             actor.AnimatedSprite.SpriteFrames.HasAnimation(animationName) &&
             actor.AnimatedSprite.SpriteFrames.GetFrameCount(animationName) > 0)
         {
             _pendingHealTarget = target;
-            actor.AnimatedSprite.Play(animationName, customSpeed: _animationSpeedMultiplier);
+            actor.AnimatedSprite.Play(animationName, customSpeed: AnimationSpeedMultiplier);
         }
         else
         {
@@ -82,7 +86,7 @@ public sealed class HealActionController : ICombatActionController
 
     public bool HandleAnimationFinished(Actor actor, StringName animationName)
     {
-        if (!animationName.ToString().StartsWith(_healAnimation.ToString(), StringComparison.Ordinal))
+        if (!animationName.ToString().StartsWith(HealAnimation.ToString(), StringComparison.Ordinal))
             return false;
 
         if (_pendingHealTarget is IHealable healable &&
@@ -108,6 +112,6 @@ public sealed class HealActionController : ICombatActionController
         if (healable == null || !healable.CanReceiveHealing)
             return;
 
-        healable.ApplyHealing(_healAmount);
+        healable.ApplyHealing(HealAmount);
     }
 }

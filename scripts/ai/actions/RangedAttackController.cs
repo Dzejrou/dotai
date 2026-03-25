@@ -2,43 +2,54 @@ using Godot;
 
 using System;
 
-public sealed class RangedAttackController : ICombatActionController
+[GlobalClass]
+public partial class RangedAttackController : Node, ICombatActionController
 {
-    private readonly StringName _attackAnimation;
-    private readonly PackedScene _projectileScene;
-    private readonly int _projectileDamage;
-    private readonly float _projectileSpeed;
-    private readonly float _projectileLifetime;
-    private readonly float _projectileMaxTravelDistance;
+    private const string DefaultProjectileScenePath = "res://scenes/projectiles/projectile.tscn";
     private float _cooldownTimer;
     private bool _hasPendingProjectileShot;
     private Vector2 _pendingProjectileDirection;
 
-    public RangedAttackController(
-        float minimumRange,
-        float preferredRange,
-        float attackCooldown,
-        StringName attackAnimation,
-        PackedScene projectileScene,
-        int projectileDamage,
-        float projectileSpeed,
-        float projectileLifetime,
-        float projectileMaxTravelDistance)
-    {
-        MinimumRange = Math.Max(0.0f, minimumRange);
-        PreferredRange = Math.Max(MinimumRange, preferredRange);
-        AttackCooldown = Math.Max(0.0f, attackCooldown);
-        _attackAnimation = attackAnimation;
-        _projectileScene = projectileScene;
-        _projectileDamage = projectileDamage;
-        _projectileSpeed = projectileSpeed;
-        _projectileLifetime = projectileLifetime;
-        _projectileMaxTravelDistance = projectileMaxTravelDistance;
-    }
+    [Export]
+    public float MinimumRange { get; set; } = 70.0f;
 
-    public float MinimumRange { get; }
-    public float PreferredRange { get; }
-    public float AttackCooldown { get; }
+    [Export]
+    public float PreferredRange { get; set; } = 120.0f;
+
+    [Export]
+    public float AttackCooldown { get; set; } = 1.2f;
+
+    [Export]
+    public StringName AttackAnimation { get; set; } = "shooting-bow";
+
+    [Export]
+    public PackedScene ProjectileScene { get; set; }
+
+    [Export]
+    public int ProjectileDamage { get; set; } = 4;
+
+    [Export]
+    public float ProjectileSpeed { get; set; } = 280.0f;
+
+    [Export]
+    public float ProjectileLifetime { get; set; } = 2.5f;
+
+    [Export]
+    public float ProjectileMaxTravelDistance { get; set; } = 320.0f;
+
+    public override void _Ready()
+    {
+        MinimumRange = Math.Max(0.0f, MinimumRange);
+        PreferredRange = Math.Max(MinimumRange, PreferredRange);
+        AttackCooldown = Math.Max(0.0f, AttackCooldown);
+        ProjectileDamage = Math.Max(1, ProjectileDamage);
+        ProjectileSpeed = Math.Max(0.0f, ProjectileSpeed);
+        ProjectileLifetime = Math.Max(0.0f, ProjectileLifetime);
+        ProjectileMaxTravelDistance = Math.Max(0.0f, ProjectileMaxTravelDistance);
+
+        if (ProjectileScene == null)
+            ProjectileScene = GD.Load<PackedScene>(DefaultProjectileScenePath);
+    }
 
     public void Update(Actor actor, double delta)
     {
@@ -48,7 +59,7 @@ public sealed class RangedAttackController : ICombatActionController
 
     public bool CanStartAction(Actor actor, Node2D target)
     {
-        if (_cooldownTimer > 0.0f || _projectileScene == null)
+        if (_cooldownTimer > 0.0f || ProjectileScene == null)
             return false;
 
         if (target == null || !Actor.IsStructurallyValidTarget(target))
@@ -80,7 +91,7 @@ public sealed class RangedAttackController : ICombatActionController
         _cooldownTimer = AttackCooldown;
 
         var projectileDirection = toTarget != Vector2.Zero ? toTarget.Normalized() : DirectionHelper.GetDirectionVector(actor.LastDirection);
-        var attackAnimationName = $"{_attackAnimation}_{actor.LastDirection}";
+        var attackAnimationName = $"{AttackAnimation}_{actor.LastDirection}";
         if (actor.AnimatedSprite?.SpriteFrames != null &&
             actor.AnimatedSprite.SpriteFrames.HasAnimation(attackAnimationName) &&
             actor.AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimationName) > 0)
@@ -97,7 +108,7 @@ public sealed class RangedAttackController : ICombatActionController
 
     public bool HandleAnimationFinished(Actor actor, StringName animationName)
     {
-        if (!animationName.ToString().StartsWith(_attackAnimation.ToString(), StringComparison.Ordinal))
+        if (!animationName.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
             return false;
 
         if (_hasPendingProjectileShot)
@@ -124,7 +135,7 @@ public sealed class RangedAttackController : ICombatActionController
 
     private void LaunchProjectile(Actor actor, Vector2 direction)
     {
-        var projectile = _projectileScene?.Instantiate<Projectile>();
+        var projectile = ProjectileScene?.Instantiate<Projectile>();
         if (projectile == null)
             return;
 
@@ -137,9 +148,9 @@ public sealed class RangedAttackController : ICombatActionController
         projectile.Initialize(
             direction,
             actor,
-            _projectileDamage,
-            _projectileSpeed,
-            _projectileLifetime,
-            _projectileMaxTravelDistance);
+            ProjectileDamage,
+            ProjectileSpeed,
+            ProjectileLifetime,
+            ProjectileMaxTravelDistance);
     }
 }

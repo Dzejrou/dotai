@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/neutrals/Dryad.cs" id="1_dryad_script"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/dryad_spriteframes.tres" id="2_dryad_frames"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="5_health_state"]
 [ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="6_faction_state"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="7_wander_behavior"]
+[ext_resource type="Script" path="res://scripts/ai/actions/HealActionController.cs" id="8_heal_action"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
@@ -35,6 +36,14 @@ script = ExtResource("5_health_state")
 [node name="FactionState" type="Node" parent="."]
 script = ExtResource("6_faction_state")
 FactionKey = "neutral"
+
+[node name="PrimaryActionController" type="Node" parent="."]
+script = ExtResource("8_heal_action")
+PreferredRange = 148.0
+ActionCooldown = 1.4
+HealAnimation = &"cast"
+HealAmount = 3
+AnimationSpeedMultiplier = 2.0
 
 [node name="Behaviors" type="Node" parent="."]
 

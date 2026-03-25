@@ -3,22 +3,11 @@ using Godot;
 [GlobalClass]
 public partial class Dryad : Actor, IAttackable, ITargetable
 {
-    private static readonly StringName HealAnimation = "cast";
-
-    [Export]
-    public float HealRange { get; set; } = 148.0f;
-
     [Export]
     public float HealAcquisitionRange { get; set; } = 96.0f;
 
     [Export]
-    public float HealCooldown { get; set; } = 1.4f;
-
-    [Export]
     public float Speed { get; set; } = 44.0f;
-
-    [Export]
-    public int HealAmount { get; set; } = 3;
 
     [Export]
     public int Health { get; set; } = 18;
@@ -30,7 +19,6 @@ public partial class Dryad : Actor, IAttackable, ITargetable
         InitializeActor(
             GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"));
         SetMovementSpeed(Speed);
-        SetPrimaryActionController(new HealActionController(HealRange, HealCooldown, HealAnimation, HealAmount, 2.0f));
 
         ConfigureBehaviors(new HealNearbyFactionBehavior(Factions.Allies, HealAcquisitionRange));
         PlayIdleIfAvailable();
