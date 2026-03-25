@@ -12,11 +12,17 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     [Signal]
     public delegate void HealthChangedEventHandler(int health, int maxHealth);
 
+    [Signal]
+    public delegate void ManaChangedEventHandler(int mana, int maxMana);
+
     [Export]
     public float Speed { get; set; } = 140.0f;
 
     [Export]
     public int MaxHealth { get; set; } = 200;
+
+    [Export]
+    public int MaxMana { get; set; } = 100;
 
     [Export]
     public float AttackRange { get; set; } = 28.0f;
@@ -58,6 +64,18 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public float FireballMaxDistance { get; set; } = 320.0f;
 
     [Export]
+    public float FireNovaRange { get; set; } = 72.0f;
+
+    [Export]
+    public int FireNovaManaCost { get; set; } = 20;
+
+    [Export]
+    public int FireNovaMinDamage { get; set; } = 6;
+
+    [Export]
+    public int FireNovaMaxDamage { get; set; } = 10;
+
+    [Export]
     public float SoftTargetRange { get; set; } = 180.0f;
 
     [Export]
@@ -65,6 +83,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
 
     private bool _isDead;
     private HealthState _health;
+    private ManaState _mana;
     private CombatState _combat;
     private AnimatedSprite2D _animatedSprite;
     private string _lastDirection = "south";
@@ -78,6 +97,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
 
     public int CurrentHealth => _health.Current;
     public int MaxHealableHealth => _health.Max;
+    public int CurrentMana => _mana.Current;
+    public int MaxManaValue => _mana.Max;
     public bool CanReceiveHealing => !_isDead && CurrentHealth < MaxHealableHealth;
     public bool CanBeTargeted => !_isDead;
     public Faction Faction => Factions.Allies;
@@ -90,11 +111,14 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         _combat = GetNode<CombatState>("CombatState");
         _health = GetNode<HealthState>("HealthState");
         _health.Initialize(Math.Max(1, MaxHealth));
+        _mana = GetNode<ManaState>("ManaState");
+        _mana.Initialize(Math.Max(1, MaxMana));
         SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Actors);
 
         EmitHealthChanged();
+        EmitManaChanged();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -113,6 +137,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             ClearTabTarget();
         if (Input.IsActionJustPressed("cast_spell"))
             CastFireball();
+        if (Input.IsActionJustPressed("cast_spell2"))
+            CastFireNova();
         var direction = Vector2.Zero;
         if (Input.IsActionPressed("move_left"))
             direction.X -= 1.0f;
@@ -227,6 +253,40 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             FireballSpeed,
             FireballLifetime,
             FireballMaxDistance);
+    }
+
+    private void CastFireNova()
+    {
+        if (_isDead)
+            return;
+
+        var manaCost = Math.Max(0, FireNovaManaCost);
+        if (!_mana.TrySpend(manaCost))
+            return;
+
+        EmitManaChanged();
+
+        var range = Math.Max(0.0f, FireNovaRange);
+        if (range <= 0.0f)
+            return;
+
+        var maxDamage = Math.Max(FireNovaMinDamage, FireNovaMaxDamage);
+        foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
+        {
+            if (node is not IAttackable attackable ||
+                node is not IFactionMember factionMember ||
+                factionMember.Faction == null ||
+                !Faction.IsHostileTo(factionMember.Faction))
+            {
+                continue;
+            }
+
+            if (GlobalPosition.DistanceTo(node.GlobalPosition) > range)
+                continue;
+
+            var damage = _random.RandiRange(Math.Min(FireNovaMinDamage, maxDamage), maxDamage);
+            attackable.ApplyDamage(new DamageInfo(damage, this));
+        }
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -578,6 +638,11 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     private void EmitHealthChanged()
     {
         EmitSignal(SignalName.HealthChanged, CurrentHealth, MaxHealableHealth);
+    }
+
+    private void EmitManaChanged()
+    {
+        EmitSignal(SignalName.ManaChanged, CurrentMana, MaxManaValue);
     }
 
 }
