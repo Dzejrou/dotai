@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/vfx/FireNovaVfx.cs" id="1_fire_nova_vfx"]
+
+[node name="FireNovaVfx" type="Node2D" unique_id=1515605752]
+script = ExtResource("1_fire_nova_vfx")

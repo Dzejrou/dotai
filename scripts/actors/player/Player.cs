@@ -6,6 +6,8 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactionMember, IHealable
 {
+    private const string DefaultFireNovaVfxScenePath = "res://scenes/effects/fire_nova_vfx.tscn";
+
     [Signal]
     public delegate void PlayerDiedEventHandler();
 
@@ -64,6 +66,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public float FireballMaxDistance { get; set; } = 320.0f;
 
     [Export]
+    public PackedScene FireNovaVfxScene { get; set; }
+
+    [Export]
     public float FireNovaRange { get; set; } = 72.0f;
 
     [Export]
@@ -113,6 +118,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         _health.Initialize(Math.Max(1, MaxHealth));
         _mana = GetNode<ManaState>("ManaState");
         _mana.Initialize(Math.Max(1, MaxMana));
+        if (FireNovaVfxScene == null)
+            FireNovaVfxScene = GD.Load<PackedScene>(DefaultFireNovaVfxScenePath);
         SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Actors);
@@ -269,6 +276,15 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         var range = Math.Max(0.0f, FireNovaRange);
         if (range <= 0.0f)
             return;
+
+        var parent = GetParent();
+        var fireNovaVfx = FireNovaVfxScene?.Instantiate<FireNovaVfx>();
+        if (fireNovaVfx != null && parent != null)
+        {
+            parent.AddChild(fireNovaVfx);
+            fireNovaVfx.GlobalPosition = GlobalPosition;
+            fireNovaVfx.Play(range);
+        }
 
         var maxDamage = Math.Max(FireNovaMinDamage, FireNovaMaxDamage);
         foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
