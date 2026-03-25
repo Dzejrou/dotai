@@ -15,7 +15,7 @@ public partial class World : Node2D
     public NodePath WorldNavigationPath { get; set; } = new NodePath("WorldNavigation");
 
     [Export]
-    public Rect2 NavigationBounds { get; set; } = new Rect2(0.0f, 0.0f, 640.0f, 360.0f);
+    public Rect2 NavigationBounds { get; set; } = new Rect2(0.0f, 0.0f, 1640.0f, 1360.0f);
 
     [Export]
     public float NavigationBlockerPadding { get; set; } = DefaultNavigationBlockerPadding;
