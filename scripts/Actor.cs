@@ -165,13 +165,6 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
             LastDirection = DirectionHelper.GetDirectionName(direction);
     }
 
-    public void TeleportTo(Vector2 position)
-    {
-        GlobalPosition = position;
-        Velocity = Vector2.Zero;
-        ResetNavigationPathState();
-    }
-
     public void FinishAttackState()
     {
         if (CurrentState != CombatUnitState.Attacking)
@@ -478,33 +471,10 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
         return false;
     }
 
-    private void ApplyIntentTargetChange(ActorIntent intent)
-    {
-        if (!intent.ChangeTarget)
-            return;
-
-        if (intent.Target == null)
-            ClearTarget();
-        else
-            SetTarget(intent.Target);
-    }
-
     private void ExecuteIntent(ActorIntent intent, double delta)
     {
         if (intent.FacingDirection.HasValue && intent.FacingDirection.Value != Vector2.Zero)
             SetFacingDirection(intent.FacingDirection.Value);
-
-        if (intent.RemoveNow)
-        {
-            PrepareForRemoval();
-            QueueFree();
-            return;
-        }
-
-        if (intent.TeleportDestination.HasValue)
-        {
-            TeleportTo(intent.TeleportDestination.Value);
-        }
 
         if (intent.UsePrimaryAction && PrimaryActionController != null && Target != null)
         {
