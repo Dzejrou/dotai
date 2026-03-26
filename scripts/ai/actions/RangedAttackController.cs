@@ -72,6 +72,10 @@ public partial class RangedAttackController : Node, ICombatActionController
         if (target is not ITargetable targetable || !targetable.CanBeTargeted)
             return false;
 
+        var targetFactionState = FactionState.ResolveFor(target);
+        if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(actor.Faction))
+            return false;
+
         var distance = actor.GlobalPosition.DistanceTo(target.GlobalPosition);
         return distance >= MinimumRange && distance <= PreferredRange;
     }
