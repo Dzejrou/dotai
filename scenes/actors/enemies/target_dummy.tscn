@@ -1,11 +1,10 @@
 [gd_scene format=3 uid="uid://bt4xu4bcnkoj8"]
 
 [ext_resource type="Script" uid="uid://dv8pveudkxu6d" path="res://scripts/actors/enemies/TargetDummy.cs" id="1_target_dummy_script"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/target_dummy_spriteframes.tres" id="2_target_dummy_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="5_faction_state"]
-
-[sub_resource type="SpriteFrames" id="SpriteFrames_xji2l"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_target_dummy"]
 radius = 5.0
@@ -17,7 +16,7 @@ script = ExtResource("1_target_dummy_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=855488886]
 position = Vector2(0, -4)
-sprite_frames = SubResource("SpriteFrames_xji2l")
+sprite_frames = ExtResource("2_target_dummy_frames")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=653097583]
 position = Vector2(0, 12)
