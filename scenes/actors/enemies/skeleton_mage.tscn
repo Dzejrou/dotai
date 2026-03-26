@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
 [ext_resource type="Script" uid="uid://cckkqobewqxb1" path="res://scripts/ai/actions/RangedAttackController.cs" id="11_ranged_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -76,3 +77,12 @@ script = ExtResource("6_target_combat")
 script = ExtResource("7_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=778717973]
+
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+script = ExtResource("13_wander_behavior")
+WanderRadius = 54.0
+MoveDurationMin = 0.9
+MoveDurationMax = 1.5
+PauseDurationMin = 0.8
+PauseDurationMax = 1.5
+SpeedMultiplier = 0.5

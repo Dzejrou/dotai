@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="14_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="15_faction_state"]
 [ext_resource type="Script" path="res://scripts/ai/actions/MeleeAttackController.cs" id="16_melee_action"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="17_wander_behavior"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
 radius = 5.0
@@ -79,3 +80,12 @@ script = ExtResource("10_target_combat")
 script = ExtResource("12_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=765021105]
+
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+script = ExtResource("17_wander_behavior")
+WanderRadius = 52.0
+MoveDurationMin = 0.9
+MoveDurationMax = 1.6
+PauseDurationMin = 0.7
+PauseDurationMax = 1.4
+SpeedMultiplier = 0.55
