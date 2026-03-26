@@ -1,32 +1,37 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://bt4xu4bcnkoj8"]
 
-[ext_resource type="Script" path="res://scripts/actors/enemies/TargetDummy.cs" id="1_target_dummy_script"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/target_dummy_spriteframes.tres" id="2_target_dummy_frames"]
+[ext_resource type="Script" uid="uid://dv8pveudkxu6d" path="res://scripts/actors/enemies/TargetDummy.cs" id="1_target_dummy_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
-[ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="5_faction_state"]
+
+[sub_resource type="ImageTexture" id="ImageTexture_xji2l"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_target_dummy"]
 radius = 5.0
 height = 24.0
 
-[node name="TargetDummy" type="CharacterBody2D"]
+[node name="TargetDummy" type="CharacterBody2D" unique_id=420334247]
 z_index = -1
 script = ExtResource("1_target_dummy_script")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="Sprite2D" parent="." unique_id=1428896196]
 position = Vector2(0, -4)
-sprite_frames = ExtResource("2_target_dummy_frames")
-animation = &"breathing-idle_south"
+texture = SubResource("ImageTexture_xji2l")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=653097583]
 position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_target_dummy")
 
-[node name="RespawnTimer" type="Timer" parent="."]
-one_shot = true
+[node name="RespawnTimer" type="Timer" parent="." unique_id=483591117]
 wait_time = 30.0
+one_shot = true
 
-[node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]
+[node name="ActorHUD" parent="." unique_id=329917461 instance=ExtResource("3_actor_hud")]
 
-[node name="CombatState" type="Node" parent="."]
+[node name="CombatState" type="Node" parent="." unique_id=338730228]
 script = ExtResource("4_combat_state")
+
+[node name="FactionState" type="Node" parent="." unique_id=1281307099]
+script = ExtResource("5_faction_state")
+FactionKey = "neutral"

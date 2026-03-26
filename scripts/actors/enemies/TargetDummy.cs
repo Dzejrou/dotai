@@ -14,12 +14,13 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
     public float RespawnDelaySeconds { get; set; } = 30.0f;
 
     public bool CanBeTargeted => !_isDead;
-    public Faction Faction => Factions.Neutral;
+    public Faction Faction => _faction.Current;
 
     private AnimatedSprite2D _animatedSprite;
     private CollisionShape2D _collisionShape;
     private Timer _respawnTimer;
     private ActorHUD _actorHud;
+    private FactionState _faction;
     private Vector2 _spawnPosition;
     private int _currentHealth;
     private bool _isDead;
@@ -31,6 +32,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         _animatedSprite = GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
         _collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
         _respawnTimer = GetNodeOrNull<Timer>("RespawnTimer");
+        _faction = GetNode<FactionState>("FactionState");
         _spawnPosition = GlobalPosition;
         _currentHealth = ResolvedMaxHealth;
         _isDead = false;

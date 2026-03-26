@@ -38,6 +38,22 @@ public partial class FactionState : Node
                Current.IsFriendlyTo(factionMember.Faction);
     }
 
+    public bool CanBeDamagedBy(FactionState sourceFactionState)
+    {
+        return CanBeDamagedBy(sourceFactionState?.Current);
+    }
+
+    public bool CanBeDamagedBy(Faction sourceFaction)
+    {
+        if (Current == null || sourceFaction == null || ReferenceEquals(Current, sourceFaction))
+            return false;
+
+        if (ReferenceEquals(Current, Factions.Neutral))
+            return true;
+
+        return Current.IsHostileTo(sourceFaction) || sourceFaction.IsHostileTo(Current);
+    }
+
     public static FactionState ResolveFor(Node node)
     {
         if (node == null || !GodotObject.IsInstanceValid(node))

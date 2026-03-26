@@ -75,10 +75,18 @@ public static class TargetingHelper
             return false;
         }
 
-        if (source is Player)
-            return !ReferenceEquals(sourceFactionMember.Faction, targetFactionMember.Faction);
+        var targetFactionState = FactionState.ResolveFor(target);
+        if (targetFactionState != null)
+            return targetFactionState.CanBeDamagedBy(sourceFactionMember.Faction);
 
-        return sourceFactionMember.Faction.IsHostileTo(targetFactionMember.Faction);
+        if (ReferenceEquals(sourceFactionMember.Faction, targetFactionMember.Faction))
+            return false;
+
+        if (ReferenceEquals(targetFactionMember.Faction, Factions.Neutral))
+            return true;
+
+        return sourceFactionMember.Faction.IsHostileTo(targetFactionMember.Faction) ||
+               targetFactionMember.Faction.IsHostileTo(sourceFactionMember.Faction);
     }
 
     private static bool IsValidTargetNode(Node node)

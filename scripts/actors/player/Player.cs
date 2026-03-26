@@ -283,13 +283,22 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         var maxDamage = Math.Max(FireNovaMinDamage, FireNovaMaxDamage);
         foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
         {
-            if (node is not IAttackable attackable ||
-                node is not IFactionMember factionMember ||
-                factionMember.Faction == null ||
-                !Faction.IsHostileTo(factionMember.Faction))
+            if (node is not IAttackable attackable)
             {
                 continue;
             }
+
+            var targetFactionState = FactionState.ResolveFor(node);
+            var canDamageTarget = targetFactionState != null
+                ? targetFactionState.CanBeDamagedBy(Faction)
+                : node is IFactionMember factionMember &&
+                  factionMember.Faction != null &&
+                  !ReferenceEquals(Faction, factionMember.Faction) &&
+                  (Faction.IsHostileTo(factionMember.Faction) ||
+                   factionMember.Faction.IsHostileTo(Faction));
+
+            if (!canDamageTarget)
+                continue;
 
             if (GlobalPosition.DistanceTo(node.GlobalPosition) > range)
                 continue;
