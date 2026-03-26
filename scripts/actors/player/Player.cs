@@ -4,10 +4,8 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactionMember, IHealable
+public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactionMember, IHealable, ISpellCaster
 {
-    private const string DefaultFireNovaVfxScenePath = "res://scenes/effects/fire_nova_vfx.tscn";
-
     [Signal]
     public delegate void PlayerDiedEventHandler();
 
@@ -45,36 +43,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public float HealthRegenerationDelayAfterDamage { get; set; } = 5.0f;
 
     [Export]
-    public PackedScene FireballScene { get; set; }
-
-    [Export]
-    public float FireballSpeed { get; set; } = 280.0f;
-
-    [Export]
-    public int FireballDamage { get; set; } = 4;
-
-    [Export]
-    public float FireballLifetime { get; set; } = 2.5f;
-
-    [Export]
-    public float FireballMaxDistance { get; set; } = 320.0f;
-
-    [Export]
-    public PackedScene FireNovaVfxScene { get; set; }
-
-    [Export]
-    public float FireNovaRange { get; set; } = 72.0f;
-
-    [Export]
-    public int FireNovaManaCost { get; set; } = 20;
-
-    [Export]
-    public int FireNovaMinDamage { get; set; } = 6;
-
-    [Export]
-    public int FireNovaMaxDamage { get; set; } = 10;
-
-    [Export]
     public float SoftTargetRange { get; set; } = 180.0f;
 
     [Export]
@@ -89,6 +57,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     private string _lastDirection = "south";
     private readonly RandomNumberGenerator _random = new();
     private readonly HashSet<Node> _hitThisAttack = new();
+    private readonly Dictionary<StringName, Spell> _spellsByAction = new();
     private float _attackCooldownTimer;
     private bool _isAttacking;
     private float _healthRegenTimer;
@@ -104,6 +73,12 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public Faction Faction => _faction.Current;
     public CombatState Combat => _combat;
     public PlayerTargetingState Targeting { get; } = new();
+    public Node2D SpellOrigin => this;
+    public string SpellDirectionName => _lastDirection;
+    public Node2D SpellTarget => Targeting.ActiveTarget;
+    public ManaState ManaState => _mana;
+    public FactionState FactionState => _faction;
+    public bool CanCastSpells => !_isDead;
 
     public override void _Ready()
     {
@@ -114,14 +89,13 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         _health.Initialize();
         _mana = GetNode<ManaState>("ManaState");
         _mana.Initialize();
-        if (FireNovaVfxScene == null)
-            FireNovaVfxScene = GD.Load<PackedScene>(DefaultFireNovaVfxScenePath);
+        LoadEquippedSpells();
         SetAnimationSafe(GetIdleAnimationName());
         _animatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Actors);
 
         EmitHealthChanged();
-        EmitManaChanged();
+        NotifyManaChanged();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -138,10 +112,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             CycleTabTarget(-1);
         if (Input.IsActionJustPressed("clear_tab_target"))
             ClearTabTarget();
-        if (Input.IsActionJustPressed("cast_spell"))
-            CastFireball();
-        if (Input.IsActionJustPressed("cast_spell2"))
-            CastFireNova();
+        TryCastEquippedSpells();
         var direction = Vector2.Zero;
         if (Input.IsActionPressed("move_left"))
             direction.X -= 1.0f;
@@ -219,87 +190,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     {
         if (_animatedSprite.Animation.ToString().StartsWith("slash_", StringComparison.Ordinal))
             _isAttacking = false;
-    }
-
-    private void CastFireball()
-    {
-        if (_isDead || FireballScene == null)
-            return;
-
-        var fireDirection = DirectionHelper.GetDirectionVector(_lastDirection);
-        var activeTarget = Targeting.ActiveTarget;
-        if (activeTarget != null &&
-            IsInstanceValid(activeTarget) &&
-            activeTarget.IsInsideTree() &&
-            activeTarget is ITargetable targetable &&
-            targetable.CanBeTargeted)
-        {
-            var toTarget = activeTarget.GlobalPosition - GlobalPosition;
-            if (toTarget != Vector2.Zero)
-                fireDirection = toTarget.Normalized();
-        }
-
-        var fireball = FireballScene.Instantiate<Projectile>();
-        if (fireball == null)
-            return;
-
-        var parent = GetParent();
-        if (parent == null)
-            return;
-
-        fireball.GlobalPosition = GlobalPosition;
-        parent.AddChild(fireball);
-        fireball.Initialize(
-            fireDirection,
-            this,
-            FireballDamage,
-            FireballSpeed,
-            FireballLifetime,
-            FireballMaxDistance);
-    }
-
-    private void CastFireNova()
-    {
-        if (_isDead)
-            return;
-
-        var manaCost = Math.Max(0, FireNovaManaCost);
-        if (!_mana.TrySpend(manaCost))
-            return;
-
-        EmitManaChanged();
-
-        var range = Math.Max(0.0f, FireNovaRange);
-        if (range <= 0.0f)
-            return;
-
-        var parent = GetParent();
-        var fireNovaVfx = FireNovaVfxScene?.Instantiate<FireNovaVfx>();
-        if (fireNovaVfx != null && parent != null)
-        {
-            parent.AddChild(fireNovaVfx);
-            fireNovaVfx.GlobalPosition = GlobalPosition;
-            fireNovaVfx.Play(range);
-        }
-
-        var maxDamage = Math.Max(FireNovaMinDamage, FireNovaMaxDamage);
-        foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
-        {
-            if (node is not IAttackable attackable)
-            {
-                continue;
-            }
-
-            var targetFactionState = FactionState.ResolveFor(node);
-            if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(_faction))
-                continue;
-
-            if (GlobalPosition.DistanceTo(node.GlobalPosition) > range)
-                continue;
-
-            var damage = _random.RandiRange(Math.Min(FireNovaMinDamage, maxDamage), maxDamage);
-            attackable.ApplyDamage(new DamageInfo(damage, this));
-        }
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -657,9 +547,41 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         EmitSignal(SignalName.HealthChanged, CurrentHealth, MaxHealableHealth);
     }
 
-    private void EmitManaChanged()
+    public void NotifyManaChanged()
     {
         EmitSignal(SignalName.ManaChanged, CurrentMana, MaxManaValue);
+    }
+
+    private void TryCastEquippedSpells()
+    {
+        foreach (var pair in _spellsByAction)
+        {
+            if (Input.IsActionJustPressed(pair.Key))
+                pair.Value.TryCast(this);
+        }
+    }
+
+    private void LoadEquippedSpells()
+    {
+        _spellsByAction.Clear();
+
+        var spellsNode = GetNode<Node>("Spells");
+        foreach (var child in spellsNode.GetChildren())
+        {
+            if (child is not Spell spell)
+            {
+                GD.PushError($"{GetPath()}: Spells container child {child.Name} must inherit Spell.");
+                continue;
+            }
+
+            if (spell.CastAction == default)
+            {
+                GD.PushError($"{spell.GetPath()}: Spell is missing CastAction.");
+                continue;
+            }
+
+            _spellsByAction[spell.CastAction] = spell;
+        }
     }
 
 }
