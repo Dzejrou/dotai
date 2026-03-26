@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cdnobkte5yigl" path="res://assets/world/rock.png" id="2_qx8h3"]
 [ext_resource type="Script" uid="uid://dhkp7bkox0i6e" path="res://scripts/core/World.cs" id="5_qx7qz"]
 [ext_resource type="Script" uid="uid://47bka353y2ms" path="res://scripts/core/DebugSpawner.cs" id="6_debug_spawner"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/target_dummy.tscn" id="6_slgso"]
+[ext_resource type="PackedScene" uid="uid://bt4xu4bcnkoj8" path="res://scenes/actors/enemies/target_dummy.tscn" id="6_slgso"]
 [ext_resource type="Resource" uid="uid://dywxbx4vl0ax3" path="res://resources/debug/spawn_catalog.tres" id="7_spawn_catalog"]
 [ext_resource type="Texture2D" uid="uid://yfu5ebx11xsn" path="res://assets/tilesets/graveyard_higher.png" id="8_8c1c8"]
 [ext_resource type="Texture2D" uid="uid://dbkxyjiesijnp" path="res://assets/tilesets/tileset_test.png" id="8_rquc4"]
@@ -122,7 +122,6 @@ script = ExtResource("5_qx7qz")
 NavigationBlockerPaths = Array[NodePath]([NodePath("Rock"), NodePath("Rock2"), NodePath("Rock3")])
 
 [node name="WorldNavigation" type="NavigationRegion2D" parent="." unique_id=367567325]
-visible = false
 navigation_polygon = SubResource("NavigationPolygon_world_navigation")
 
 [node name="Player" parent="." unique_id=643983542 instance=ExtResource("1_k6v4i")]
@@ -171,6 +170,9 @@ position = Vector2(389, 27)
 z_index = 0
 position = Vector2(300, 32)
 
+[node name="Dryad" parent="." unique_id=419684181 instance=ExtResource("10_vn8ag")]
+position = Vector2(171, 200)
+
 [node name="TileMapLayer2" type="TileMapLayer" parent="." unique_id=1259841334]
 
 [node name="TileMapLayer" type="TileMapLayer" parent="TileMapLayer2" unique_id=1443743029]
@@ -189,6 +191,3 @@ tile_set = SubResource("TileSet_1j3no")
 z_index = -3
 tile_map_data = PackedByteArray("AAABAAEAAAADAAMAAAAFAAEAAAACAAEAAAABAAUAAAAAAAEAAAAFAAUAAAADAAEAAAAJAAkAAAACAAEAAAANAAkAAAABAAEAAAANAAUAAAADAAEAAAAJAAUAAAAAAAEAAAAJAAEAAAADAAMAAAABAAkAAAAAAAIAAAAFAAkAAAACAAMAAAAFAA0AAAADAAMAAAABAA0AAAABAAIAAAAJAA0AAAABAAMAAAANAA0AAAACAAMAAAARAAUAAAADAAMAAAARAAkAAAADAAEAAAAVAAUAAAABAAEAAAANAAEAAAACAAEAAAARAAEAAAADAAMAAAAVAAEAAAAAAAEAAAAVAAkAAAADAAEAAAAZAAkAAAACAAEAAAAZAAUAAAAAAAEAAAAZAAEAAAADAAMAAAARAA0AAAADAAMAAAAVAA0AAAADAAEAAAAZAA0AAAACAAEAAAA=")
 tile_set = SubResource("TileSet_epgnc")
-
-[node name="Dryad" parent="TileMapLayer2" unique_id=419684181 instance=ExtResource("10_vn8ag")]
-position = Vector2(171, 200)
