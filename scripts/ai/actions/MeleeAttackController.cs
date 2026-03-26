@@ -62,7 +62,9 @@ public partial class MeleeAttackController : Node, ICombatActionController
         if (!CanStartAction(actor, target) ||
             target is not IAttackable attackable ||
             target is not ITargetable targetable ||
-            !targetable.CanBeTargeted)
+            !targetable.CanBeTargeted ||
+            FactionState.ResolveFor(target) is not FactionState targetFactionState ||
+            !targetFactionState.CanBeDamagedBy(actor.Faction))
         {
             actor.ClearTarget();
             return;

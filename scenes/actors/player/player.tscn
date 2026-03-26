@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="5_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="6_health_state"]
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="7_mana_state"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="8_faction_state"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -39,3 +40,7 @@ Max = 200
 [node name="ManaState" type="Node" parent="." unique_id=1010931290]
 script = ExtResource("7_mana_state")
 Max = 1000
+
+[node name="FactionState" type="Node" parent="." unique_id=780844721]
+script = ExtResource("8_faction_state")
+FactionKey = "allies"

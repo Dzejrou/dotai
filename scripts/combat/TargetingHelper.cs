@@ -76,17 +76,8 @@ public static class TargetingHelper
         }
 
         var targetFactionState = FactionState.ResolveFor(target);
-        if (targetFactionState != null)
-            return targetFactionState.CanBeDamagedBy(sourceFactionMember.Faction);
-
-        if (ReferenceEquals(sourceFactionMember.Faction, targetFactionMember.Faction))
-            return false;
-
-        if (ReferenceEquals(targetFactionMember.Faction, Factions.Neutral))
-            return true;
-
-        return sourceFactionMember.Faction.IsHostileTo(targetFactionMember.Faction) ||
-               targetFactionMember.Faction.IsHostileTo(sourceFactionMember.Faction);
+        return targetFactionState != null &&
+               targetFactionState.CanBeDamagedBy(sourceFactionMember.Faction);
     }
 
     private static bool IsValidTargetNode(Node node)

@@ -84,6 +84,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     private HealthState _health;
     private ManaState _mana;
     private CombatState _combat;
+    private FactionState _faction;
     private AnimatedSprite2D _animatedSprite;
     private string _lastDirection = "south";
     private readonly RandomNumberGenerator _random = new();
@@ -100,7 +101,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public int MaxManaValue => _mana.Max;
     public bool CanReceiveHealing => !_isDead && CurrentHealth < MaxHealableHealth;
     public bool CanBeTargeted => !_isDead;
-    public Faction Faction => Factions.Allies;
+    public Faction Faction => _faction.Current;
     public CombatState Combat => _combat;
     public PlayerTargetingState Targeting { get; } = new();
 
@@ -108,6 +109,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     {
         _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
         _combat = GetNode<CombatState>("CombatState");
+        _faction = GetNode<FactionState>("FactionState");
         _health = GetNode<HealthState>("HealthState");
         _health.Initialize();
         _mana = GetNode<ManaState>("ManaState");
@@ -289,15 +291,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             }
 
             var targetFactionState = FactionState.ResolveFor(node);
-            var canDamageTarget = targetFactionState != null
-                ? targetFactionState.CanBeDamagedBy(Faction)
-                : node is IFactionMember factionMember &&
-                  factionMember.Faction != null &&
-                  !ReferenceEquals(Faction, factionMember.Faction) &&
-                  (Faction.IsHostileTo(factionMember.Faction) ||
-                   factionMember.Faction.IsHostileTo(Faction));
-
-            if (!canDamageTarget)
+            if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(_faction))
                 continue;
 
             if (GlobalPosition.DistanceTo(node.GlobalPosition) > range)
@@ -585,6 +579,10 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     private void ApplyDamageToEnemy(Node node, IAttackable enemy)
     {
         if (enemy == null || !_hitThisAttack.Add(node))
+            return;
+
+        var targetFactionState = FactionState.ResolveFor(node);
+        if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(_faction))
             return;
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
