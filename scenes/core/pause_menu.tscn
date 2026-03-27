@@ -60,3 +60,17 @@ text = "Resume"
 [node name="DebugButton" type="Button" parent="Root/Center/Panel/VBox"]
 layout_mode = 2
 text = "Debug"
+
+[node name="Options" type="VBoxContainer" parent="Root/Center/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="OptionsLabel" type="Label" parent="Root/Center/Panel/VBox/Options"]
+layout_mode = 2
+text = "Options"
+horizontal_alignment = 1
+
+[node name="ShowNamesToggle" type="CheckBox" parent="Root/Center/Panel/VBox/Options"]
+layout_mode = 2
+text = "Show Unit Names"
+button_pressed = true

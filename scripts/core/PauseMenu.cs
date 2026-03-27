@@ -15,8 +15,12 @@ public partial class PauseMenu : Control
     [Export]
     public NodePath DebugButtonPath { get; set; } = new NodePath("Center/Panel/VBox/DebugButton");
 
+    [Export]
+    public NodePath ShowNamesTogglePath { get; set; } = new NodePath("Center/Panel/VBox/Options/ShowNamesToggle");
+
     private Button _resumeButton;
     private Button _debugButton;
+    private BaseButton _showNamesToggle;
 
     public override void _Ready()
     {
@@ -24,12 +28,19 @@ public partial class PauseMenu : Control
 
         _resumeButton = GetNodeOrNull<Button>(ResumeButtonPath);
         _debugButton = GetNodeOrNull<Button>(DebugButtonPath);
+        _showNamesToggle = GetNodeOrNull<BaseButton>(ShowNamesTogglePath);
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
 
         if (_debugButton != null)
             _debugButton.Pressed += OnDebugPressed;
+
+        if (_showNamesToggle != null)
+        {
+            _showNamesToggle.ButtonPressed = ActorHudSettings.ShowNames;
+            _showNamesToggle.Toggled += OnShowNamesToggled;
+        }
     }
 
     public override void _ExitTree()
@@ -39,6 +50,9 @@ public partial class PauseMenu : Control
 
         if (_debugButton != null)
             _debugButton.Pressed -= OnDebugPressed;
+
+        if (_showNamesToggle != null)
+            _showNamesToggle.Toggled -= OnShowNamesToggled;
     }
 
     private void OnResumePressed()
@@ -49,5 +63,10 @@ public partial class PauseMenu : Control
     private void OnDebugPressed()
     {
         EmitSignal(SignalName.DebugRequested);
+    }
+
+    private void OnShowNamesToggled(bool pressed)
+    {
+        ActorHudSettings.SetShowNames(pressed);
     }
 }

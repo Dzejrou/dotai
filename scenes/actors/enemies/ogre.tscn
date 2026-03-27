@@ -11,7 +11,7 @@
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="11_melee_action"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="12_wander_behavior"]
+[ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="12_wander_behavior"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ogre"]
 radius = 6.0
@@ -34,6 +34,8 @@ position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_ogre")
 
 [node name="ActorHUD" parent="." unique_id=856333492 instance=ExtResource("3_actor_hud")]
+DisplayName = "Ogre"
+VerticalOffset = -50.0
 
 [node name="CombatState" type="Node" parent="." unique_id=223682911]
 script = ExtResource("8_combat_state")
@@ -77,11 +79,9 @@ script = ExtResource("7_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=1837160544]
 
-[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=371452597]
 script = ExtResource("12_wander_behavior")
 WanderRadius = 64.0
 MoveDurationMin = 1.0
-MoveDurationMax = 1.8
-PauseDurationMin = 0.8
 PauseDurationMax = 1.6
 SpeedMultiplier = 0.45

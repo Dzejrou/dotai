@@ -9,9 +9,9 @@
 [ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="11_return_home"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="12_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="13_health_state"]
-[ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="14_faction_state"]
-[ext_resource type="Script" path="res://scripts/ai/actions/MeleeAttackController.cs" id="15_melee_action"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="16_wander_behavior"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="14_faction_state"]
+[ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="15_melee_action"]
+[ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="16_wander_behavior"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wolf"]
 radius = 6.0
@@ -35,6 +35,7 @@ position = Vector2(0, 10)
 shape = SubResource("CapsuleShape2D_wolf")
 
 [node name="ActorHUD" parent="." unique_id=1379259388 instance=ExtResource("3_actor_hud")]
+DisplayName = "Wolf"
 
 [node name="CombatState" type="Node" parent="." unique_id=691522938]
 script = ExtResource("12_combat_state")
@@ -43,16 +44,14 @@ script = ExtResource("12_combat_state")
 script = ExtResource("13_health_state")
 Max = 12
 
-[node name="FactionState" type="Node" parent="."]
+[node name="FactionState" type="Node" parent="." unique_id=1175552823]
 script = ExtResource("14_faction_state")
-FactionKey = "enemies"
 
-[node name="PrimaryActionController" type="Node" parent="."]
+[node name="PrimaryActionController" type="Node" parent="." unique_id=703452880]
 script = ExtResource("15_melee_action")
 PreferredRange = 42.0
 AttackCooldown = 0.85
 AttackAnimation = &"bark"
-MinimumDamage = 1
 MaximumDamage = 3
 
 [node name="Behaviors" type="Node" parent="." unique_id=24580142]
@@ -80,10 +79,9 @@ script = ExtResource("11_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=1273776635]
 
-[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=1474140455]
 script = ExtResource("16_wander_behavior")
 WanderRadius = 56.0
-MoveDurationMin = 0.8
 MoveDurationMax = 1.4
 PauseDurationMin = 0.6
 PauseDurationMax = 1.2

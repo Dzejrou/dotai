@@ -10,13 +10,13 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
-[ext_resource type="Script" path="res://scripts/combat/ManaState.cs" id="15_mana_state"]
-[ext_resource type="Script" path="res://scripts/ai/actions/SpellCastActionController.cs" id="11_spell_cast_action"]
+[ext_resource type="Script" uid="uid://81lj2bds5kdy" path="res://scripts/ai/actions/SpellCastActionController.cs" id="11_spell_cast_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
-[ext_resource type="Script" path="res://scripts/spells/FireballSpell.cs" id="14_fireball_spell"]
+[ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
+[ext_resource type="Script" uid="uid://df50yybv2e8ng" path="res://scripts/spells/FireballSpell.cs" id="14_fireball_spell"]
+[ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="15_mana_state"]
 [ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="16_fire_nova_vfx"]
-[ext_resource type="Script" path="res://scripts/spells/FireNovaSpell.cs" id="17_fire_nova_spell"]
+[ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="17_fire_nova_spell"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -39,6 +39,8 @@ position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_l5f1m")
 
 [node name="ActorHUD" parent="." unique_id=1495421896 instance=ExtResource("3_actor_hud")]
+DisplayName = "Skeleton Mage"
+VerticalOffset = -55.0
 
 [node name="CombatState" type="Node" parent="." unique_id=1453183541]
 script = ExtResource("8_combat_state")
@@ -50,22 +52,17 @@ Max = 22
 [node name="FactionState" type="Node" parent="." unique_id=326418690]
 script = ExtResource("10_faction_state")
 
-[node name="ManaState" type="Node" parent="."]
+[node name="ManaState" type="Node" parent="." unique_id=48333665]
 script = ExtResource("15_mana_state")
 Max = 20
 
-[node name="Spells" type="Node" parent="."]
+[node name="Spells" type="Node" parent="." unique_id=1247757545]
 
-[node name="Fireball" type="Node" parent="Spells"]
+[node name="Fireball" type="Node" parent="Spells" unique_id=436095138]
 script = ExtResource("14_fireball_spell")
 ProjectileScene = ExtResource("12_projectile_scene")
-ManaCost = 0
-ProjectileSpeed = 280.0
-ProjectileDamage = 4
-ProjectileLifetime = 2.5
-ProjectileMaxDistance = 320.0
 
-[node name="FireNova" type="Node" parent="Spells"]
+[node name="FireNova" type="Node" parent="Spells" unique_id=1734723264]
 script = ExtResource("17_fire_nova_spell")
 VfxScene = ExtResource("16_fire_nova_vfx")
 Range = 56.0
@@ -75,14 +72,8 @@ MaximumDamage = 12
 
 [node name="PrimaryActionController" type="Node" parent="." unique_id=612694339]
 script = ExtResource("11_spell_cast_action")
-SpellNodePath = NodePath("../Spells/Fireball")
-MinimumRange = 70.0
-PreferredRange = 120.0
-AttackCooldown = 1.2
-AttackAnimation = &"cast_spell"
 AnimationSpeedMultiplier = 2.0
 CloseRangeSpellNodePath = NodePath("../Spells/FireNova")
-CloseRangeMaxDistance = 56.0
 CloseRangeCooldown = 3.2
 
 [node name="Behaviors" type="Node" parent="." unique_id=258315963]
@@ -111,11 +102,10 @@ script = ExtResource("7_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=778717973]
 
-[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=1483723025]
 script = ExtResource("13_wander_behavior")
 WanderRadius = 54.0
 MoveDurationMin = 0.9
 MoveDurationMax = 1.5
-PauseDurationMin = 0.8
 PauseDurationMax = 1.5
 SpeedMultiplier = 0.5

@@ -63,6 +63,8 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     private float _healthRegenTimer;
     private float _healthRegenDelayTimer;
     private ActorHUD _activeTargetHud;
+    private readonly HashSet<ActorHUD> _visibleTargetHuds = new();
+    private readonly HashSet<ActorHUD> _nextVisibleTargetHuds = new();
 
     public int CurrentHealth => _health.Current;
     public int MaxHealableHealth => _health.Max;
@@ -204,7 +206,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             _combat.ClearTarget();
             _combat.ExitCombat();
             Targeting.ClearAllTargets();
-            UpdateTargetBracket();
+            UpdateTargetHudVisibility();
             EmitSignal(SignalName.PlayerDied);
             QueueFree();
         }
@@ -228,7 +230,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     {
         ValidateTabTarget();
         UpdateSoftTarget();
-        UpdateTargetBracket();
+        UpdateTargetHudVisibility();
     }
 
     private void UpdateSoftTarget()
@@ -295,7 +297,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     private void ClearTabTarget()
     {
         Targeting.ClearTabTarget();
-        UpdateTargetBracket();
+        UpdateTargetHudVisibility();
     }
 
     private void CycleTabTarget(int direction)
@@ -313,7 +315,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         {
             var initialIndex = direction < 0 ? candidates.Count - 1 : 0;
             Targeting.SetTabTarget(candidates[initialIndex]);
-            UpdateTargetBracket();
+            UpdateTargetHudVisibility();
             return;
         }
 
@@ -326,7 +328,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         var step = direction < 0 ? -1 : 1;
         var nextIndex = (currentIndex + step + candidates.Count) % candidates.Count;
         Targeting.SetTabTarget(candidates[nextIndex]);
-        UpdateTargetBracket();
+        UpdateTargetHudVisibility();
     }
 
     private void ValidateTabTarget()
@@ -406,19 +408,51 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         return (alignmentScore * 0.7f) + (distanceScore * 0.3f);
     }
 
+    private void UpdateTargetHudVisibility()
+    {
+        _nextVisibleTargetHuds.Clear();
+        TryAddTargetHud(Targeting.ActiveTarget, _nextVisibleTargetHuds);
+
+        foreach (var hud in _visibleTargetHuds)
+        {
+            if (hud == null || !GodotObject.IsInstanceValid(hud) || _nextVisibleTargetHuds.Contains(hud))
+                continue;
+
+            hud.SetUnitFrameVisible(false);
+        }
+
+        foreach (var hud in _nextVisibleTargetHuds)
+            hud.SetUnitFrameVisible(true);
+
+        _visibleTargetHuds.Clear();
+        foreach (var hud in _nextVisibleTargetHuds)
+            _visibleTargetHuds.Add(hud);
+
+        UpdateTargetBracket();
+    }
+
     private void UpdateTargetBracket()
     {
         var activeTarget = Targeting.ActiveTarget;
         var nextTargetHud = ResolveActorHud(activeTarget);
-        if (_activeTargetHud == nextTargetHud)
-            return;
 
-        if (_activeTargetHud != null && GodotObject.IsInstanceValid(_activeTargetHud))
+        if (_activeTargetHud != null &&
+            GodotObject.IsInstanceValid(_activeTargetHud) &&
+            _activeTargetHud != nextTargetHud)
+        {
             _activeTargetHud.SetTargetBracketVisible(false);
+        }
 
         _activeTargetHud = nextTargetHud;
         if (_activeTargetHud != null)
             _activeTargetHud.SetTargetBracketVisible(true);
+    }
+
+    private static void TryAddTargetHud(Node2D actor, HashSet<ActorHUD> targetHuds)
+    {
+        var hud = ResolveActorHud(actor);
+        if (hud != null)
+            targetHuds.Add(hud);
     }
 
     private static ActorHUD ResolveActorHud(Node2D actor)

@@ -1,95 +1,91 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene format=3 uid="uid://chmx43pfadld4"]
 
-[ext_resource type="Script" path="res://scripts/actors/enemies/ElfRanger.cs" id="1_elf_ranger_script"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/elf_ranger_spriteframes.tres" id="2_elf_ranger_frames"]
+[ext_resource type="Script" uid="uid://gosarrlge42r" path="res://scripts/actors/enemies/ElfRanger.cs" id="1_elf_ranger_script"]
+[ext_resource type="SpriteFrames" uid="uid://dy0ma2kx46j4w" path="res://resources/animations/elf_ranger_spriteframes.tres" id="2_elf_ranger_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="5_leash_behavior"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="6_target_combat"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="7_return_home"]
-[ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
-[ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
-[ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
-[ext_resource type="Script" path="res://scripts/ai/actions/RangedAttackController.cs" id="11_ranged_action"]
+[ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
+[ext_resource type="Script" uid="uid://b7mqwlipopylh" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="5_leash_behavior"]
+[ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="6_target_combat"]
+[ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="7_return_home"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
+[ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
+[ext_resource type="Script" uid="uid://cckkqobewqxb1" path="res://scripts/ai/actions/RangedAttackController.cs" id="11_ranged_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
+[ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_elf_ranger"]
 radius = 5.0
 height = 26.0
 
-[node name="ElfRanger" type="CharacterBody2D"]
+[node name="ElfRanger" type="CharacterBody2D" unique_id=1709862197]
 z_index = -1
 script = ExtResource("1_elf_ranger_script")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1877841505]
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_elf_ranger_frames")
 animation = &"breathing-idle_south"
 
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1849446510]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1493116296]
 position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_elf_ranger")
 
-[node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]
+[node name="ActorHUD" parent="." unique_id=1703724853 instance=ExtResource("3_actor_hud")]
+DisplayName = "Ranger"
+VerticalOffset = -50.0
 
-[node name="CombatState" type="Node" parent="."]
+[node name="CombatState" type="Node" parent="." unique_id=1813498729]
 script = ExtResource("8_combat_state")
 
-[node name="HealthState" type="Node" parent="."]
+[node name="HealthState" type="Node" parent="." unique_id=383988540]
 script = ExtResource("9_health_state")
 Max = 18
 
-[node name="FactionState" type="Node" parent="."]
+[node name="FactionState" type="Node" parent="." unique_id=2056568788]
 script = ExtResource("10_faction_state")
-FactionKey = "enemies"
 
-[node name="PrimaryActionController" type="Node" parent="."]
+[node name="PrimaryActionController" type="Node" parent="." unique_id=1812847766]
 script = ExtResource("11_ranged_action")
 MinimumRange = 80.0
 PreferredRange = 140.0
 AttackCooldown = 1.35
-AttackAnimation = &"shooting-bow"
 ProjectileScene = ExtResource("12_projectile_scene")
 ProjectileDamage = 3
 ProjectileSpeed = 320.0
 ProjectileLifetime = 2.4
 ProjectileMaxTravelDistance = 360.0
 
-[node name="Behaviors" type="Node" parent="."]
+[node name="Behaviors" type="Node" parent="." unique_id=545402278]
 
-[node name="Tier10_Targeting" type="Node" parent="Behaviors"]
+[node name="Tier10_Targeting" type="Node" parent="Behaviors" unique_id=1931107523]
 
-[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting"]
+[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting" unique_id=80250990]
 script = ExtResource("4_acquire_hostile")
-AcquisitionRange = 150.0
 InitialTargetPath = NodePath("../Player")
 DebugActorName = "ElfRanger"
 
-[node name="Tier20_Leash" type="Node" parent="Behaviors"]
+[node name="Tier20_Leash" type="Node" parent="Behaviors" unique_id=5018870]
 
-[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash"]
+[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash" unique_id=1528449133]
 script = ExtResource("5_leash_behavior")
-LossRange = 220.0
-EvadeOnAggroLoss = true
-IgnoreDamageWhileReturning = true
 
-[node name="Tier50_Combat" type="Node" parent="Behaviors"]
+[node name="Tier50_Combat" type="Node" parent="Behaviors" unique_id=530122422]
 
-[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat"]
+[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat" unique_id=1518596404]
 script = ExtResource("6_target_combat")
 
-[node name="Tier80_ReturnHome" type="Node" parent="Behaviors"]
+[node name="Tier80_ReturnHome" type="Node" parent="Behaviors" unique_id=721417642]
 
-[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome"]
+[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome" unique_id=1842923429]
 script = ExtResource("7_return_home")
 
-[node name="Tier90_Recovery" type="Node" parent="Behaviors"]
+[node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=868573268]
 
-[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=890008062]
 script = ExtResource("13_wander_behavior")
 WanderRadius = 58.0
 MoveDurationMin = 0.9

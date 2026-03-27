@@ -10,8 +10,8 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="13_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="14_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="15_faction_state"]
-[ext_resource type="Script" path="res://scripts/ai/actions/MeleeAttackController.cs" id="16_melee_action"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="17_wander_behavior"]
+[ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="16_melee_action"]
+[ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="17_wander_behavior"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
 radius = 5.0
@@ -36,6 +36,8 @@ position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_q6f3w")
 
 [node name="ActorHUD" parent="." unique_id=641888673 instance=ExtResource("3_actor_hud")]
+DisplayName = "Skeleton"
+VerticalOffset = -45.0
 
 [node name="CombatState" type="Node" parent="." unique_id=1013428647]
 script = ExtResource("13_combat_state")
@@ -47,12 +49,9 @@ Max = 10
 [node name="FactionState" type="Node" parent="." unique_id=734064014]
 script = ExtResource("15_faction_state")
 
-[node name="PrimaryActionController" type="Node" parent="."]
+[node name="PrimaryActionController" type="Node" parent="." unique_id=272517061]
 script = ExtResource("16_melee_action")
-PreferredRange = 18.0
 AttackCooldown = 1.1
-AttackAnimation = &"cross-punch"
-MinimumDamage = 1
 MaximumDamage = 5
 
 [node name="Behaviors" type="Node" parent="." unique_id=298671112]
@@ -81,7 +80,7 @@ script = ExtResource("12_return_home")
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=765021105]
 
-[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=927926458]
 script = ExtResource("17_wander_behavior")
 WanderRadius = 52.0
 MoveDurationMin = 0.9
