@@ -23,20 +23,29 @@ public partial class FireballSpell : Spell
     [Export]
     public float ProjectileMaxDistance { get; set; } = 320.0f;
 
+    public override bool CanCast(ISpellCaster caster)
+    {
+        if (!base.CanCast(caster) || ProjectileScene == null)
+            return false;
+
+        var manaState = caster.ManaState;
+        if (manaState == null)
+            return false;
+
+        return manaState.Current >= Math.Max(0, ManaCost);
+    }
+
     public override bool TryCast(ISpellCaster caster)
     {
-        if (caster == null || !caster.CanCastSpells || caster.SpellOrigin == null || ProjectileScene == null)
+        if (!CanCast(caster))
             return false;
 
         var manaState = caster.ManaState;
         var manaCost = Math.Max(0, ManaCost);
-        if (manaState == null && manaCost > 0)
+        if (!manaState.TrySpend(manaCost))
             return false;
 
-        if (manaState != null && !manaState.TrySpend(manaCost))
-            return false;
-
-        if (manaState != null && manaCost > 0)
+        if (manaCost > 0)
             caster.NotifyManaChanged();
 
         var fireDirection = DirectionHelper.GetDirectionVector(caster.SpellDirectionName);

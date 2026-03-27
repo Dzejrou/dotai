@@ -5,9 +5,18 @@ using System;
 [GlobalClass]
 public partial class SpellCastActionController : Node, ICombatActionController
 {
-    private float _cooldownTimer;
-    private bool _hasPendingCast;
-    private Spell _spell;
+    private enum SpellSlot
+    {
+        None,
+        Basic,
+        CloseRange,
+    }
+
+    private float _basicCooldownTimer;
+    private float _closeRangeCooldownTimer;
+    private SpellSlot _pendingSpell = SpellSlot.None;
+    private Spell _basicSpell;
+    private Spell _closeRangeSpell;
 
     [Export]
     public NodePath SpellNodePath { get; set; } = new("../Spells/Fireball");
@@ -27,24 +36,39 @@ public partial class SpellCastActionController : Node, ICombatActionController
     [Export]
     public float AnimationSpeedMultiplier { get; set; } = 1.0f;
 
+    [Export]
+    public NodePath CloseRangeSpellNodePath { get; set; }
+
+    [Export]
+    public float CloseRangeMaxDistance { get; set; } = 56.0f;
+
+    [Export]
+    public float CloseRangeCooldown { get; set; } = 3.0f;
+
     public override void _Ready()
     {
         MinimumRange = Math.Max(0.0f, MinimumRange);
         PreferredRange = Math.Max(MinimumRange, PreferredRange);
         AttackCooldown = Math.Max(0.0f, AttackCooldown);
         AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
-        _spell = ResolveSpell();
+        CloseRangeMaxDistance = Math.Max(0.0f, CloseRangeMaxDistance);
+        CloseRangeCooldown = Math.Max(0.0f, CloseRangeCooldown);
+        _basicSpell = ResolveSpell(SpellNodePath);
+        _closeRangeSpell = ResolveSpell(CloseRangeSpellNodePath);
     }
 
     public void Update(Actor actor, double delta)
     {
-        if (_cooldownTimer > 0.0f)
-            _cooldownTimer -= (float)delta;
+        if (_basicCooldownTimer > 0.0f)
+            _basicCooldownTimer -= (float)delta;
+
+        if (_closeRangeCooldownTimer > 0.0f)
+            _closeRangeCooldownTimer -= (float)delta;
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
     {
-        if (_cooldownTimer > 0.0f || _spell == null || actor is not ISpellCaster)
+        if (actor is not ISpellCaster caster)
             return false;
 
         if (target == null || !Actor.IsStructurallyValidTarget(target))
@@ -58,12 +82,16 @@ public partial class SpellCastActionController : Node, ICombatActionController
             return false;
 
         var distance = actor.GlobalPosition.DistanceTo(target.GlobalPosition);
-        return distance >= MinimumRange && distance <= PreferredRange;
+        return ResolveSpellSlot(caster, distance) != SpellSlot.None;
     }
 
     public void StartAction(Actor actor, Node2D target)
     {
-        if (!CanStartAction(actor, target))
+        if (actor is not ISpellCaster caster)
+            return;
+
+        var spellSlot = ResolveSpellSlot(caster, target);
+        if (spellSlot == SpellSlot.None)
         {
             if (target == null || !Actor.IsStructurallyValidTarget(target))
                 actor.ClearTarget();
@@ -77,19 +105,19 @@ public partial class SpellCastActionController : Node, ICombatActionController
             actor.SetFacingDirection(toTarget);
 
         actor.SetState(CombatUnitState.Attacking);
-        _cooldownTimer = AttackCooldown;
+        StartCooldown(spellSlot);
 
         var attackAnimationName = $"{AttackAnimation}_{actor.LastDirection}";
         if (actor.AnimatedSprite?.SpriteFrames != null &&
             actor.AnimatedSprite.SpriteFrames.HasAnimation(attackAnimationName) &&
             actor.AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimationName) > 0)
         {
-            _hasPendingCast = true;
+            _pendingSpell = spellSlot;
             actor.AnimatedSprite.Play(attackAnimationName, customSpeed: AnimationSpeedMultiplier);
             return;
         }
 
-        TryCast(actor);
+        TryCast(actor, spellSlot);
         actor.FinishAttackState();
     }
 
@@ -98,9 +126,9 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (!animationName.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
             return false;
 
-        if (_hasPendingCast)
+        if (_pendingSpell != SpellSlot.None)
         {
-            TryCast(actor);
+            TryCast(actor, _pendingSpell);
             ClearPendingCast();
         }
 
@@ -110,24 +138,25 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
     public void Cancel(Actor actor)
     {
-        _cooldownTimer = 0.0f;
+        _basicCooldownTimer = 0.0f;
+        _closeRangeCooldownTimer = 0.0f;
         ClearPendingCast();
     }
 
     private void ClearPendingCast()
     {
-        _hasPendingCast = false;
+        _pendingSpell = SpellSlot.None;
     }
 
-    private Spell ResolveSpell()
+    private Spell ResolveSpell(NodePath spellNodePath)
     {
-        if (SpellNodePath.IsEmpty)
+        if (spellNodePath.IsEmpty)
             return null;
 
-        var spellNode = GetNodeOrNull<Node>(SpellNodePath);
+        var spellNode = GetNodeOrNull<Node>(spellNodePath);
         if (spellNode == null)
         {
-            GD.PushError($"{GetPath()}: Spell node not found at {SpellNodePath}.");
+            GD.PushError($"{GetPath()}: Spell node not found at {spellNodePath}.");
             return null;
         }
 
@@ -140,14 +169,80 @@ public partial class SpellCastActionController : Node, ICombatActionController
         return spell;
     }
 
-    private void TryCast(Actor actor)
+    private SpellSlot ResolveSpellSlot(ISpellCaster caster, Node2D target)
     {
-        if (_spell == null)
-            _spell = ResolveSpell();
+        if (caster == null || target == null || !Actor.IsStructurallyValidTarget(target))
+            return SpellSlot.None;
 
-        if (_spell == null || actor is not ISpellCaster caster)
+        var distance = caster.SpellOrigin.GlobalPosition.DistanceTo(target.GlobalPosition);
+        return ResolveSpellSlot(caster, distance);
+    }
+
+    private SpellSlot ResolveSpellSlot(ISpellCaster caster, float distance)
+    {
+        if (CanUseCloseRangeSpell(caster, distance))
+            return SpellSlot.CloseRange;
+
+        if (CanUseBasicSpell(caster, distance))
+            return SpellSlot.Basic;
+
+        return SpellSlot.None;
+    }
+
+    private bool CanUseBasicSpell(ISpellCaster caster, float distance)
+    {
+        return _basicCooldownTimer <= 0.0f &&
+               _basicSpell != null &&
+               distance >= MinimumRange &&
+               distance <= PreferredRange &&
+               _basicSpell.CanCast(caster);
+    }
+
+    private bool CanUseCloseRangeSpell(ISpellCaster caster, float distance)
+    {
+        return _closeRangeCooldownTimer <= 0.0f &&
+               _closeRangeSpell != null &&
+               distance <= CloseRangeMaxDistance &&
+               _closeRangeSpell.CanCast(caster);
+    }
+
+    private void StartCooldown(SpellSlot spellSlot)
+    {
+        if (spellSlot == SpellSlot.CloseRange)
+        {
+            _closeRangeCooldownTimer = CloseRangeCooldown;
+            return;
+        }
+
+        if (spellSlot == SpellSlot.Basic)
+            _basicCooldownTimer = AttackCooldown;
+    }
+
+    private void TryCast(Actor actor, SpellSlot spellSlot)
+    {
+        if (actor is not ISpellCaster caster)
             return;
 
-        _spell.TryCast(caster);
+        var spell = ResolveSpellForSlot(spellSlot);
+        if (spell == null)
+            return;
+
+        spell.TryCast(caster);
+    }
+
+    private Spell ResolveSpellForSlot(SpellSlot spellSlot)
+    {
+        if (spellSlot == SpellSlot.CloseRange)
+        {
+            if (_closeRangeSpell == null)
+                _closeRangeSpell = ResolveSpell(CloseRangeSpellNodePath);
+
+            return _closeRangeSpell;
+        }
+
+        if (_basicSpell == null)
+            _basicSpell = ResolveSpell(SpellNodePath);
+
+        return _basicSpell;
     }
 }

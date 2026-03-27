@@ -15,6 +15,8 @@
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
 [ext_resource type="Script" path="res://scripts/spells/FireballSpell.cs" id="14_fireball_spell"]
+[ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="16_fire_nova_vfx"]
+[ext_resource type="Script" path="res://scripts/spells/FireNovaSpell.cs" id="17_fire_nova_spell"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -63,6 +65,14 @@ ProjectileDamage = 4
 ProjectileLifetime = 2.5
 ProjectileMaxDistance = 320.0
 
+[node name="FireNova" type="Node" parent="Spells"]
+script = ExtResource("17_fire_nova_spell")
+VfxScene = ExtResource("16_fire_nova_vfx")
+Range = 56.0
+ManaCost = 10
+MinimumDamage = 8
+MaximumDamage = 12
+
 [node name="PrimaryActionController" type="Node" parent="." unique_id=612694339]
 script = ExtResource("11_spell_cast_action")
 SpellNodePath = NodePath("../Spells/Fireball")
@@ -71,6 +81,9 @@ PreferredRange = 120.0
 AttackCooldown = 1.2
 AttackAnimation = &"cast_spell"
 AnimationSpeedMultiplier = 2.0
+CloseRangeSpellNodePath = NodePath("../Spells/FireNova")
+CloseRangeMaxDistance = 56.0
+CloseRangeCooldown = 3.2
 
 [node name="Behaviors" type="Node" parent="." unique_id=258315963]
 

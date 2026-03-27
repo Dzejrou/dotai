@@ -27,15 +27,26 @@ public partial class FireNovaSpell : Spell
         _random.Randomize();
     }
 
-    public override bool TryCast(ISpellCaster caster)
+    public override bool CanCast(ISpellCaster caster)
     {
-        if (caster == null || !caster.CanCastSpells || caster.SpellOrigin == null)
+        if (!base.CanCast(caster))
             return false;
 
         var manaState = caster.ManaState;
         var sourceFaction = caster.Faction;
         if (manaState == null || sourceFaction == null)
             return false;
+
+        return manaState.Current >= Math.Max(0, ManaCost);
+    }
+
+    public override bool TryCast(ISpellCaster caster)
+    {
+        if (!CanCast(caster))
+            return false;
+
+        var manaState = caster.ManaState;
+        var sourceFaction = caster.Faction;
 
         if (!manaState.TrySpend(Math.Max(0, ManaCost)))
             return false;
