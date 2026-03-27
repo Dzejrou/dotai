@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://cnpc2ij535kmo"]
+[gd_scene format=3 uid="uid://cnpc2ij535kmo"]
 
 [ext_resource type="PackedScene" uid="uid://7r3kh3tx2max" path="res://scenes/actors/player/player.tscn" id="1_k6v4i"]
 [ext_resource type="Texture2D" uid="uid://cdnobkte5yigl" path="res://assets/world/rock.png" id="2_qx8h3"]
@@ -6,116 +6,13 @@
 [ext_resource type="Script" uid="uid://47bka353y2ms" path="res://scripts/core/DebugSpawner.cs" id="6_debug_spawner"]
 [ext_resource type="PackedScene" uid="uid://bt4xu4bcnkoj8" path="res://scenes/actors/enemies/target_dummy.tscn" id="6_slgso"]
 [ext_resource type="Resource" uid="uid://dywxbx4vl0ax3" path="res://resources/debug/spawn_catalog.tres" id="7_spawn_catalog"]
-[ext_resource type="Texture2D" uid="uid://yfu5ebx11xsn" path="res://assets/tilesets/graveyard_higher.png" id="8_8c1c8"]
-[ext_resource type="Texture2D" uid="uid://dbkxyjiesijnp" path="res://assets/tilesets/tileset_test.png" id="8_rquc4"]
-[ext_resource type="Texture2D" uid="uid://15ev6i2x8hcr" path="res://assets/tilesets/tileset_test2.png" id="9_8c1c8"]
 [ext_resource type="PackedScene" path="res://scenes/actors/neutrals/dryad.tscn" id="10_vn8ag"]
+[ext_resource type="Texture2D" uid="uid://b65b0optd443s" path="res://assets/graveyard.png" id="11_epgnc"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_world_navigation"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_z8t4t"]
 size = Vector2(54, 38)
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rquc4"]
-resource_name = "Top layer stuff"
-texture = ExtResource("8_8c1c8")
-separation = Vector2i(1, 1)
-texture_region_size = Vector2i(32, 32)
-0:0/0 = 0
-1:0/0 = 0
-2:0/0 = 0
-3:0/0 = 0
-0:1/0 = 0
-1:1/0 = 0
-2:1/0 = 0
-3:1/0 = 0
-0:2/0 = 0
-1:2/0 = 0
-2:2/0 = 0
-3:2/0 = 0
-0:3/0 = 0
-1:3/0 = 0
-2:3/0 = 0
-3:3/0 = 0
-
-[sub_resource type="TileSet" id="TileSet_8c1c8"]
-sources/2 = SubResource("TileSetAtlasSource_rquc4")
-
-[sub_resource type="TileMapPattern" id="TileMapPattern_vn8ag"]
-tile_data = PackedInt32Array(0, 196611, 3, 65536, 131075, 3, 131072, 65539, 2, 196608, 131075, 3, 262144, 131075, 3, 327680, 131075, 3, 393216, 131075, 3, 458752, 196611, 3, 1, 131075, 3, 65537, 65539, 2, 131073, 65539, 2, 196609, 65539, 1, 262145, 131075, 3, 327681, 131075, 3, 393217, 131075, 3, 458753, 131075, 0, 2, 131075, 0, 65538, 131075, 3, 131074, 65539, 2, 196610, 131075, 3, 262146, 131075, 0, 327682, 131075, 3, 393218, 196611, 0, 458754, 3, 1, 3, 131075, 3, 65539, 196611, 1, 131075, 131075, 0, 196611, 131075, 3, 262147, 131075, 3, 327683, 65539, 1, 393219, 196611, 3, 458755, 131075, 3, 4, 196611, 3, 65540, 3, 1, 131076, 131075, 3, 196612, 131075, 3, 262148, 196611, 3, 327684, 131075, 3, 393220, 131075, 3, 458756, 131075, 3, 5, 65539, 1, 65541, 131075, 3, 131077, 131075, 3, 196613, 196611, 1, 262149, 131075, 3, 327685, 131075, 0, 393221, 65539, 2, 458757, 131075, 3, 6, 196611, 1, 65542, 131075, 3, 131078, 131075, 3, 196614, 131075, 3, 458758, 65539, 2, 7, 3, 1, 65543, 131075, 0, 131079, 196611, 3, 196615, 131075, 3, 458759, 65539, 2, 8, 131075, 3, 65544, 65539, 2, 131080, 131075, 3, 196616, 196611, 0, 458760, 131075, 3, 9, 131075, 0, 65545, 131075, 3, 131081, 3, 1, 196617, 131075, 3, 458761, 131075, 3, 10, 131075, 3, 65546, 196611, 3, 131082, 131075, 3, 196618, 131075, 3, 458762, 131075, 3, 11, 131075, 3, 65547, 131075, 0, 131083, 196611, 0, 196619, 65539, 1, 262155, 131075, 3, 327691, 3, 2, 393227, 196611, 3, 458763, 131075, 0, 12, 196611, 3, 65548, 3, 1, 131084, 131075, 3, 196620, 196611, 3, 262156, 131075, 0, 327692, 131075, 3, 393228, 65539, 2, 458764, 131075, 3, 13, 131075, 3, 65549, 131075, 3, 131085, 131075, 0, 196621, 131075, 3, 262157, 65539, 2, 327693, 131075, 3, 393229, 131075, 3, 458765, 131075, 3)
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_epgnc"]
-resource_name = "Graveyard Higher"
-texture = ExtResource("8_8c1c8")
-texture_region_size = Vector2i(32, 32)
-0:0/0 = 0
-1:0/0 = 0
-2:0/0 = 0
-3:0/0 = 0
-0:1/0 = 0
-1:1/0 = 0
-2:1/0 = 0
-3:1/0 = 0
-0:2/0 = 0
-1:2/0 = 0
-2:2/0 = 0
-3:2/0 = 0
-0:3/0 = 0
-1:3/0 = 0
-2:3/0 = 0
-3:3/0 = 0
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8c1c8"]
-texture = ExtResource("8_rquc4")
-separation = Vector2i(1, 1)
-texture_region_size = Vector2i(32, 32)
-0:0/0 = 0
-1:0/0 = 0
-2:0/0 = 0
-3:0/0 = 0
-0:1/0 = 0
-1:1/0 = 0
-2:1/0 = 0
-3:1/0 = 0
-0:2/0 = 0
-1:2/0 = 0
-2:2/0 = 0
-3:2/0 = 0
-0:3/0 = 0
-1:3/0 = 0
-2:3/0 = 0
-3:3/0 = 0
-
-[sub_resource type="TileSet" id="TileSet_1j3no"]
-tile_size = Vector2i(32, 32)
-sources/2 = SubResource("TileSetAtlasSource_epgnc")
-sources/3 = SubResource("TileSetAtlasSource_8c1c8")
-pattern_0 = SubResource("TileMapPattern_vn8ag")
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vn8ag"]
-resource_name = "Ground"
-texture = ExtResource("9_8c1c8")
-separation = Vector2i(1, 1)
-texture_region_size = Vector2i(64, 64)
-0:0/0 = 0
-1:0/0 = 0
-2:0/0 = 0
-3:0/0 = 0
-0:1/0 = 0
-1:1/0 = 0
-2:1/0 = 0
-3:1/0 = 0
-0:2/0 = 0
-1:2/0 = 0
-2:2/0 = 0
-3:2/0 = 0
-0:3/0 = 0
-1:3/0 = 0
-2:3/0 = 0
-3:3/0 = 0
-
-[sub_resource type="TileSet" id="TileSet_epgnc"]
-sources/0 = SubResource("TileSetAtlasSource_vn8ag")
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("5_qx7qz")
@@ -124,8 +21,14 @@ NavigationBlockerPaths = Array[NodePath]([NodePath("Rock"), NodePath("Rock2"), N
 [node name="WorldNavigation" type="NavigationRegion2D" parent="." unique_id=367567325]
 navigation_polygon = SubResource("NavigationPolygon_world_navigation")
 
+[node name="Background2" type="Sprite2D" parent="WorldNavigation" unique_id=649039668]
+z_index = -5
+texture = ExtResource("11_epgnc")
+centered = false
+metadata/_edit_lock_ = true
+
 [node name="Player" parent="." unique_id=643983542 instance=ExtResource("1_k6v4i")]
-position = Vector2(120, 120)
+position = Vector2(500, 397)
 
 [node name="DebugSpawner" type="Node2D" parent="." unique_id=59067455]
 script = ExtResource("6_debug_spawner")
@@ -160,34 +63,15 @@ shape = SubResource("RectangleShape2D_z8t4t")
 
 [node name="TargetDummy" parent="." unique_id=1389461644 instance=ExtResource("6_slgso")]
 z_index = 0
-position = Vector2(381, 137)
+position = Vector2(728, 319)
 
 [node name="TargetDummy2" parent="." unique_id=1378294245 instance=ExtResource("6_slgso")]
 z_index = 0
-position = Vector2(389, 27)
+position = Vector2(748, 327)
 
 [node name="TargetDummy3" parent="." unique_id=1028788194 instance=ExtResource("6_slgso")]
 z_index = 0
-position = Vector2(300, 32)
+position = Vector2(700, 308)
 
 [node name="Dryad" parent="." unique_id=419684181 instance=ExtResource("10_vn8ag")]
-position = Vector2(171, 200)
-
-[node name="TileMapLayer2" type="TileMapLayer" parent="." unique_id=1259841334]
-
-[node name="TileMapLayer" type="TileMapLayer" parent="TileMapLayer2" unique_id=1443743029]
-visible = false
-z_index = -4
-tile_map_data = PackedByteArray("AAAJAA8AAAABAAEAAAAJAA0AAAABAAEAAAALAAsAAAABAAEAAGANAAsAAAACAAEAADANAAkAAAABAAEAAAANAAcAAAADAAEAAAAJAAsAAAACAAEAAAA=")
-tile_set = SubResource("TileSet_8c1c8")
-
-[node name="TileMapLayer2" type="TileMapLayer" parent="TileMapLayer2" unique_id=1189407978]
-visible = false
-z_index = -5
-tile_map_data = PackedByteArray("AAAAAAMAAwACAAMAAAABAAMAAwABAAEAAAACAAMAAwACAAMAAAADAAMAAwACAAMAAAAAAAQAAwACAAMAAAABAAQAAwACAAMAAAACAAQAAwACAAAAAAACAAUAAwACAAMAAAACAAYAAwADAAAAAAABAAYAAwACAAMAAAAAAAYAAwACAAMAAAAAAAUAAwACAAMAAAADAAQAAwACAAMAAAADAAUAAwABAAEAAAADAAYAAwADAAMAAAAEAAYAAwACAAMAAAAEAAUAAwACAAMAAAAEAAQAAwADAAMAAAAEAAMAAwACAAMAAAAEAAcAAwACAAMAAAAFAAAAAwABAAEAAAAFAAEAAwACAAMAAAAFAAIAAwACAAMAAAAGAAAAAwADAAEAAAAGAAEAAwACAAMAAAAGAAIAAwACAAMAAAAHAAAAAwAAAAEAAAAHAAEAAwACAAAAAAAHAAIAAwADAAMAAAAIAAAAAwACAAMAAAAIAAEAAwABAAIAAAAIAAIAAwACAAMAAAAJAAAAAwACAAAAAAAJAAEAAwACAAMAAAAJAAIAAwAAAAEAAAAKAAAAAwABAAAAAAAKAAEAAwADAAMAAAAKAAIAAwACAAMAAAALAAAAAwACAAMAAAALAAEAAwACAAAAAAALAAIAAwADAAAAAAAMAAAAAwADAAMAAAAMAAEAAwAAAAEAAAAMAAIAAwAAAAMAAAANAAAAAwACAAMAAAANAAEAAwACAAMAAAANAAIAAwACAAAAAAAAAAcAAwADAAMAAAABAAUAAwACAAMAAAABAAcAAwACAAAAAAACAAcAAwAAAAEAAAADAAcAAwACAAMAAAAAAAAAAwADAAMAAAAAAAEAAwACAAMAAAAAAAIAAwABAAIAAAABAAAAAwACAAMAAAABAAIAAwABAAIAAAACAAAAAwACAAAAAAACAAEAAwACAAMAAAACAAIAAwABAAIAAAADAAAAAwACAAMAAAADAAEAAwADAAEAAAADAAIAAwACAAAAAAAEAAAAAwADAAMAAAAEAAEAAwAAAAEAAAAEAAIAAwACAAMAAAAFAAMAAwADAAEAAAAFAAQAAwACAAMAAAAFAAUAAwACAAAAAAAFAAYAAwABAAIAAAAFAAcAAwACAAMAAAAGAAMAAwACAAMAAAAGAAcAAwABAAIAAAAHAAMAAwACAAMAAAAHAAcAAwABAAIAAAAIAAMAAwADAAAAAAAIAAcAAwACAAMAAAAJAAMAAwACAAMAAAAJAAcAAwACAAMAAAAKAAMAAwACAAMAAAAKAAcAAwACAAMAAAALAAMAAwABAAEAAAALAAQAAwACAAMAAAALAAUAAwAAAAIAAAALAAYAAwADAAMAAAALAAcAAwACAAAAAAAMAAMAAwADAAMAAAAMAAQAAwACAAAAAAAMAAUAAwACAAMAAAAMAAYAAwABAAIAAAAMAAcAAwACAAMAAAANAAMAAwACAAMAAAANAAQAAwABAAIAAAANAAUAAwACAAMAAAANAAYAAwACAAMAAAANAAcAAwABAAIAAAAJAAUAAwACAAAAAAAHAAQAAwACAAAAAAAJAAYAAwACAAEAAAAKAAUAAwACAAEAAAAJAAQAAwAAAAIAAAAKAAYAAwABAAEAAAAKAAQAAwAAAAEAAAAIAAUAAwADAAAAAAAHAAUAAwACAAMAAAAGAAYAAwACAAMAAAAIAAYAAwADAAIAAAAHAAYAAwAAAAIAAAAIAAQAAwABAAIAAAAGAAQAAwABAAAAAAAGAAUAAwABAAAAAAABAAEAAwABAAIAAAAAAAgAAwABAAIAAAAAAAkAAwABAAIAAAAAAAoAAwABAAIAAAAAAAsAAwABAAIAAAABAAsAAwABAAIAAAACAAsAAwABAAIAAAADAAsAAwABAAIAAAAEAAsAAwABAAIAAAAFAAsAAwABAAIAAAAGAAsAAwABAAIAAAAHAAsAAwABAAIAAAAIAAsAAwABAAIAAAAJAAsAAwABAAIAAAAKAAsAAwABAAIAAAALAAsAAwABAAIAAAAMAAsAAwABAAIAAAANAAsAAwABAAIAAAANAAgAAwABAAIAAAANAAkAAwABAAIAAAANAAoAAwABAAIAAAAJAAkAAwACAAEAAAAJAAgAAwACAAEAAAAIAAgAAwACAAEAAAAHAAgAAwACAAEAAAAGAAgAAwACAAEAAAAFAAgAAwACAAEAAAAEAAgAAwACAAEAAAADAAgAAwACAAEAAAACAAgAAwACAAEAAAABAAgAAwACAAEAAAABAAkAAwACAAEAAAABAAoAAwACAAEAAAACAAoAAwACAAEAAAACAAkAAwACAAEAAAADAAkAAwACAAEAAAADAAoAAwACAAEAAAAEAAoAAwACAAEAAAAEAAkAAwACAAEAAAAFAAkAAwACAAEAAAAFAAoAAwACAAEAAAAGAAoAAwACAAEAAAAGAAkAAwACAAEAAAAHAAkAAwACAAEAAAAHAAoAAwACAAEAAAAIAAoAAwACAAEAAAAIAAkAAwACAAEAAAAJAAoAAwACAAEAAAAKAAoAAwACAAEAAAAKAAkAAwACAAEAAAAKAAgAAwACAAEAAAALAAgAAwACAAEAAAALAAkAAwACAAEAAAALAAoAAwACAAEAAAAMAAoAAwACAAEAAAAMAAkAAwACAAEAAAAMAAgAAwACAAEAAAAOAAkAAwABAAAAAAAOAAgAAwACAAEAAAAOAAcAAwAAAAEAAAAOAAYAAwACAAEAAAAPAAYAAwACAAEAAAAPAAcAAwAAAAEAAAAPAAUAAwAAAAEAAAAPAAQAAwACAAEAAAAPAAkAAwACAAEAAAAPAAgAAwAAAAEAAAAPAAoAAwAAAAEAAAAOAAoAAwABAAAAAAAOAAsAAwAAAAEAAAAPAAsAAwACAAEAAAAQAAQAAwACAAAAAAAPAAMAAwABAAAAAAAQAAIAAwACAAAAAAAQAAYAAwACAAIAAAAOAAQAAwACAAIAAGAOAAMAAwADAAIAAAAOAAIAAwABAAMAAAAPAAIAAwABAAMAAAAOAAUAAwABAAMAAAA=")
-tile_set = SubResource("TileSet_1j3no")
-
-[node name="TileMapLayer3" type="TileMapLayer" parent="TileMapLayer2" unique_id=705282572]
-z_index = -3
-tile_map_data = PackedByteArray("AAABAAEAAAADAAMAAAAFAAEAAAACAAEAAAABAAUAAAAAAAEAAAAFAAUAAAADAAEAAAAJAAkAAAACAAEAAAANAAkAAAABAAEAAAANAAUAAAADAAEAAAAJAAUAAAAAAAEAAAAJAAEAAAADAAMAAAABAAkAAAAAAAIAAAAFAAkAAAACAAMAAAAFAA0AAAADAAMAAAABAA0AAAABAAIAAAAJAA0AAAABAAMAAAANAA0AAAACAAMAAAARAAUAAAADAAMAAAARAAkAAAADAAEAAAAVAAUAAAABAAEAAAANAAEAAAACAAEAAAARAAEAAAADAAMAAAAVAAEAAAAAAAEAAAAVAAkAAAADAAEAAAAZAAkAAAACAAEAAAAZAAUAAAAAAAEAAAAZAAEAAAADAAMAAAARAA0AAAADAAMAAAAVAA0AAAADAAEAAAAZAA0AAAACAAEAAAA=")
-tile_set = SubResource("TileSet_epgnc")
+position = Vector2(423, 524)
