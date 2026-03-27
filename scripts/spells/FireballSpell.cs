@@ -29,13 +29,14 @@ public partial class FireballSpell : Spell
             return false;
 
         var manaState = caster.ManaState;
-        if (manaState == null)
+        var manaCost = Math.Max(0, ManaCost);
+        if (manaState == null && manaCost > 0)
             return false;
 
-        if (!manaState.TrySpend(Math.Max(0, ManaCost)))
+        if (manaState != null && !manaState.TrySpend(manaCost))
             return false;
 
-        if (ManaCost > 0)
+        if (manaState != null && manaCost > 0)
             caster.NotifyManaChanged();
 
         var fireDirection = DirectionHelper.GetDirectionVector(caster.SpellDirectionName);

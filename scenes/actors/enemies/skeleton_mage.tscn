@@ -10,9 +10,10 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
-[ext_resource type="Script" uid="uid://cckkqobewqxb1" path="res://scripts/ai/actions/RangedAttackController.cs" id="11_ranged_action"]
+[ext_resource type="Script" path="res://scripts/ai/actions/SpellCastActionController.cs" id="11_spell_cast_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
+[ext_resource type="Script" path="res://scripts/spells/FireballSpell.cs" id="14_fireball_spell"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -46,10 +47,24 @@ Max = 22
 [node name="FactionState" type="Node" parent="." unique_id=326418690]
 script = ExtResource("10_faction_state")
 
-[node name="PrimaryActionController" type="Node" parent="." unique_id=612694339]
-script = ExtResource("11_ranged_action")
-AttackAnimation = &"cast_spell"
+[node name="Spells" type="Node" parent="."]
+
+[node name="Fireball" type="Node" parent="Spells"]
+script = ExtResource("14_fireball_spell")
 ProjectileScene = ExtResource("12_projectile_scene")
+ManaCost = 0
+ProjectileSpeed = 280.0
+ProjectileDamage = 4
+ProjectileLifetime = 2.5
+ProjectileMaxDistance = 320.0
+
+[node name="PrimaryActionController" type="Node" parent="." unique_id=612694339]
+script = ExtResource("11_spell_cast_action")
+SpellNodePath = NodePath("../Spells/Fireball")
+MinimumRange = 70.0
+PreferredRange = 120.0
+AttackCooldown = 1.2
+AttackAnimation = &"cast_spell"
 AnimationSpeedMultiplier = 2.0
 
 [node name="Behaviors" type="Node" parent="." unique_id=258315963]

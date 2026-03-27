@@ -1,12 +1,17 @@
 using Godot;
 
 [GlobalClass]
-public partial class SkeletonMage : Actor, IAttackable, ITargetable
+public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaster
 {
     [Export]
     public float Speed { get; set; } = 58.0f;
 
     public bool CanBeTargeted => !IsDead;
+    public Node2D SpellOrigin => this;
+    public string SpellDirectionName => LastDirection;
+    public Node2D SpellTarget => Target;
+    public ManaState ManaState => null;
+    public bool CanCastSpells => !IsDead;
 
     public override void _Ready()
     {
@@ -19,6 +24,8 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable
 
         PlayIdleIfAvailable();
     }
+
+    public void NotifyManaChanged() { }
 
     public void ApplyDamage(DamageInfo damageInfo)
     {

@@ -33,8 +33,8 @@ public partial class FireNovaSpell : Spell
             return false;
 
         var manaState = caster.ManaState;
-        var factionState = caster.FactionState;
-        if (manaState == null || factionState == null)
+        var sourceFaction = caster.Faction;
+        if (manaState == null || sourceFaction == null)
             return false;
 
         if (!manaState.TrySpend(Math.Max(0, ManaCost)))
@@ -47,7 +47,7 @@ public partial class FireNovaSpell : Spell
             return true;
 
         SpawnVfx(caster.SpellOrigin, resolvedRange);
-        ApplyAreaDamage(caster, resolvedRange, factionState);
+        ApplyAreaDamage(caster, resolvedRange, sourceFaction);
         return true;
     }
 
@@ -68,7 +68,7 @@ public partial class FireNovaSpell : Spell
         fireNovaVfx.Play(range);
     }
 
-    private void ApplyAreaDamage(ISpellCaster caster, float range, FactionState sourceFactionState)
+    private void ApplyAreaDamage(ISpellCaster caster, float range, Faction sourceFaction)
     {
         var maximumDamage = Math.Max(MinimumDamage, MaximumDamage);
         foreach (var node in TargetingHelper.EnumerateCandidateTargets(caster.SpellOrigin))
@@ -77,7 +77,7 @@ public partial class FireNovaSpell : Spell
                 continue;
 
             var targetFactionState = FactionState.ResolveFor(node);
-            if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(sourceFactionState))
+            if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(sourceFaction))
                 continue;
 
             if (caster.SpellOrigin.GlobalPosition.DistanceTo(node.GlobalPosition) > range)
