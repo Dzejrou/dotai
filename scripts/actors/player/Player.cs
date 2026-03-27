@@ -75,6 +75,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public PlayerTargetingState Targeting { get; } = new();
     public Node2D SpellOrigin => this;
     public string SpellDirectionName => _lastDirection;
+    public Vector2 SpellDirection => GetSpellDirection();
     public Node2D SpellTarget => Targeting.ActiveTarget;
     public ManaState ManaState => _mana;
     public FactionState FactionState => _faction;
@@ -113,15 +114,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         if (Input.IsActionJustPressed("clear_tab_target"))
             ClearTabTarget();
         TryCastEquippedSpells();
-        var direction = Vector2.Zero;
-        if (Input.IsActionPressed("move_left"))
-            direction.X -= 1.0f;
-        if (Input.IsActionPressed("move_right"))
-            direction.X += 1.0f;
-        if (Input.IsActionPressed("move_up"))
-            direction.Y -= 1.0f;
-        if (Input.IsActionPressed("move_down"))
-            direction.Y += 1.0f;
+        var direction = GetInputDirection();
 
         if (_isAttacking)
         {
@@ -550,6 +543,30 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public void NotifyManaChanged()
     {
         EmitSignal(SignalName.ManaChanged, CurrentMana, MaxManaValue);
+    }
+
+    private Vector2 GetSpellDirection()
+    {
+        var inputDirection = GetInputDirection();
+        if (inputDirection != Vector2.Zero)
+            return inputDirection.Normalized();
+
+        return DirectionHelper.GetDirectionVector(_lastDirection);
+    }
+
+    private static Vector2 GetInputDirection()
+    {
+        var direction = Vector2.Zero;
+        if (Input.IsActionPressed("move_left"))
+            direction.X -= 1.0f;
+        if (Input.IsActionPressed("move_right"))
+            direction.X += 1.0f;
+        if (Input.IsActionPressed("move_up"))
+            direction.Y -= 1.0f;
+        if (Input.IsActionPressed("move_down"))
+            direction.Y += 1.0f;
+
+        return direction;
     }
 
     private void TryCastEquippedSpells()

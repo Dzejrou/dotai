@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="8_faction_state"]
 [ext_resource type="Script" path="res://scripts/spells/FireNovaSpell.cs" id="9_fire_nova_spell"]
 [ext_resource type="Script" path="res://scripts/spells/FireballSpell.cs" id="10_fireball_spell"]
+[ext_resource type="Script" path="res://scripts/spells/BlinkSpell.cs" id="11_blink_spell"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -65,3 +66,10 @@ Range = 72.0
 ManaCost = 20
 MinimumDamage = 6
 MaximumDamage = 10
+
+[node name="Blink" type="Node" parent="Spells"]
+script = ExtResource("11_blink_spell")
+CastAction = &"cast_spell3"
+ManaCost = 15
+BlinkDistance = 64.0
+Cooldown = 1.5

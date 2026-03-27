@@ -11,6 +11,7 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaste
     public bool CanBeTargeted => !IsDead;
     public Node2D SpellOrigin => this;
     public string SpellDirectionName => LastDirection;
+    public Vector2 SpellDirection => DirectionHelper.GetDirectionVector(LastDirection);
     public Node2D SpellTarget => Target;
     public ManaState ManaState => _mana;
     public bool CanCastSpells => !IsDead;

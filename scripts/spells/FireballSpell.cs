@@ -48,7 +48,9 @@ public partial class FireballSpell : Spell
         if (manaCost > 0)
             caster.NotifyManaChanged();
 
-        var fireDirection = DirectionHelper.GetDirectionVector(caster.SpellDirectionName);
+        var fireDirection = caster.SpellDirection;
+        if (fireDirection == Vector2.Zero)
+            fireDirection = DirectionHelper.GetDirectionVector(caster.SpellDirectionName);
         var activeTarget = caster.SpellTarget;
         if (activeTarget != null &&
             GodotObject.IsInstanceValid(activeTarget) &&
