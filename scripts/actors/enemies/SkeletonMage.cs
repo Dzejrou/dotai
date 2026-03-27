@@ -3,6 +3,8 @@ using Godot;
 [GlobalClass]
 public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaster
 {
+    private ManaState _mana;
+
     [Export]
     public float Speed { get; set; } = 58.0f;
 
@@ -10,7 +12,7 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaste
     public Node2D SpellOrigin => this;
     public string SpellDirectionName => LastDirection;
     public Node2D SpellTarget => Target;
-    public ManaState ManaState => null;
+    public ManaState ManaState => _mana;
     public bool CanCastSpells => !IsDead;
 
     public override void _Ready()
@@ -18,6 +20,8 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaste
         InitializeActor(
             GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
+        _mana = GetNode<ManaState>("ManaState");
+        _mana.Initialize();
         SetMovementSpeed(Speed);
 
         ConfigureBehaviors(ActorBehaviorPresets.CreateSceneBackedHostileRangedPreset());

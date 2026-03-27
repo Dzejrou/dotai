@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
+[ext_resource type="Script" path="res://scripts/combat/ManaState.cs" id="15_mana_state"]
 [ext_resource type="Script" path="res://scripts/ai/actions/SpellCastActionController.cs" id="11_spell_cast_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
@@ -46,6 +47,10 @@ Max = 22
 
 [node name="FactionState" type="Node" parent="." unique_id=326418690]
 script = ExtResource("10_faction_state")
+
+[node name="ManaState" type="Node" parent="."]
+script = ExtResource("15_mana_state")
+Max = 20
 
 [node name="Spells" type="Node" parent="."]
 
