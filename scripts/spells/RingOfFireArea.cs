@@ -5,6 +5,7 @@ using System;
 [GlobalClass]
 public partial class RingOfFireArea : Node2D
 {
+    private bool _isPreview;
     private Node _damageSource;
     private Faction _sourceFaction;
     private float _radius = 48.0f;
@@ -23,6 +24,19 @@ public partial class RingOfFireArea : Node2D
     [Export]
     public float OutlineWidth { get; set; } = 2.0f;
 
+    [Export]
+    public Color PreviewFillColor { get; set; } = new Color(1.0f, 0.45f, 0.08f, 0.14f);
+
+    [Export]
+    public Color PreviewOutlineColor { get; set; } = new Color(1.0f, 0.62f, 0.14f, 0.45f);
+
+    public void InitializePreview(float radius)
+    {
+        _isPreview = true;
+        _radius = Math.Max(1.0f, radius);
+        QueueRedraw();
+    }
+
     public void Initialize(
         Node damageSource,
         Faction sourceFaction,
@@ -31,6 +45,7 @@ public partial class RingOfFireArea : Node2D
         float tickInterval,
         int damagePerTick)
     {
+        _isPreview = false;
         _damageSource = damageSource;
         _sourceFaction = sourceFaction;
         _radius = Math.Max(1.0f, radius);
@@ -44,6 +59,9 @@ public partial class RingOfFireArea : Node2D
 
     public override void _Process(double delta)
     {
+        if (_isPreview)
+            return;
+
         var deltaSeconds = Math.Max(0.0f, (float)delta);
         _elapsedTime += deltaSeconds;
 
@@ -59,8 +77,10 @@ public partial class RingOfFireArea : Node2D
 
     public override void _Draw()
     {
-        DrawCircle(Vector2.Zero, _radius, FillColor);
-        DrawArc(Vector2.Zero, _radius, 0.0f, Mathf.Tau, 48, OutlineColor, Math.Max(1.0f, OutlineWidth));
+        var fillColor = _isPreview ? PreviewFillColor : FillColor;
+        var outlineColor = _isPreview ? PreviewOutlineColor : OutlineColor;
+        DrawCircle(Vector2.Zero, _radius, fillColor);
+        DrawArc(Vector2.Zero, _radius, 0.0f, Mathf.Tau, 48, outlineColor, Math.Max(1.0f, OutlineWidth));
     }
 
     private void ApplyTickDamage()
