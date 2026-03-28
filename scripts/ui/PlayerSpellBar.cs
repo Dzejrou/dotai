@@ -10,6 +10,8 @@ public partial class PlayerSpellBar : Control
     {
         public Spell Spell { get; init; }
         public Control Root { get; init; }
+        public Label ManaLabel { get; init; }
+        public ColorRect ManaUnavailableOverlay { get; init; }
         public ColorRect Overlay { get; init; }
         public Label CooldownLabel { get; init; }
     }
@@ -23,6 +25,7 @@ public partial class PlayerSpellBar : Control
     [Export]
     public Vector2 ScreenMargin { get; set; } = new Vector2(12.0f, 12.0f);
 
+    private Player _player;
     private HBoxContainer _slots;
     private readonly List<SpellSlotView> _slotViews = new();
 
@@ -36,11 +39,15 @@ public partial class PlayerSpellBar : Control
     public override void _Process(double delta)
     {
         foreach (var slotView in _slotViews)
+        {
+            UpdateManaAvailabilityView(slotView);
             UpdateCooldownView(slotView);
+        }
     }
 
     public void Bind(Player player)
     {
+        _player = player;
         ClearSlots();
         if (_slots == null || player == null)
         {
@@ -136,6 +143,16 @@ public partial class PlayerSpellBar : Control
         manaLabel.AddThemeColorOverride("font_color", new Color(0.55f, 0.78f, 1.0f, 1.0f));
         slotRoot.AddChild(manaLabel);
 
+        var manaUnavailableOverlay = new ColorRect
+        {
+            Name = "ManaUnavailableOverlay",
+            Color = new Color(0.16f, 0.04f, 0.06f, 0.38f),
+            Size = SlotSize,
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        slotRoot.AddChild(manaUnavailableOverlay);
+
         var cooldownOverlay = new ColorRect
         {
             Name = "CooldownOverlay",
@@ -162,6 +179,8 @@ public partial class PlayerSpellBar : Control
         {
             Spell = spell,
             Root = slotRoot,
+            ManaLabel = manaLabel,
+            ManaUnavailableOverlay = manaUnavailableOverlay,
             Overlay = cooldownOverlay,
             CooldownLabel = cooldownLabel,
         };
@@ -214,6 +233,35 @@ public partial class PlayerSpellBar : Control
         }
 
         return action.ToString();
+    }
+
+    private void UpdateManaAvailabilityView(SpellSlotView slotView)
+    {
+        if (_player == null ||
+            !GodotObject.IsInstanceValid(_player) ||
+            slotView.Spell == null ||
+            !GodotObject.IsInstanceValid(slotView.Spell) ||
+            slotView.ManaLabel == null ||
+            slotView.ManaUnavailableOverlay == null ||
+            slotView.Root == null)
+        {
+            return;
+        }
+
+        var slotSize = slotView.Root.Size;
+        if (slotSize == Vector2.Zero)
+            slotSize = SlotSize;
+
+        var canAffordSpell = _player.CurrentMana >= Math.Max(0, slotView.Spell.DisplayManaCost);
+        slotView.ManaLabel.AddThemeColorOverride(
+            "font_color",
+            canAffordSpell
+                ? new Color(0.55f, 0.78f, 1.0f, 1.0f)
+                : new Color(1.0f, 0.34f, 0.34f, 1.0f));
+
+        slotView.ManaUnavailableOverlay.Visible = !canAffordSpell;
+        slotView.ManaUnavailableOverlay.Position = Vector2.Zero;
+        slotView.ManaUnavailableOverlay.Size = slotSize;
     }
 
     private void UpdateCooldownView(SpellSlotView slotView)

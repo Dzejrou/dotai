@@ -2,7 +2,7 @@ using System;
 
 public static class ActorHudSettings
 {
-    private static bool _showNames = true;
+    private static bool _showNames = false;
 
     public static bool ShowNames => _showNames;
 
