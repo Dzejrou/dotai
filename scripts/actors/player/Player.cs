@@ -58,6 +58,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     private readonly RandomNumberGenerator _random = new();
     private readonly HashSet<Node> _hitThisAttack = new();
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
+    private IPlacementSpell _pendingPlacementSpell;
     private float _attackCooldownTimer;
     private bool _isAttacking;
     private float _healthRegenTimer;
@@ -163,6 +164,28 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             _animatedSprite.Play(animationName);
     }
 
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (_isDead || _pendingPlacementSpell == null || @event is not InputEventMouseButton mouseButton || !mouseButton.Pressed)
+            return;
+
+        if (mouseButton.ButtonIndex == MouseButton.Right)
+        {
+            ClearPendingPlacementSpell();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (mouseButton.ButtonIndex != MouseButton.Left)
+            return;
+
+        _pendingPlacementSpell.TryPlace(this, GetGlobalMousePosition());
+        if (!_pendingPlacementSpell.IsAwaitingPlacement)
+            _pendingPlacementSpell = null;
+
+        GetViewport().SetInputAsHandled();
+    }
+
     private void StartAttack()
     {
         if (_isAttacking || _attackCooldownTimer > 0.0f)
@@ -209,6 +232,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             _combat.ClearTarget();
             _combat.ExitCombat();
             Targeting.ClearAllTargets();
+            ClearPendingPlacementSpell();
             UpdateTargetHudVisibility();
             EmitSignal(SignalName.PlayerDied);
             QueueFree();
@@ -610,9 +634,34 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     {
         foreach (var pair in _spellsByAction)
         {
-            if (Input.IsActionJustPressed(pair.Key))
-                pair.Value.TryCast(this);
+            if (!Input.IsActionJustPressed(pair.Key))
+                continue;
+
+            if (pair.Value is IPlacementSpell placementSpell)
+            {
+                if (ReferenceEquals(_pendingPlacementSpell, placementSpell))
+                {
+                    ClearPendingPlacementSpell();
+                    return;
+                }
+
+                ClearPendingPlacementSpell();
+                if (placementSpell.TryBeginPlacement(this))
+                    _pendingPlacementSpell = placementSpell;
+
+                return;
+            }
+
+            ClearPendingPlacementSpell();
+            pair.Value.TryCast(this);
+            return;
         }
+    }
+
+    private void ClearPendingPlacementSpell()
+    {
+        _pendingPlacementSpell?.CancelPlacement();
+        _pendingPlacementSpell = null;
     }
 
     private void LoadEquippedSpells()

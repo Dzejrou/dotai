@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://scripts/spells/FireNovaSpell.cs" id="9_fire_nova_spell"]
 [ext_resource type="Script" path="res://scripts/spells/FireballSpell.cs" id="10_fireball_spell"]
 [ext_resource type="Script" path="res://scripts/spells/BlinkSpell.cs" id="11_blink_spell"]
+[ext_resource type="Script" path="res://scripts/spells/RingOfFireSpell.cs" id="12_ring_of_fire_spell"]
+[ext_resource type="PackedScene" path="res://scenes/effects/ring_of_fire_area.tscn" id="13_ring_of_fire_area"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -79,3 +81,15 @@ HudLabel = "Blink"
 ManaCost = 15
 BlinkDistance = 64.0
 Cooldown = 1.5
+
+[node name="RingOfFire" type="Node" parent="Spells"]
+script = ExtResource("12_ring_of_fire_spell")
+CastAction = &"cast_spell4"
+HudLabel = "Ring of Fire"
+AreaScene = ExtResource("13_ring_of_fire_area")
+ManaCost = 35
+Cooldown = 6.0
+Radius = 56.0
+Duration = 5.0
+TickInterval = 1.0
+DamagePerTick = 8
