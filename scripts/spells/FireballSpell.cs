@@ -23,6 +23,8 @@ public partial class FireballSpell : Spell
     [Export]
     public float ProjectileMaxDistance { get; set; } = 320.0f;
 
+    public override int DisplayManaCost => Math.Max(0, ManaCost);
+
     public override bool CanCast(ISpellCaster caster)
     {
         if (!base.CanCast(caster) || ProjectileScene == null)

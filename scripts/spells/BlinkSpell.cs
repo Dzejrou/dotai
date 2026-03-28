@@ -17,6 +17,10 @@ public partial class BlinkSpell : Spell
     [Export]
     public float Cooldown { get; set; } = 1.5f;
 
+    public override int DisplayManaCost => Math.Max(0, ManaCost);
+    public override float CooldownDuration => Math.Max(0.0f, Cooldown);
+    public override float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
+
     public override void _Process(double delta)
     {
         if (_cooldownRemaining > 0.0f)

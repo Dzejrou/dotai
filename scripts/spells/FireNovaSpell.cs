@@ -22,6 +22,8 @@ public partial class FireNovaSpell : Spell
     [Export]
     public int MaximumDamage { get; set; } = 10;
 
+    public override int DisplayManaCost => Math.Max(0, ManaCost);
+
     public override void _Ready()
     {
         _random.Randomize();

@@ -54,6 +54,7 @@ FactionKey = "allies"
 [node name="Fireball" type="Node" parent="Spells"]
 script = ExtResource("10_fireball_spell")
 CastAction = &"cast_spell"
+HudLabel = "Fireball"
 ProjectileScene = ExtResource("2_gx9kq")
 ManaCost = 0
 ProjectileSpeed = 280.0
@@ -64,6 +65,7 @@ ProjectileMaxDistance = 320.0
 [node name="FireNova" type="Node" parent="Spells"]
 script = ExtResource("9_fire_nova_spell")
 CastAction = &"cast_spell2"
+HudLabel = "Fire Nova"
 VfxScene = ExtResource("4_fire_nova_vfx")
 Range = 72.0
 ManaCost = 20
@@ -73,6 +75,7 @@ MaximumDamage = 10
 [node name="Blink" type="Node" parent="Spells"]
 script = ExtResource("11_blink_spell")
 CastAction = &"cast_spell3"
+HudLabel = "Blink"
 ManaCost = 15
 BlinkDistance = 64.0
 Cooldown = 1.5

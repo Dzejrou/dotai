@@ -39,10 +39,12 @@ public partial class Main : Node2D
     private Label _manaText;
     private ColorRect _manaBackground;
     private ColorRect _manaFill;
+    private PlayerSpellBar _spellBar;
     private const int HealthBarWidth = 140;
     private const int HealthBarHeight = 16;
     private const int ManaBarWidth = 140;
     private const int ManaBarHeight = 16;
+    private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private int _windowPresetIndex;
 
     public override void _Ready()
@@ -87,11 +89,13 @@ public partial class Main : Node2D
         {
             UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealableHealth);
             UpdatePlayerManaHud(player.CurrentMana, player.MaxManaValue);
+            _spellBar?.Bind(player);
         }
         else
         {
             UpdatePlayerHealthHud(0, 0);
             UpdatePlayerManaHud(0, 0);
+            _spellBar?.Bind(null);
         }
 
         InitializeWindowPreset();
@@ -289,6 +293,13 @@ public partial class Main : Node2D
         _manaText.OffsetTop = 1.0f;
         _manaText.AddThemeFontSizeOverride("font_size", 18);
         manaPanel.AddChild(_manaText);
+
+        var spellBarScene = ResourceLoader.Load<PackedScene>(PlayerSpellBarScenePath);
+        if (spellBarScene?.Instantiate<PlayerSpellBar>() is PlayerSpellBar spellBar)
+        {
+            _spellBar = spellBar;
+            hudCanvas.AddChild(_spellBar);
+        }
     }
 
     private void InitializeWindowPreset()
