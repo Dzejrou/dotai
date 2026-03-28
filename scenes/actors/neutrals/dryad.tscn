@@ -1,60 +1,55 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene format=3 uid="uid://bvpoidanjqur5"]
 
-[ext_resource type="Script" path="res://scripts/actors/neutrals/Dryad.cs" id="1_dryad_script"]
+[ext_resource type="Script" uid="uid://cl1k5okddker6" path="res://scripts/actors/neutrals/Dryad.cs" id="1_dryad_script"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/dryad_spriteframes.tres" id="2_dryad_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
-[ext_resource type="Script" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
-[ext_resource type="Script" path="res://scripts/combat/HealthState.cs" id="5_health_state"]
-[ext_resource type="Script" path="res://scripts/combat/FactionState.cs" id="6_faction_state"]
-[ext_resource type="Script" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="7_wander_behavior"]
-[ext_resource type="Script" path="res://scripts/ai/actions/HealActionController.cs" id="8_heal_action"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
+[ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="5_health_state"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="6_faction_state"]
+[ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="7_wander_behavior"]
+[ext_resource type="Script" uid="uid://c7xifm5fh44t7" path="res://scripts/ai/actions/HealActionController.cs" id="8_heal_action"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
 
-[node name="Dryad" type="CharacterBody2D"]
+[node name="Dryad" type="CharacterBody2D" unique_id=1856568282]
 z_index = -1
 script = ExtResource("1_dryad_script")
 DeathAnimation = &"death"
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=891692441]
 sprite_frames = ExtResource("2_dryad_frames")
 animation = &"breathing-idle_south"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1940295191]
 position = Vector2(0, 6)
 shape = SubResource("RectangleShape2D_dryad")
 
-[node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]
+[node name="ActorHUD" parent="." unique_id=497306127 instance=ExtResource("3_actor_hud")]
 
-[node name="CombatState" type="Node" parent="."]
+[node name="CombatState" type="Node" parent="." unique_id=614035875]
 script = ExtResource("4_combat_state")
 
-[node name="HealthState" type="Node" parent="."]
+[node name="HealthState" type="Node" parent="." unique_id=1366423248]
 script = ExtResource("5_health_state")
 Max = 18
 
-[node name="FactionState" type="Node" parent="."]
+[node name="FactionState" type="Node" parent="." unique_id=218462241]
 script = ExtResource("6_faction_state")
 FactionKey = "neutral"
 
-[node name="PrimaryActionController" type="Node" parent="."]
+[node name="PrimaryActionController" type="Node" parent="." unique_id=925153119]
 script = ExtResource("8_heal_action")
-PreferredRange = 148.0
-ActionCooldown = 1.4
-HealAnimation = &"cast"
-HealAmount = 3
 AnimationSpeedMultiplier = 2.0
 
-[node name="Behaviors" type="Node" parent="."]
+[node name="Behaviors" type="Node" parent="." unique_id=1488017195]
 
-[node name="Tier90_Recovery" type="Node" parent="Behaviors"]
+[node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=1057247949]
 
-[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=798267328]
 script = ExtResource("7_wander_behavior")
 WanderRadius = 56.0
 MoveDurationMin = 0.9
-MoveDurationMax = 1.8
 PauseDurationMin = 0.7
 PauseDurationMax = 1.6
 SpeedMultiplier = 0.55

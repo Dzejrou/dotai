@@ -3,12 +3,12 @@
 [ext_resource type="Script" uid="uid://bkdo0ru5s0m8n" path="res://scripts/core/SpawnCatalog.cs" id="1_spawn_catalog_script"]
 [ext_resource type="Script" uid="uid://4as3gc2efjj4" path="res://scripts/core/SpawnCatalogEntry.cs" id="2_spawn_catalog_entry_script"]
 [ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="3_skeleton_scene"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/ogre.tscn" id="4_ogre_scene"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="5_skeleton_mage_scene"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/target_dummy.tscn" id="7_target_dummy_scene"]
-[ext_resource type="PackedScene" path="res://scenes/actors/enemies/elf_ranger.tscn" id="8_elf_ranger_scene"]
+[ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="4_ogre_scene"]
+[ext_resource type="PackedScene" uid="uid://cke5y8t7ihlt5" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="5_skeleton_mage_scene"]
+[ext_resource type="PackedScene" uid="uid://bt4xu4bcnkoj8" path="res://scenes/actors/enemies/target_dummy.tscn" id="7_target_dummy_scene"]
+[ext_resource type="PackedScene" uid="uid://chmx43pfadld4" path="res://scenes/actors/enemies/elf_ranger.tscn" id="8_elf_ranger_scene"]
 [ext_resource type="PackedScene" uid="uid://dvt5dfelupt64" path="res://scenes/actors/enemies/wolf.tscn" id="9_wolf_scene"]
-[ext_resource type="PackedScene" path="res://scenes/actors/neutrals/dryad.tscn" id="10_dryad_scene"]
+[ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="10_dryad_scene"]
 
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_skeleton"]
 script = ExtResource("2_spawn_catalog_entry_script")
