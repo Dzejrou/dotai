@@ -93,12 +93,6 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
     {
         decision = default;
 
-        if (_isReturningHome && IgnoreDamageWhileReturning)
-        {
-            decision = IncomingDamageDecision.Deny("EVADE", EvadeColor);
-            return true;
-        }
-
         if (damageInfo.Source is not Node2D sourceNode)
             return false;
 
@@ -107,6 +101,19 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
 
         if (sourceNode is not ITargetable targetable || !targetable.CanBeTargeted)
             return false;
+
+        if (ShouldEngageDamageSource(actor, sourceNode))
+        {
+            _isReturningHome = false;
+            decision = IncomingDamageDecision.AllowWithRetarget(sourceNode);
+            return true;
+        }
+
+        if (_isReturningHome && IgnoreDamageWhileReturning)
+        {
+            decision = IncomingDamageDecision.Deny("EVADE", EvadeColor);
+            return true;
+        }
 
         if (IsTargetWithinLossRange(actor, sourceNode))
         {
@@ -140,5 +147,21 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
             return false;
 
         return actor.GlobalPosition.DistanceTo(target.GlobalPosition) <= Math.Max(0.0f, LossRange);
+    }
+
+    private bool ShouldEngageDamageSource(Actor actor, Node2D sourceNode)
+    {
+        if (actor == null || sourceNode == null)
+            return false;
+
+        var actorIsIdleOrReturning =
+            _isReturningHome ||
+            actor.CurrentState == CombatUnitState.Idle ||
+            actor.CurrentState == ReturnState ||
+            (!actor.InCombat && actor.Target == null);
+        if (!actorIsIdleOrReturning)
+            return false;
+
+        return actor.CanReachTarget(sourceNode);
     }
 }

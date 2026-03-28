@@ -241,6 +241,14 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
         return target != null && GodotObject.IsInstanceValid(target) && target.IsInsideTree();
     }
 
+    public bool CanReachTarget(Node2D target)
+    {
+        if (!IsStructurallyValidTarget(target))
+            return false;
+
+        return CanReachDestination(target.GlobalPosition);
+    }
+
     private void AppendBehaviorNodes(Node root)
     {
         if (root == null)
@@ -506,6 +514,26 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
         SetState(CombatUnitState.Idle);
         Velocity = Vector2.Zero;
         PlayIdleIfAvailable();
+    }
+
+    private bool CanReachDestination(Vector2 destination)
+    {
+        var movementToDestination = destination - GlobalPosition;
+        if (movementToDestination == Vector2.Zero || movementToDestination.Length() <= ShortRangeDirectMovementDistance)
+            return true;
+
+        if (NavigationAgent == null || !NavigationAgent.IsInsideTree())
+            return true;
+
+        var navigationMap = NavigationAgent.GetNavigationMap();
+        if (!navigationMap.IsValid)
+            return true;
+
+        var path = NavigationServer2D.MapGetPath(navigationMap, GlobalPosition, destination, true);
+        if (path.Length == 0)
+            return false;
+
+        return path[path.Length - 1].DistanceTo(destination) <= DefaultTargetDesiredDistance;
     }
 
     private Vector2 ResolveMovementDirection(Vector2 desiredDestination, double delta)
