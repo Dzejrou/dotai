@@ -50,6 +50,7 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
             var initialTarget = ResolveInitialTarget(actor);
             if (CanAcquireTarget(actor, initialTarget))
             {
+                actor.Combat.EnterCombat(initialTarget);
                 intent = ActorIntent.WithTarget(initialTarget);
                 return true;
             }
@@ -65,6 +66,7 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
         if (candidate == null)
             return false;
 
+        actor.Combat.EnterCombat(candidate);
         intent = ActorIntent.WithTarget(candidate);
         return true;
     }

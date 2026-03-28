@@ -62,7 +62,10 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
     {
         intent = ActorIntent.None;
 
-        if (!_isReturningHome && actor.Target != null && !IsTargetWithinLossRange(actor, actor.Target))
+        if (_isReturningHome && actor.InCombat)
+            _isReturningHome = false;
+
+        if (!_isReturningHome && !actor.InCombat && actor.Target != null && !IsTargetWithinLossRange(actor, actor.Target))
         {
             if (EvadeOnAggroLoss)
             {
@@ -101,6 +104,15 @@ public partial class LeashBehavior : Node, IActorBehavior, IActorDamageIntercept
 
         if (sourceNode is not ITargetable targetable || !targetable.CanBeTargeted)
             return false;
+
+        if (actor.InCombat)
+        {
+            _isReturningHome = false;
+            decision = actor.Target == null && actor.CanReachTarget(sourceNode)
+                ? IncomingDamageDecision.AllowWithRetarget(sourceNode)
+                : IncomingDamageDecision.Allow();
+            return true;
+        }
 
         if (ShouldEngageDamageSource(actor, sourceNode))
         {

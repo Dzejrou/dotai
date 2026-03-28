@@ -107,12 +107,15 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         if (_isDead)
             return;
 
-        if (_mana.Tick(delta) > 0)
+        _combat.Update(delta);
+        if (!_combat.InCombat && _mana.Tick(delta) > 0)
             NotifyManaChanged();
 
-        _combat.Update(delta);
         HandleHealthRegenerationDelay((float)delta);
-        HandleHealthRegeneration((float)delta);
+        if (_combat.InCombat)
+            _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
+        else
+            HandleHealthRegeneration((float)delta);
         if (Input.IsActionJustPressed("tab_target"))
             CycleTabTarget(1);
         if (Input.IsActionJustPressed("tab_target_reverse"))

@@ -20,6 +20,7 @@ public sealed class ReturnHomeRegenerationBehavior : IActorBehavior, IActorTickB
     {
         if (_fractionPerSecond <= 0.0f ||
             actor.IsDead ||
+            actor.InCombat ||
             actor.CurrentHealth >= actor.ResolvedMaxHealth ||
             actor.CurrentState != CombatUnitState.ReturningHome)
         {

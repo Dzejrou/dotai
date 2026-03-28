@@ -5,7 +5,7 @@ using System;
 [GlobalClass]
 public partial class CombatState : Node
 {
-    public const float DefaultCombatTimeoutSeconds = 5.0f;
+    public const float DefaultCombatTimeoutSeconds = 10.0f;
 
     private float _combatTimeRemaining;
 
@@ -22,6 +22,8 @@ public partial class CombatState : Node
             return;
 
         _combatTimeRemaining = Math.Max(0.0f, _combatTimeRemaining - Math.Max(0.0f, (float)delta));
+        if (_combatTimeRemaining <= 0.0f)
+            ExitCombat();
     }
 
     public void SetTarget(Node2D target)
@@ -39,23 +41,31 @@ public partial class CombatState : Node
         _combatTimeRemaining = Math.Max(0.0f, durationSeconds);
     }
 
+    public void EnterCombat(Node2D target = null, float durationSeconds = DefaultCombatTimeoutSeconds)
+    {
+        if (target != null)
+            SetTarget(target);
+
+        RefreshCombat(durationSeconds);
+    }
+
     public void RegisterOutgoingDamage(Node2D target, float durationSeconds = DefaultCombatTimeoutSeconds)
     {
-        SetTarget(target);
-        RefreshCombat(durationSeconds);
+        EnterCombat(target, durationSeconds);
     }
 
     public void RegisterIncomingDamage(Node2D source = null, bool setTargetToSource = false, float durationSeconds = DefaultCombatTimeoutSeconds)
     {
         if (setTargetToSource)
-            SetTarget(source);
-
-        RefreshCombat(durationSeconds);
+            EnterCombat(source, durationSeconds);
+        else
+            RefreshCombat(durationSeconds);
     }
 
     public void ExitCombat()
     {
         _combatTimeRemaining = 0.0f;
+        ClearTarget();
     }
 
     public static CombatState ResolveFor(Node node)

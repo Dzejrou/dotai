@@ -22,6 +22,7 @@ public sealed class IdleRegenerationBehavior : IActorBehavior, IActorTickBehavio
     {
         if (_fractionPerSecond <= 0.0f ||
             actor.IsDead ||
+            actor.InCombat ||
             actor.CurrentHealth >= actor.ResolvedMaxHealth ||
             actor.CurrentState != CombatUnitState.Idle ||
             actor.Target != null)
