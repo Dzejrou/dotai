@@ -55,6 +55,9 @@ script = ExtResource("10_faction_state")
 [node name="ManaState" type="Node" parent="." unique_id=48333665]
 script = ExtResource("15_mana_state")
 Max = 20
+RegenerationAmount = 2
+RegenerationInterval = 0.75
+RegenerationDelayAfterCast = 1.5
 
 [node name="Spells" type="Node" parent="." unique_id=1247757545]
 

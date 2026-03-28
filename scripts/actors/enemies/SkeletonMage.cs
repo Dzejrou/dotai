@@ -30,6 +30,12 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaste
         PlayIdleIfAvailable();
     }
 
+    public override void _PhysicsProcess(double delta)
+    {
+        _mana.Tick(delta);
+        base._PhysicsProcess(delta);
+    }
+
     public void NotifyManaChanged() { }
 
     public void ApplyDamage(DamageInfo damageInfo)

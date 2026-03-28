@@ -32,12 +32,11 @@ public partial class FireNovaSpell : Spell
         if (!base.CanCast(caster))
             return false;
 
-        var manaState = caster.ManaState;
         var sourceFaction = caster.Faction;
-        if (manaState == null || sourceFaction == null)
+        if (caster.ManaState == null || sourceFaction == null)
             return false;
 
-        return manaState.Current >= Math.Max(0, ManaCost);
+        return caster.ManaState.Current >= Math.Max(0, ManaCost);
     }
 
     public override bool TryCast(ISpellCaster caster)
@@ -45,13 +44,10 @@ public partial class FireNovaSpell : Spell
         if (!CanCast(caster))
             return false;
 
-        var manaState = caster.ManaState;
         var sourceFaction = caster.Faction;
 
-        if (!manaState.TrySpend(Math.Max(0, ManaCost)))
+        if (!TrySpendCastMana(caster, ManaCost))
             return false;
-
-        caster.NotifyManaChanged();
 
         var resolvedRange = Math.Max(0.0f, Range);
         if (resolvedRange <= 0.0f)

@@ -11,5 +11,22 @@ public abstract partial class Spell : Node
         return caster != null && caster.CanCastSpells && caster.SpellOrigin != null;
     }
 
+    protected static bool TrySpendCastMana(ISpellCaster caster, int manaCost)
+    {
+        var manaState = caster?.ManaState;
+        if (manaState == null)
+            return false;
+
+        var resolvedManaCost = Mathf.Max(0, manaCost);
+        if (!manaState.TrySpend(resolvedManaCost))
+            return false;
+
+        manaState.ResetRegenerationDelay();
+        if (resolvedManaCost > 0)
+            caster.NotifyManaChanged();
+
+        return true;
+    }
+
     public abstract bool TryCast(ISpellCaster caster);
 }

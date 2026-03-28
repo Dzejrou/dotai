@@ -41,6 +41,9 @@ Max = 200
 [node name="ManaState" type="Node" parent="." unique_id=1010931290]
 script = ExtResource("7_mana_state")
 Max = 1000
+RegenerationAmount = 20
+RegenerationInterval = 0.5
+RegenerationDelayAfterCast = 1.25
 
 [node name="FactionState" type="Node" parent="." unique_id=780844721]
 script = ExtResource("8_faction_state")

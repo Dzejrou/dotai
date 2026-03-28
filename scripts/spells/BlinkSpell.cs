@@ -51,13 +51,9 @@ public partial class BlinkSpell : Spell
         if (blinkDistance <= 0.0f)
             return false;
 
-        var manaState = caster.ManaState;
         var manaCost = Math.Max(0, ManaCost);
-        if (!manaState.TrySpend(manaCost))
+        if (!TrySpendCastMana(caster, manaCost))
             return false;
-
-        if (manaCost > 0)
-            caster.NotifyManaChanged();
 
         blinkBody.GlobalPosition += direction * blinkDistance;
         _cooldownRemaining = Math.Max(0.0f, Cooldown);

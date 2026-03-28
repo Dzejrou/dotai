@@ -106,6 +106,9 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         if (_isDead)
             return;
 
+        if (_mana.Tick(delta) > 0)
+            NotifyManaChanged();
+
         _combat.Update(delta);
         HandleHealthRegenerationDelay((float)delta);
         HandleHealthRegeneration((float)delta);

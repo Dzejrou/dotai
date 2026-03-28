@@ -40,14 +40,7 @@ public partial class FireballSpell : Spell
         if (!CanCast(caster))
             return false;
 
-        var manaState = caster.ManaState;
         var manaCost = Math.Max(0, ManaCost);
-        if (!manaState.TrySpend(manaCost))
-            return false;
-
-        if (manaCost > 0)
-            caster.NotifyManaChanged();
-
         var fireDirection = caster.SpellDirection;
         if (fireDirection == Vector2.Zero)
             fireDirection = DirectionHelper.GetDirectionVector(caster.SpellDirectionName);
@@ -69,6 +62,12 @@ public partial class FireballSpell : Spell
 
         var parent = caster.SpellOrigin.GetParent();
         if (parent == null)
+        {
+            projectile.QueueFree();
+            return false;
+        }
+
+        if (!TrySpendCastMana(caster, manaCost))
         {
             projectile.QueueFree();
             return false;
