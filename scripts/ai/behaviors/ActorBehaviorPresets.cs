@@ -11,7 +11,7 @@ public static class ActorBehaviorPresets
         Action<Actor> onPursuitStuck = null,
         params IActorBehavior[] extraBehaviors)
     {
-        var pursuitStuckCallback = onPursuitStuck ?? (actor => LeashBehavior.ResolveFor(actor)?.BeginReturnHome(actor, true));
+        var pursuitStuckCallback = onPursuitStuck ?? (actor => ReturnHomeBehavior.ResolveFor(actor)?.BeginReturnHome(actor));
         var behaviors = new List<IActorBehavior>
         {
             new PursuitStuckRecoveryBehavior(

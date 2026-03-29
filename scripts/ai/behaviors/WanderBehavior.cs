@@ -43,6 +43,7 @@ public partial class WanderBehavior : Node, IActorBehavior
             actor.IsDead ||
             actor.Target != null ||
             actor.InCombat ||
+            actor.CurrentState == CombatUnitState.ReturningHome ||
             WanderRadius <= 0.0f)
         {
             return false;

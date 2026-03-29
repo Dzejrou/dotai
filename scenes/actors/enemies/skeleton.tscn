@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="9_acquire_hostile"]
 [ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="10_target_combat"]
-[ext_resource type="Script" uid="uid://b7mqwlipopylh" path="res://scripts/ai/behaviors/LeashBehavior.cs" id="11_leash_behavior"]
 [ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="12_return_home"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="13_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="14_health_state"]
@@ -63,11 +62,6 @@ script = ExtResource("9_acquire_hostile")
 InitialTargetPath = NodePath("../Player")
 DebugActorName = "Skeleton"
 
-[node name="Tier20_Leash" type="Node" parent="Behaviors" unique_id=1663198841]
-
-[node name="LeashBehavior" type="Node" parent="Behaviors/Tier20_Leash" unique_id=1667796645]
-script = ExtResource("11_leash_behavior")
-
 [node name="Tier50_Combat" type="Node" parent="Behaviors" unique_id=117367814]
 
 [node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat" unique_id=245918730]
@@ -77,6 +71,7 @@ script = ExtResource("10_target_combat")
 
 [node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome" unique_id=1998501188]
 script = ExtResource("12_return_home")
+ReturnHomeTriggerDistance = 52.0
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=765021105]
 
