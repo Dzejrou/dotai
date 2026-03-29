@@ -81,6 +81,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public Vector2 SpellDirection => GetSpellDirection();
     public Node2D SpellTarget => Targeting.ActiveTarget;
     public ManaState ManaState => _mana;
+    public Spell ArmedPlacementSpell => _pendingPlacementSpell as Spell;
     public FactionState FactionState => _faction;
     public bool CanCastSpells => !_isDead;
 

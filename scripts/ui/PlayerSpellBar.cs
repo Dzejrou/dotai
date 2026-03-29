@@ -10,7 +10,9 @@ public partial class PlayerSpellBar : Control
     {
         public Spell Spell { get; init; }
         public Control Root { get; init; }
+        public ColorRect Frame { get; init; }
         public Label ManaLabel { get; init; }
+        public ColorRect ArmedOverlay { get; init; }
         public ColorRect ManaUnavailableOverlay { get; init; }
         public ColorRect Overlay { get; init; }
         public Label CooldownLabel { get; init; }
@@ -24,6 +26,10 @@ public partial class PlayerSpellBar : Control
 
     [Export]
     public Vector2 ScreenMargin { get; set; } = new Vector2(12.0f, 12.0f);
+
+    private static readonly Color DefaultFrameColor = new(0.05f, 0.06f, 0.08f, 0.95f);
+    private static readonly Color ArmedFrameColor = new(0.92f, 0.68f, 0.22f, 1.0f);
+    private static readonly Color ArmedOverlayColor = new(0.98f, 0.78f, 0.18f, 0.18f);
 
     private Player _player;
     private HBoxContainer _slots;
@@ -40,6 +46,7 @@ public partial class PlayerSpellBar : Control
     {
         foreach (var slotView in _slotViews)
         {
+            UpdateArmedPlacementView(slotView);
             UpdateManaAvailabilityView(slotView);
             UpdateCooldownView(slotView);
         }
@@ -94,7 +101,7 @@ public partial class PlayerSpellBar : Control
         var frame = new ColorRect
         {
             Name = "Frame",
-            Color = new Color(0.05f, 0.06f, 0.08f, 0.95f),
+            Color = DefaultFrameColor,
             Size = SlotSize,
         };
         slotRoot.AddChild(frame);
@@ -143,6 +150,17 @@ public partial class PlayerSpellBar : Control
         manaLabel.AddThemeColorOverride("font_color", new Color(0.55f, 0.78f, 1.0f, 1.0f));
         slotRoot.AddChild(manaLabel);
 
+        var armedOverlay = new ColorRect
+        {
+            Name = "ArmedOverlay",
+            Color = ArmedOverlayColor,
+            Position = new Vector2(2.0f, 2.0f),
+            Size = SlotSize - new Vector2(4.0f, 4.0f),
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        slotRoot.AddChild(armedOverlay);
+
         var manaUnavailableOverlay = new ColorRect
         {
             Name = "ManaUnavailableOverlay",
@@ -179,7 +197,9 @@ public partial class PlayerSpellBar : Control
         {
             Spell = spell,
             Root = slotRoot,
+            Frame = frame,
             ManaLabel = manaLabel,
+            ArmedOverlay = armedOverlay,
             ManaUnavailableOverlay = manaUnavailableOverlay,
             Overlay = cooldownOverlay,
             CooldownLabel = cooldownLabel,
@@ -262,6 +282,31 @@ public partial class PlayerSpellBar : Control
         slotView.ManaUnavailableOverlay.Visible = !canAffordSpell;
         slotView.ManaUnavailableOverlay.Position = Vector2.Zero;
         slotView.ManaUnavailableOverlay.Size = slotSize;
+    }
+
+    private void UpdateArmedPlacementView(SpellSlotView slotView)
+    {
+        if (_player == null ||
+            !GodotObject.IsInstanceValid(_player) ||
+            slotView.Spell == null ||
+            !GodotObject.IsInstanceValid(slotView.Spell) ||
+            slotView.Frame == null ||
+            slotView.ArmedOverlay == null ||
+            slotView.Root == null)
+        {
+            return;
+        }
+
+        var isArmedPlacementSpell = ReferenceEquals(_player.ArmedPlacementSpell, slotView.Spell);
+        slotView.Frame.Color = isArmedPlacementSpell ? ArmedFrameColor : DefaultFrameColor;
+        slotView.ArmedOverlay.Visible = isArmedPlacementSpell;
+
+        var slotSize = slotView.Root.Size;
+        if (slotSize == Vector2.Zero)
+            slotSize = SlotSize;
+
+        slotView.ArmedOverlay.Position = new Vector2(2.0f, 2.0f);
+        slotView.ArmedOverlay.Size = slotSize - new Vector2(4.0f, 4.0f);
     }
 
     private void UpdateCooldownView(SpellSlotView slotView)
