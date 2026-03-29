@@ -69,13 +69,9 @@ public partial class HealActionController : Node, ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         _cooldownTimer = ActionCooldown;
 
-        var animationName = $"{HealAnimation}_{actor.LastDirection}";
-        if (actor.AnimatedSprite?.SpriteFrames != null &&
-            actor.AnimatedSprite.SpriteFrames.HasAnimation(animationName) &&
-            actor.AnimatedSprite.SpriteFrames.GetFrameCount(animationName) > 0)
+        if (actor.TryPlayDirectionalAnimation(HealAnimation.ToString(), AnimationSpeedMultiplier))
         {
             _pendingHealTarget = target;
-            actor.AnimatedSprite.Play(animationName, customSpeed: AnimationSpeedMultiplier);
         }
         else
         {

@@ -21,27 +21,61 @@ public abstract partial class AnimatedCharacter : CharacterBody2D
         return $"{animationPrefix}_{LastDirection}";
     }
 
+    public string ResolveDirectionalAnimationName(string animationPrefix)
+    {
+        if (AnimatedSprite?.SpriteFrames == null || string.IsNullOrEmpty(animationPrefix))
+            return null;
+
+        var exactAnimationName = $"{animationPrefix}_{LastDirection}";
+        if (HasAnimation(exactAnimationName))
+            return exactAnimationName;
+
+        var fallbackDirection = DirectionHelper.GetCardinalFallbackDirectionName(LastDirection);
+        if (fallbackDirection == LastDirection)
+            return null;
+
+        var fallbackAnimationName = $"{animationPrefix}_{fallbackDirection}";
+        return HasAnimation(fallbackAnimationName) ? fallbackAnimationName : null;
+    }
+
     protected string GetIdleAnimationName()
     {
-        return GetDirectionalAnimationName("breathing-idle");
+        return ResolveDirectionalAnimationName("breathing-idle") ?? GetDirectionalAnimationName("breathing-idle");
     }
 
     protected string GetWalkAnimationName()
     {
-        return GetDirectionalAnimationName("walk");
+        return ResolveDirectionalAnimationName("walk") ?? GetDirectionalAnimationName("walk");
     }
 
     protected void SetAnimationSafe(string animationName)
     {
-        if (AnimatedSprite?.SpriteFrames == null || !AnimatedSprite.SpriteFrames.HasAnimation(animationName))
+        if (!HasAnimation(animationName))
             return;
 
         if (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != animationName)
             AnimatedSprite.Play(animationName);
     }
 
+    public bool TryPlayDirectionalAnimation(string animationPrefix, float customSpeed = 1.0f)
+    {
+        var animationName = ResolveDirectionalAnimationName(animationPrefix);
+        if (animationName == null)
+            return false;
+
+        AnimatedSprite.Play(animationName, customSpeed: customSpeed);
+        return true;
+    }
+
     public void PlayIdleIfAvailable()
     {
         SetAnimationSafe(GetIdleAnimationName());
+    }
+
+    private bool HasAnimation(string animationName)
+    {
+        return AnimatedSprite?.SpriteFrames != null &&
+               AnimatedSprite.SpriteFrames.HasAnimation(animationName) &&
+               AnimatedSprite.SpriteFrames.GetFrameCount(animationName) > 0;
     }
 }

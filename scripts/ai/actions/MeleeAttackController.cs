@@ -77,14 +77,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         _cooldownTimer = AttackCooldown;
 
-        var attackAnimation = $"{AttackAnimation}_{actor.LastDirection}";
-        if (actor.AnimatedSprite?.SpriteFrames != null &&
-            actor.AnimatedSprite.SpriteFrames.HasAnimation(attackAnimation) &&
-            actor.AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) > 0)
-        {
-            actor.AnimatedSprite.Play(attackAnimation, customSpeed: AnimationSpeedMultiplier);
-        }
-        else
+        if (!actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier))
         {
             actor.SetState(CombatUnitState.PursuingTarget);
         }

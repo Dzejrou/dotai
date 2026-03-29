@@ -99,14 +99,10 @@ public partial class RangedAttackController : Node, ICombatActionController
         _cooldownTimer = AttackCooldown;
 
         var projectileDirection = toTarget != Vector2.Zero ? toTarget.Normalized() : DirectionHelper.GetDirectionVector(actor.LastDirection);
-        var attackAnimationName = $"{AttackAnimation}_{actor.LastDirection}";
-        if (actor.AnimatedSprite?.SpriteFrames != null &&
-            actor.AnimatedSprite.SpriteFrames.HasAnimation(attackAnimationName) &&
-            actor.AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimationName) > 0)
+        if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier))
         {
             _hasPendingProjectileShot = true;
             _pendingProjectileDirection = projectileDirection;
-            actor.AnimatedSprite.Play(attackAnimationName, customSpeed: AnimationSpeedMultiplier);
             return;
         }
 

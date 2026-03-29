@@ -195,8 +195,8 @@ public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFact
         _attackCooldownTimer = AttackCooldown;
         _hitThisAttack.Clear();
 
-        var attackAnimation = GetDirectionalAnimationName("slash");
-        if (AnimatedSprite.SpriteFrames == null || AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
+        var attackAnimation = ResolveDirectionalAnimationName("slash");
+        if (attackAnimation == null)
         {
             ApplySlashDamage();
             _isAttacking = false;

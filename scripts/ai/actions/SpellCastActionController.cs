@@ -107,13 +107,9 @@ public partial class SpellCastActionController : Node, ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         StartCooldown(spellSlot);
 
-        var attackAnimationName = $"{AttackAnimation}_{actor.LastDirection}";
-        if (actor.AnimatedSprite?.SpriteFrames != null &&
-            actor.AnimatedSprite.SpriteFrames.HasAnimation(attackAnimationName) &&
-            actor.AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimationName) > 0)
+        if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier))
         {
             _pendingSpell = spellSlot;
-            actor.AnimatedSprite.Play(attackAnimationName, customSpeed: AnimationSpeedMultiplier);
             return;
         }
 
