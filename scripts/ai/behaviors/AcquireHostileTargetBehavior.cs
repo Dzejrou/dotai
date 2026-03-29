@@ -54,9 +54,6 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
                 intent = ActorIntent.WithTarget(initialTarget);
                 return true;
             }
-
-            if (initialTarget != null && !string.IsNullOrEmpty(DebugActorName))
-                GD.PrintErr($"{DebugActorName} did not acquire initial target (not in aggro range).");
         }
 
         var candidate = TargetingHelper.FindClosestHostileTarget(

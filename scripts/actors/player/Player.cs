@@ -227,7 +227,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         ShowFloatingDamageNumber(damage);
         EmitHealthChanged();
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
-        GD.Print($"Player health: {CurrentHealth}/{MaxHealableHealth} (took {damage})");
 
         if (_health.IsDead)
         {
