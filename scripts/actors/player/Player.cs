@@ -643,7 +643,18 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             {
                 if (ReferenceEquals(_pendingPlacementSpell, placementSpell))
                 {
-                    ClearPendingPlacementSpell();
+                    var tabTarget = Targeting.TabTarget;
+                    if (IsValidTabTarget(tabTarget))
+                    {
+                        placementSpell.TryPlace(this, tabTarget.GlobalPosition);
+                        if (!placementSpell.IsAwaitingPlacement)
+                            _pendingPlacementSpell = null;
+                    }
+                    else
+                    {
+                        ClearPendingPlacementSpell();
+                    }
+
                     return;
                 }
 
