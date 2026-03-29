@@ -3,7 +3,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealable
+public abstract partial class Actor : CombatCharacter
 {
     private const string DefaultCorpseScenePath = "res://scenes/world/corpse.tscn";
     private const string BehaviorNodeTargetingPath = "Behaviors/Tier10_Targeting";
@@ -23,19 +23,12 @@ public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealab
     public float HomeReturnTolerance { get; set; } = 4.0f;
 
     public NavigationAgent2D NavigationAgent { get; private set; }
-    public CombatState Combat => _combat;
-    public Node2D Target => _combat.Target;
-    public bool InCombat => _combat.InCombat;
+    public Node2D Target => Combat.Target;
     public bool IsUsingNavigationPath { get; private set; }
     public Vector2 LastNavigationPathPosition { get; private set; }
     public float MovementSpeed { get; private set; } = 1.0f;
     public Vector2 HomePosition { get; private set; }
-    public int CurrentHealth => _health.Current;
-    public bool IsDead => _health.IsDead;
-    public Faction Faction => _faction.Current;
-    public int ResolvedMaxHealth => _health.Max;
-    public int MaxHealableHealth => ResolvedMaxHealth;
-    public bool CanReceiveHealing => !IsDead && CurrentHealth < ResolvedMaxHealth;
+    public int ResolvedMaxHealth => MaxHealthValue;
     public ICombatActionController PrimaryActionController { get; private set; }
 
     [Export]
@@ -47,9 +40,6 @@ public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealab
     private bool _hasNavigationDestination;
     private Vector2 _lastNavigationDestination;
     private ActorHUD _actorHud;
-    private HealthState _health;
-    private CombatState _combat;
-    private FactionState _faction;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
 
@@ -70,12 +60,8 @@ public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealab
 
         AddToGroup(CombatGroups.Actors);
         HomePosition = GlobalPosition;
-        _combat = GetNode<CombatState>("CombatState");
-        _combat.ClearTarget();
-        _combat.ExitCombat();
-        _health = GetNode<HealthState>("HealthState");
-        _health.Initialize();
-        _faction = GetNode<FactionState>("FactionState");
+        InitializeCombatCharacter();
+        ResetCombatState();
         var scenePrimaryActionController = GetNodeOrNull<Node>(PrimaryActionControllerPath);
         if (scenePrimaryActionController != null)
         {
@@ -103,7 +89,7 @@ public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealab
             return;
         }
 
-        _combat.Update(delta);
+        Combat.Update(delta);
 
         PrimaryActionController?.Update(this, delta);
         foreach (var tickBehavior in _tickBehaviors)
@@ -138,12 +124,12 @@ public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealab
 
     public void SetTarget(Node2D target)
     {
-        _combat.SetTarget(target);
+        Combat.SetTarget(target);
     }
 
     public void ClearTarget()
     {
-        _combat.ClearTarget();
+        Combat.ClearTarget();
     }
 
     public void SetState(CombatUnitState state)
@@ -166,20 +152,20 @@ public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealab
 
     public bool IsHostileTo(Node target)
     {
-        return _faction.IsHostileTo(target);
+        return FactionState.IsHostileTo(target);
     }
 
     public bool IsFriendlyTo(Node target)
     {
-        return _faction.IsFriendlyTo(target);
+        return FactionState.IsFriendlyTo(target);
     }
 
-    public void ApplyHealing(int amount)
+    public override void ApplyHealing(int amount)
     {
         if (amount <= 0 || IsDead)
             return;
 
-        var healedAmount = _health.ApplyHealing(amount);
+        var healedAmount = HealthStateNode.ApplyHealing(amount);
         if (healedAmount <= 0)
             return;
 
@@ -284,12 +270,11 @@ public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealab
 
     protected void SetIsDead(bool value)
     {
-        _health.SetDead(value);
+        HealthStateNode.SetDead(value);
         if (value)
         {
             CleanupNavigationForInactiveState();
-            _combat.ClearTarget();
-            _combat.ExitCombat();
+            ResetCombatState();
         }
     }
 
@@ -354,11 +339,11 @@ public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealab
             break;
         }
 
-        damage = _health.ApplyDamage(damageInfo.Amount);
+        damage = HealthStateNode.ApplyDamage(damageInfo.Amount);
         RefreshHealthLabel();
         damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
 
-        died = _health.IsDead;
+        died = HealthStateNode.IsDead;
         if (died)
             SetIsDead(true);
 

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFactionMember, IHealable, ISpellCaster
+public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellCaster
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -49,10 +49,6 @@ public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFact
     public float TabTargetRange { get; set; } = 220.0f;
 
     private bool _isDead;
-    private HealthState _health;
-    private ManaState _mana;
-    private CombatState _combat;
-    private FactionState _faction;
     private readonly RandomNumberGenerator _random = new();
     private readonly HashSet<Node> _hitThisAttack = new();
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
@@ -65,33 +61,19 @@ public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFact
     private readonly HashSet<ActorHUD> _visibleTargetHuds = new();
     private readonly HashSet<ActorHUD> _nextVisibleTargetHuds = new();
 
-    public int CurrentHealth => _health.Current;
-    public int MaxHealableHealth => _health.Max;
-    public int CurrentMana => _mana.Current;
-    public int MaxManaValue => _mana.Max;
-    public bool CanReceiveHealing => !_isDead && CurrentHealth < MaxHealableHealth;
     public bool CanBeTargeted => !_isDead;
-    public Faction Faction => _faction.Current;
-    public CombatState Combat => _combat;
     public PlayerTargetingState Targeting { get; } = new();
     public Node2D SpellOrigin => this;
     public string SpellDirectionName => LastDirection;
     public Vector2 SpellDirection => GetSpellDirection();
     public Node2D SpellTarget => Targeting.ActiveTarget;
-    public ManaState ManaState => _mana;
     public Spell ArmedPlacementSpell => _pendingPlacementSpell as Spell;
-    public FactionState FactionState => _faction;
     public bool CanCastSpells => !_isDead;
 
     public override void _Ready()
     {
         SetAnimatedSprite(GetNode<AnimatedSprite2D>("AnimatedSprite2D"));
-        _combat = GetNode<CombatState>("CombatState");
-        _faction = GetNode<FactionState>("FactionState");
-        _health = GetNode<HealthState>("HealthState");
-        _health.Initialize();
-        _mana = GetNode<ManaState>("ManaState");
-        _mana.Initialize();
+        InitializeCombatCharacter(requireManaState: true);
         LoadEquippedSpells();
         SetAnimationSafe(GetIdleAnimationName());
         AnimatedSprite.AnimationFinished += OnAnimationFinished;
@@ -106,12 +88,12 @@ public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFact
         if (_isDead)
             return;
 
-        _combat.Update(delta);
-        if (!_combat.InCombat && _mana.Tick(delta) > 0)
+        Combat.Update(delta);
+        if (!InCombat && ManaState.Tick(delta) > 0)
             NotifyManaChanged();
 
         HandleHealthRegenerationDelay((float)delta);
-        if (_combat.InCombat)
+        if (InCombat)
             _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
         else
             HandleHealthRegeneration((float)delta);
@@ -218,18 +200,17 @@ public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFact
         if (_isDead)
             return;
 
-        var damage = _health.ApplyDamage(damageInfo.Amount);
+        var damage = HealthStateNode.ApplyDamage(damageInfo.Amount);
         damageInfo.RegisterHit(this, setReceiverTargetToSource: true);
 
         ShowFloatingDamageNumber(damage);
         EmitHealthChanged();
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
 
-        if (_health.IsDead)
+        if (HealthStateNode.IsDead)
         {
             _isDead = true;
-            _combat.ClearTarget();
-            _combat.ExitCombat();
+            ResetCombatState();
             Targeting.ClearAllTargets();
             ClearPendingPlacementSpell();
             UpdateTargetHudVisibility();
@@ -238,12 +219,12 @@ public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFact
         }
     }
 
-    public void ApplyHealing(int amount)
+    public override void ApplyHealing(int amount)
     {
         if (_isDead || amount <= 0)
             return;
 
-        var recovered = _health.ApplyHealing(amount);
+        var recovered = HealthStateNode.ApplyHealing(amount);
         if (recovered <= 0)
             return;
 
@@ -525,7 +506,7 @@ public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFact
             return;
 
         var targetFactionState = FactionState.ResolveFor(node);
-        if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(_faction))
+        if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(FactionState))
             return;
 
         var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
@@ -550,7 +531,7 @@ public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFact
             var missingHealth = MaxHealableHealth - CurrentHealth;
             var recovered = Math.Clamp(HealthRegenerationAmount, 1, missingHealth);
             ShowFloatingHealingNumber(recovered);
-            _health.ApplyHealing(recovered);
+            HealthStateNode.ApplyHealing(recovered);
             EmitHealthChanged();
         }
 
