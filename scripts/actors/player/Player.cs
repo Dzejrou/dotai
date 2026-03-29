@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactionMember, IHealable, ISpellCaster
+public partial class Player : AnimatedCharacter, IAttackable, ITargetable, IFactionMember, IHealable, ISpellCaster
 {
     [Signal]
     public delegate void PlayerDiedEventHandler();
@@ -53,8 +53,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     private ManaState _mana;
     private CombatState _combat;
     private FactionState _faction;
-    private AnimatedSprite2D _animatedSprite;
-    private string _lastDirection = "south";
     private readonly RandomNumberGenerator _random = new();
     private readonly HashSet<Node> _hitThisAttack = new();
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
@@ -77,7 +75,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
     public CombatState Combat => _combat;
     public PlayerTargetingState Targeting { get; } = new();
     public Node2D SpellOrigin => this;
-    public string SpellDirectionName => _lastDirection;
+    public string SpellDirectionName => LastDirection;
     public Vector2 SpellDirection => GetSpellDirection();
     public Node2D SpellTarget => Targeting.ActiveTarget;
     public ManaState ManaState => _mana;
@@ -87,7 +85,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
 
     public override void _Ready()
     {
-        _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+        SetAnimatedSprite(GetNode<AnimatedSprite2D>("AnimatedSprite2D"));
         _combat = GetNode<CombatState>("CombatState");
         _faction = GetNode<FactionState>("FactionState");
         _health = GetNode<HealthState>("HealthState");
@@ -96,7 +94,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         _mana.Initialize();
         LoadEquippedSpells();
         SetAnimationSafe(GetIdleAnimationName());
-        _animatedSprite.AnimationFinished += OnAnimationFinished;
+        AnimatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Actors);
 
         EmitHealthChanged();
@@ -140,7 +138,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         if (Input.IsActionPressed("attack") && _attackCooldownTimer <= 0.0f)
         {
             if (direction != Vector2.Zero)
-                _lastDirection = DirectionHelper.GetDirectionName(direction);
+                SetFacingDirection(direction);
 
             UpdateTargetingState();
             StartAttack();
@@ -156,16 +154,14 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         }
 
         direction = direction.Normalized();
-        _lastDirection = DirectionHelper.GetDirectionName(direction);
+        SetFacingDirection(direction);
         var isSprinting = Input.IsActionPressed("sprint");
         var moveSpeed = isSprinting ? Speed * 2.0f : Speed;
         Velocity = direction * moveSpeed;
         MoveAndSlide();
         UpdateTargetingState();
 
-        var animationName = $"walk_{_lastDirection}";
-        if (_animatedSprite.Animation != animationName)
-            _animatedSprite.Play(animationName);
+        SetAnimationSafe(GetWalkAnimationName());
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -199,21 +195,21 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         _attackCooldownTimer = AttackCooldown;
         _hitThisAttack.Clear();
 
-        var attackAnimation = $"slash_{_lastDirection}";
-        if (_animatedSprite.SpriteFrames == null || _animatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
+        var attackAnimation = GetDirectionalAnimationName("slash");
+        if (AnimatedSprite.SpriteFrames == null || AnimatedSprite.SpriteFrames.GetFrameCount(attackAnimation) == 0)
         {
             ApplySlashDamage();
             _isAttacking = false;
             return;
         }
 
-        _animatedSprite.Play(attackAnimation, customSpeed: 6.0f);
+        AnimatedSprite.Play(attackAnimation, customSpeed: 6.0f);
         ApplySlashDamage();
     }
 
     private void OnAnimationFinished()
     {
-        if (_animatedSprite.Animation.ToString().StartsWith("slash_", StringComparison.Ordinal))
+        if (AnimatedSprite.Animation.ToString().StartsWith("slash_", StringComparison.Ordinal))
             _isAttacking = false;
     }
 
@@ -272,7 +268,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
             return;
         }
 
-        var facingDirection = DirectionHelper.GetDirectionVector(_lastDirection);
+        var facingDirection = DirectionHelper.GetDirectionVector(LastDirection);
         if (facingDirection == Vector2.Zero)
             facingDirection = Vector2.Down;
 
@@ -390,7 +386,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         if (tabTargetRange <= 0.0f)
             return candidates;
 
-        var facingDirection = DirectionHelper.GetDirectionVector(_lastDirection);
+        var facingDirection = DirectionHelper.GetDirectionVector(LastDirection);
         if (facingDirection == Vector2.Zero)
             facingDirection = Vector2.Down;
 
@@ -498,7 +494,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         if (_isDead)
             return;
 
-        var facingVector = DirectionHelper.GetDirectionVector(_lastDirection);
+        var facingVector = DirectionHelper.GetDirectionVector(LastDirection);
         var minimumDot = Mathf.Cos(Mathf.DegToRad(AttackArcDegrees / 2.0f));
 
         foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
@@ -536,17 +532,6 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         var damage = _random.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
         enemy.ApplyDamage(new DamageInfo(damage, this));
     }
-
-    private void SetAnimationSafe(string animationName)
-    {
-        if (_animatedSprite == null || _animatedSprite.SpriteFrames == null)
-            return;
-
-        if (_animatedSprite.SpriteFrames.HasAnimation(animationName))
-            _animatedSprite.Play(animationName);
-    }
-
-    private string GetIdleAnimationName() => $"breathing-idle_{_lastDirection}";
 
     private void HandleHealthRegeneration(float delta)
     {
@@ -615,7 +600,7 @@ public partial class Player : CharacterBody2D, IAttackable, ITargetable, IFactio
         if (inputDirection != Vector2.Zero)
             return inputDirection.Normalized();
 
-        return DirectionHelper.GetDirectionVector(_lastDirection);
+        return DirectionHelper.GetDirectionVector(LastDirection);
     }
 
     private static Vector2 GetInputDirection()

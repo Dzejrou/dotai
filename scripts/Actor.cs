@@ -3,7 +3,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
+public abstract partial class Actor : AnimatedCharacter, IFactionMember, IHealable
 {
     private const string DefaultCorpseScenePath = "res://scenes/world/corpse.tscn";
     private const string BehaviorNodeTargetingPath = "Behaviors/Tier10_Targeting";
@@ -22,7 +22,6 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
     [Export]
     public float HomeReturnTolerance { get; set; } = 4.0f;
 
-    public AnimatedSprite2D AnimatedSprite { get; private set; }
     public NavigationAgent2D NavigationAgent { get; private set; }
     public CombatState Combat => _combat;
     public Node2D Target => _combat.Target;
@@ -30,7 +29,6 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
     public bool IsUsingNavigationPath { get; private set; }
     public Vector2 LastNavigationPathPosition { get; private set; }
     public float MovementSpeed { get; private set; } = 1.0f;
-    public string LastDirection { get; private set; } = "south";
     public Vector2 HomePosition { get; private set; }
     public int CurrentHealth => _health.Current;
     public bool IsDead => _health.IsDead;
@@ -59,7 +57,7 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
         AnimatedSprite2D animatedSprite,
         NavigationAgent2D navigationAgent = null)
     {
-        AnimatedSprite = animatedSprite;
+        SetAnimatedSprite(animatedSprite);
         NavigationAgent = navigationAgent;
 
         if (NavigationAgent != null)
@@ -153,12 +151,6 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
         CurrentState = state;
     }
 
-    public void SetFacingDirection(Vector2 direction)
-    {
-        if (direction != Vector2.Zero)
-            LastDirection = DirectionHelper.GetDirectionName(direction);
-    }
-
     public void FinishAttackState()
     {
         if (CurrentState != CombatUnitState.Attacking)
@@ -195,19 +187,6 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
         ShowFloatingHealingNumber(healedAmount);
     }
 
-    public void PlayIdleIfAvailable()
-    {
-        if (AnimatedSprite?.SpriteFrames == null)
-            return;
-
-        var idleAnimation = $"breathing-idle_{LastDirection}";
-        if (!AnimatedSprite.SpriteFrames.HasAnimation(idleAnimation))
-            return;
-
-        if (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != idleAnimation)
-            AnimatedSprite.Play(idleAnimation);
-    }
-
     public bool TryMoveTowardDestination(Vector2 destinationPosition, float speedMultiplier, CombatUnitState movingState, double delta)
     {
         var movement = ResolveMovementDirection(destinationPosition, delta);
@@ -218,13 +197,7 @@ public abstract partial class Actor : CharacterBody2D, IFactionMember, IHealable
 
         var normalizedMovement = movement.Normalized();
         SetFacingDirection(normalizedMovement);
-        var walkAnimation = $"walk_{LastDirection}";
-        if (AnimatedSprite?.SpriteFrames != null &&
-            AnimatedSprite.SpriteFrames.HasAnimation(walkAnimation) &&
-            (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != walkAnimation))
-        {
-            AnimatedSprite.Play(walkAnimation);
-        }
+        SetAnimationSafe(GetWalkAnimationName());
 
         Velocity = normalizedMovement * MovementSpeed * Math.Max(0.0f, speedMultiplier);
         return true;
