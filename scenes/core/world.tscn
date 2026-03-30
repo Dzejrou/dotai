@@ -6,8 +6,8 @@
 [ext_resource type="Script" uid="uid://47bka353y2ms" path="res://scripts/core/DebugSpawner.cs" id="6_debug_spawner"]
 [ext_resource type="PackedScene" uid="uid://bt4xu4bcnkoj8" path="res://scenes/actors/enemies/target_dummy.tscn" id="6_slgso"]
 [ext_resource type="Resource" uid="uid://dywxbx4vl0ax3" path="res://resources/debug/spawn_catalog.tres" id="7_spawn_catalog"]
-[ext_resource type="PackedScene" path="res://scenes/actors/neutrals/dryad.tscn" id="10_vn8ag"]
-[ext_resource type="Texture2D" path="res://assets/graveyard.png" id="11_epgnc"]
+[ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="10_vn8ag"]
+[ext_resource type="Texture2D" uid="uid://b65b0optd443s" path="res://assets/graveyard.png" id="11_epgnc"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_world_navigation"]
 
