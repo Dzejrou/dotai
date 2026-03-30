@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://dkc8t7728cd0u"]
 
 [ext_resource type="Texture2D" path="res://assets/player/animations/slash/east/frame_000.png" id="1_player"]
 [ext_resource type="Texture2D" path="res://assets/player/animations/slash/east/frame_001.png" id="2_player"]

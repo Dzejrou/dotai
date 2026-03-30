@@ -18,24 +18,42 @@
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_006.png" id="16_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_007.png" id="17_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_008.png" id="18_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_000.png" id="19_o7sq8"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_000.png" id="19_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_001.png" id="20_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_001.png" id="20_xnxka"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_002.png" id="21_47qcq"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_002.png" id="21_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_003.png" id="22_43sec"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_003.png" id="22_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_004.png" id="23_a28b1"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_004.png" id="23_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_005.png" id="24_b26bx"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_005.png" id="24_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_006.png" id="25_8jbp5"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_006.png" id="25_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_007.png" id="26_gcgdm"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_007.png" id="26_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-east/frame_008.png" id="27_1jeip"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_008.png" id="27_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_000.png" id="28_b3a7v"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_000.png" id="28_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_001.png" id="29_ptwh6"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_001.png" id="29_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_002.png" id="30_oyypj"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_002.png" id="30_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_003.png" id="31_30qqo"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_003.png" id="31_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_004.png" id="32_q4kyw"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_004.png" id="32_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_005.png" id="33_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_005.png" id="33_ub0xj"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_006.png" id="34_6c5oq"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_006.png" id="34_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_007.png" id="35_q7f6u"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_007.png" id="35_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_008.png" id="36_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north-west/frame_008.png" id="36_uacsy"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_000.png" id="37_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_001.png" id="38_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_002.png" id="39_tex"]
@@ -45,23 +63,41 @@
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_006.png" id="43_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_007.png" id="44_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_008.png" id="45_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_000.png" id="46_sc6ay"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_000.png" id="46_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_001.png" id="47_ku254"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_001.png" id="47_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_002.png" id="48_nesov"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_002.png" id="48_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_003.png" id="49_kl176"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_003.png" id="49_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_004.png" id="50_fv1o8"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_004.png" id="50_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_005.png" id="51_2x6sb"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_005.png" id="51_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_006.png" id="52_1jx1y"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_006.png" id="52_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_007.png" id="53_a3lap"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_007.png" id="53_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-east/frame_008.png" id="54_3uw64"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_008.png" id="54_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_000.png" id="55_lis3a"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_000.png" id="55_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_001.png" id="56_pcwhw"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_001.png" id="56_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_002.png" id="57_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_002.png" id="57_vpwyc"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_003.png" id="58_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_003.png" id="58_xt3rp"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_004.png" id="59_nnjmq"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_004.png" id="59_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_005.png" id="60_damqj"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_005.png" id="60_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_006.png" id="61_3uaw6"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_006.png" id="61_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_007.png" id="62_51xnf"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_007.png" id="62_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south-west/frame_008.png" id="63_7jkf5"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_008.png" id="63_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_000.png" id="64_tex"]
 [ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_001.png" id="65_tex"]
@@ -249,6 +285,70 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("19_o7sq8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_xnxka")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_47qcq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_43sec")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_a28b1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_b26bx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_8jbp5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_gcgdm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_1jeip")
+}],
+"loop": true,
+"name": &"breathing-idle_north-east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("28_b3a7v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_ptwh6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_oyypj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_30qqo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_q4kyw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_ub0xj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_6c5oq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_q7f6u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_uacsy")
+}],
+"loop": true,
+"name": &"breathing-idle_north-west",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("19_tex")
 }, {
 "duration": 1.0,
@@ -277,6 +377,70 @@ animations = [{
 }],
 "loop": true,
 "name": &"breathing-idle_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("46_sc6ay")
+}, {
+"duration": 1.0,
+"texture": ExtResource("47_ku254")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_nesov")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_kl176")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_fv1o8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_2x6sb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("52_1jx1y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("53_a3lap")
+}, {
+"duration": 1.0,
+"texture": ExtResource("54_3uw64")
+}],
+"loop": true,
+"name": &"breathing-idle_south-east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("55_lis3a")
+}, {
+"duration": 1.0,
+"texture": ExtResource("56_pcwhw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("57_vpwyc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("58_xt3rp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("59_nnjmq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("60_damqj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("61_3uaw6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("62_51xnf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("63_7jkf5")
+}],
+"loop": true,
+"name": &"breathing-idle_south-west",
 "speed": 5.0
 }, {
 "frames": [{
