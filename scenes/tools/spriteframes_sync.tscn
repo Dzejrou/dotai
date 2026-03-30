@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tools/SpriteFramesSyncRunner.cs" id="1_spriteframes_sync_runner"]
+
+[node name="SpriteFramesSyncRunner" type="Node" unique_id=1983049014]
+script = ExtResource("1_spriteframes_sync_runner")

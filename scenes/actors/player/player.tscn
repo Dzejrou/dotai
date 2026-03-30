@@ -2,16 +2,16 @@
 
 [ext_resource type="Script" uid="uid://dvutl3mkyi0ph" path="res://scripts/actors/player/Player.cs" id="1_t1u7h"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="2_gx9kq"]
-[ext_resource type="SpriteFrames" uid="uid://tosg1b0bkr3a" path="res://resources/animations/player_spriteframes.tres" id="3_player_frames"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/player_spriteframes.tres" id="3_player_frames"]
 [ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="4_fire_nova_vfx"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="5_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="6_health_state"]
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="7_mana_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="8_faction_state"]
-[ext_resource type="Script" path="res://scripts/spells/FireNovaSpell.cs" id="9_fire_nova_spell"]
-[ext_resource type="Script" path="res://scripts/spells/FireballSpell.cs" id="10_fireball_spell"]
-[ext_resource type="Script" path="res://scripts/spells/BlinkSpell.cs" id="11_blink_spell"]
-[ext_resource type="Script" path="res://scripts/spells/RingOfFireSpell.cs" id="12_ring_of_fire_spell"]
+[ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="9_fire_nova_spell"]
+[ext_resource type="Script" uid="uid://df50yybv2e8ng" path="res://scripts/spells/FireballSpell.cs" id="10_fireball_spell"]
+[ext_resource type="Script" uid="uid://casb8y51xl1h3" path="res://scripts/spells/BlinkSpell.cs" id="11_blink_spell"]
+[ext_resource type="Script" uid="uid://dtc0do7tcpgct" path="res://scripts/spells/RingOfFireSpell.cs" id="12_ring_of_fire_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ring_of_fire_area.tscn" id="13_ring_of_fire_area"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
@@ -51,45 +51,28 @@ RegenerationDelayAfterCast = 1.25
 script = ExtResource("8_faction_state")
 FactionKey = "allies"
 
-[node name="Spells" type="Node" parent="."]
+[node name="Spells" type="Node" parent="." unique_id=1018490496]
 
-[node name="Fireball" type="Node" parent="Spells"]
+[node name="Fireball" type="Node" parent="Spells" unique_id=1365317893]
 script = ExtResource("10_fireball_spell")
+ProjectileScene = ExtResource("2_gx9kq")
 CastAction = &"cast_spell"
 HudLabel = "Fireball"
-ProjectileScene = ExtResource("2_gx9kq")
-ManaCost = 0
-ProjectileSpeed = 280.0
-ProjectileDamage = 4
-ProjectileLifetime = 2.5
-ProjectileMaxDistance = 320.0
 
-[node name="FireNova" type="Node" parent="Spells"]
+[node name="FireNova" type="Node" parent="Spells" unique_id=1504189636]
 script = ExtResource("9_fire_nova_spell")
+VfxScene = ExtResource("4_fire_nova_vfx")
 CastAction = &"cast_spell2"
 HudLabel = "Fire Nova"
-VfxScene = ExtResource("4_fire_nova_vfx")
-Range = 72.0
-ManaCost = 20
-MinimumDamage = 6
-MaximumDamage = 10
 
-[node name="Blink" type="Node" parent="Spells"]
+[node name="Blink" type="Node" parent="Spells" unique_id=1496081750]
 script = ExtResource("11_blink_spell")
 CastAction = &"cast_spell3"
 HudLabel = "Blink"
-ManaCost = 15
-BlinkDistance = 64.0
-Cooldown = 1.5
 
-[node name="RingOfFire" type="Node" parent="Spells"]
+[node name="RingOfFire" type="Node" parent="Spells" unique_id=1006917204]
 script = ExtResource("12_ring_of_fire_spell")
-CastAction = &"cast_spell4"
-HudLabel = "Ring of Fire"
 AreaScene = ExtResource("13_ring_of_fire_area")
 ManaCost = 35
-Cooldown = 6.0
-Radius = 56.0
-Duration = 5.0
-TickInterval = 1.0
-DamagePerTick = 8
+CastAction = &"cast_spell4"
+HudLabel = "Ring of Fire"

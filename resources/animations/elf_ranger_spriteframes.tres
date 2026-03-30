@@ -1,149 +1,185 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dy0ma2kx46j4w"]
 
-[ext_resource type="Texture2D" uid="uid://cfs8ldka0lrdd" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_000.png" id="1_tex"]
-[ext_resource type="Texture2D" uid="uid://12x5ahgto5he" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_001.png" id="2_tex"]
-[ext_resource type="Texture2D" uid="uid://37qp71qx0kcd" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_002.png" id="3_tex"]
-[ext_resource type="Texture2D" uid="uid://bawfwetgedym6" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_003.png" id="4_tex"]
-[ext_resource type="Texture2D" uid="uid://dvgkpj5i0o77k" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_004.png" id="5_tex"]
-[ext_resource type="Texture2D" uid="uid://ctav6qnha8ba5" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_005.png" id="6_tex"]
-[ext_resource type="Texture2D" uid="uid://c70gxmyb6aiy8" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_006.png" id="7_tex"]
-[ext_resource type="Texture2D" uid="uid://c4e0o50pb2v1l" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_007.png" id="8_tex"]
-[ext_resource type="Texture2D" uid="uid://di7mv830rgs2d" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_008.png" id="9_tex"]
-[ext_resource type="Texture2D" uid="uid://cflgeigjh6e4p" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_000.png" id="10_tex"]
-[ext_resource type="Texture2D" uid="uid://b8238rlineowe" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_001.png" id="11_tex"]
-[ext_resource type="Texture2D" uid="uid://bufkxbwvs7m5i" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_002.png" id="12_tex"]
-[ext_resource type="Texture2D" uid="uid://dcn5fnl2iynpu" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_003.png" id="13_tex"]
-[ext_resource type="Texture2D" uid="uid://eq2fn3qrqdlc" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_004.png" id="14_tex"]
-[ext_resource type="Texture2D" uid="uid://ccj3pqks0c4yt" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_005.png" id="15_tex"]
-[ext_resource type="Texture2D" uid="uid://cyqpj0sa0ht0e" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_006.png" id="16_tex"]
-[ext_resource type="Texture2D" uid="uid://qenniv2swchb" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_007.png" id="17_tex"]
-[ext_resource type="Texture2D" uid="uid://2fl8e3sa8qi0" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_008.png" id="18_tex"]
-[ext_resource type="Texture2D" uid="uid://ct46o54a2dlnj" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_000.png" id="19_tex"]
-[ext_resource type="Texture2D" uid="uid://b64cnhpj3nm0e" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_001.png" id="20_tex"]
-[ext_resource type="Texture2D" uid="uid://bobxl7d7vf5q0" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_002.png" id="21_tex"]
-[ext_resource type="Texture2D" uid="uid://c3f655fxb2oct" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_003.png" id="22_tex"]
-[ext_resource type="Texture2D" uid="uid://cws5e2o7wycc8" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_004.png" id="23_tex"]
-[ext_resource type="Texture2D" uid="uid://buv3xpb4ehhxw" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_005.png" id="24_tex"]
-[ext_resource type="Texture2D" uid="uid://6m0frrq1pdol" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_006.png" id="25_tex"]
-[ext_resource type="Texture2D" uid="uid://c3vun7anb3vaw" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_007.png" id="26_tex"]
-[ext_resource type="Texture2D" uid="uid://dlmycjekry6ts" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_008.png" id="27_tex"]
-[ext_resource type="Texture2D" uid="uid://cnq453wtwyjfd" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_000.png" id="28_tex"]
-[ext_resource type="Texture2D" uid="uid://bcfa5205e2vun" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_001.png" id="29_tex"]
-[ext_resource type="Texture2D" uid="uid://dfvhuwavj3q8x" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_002.png" id="30_tex"]
-[ext_resource type="Texture2D" uid="uid://n6wa7ujam13d" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_003.png" id="31_tex"]
-[ext_resource type="Texture2D" uid="uid://8s3lu76bu8l7" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_004.png" id="32_tex"]
-[ext_resource type="Texture2D" uid="uid://nojormshy2fc" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_005.png" id="33_tex"]
-[ext_resource type="Texture2D" uid="uid://ctbd4n62najti" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_006.png" id="34_tex"]
-[ext_resource type="Texture2D" uid="uid://p4bb8rht5ftx" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_007.png" id="35_tex"]
-[ext_resource type="Texture2D" uid="uid://cjwq6hyevf50f" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_008.png" id="36_tex"]
-[ext_resource type="Texture2D" uid="uid://dlel6hjenyaia" path="res://assets/elf_ranger/animations/walk/east/frame_000.png" id="37_tex"]
-[ext_resource type="Texture2D" uid="uid://b5w33iviibsv2" path="res://assets/elf_ranger/animations/walk/east/frame_001.png" id="38_tex"]
-[ext_resource type="Texture2D" uid="uid://btbimiltypdrp" path="res://assets/elf_ranger/animations/walk/east/frame_002.png" id="39_tex"]
-[ext_resource type="Texture2D" uid="uid://dx06mu7hndvbt" path="res://assets/elf_ranger/animations/walk/east/frame_003.png" id="40_tex"]
-[ext_resource type="Texture2D" uid="uid://bq8gdhwn1fi50" path="res://assets/elf_ranger/animations/walk/east/frame_004.png" id="41_tex"]
-[ext_resource type="Texture2D" uid="uid://b33omi6ho6ocu" path="res://assets/elf_ranger/animations/walk/east/frame_005.png" id="42_tex"]
-[ext_resource type="Texture2D" uid="uid://dxu28327le73m" path="res://assets/elf_ranger/animations/walk/east/frame_006.png" id="43_tex"]
-[ext_resource type="Texture2D" uid="uid://cb0u1divq11cg" path="res://assets/elf_ranger/animations/walk/east/frame_007.png" id="44_tex"]
-[ext_resource type="Texture2D" uid="uid://knbt7k0xtmkc" path="res://assets/elf_ranger/animations/walk/east/frame_008.png" id="45_tex"]
-[ext_resource type="Texture2D" uid="uid://kkmgq4gwut20" path="res://assets/elf_ranger/animations/walk/north/frame_000.png" id="46_tex"]
-[ext_resource type="Texture2D" uid="uid://dbkscc6diy7nf" path="res://assets/elf_ranger/animations/walk/north/frame_001.png" id="47_tex"]
-[ext_resource type="Texture2D" uid="uid://cxfrvyuqyk34j" path="res://assets/elf_ranger/animations/walk/north/frame_002.png" id="48_tex"]
-[ext_resource type="Texture2D" uid="uid://b125cegtihs0q" path="res://assets/elf_ranger/animations/walk/north/frame_003.png" id="49_tex"]
-[ext_resource type="Texture2D" uid="uid://rrfplyh7kvtp" path="res://assets/elf_ranger/animations/walk/north/frame_004.png" id="50_tex"]
-[ext_resource type="Texture2D" uid="uid://4qwjix10nsjy" path="res://assets/elf_ranger/animations/walk/north/frame_005.png" id="51_tex"]
-[ext_resource type="Texture2D" uid="uid://cmh6gs7jy7rlx" path="res://assets/elf_ranger/animations/walk/north/frame_006.png" id="52_tex"]
-[ext_resource type="Texture2D" uid="uid://lr37g6mycd5v" path="res://assets/elf_ranger/animations/walk/north/frame_007.png" id="53_tex"]
-[ext_resource type="Texture2D" uid="uid://b8o0wltufj0mv" path="res://assets/elf_ranger/animations/walk/north/frame_008.png" id="54_tex"]
-[ext_resource type="Texture2D" uid="uid://cuooeo1qgpm3f" path="res://assets/elf_ranger/animations/walk/south/frame_000.png" id="55_tex"]
-[ext_resource type="Texture2D" uid="uid://b8n7hlft4dy0y" path="res://assets/elf_ranger/animations/walk/south/frame_001.png" id="56_tex"]
-[ext_resource type="Texture2D" uid="uid://cx5po2v4fm7ox" path="res://assets/elf_ranger/animations/walk/south/frame_002.png" id="57_tex"]
-[ext_resource type="Texture2D" uid="uid://dj1f1afqqahjy" path="res://assets/elf_ranger/animations/walk/south/frame_003.png" id="58_tex"]
-[ext_resource type="Texture2D" uid="uid://ndh5b64qtsh8" path="res://assets/elf_ranger/animations/walk/south/frame_004.png" id="59_tex"]
-[ext_resource type="Texture2D" uid="uid://dohuopf8vnmse" path="res://assets/elf_ranger/animations/walk/south/frame_005.png" id="60_tex"]
-[ext_resource type="Texture2D" uid="uid://dmg5548qyke84" path="res://assets/elf_ranger/animations/walk/south/frame_006.png" id="61_tex"]
-[ext_resource type="Texture2D" uid="uid://0uin0p05gn2y" path="res://assets/elf_ranger/animations/walk/south/frame_007.png" id="62_tex"]
-[ext_resource type="Texture2D" uid="uid://csu7aqbmevn2m" path="res://assets/elf_ranger/animations/walk/south/frame_008.png" id="63_tex"]
-[ext_resource type="Texture2D" uid="uid://dfyu866idy0h7" path="res://assets/elf_ranger/animations/walk/west/frame_000.png" id="64_tex"]
-[ext_resource type="Texture2D" uid="uid://cdfmnhjhwa6gr" path="res://assets/elf_ranger/animations/walk/west/frame_001.png" id="65_tex"]
-[ext_resource type="Texture2D" uid="uid://ou3snjv5h4n2" path="res://assets/elf_ranger/animations/walk/west/frame_002.png" id="66_tex"]
-[ext_resource type="Texture2D" uid="uid://bmglcowvfyku6" path="res://assets/elf_ranger/animations/walk/west/frame_003.png" id="67_tex"]
-[ext_resource type="Texture2D" uid="uid://bhn24rl8w0p8r" path="res://assets/elf_ranger/animations/walk/west/frame_004.png" id="68_tex"]
-[ext_resource type="Texture2D" uid="uid://yym04kxnmu6" path="res://assets/elf_ranger/animations/walk/west/frame_005.png" id="69_tex"]
-[ext_resource type="Texture2D" uid="uid://chd861xmqmgrx" path="res://assets/elf_ranger/animations/walk/west/frame_006.png" id="70_tex"]
-[ext_resource type="Texture2D" uid="uid://bqp7rekkv18u6" path="res://assets/elf_ranger/animations/walk/west/frame_007.png" id="71_tex"]
-[ext_resource type="Texture2D" uid="uid://bpveew1gjikqo" path="res://assets/elf_ranger/animations/walk/west/frame_008.png" id="72_tex"]
-[ext_resource type="Texture2D" uid="uid://d13qae0b6733x" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_000.png" id="73_tex"]
-[ext_resource type="Texture2D" uid="uid://b61h1jelu7ihv" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_001.png" id="74_tex"]
-[ext_resource type="Texture2D" uid="uid://ctokkt3tk3hsy" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_002.png" id="75_tex"]
-[ext_resource type="Texture2D" uid="uid://ck0ap1h5msmqu" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_003.png" id="76_tex"]
-[ext_resource type="Texture2D" uid="uid://b23xuj6oce7ol" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_004.png" id="77_tex"]
-[ext_resource type="Texture2D" uid="uid://djch7t3nwrtgj" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_005.png" id="78_tex"]
-[ext_resource type="Texture2D" uid="uid://bgspdfjfcsnyh" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_006.png" id="79_tex"]
-[ext_resource type="Texture2D" uid="uid://del4ktxhrabbx" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_007.png" id="80_tex"]
-[ext_resource type="Texture2D" uid="uid://bbx2cn7v0lp5o" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_008.png" id="81_tex"]
-[ext_resource type="Texture2D" uid="uid://dt0w7pcps5pfa" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_000.png" id="82_tex"]
-[ext_resource type="Texture2D" uid="uid://d1x085ixbvta0" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_001.png" id="83_tex"]
-[ext_resource type="Texture2D" uid="uid://dufppwxb83n6p" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_002.png" id="84_tex"]
-[ext_resource type="Texture2D" uid="uid://ogtlcm312r44" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_003.png" id="85_tex"]
-[ext_resource type="Texture2D" uid="uid://dn2soskrr3kua" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_004.png" id="86_tex"]
-[ext_resource type="Texture2D" uid="uid://haaa8xe3smyl" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_005.png" id="87_tex"]
-[ext_resource type="Texture2D" uid="uid://dc8bdpf84qast" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_006.png" id="88_tex"]
-[ext_resource type="Texture2D" uid="uid://bnhxxom3w2eo7" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_007.png" id="89_tex"]
-[ext_resource type="Texture2D" uid="uid://craxypjgmd8l7" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_008.png" id="90_tex"]
-[ext_resource type="Texture2D" uid="uid://cyvqtqnt8eame" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_000.png" id="91_tex"]
-[ext_resource type="Texture2D" uid="uid://brni0h7v2ev03" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_001.png" id="92_tex"]
-[ext_resource type="Texture2D" uid="uid://c1ib7xhnvi4rk" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_002.png" id="93_tex"]
-[ext_resource type="Texture2D" uid="uid://bxy5p3e2t5373" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_003.png" id="94_tex"]
-[ext_resource type="Texture2D" uid="uid://cwydsge8tny4j" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_004.png" id="95_tex"]
-[ext_resource type="Texture2D" uid="uid://doficjwlud4t6" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_005.png" id="96_tex"]
-[ext_resource type="Texture2D" uid="uid://d1wsui1d30e7h" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_006.png" id="97_tex"]
-[ext_resource type="Texture2D" uid="uid://de8qj02gaxuyg" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_007.png" id="98_tex"]
-[ext_resource type="Texture2D" uid="uid://dos5sbr4wo3ky" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_008.png" id="99_tex"]
-[ext_resource type="Texture2D" uid="uid://b4bg6jmjti4na" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_000.png" id="100_tex"]
-[ext_resource type="Texture2D" uid="uid://c3uvuwroyp0ih" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_001.png" id="101_tex"]
-[ext_resource type="Texture2D" uid="uid://cfnwykrlpmye5" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_002.png" id="102_tex"]
-[ext_resource type="Texture2D" uid="uid://c03up1lguouff" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_003.png" id="103_tex"]
-[ext_resource type="Texture2D" uid="uid://cfjeera8y8tc7" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_004.png" id="104_tex"]
-[ext_resource type="Texture2D" uid="uid://h6u3afe437ip" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_005.png" id="105_tex"]
-[ext_resource type="Texture2D" uid="uid://bpvd4pkfy67kn" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_006.png" id="106_tex"]
-[ext_resource type="Texture2D" uid="uid://b128uefm00rw8" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_007.png" id="107_tex"]
-[ext_resource type="Texture2D" uid="uid://c7fdm77hawdqm" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_008.png" id="108_tex"]
-[ext_resource type="Texture2D" uid="uid://bgg46lpgvps7d" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_000.png" id="109_tex"]
-[ext_resource type="Texture2D" uid="uid://lvpbwsroqjds" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_001.png" id="110_tex"]
-[ext_resource type="Texture2D" uid="uid://cd3c232c3g3j0" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_002.png" id="111_tex"]
-[ext_resource type="Texture2D" uid="uid://bnay0r0u8xmo" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_003.png" id="112_tex"]
-[ext_resource type="Texture2D" uid="uid://btubhe184am87" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_004.png" id="113_tex"]
-[ext_resource type="Texture2D" uid="uid://ilfqu1phoajo" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_005.png" id="114_tex"]
-[ext_resource type="Texture2D" uid="uid://bbx5furakvckj" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_006.png" id="115_tex"]
-[ext_resource type="Texture2D" uid="uid://c5ktnkk2rjiei" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_007.png" id="116_tex"]
-[ext_resource type="Texture2D" uid="uid://boe1ikf75odui" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_008.png" id="117_tex"]
-[ext_resource type="Texture2D" uid="uid://bmjxu2hqxnssu" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_000.png" id="118_tex"]
-[ext_resource type="Texture2D" uid="uid://b00uagjjh6uen" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_001.png" id="119_tex"]
-[ext_resource type="Texture2D" uid="uid://b7j45r3t1d5f2" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_002.png" id="120_tex"]
-[ext_resource type="Texture2D" uid="uid://cl0gecu0bldq7" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_003.png" id="121_tex"]
-[ext_resource type="Texture2D" uid="uid://du34sao771cqn" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_004.png" id="122_tex"]
-[ext_resource type="Texture2D" uid="uid://mnruuxvc702g" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_005.png" id="123_tex"]
-[ext_resource type="Texture2D" uid="uid://bskunrf2cighu" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_006.png" id="124_tex"]
-[ext_resource type="Texture2D" uid="uid://sbn6fgedkk8w" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_007.png" id="125_tex"]
-[ext_resource type="Texture2D" uid="uid://c8cteim4cgy0x" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_008.png" id="126_tex"]
-[ext_resource type="Texture2D" uid="uid://wfhlrlvvkgrg" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_000.png" id="127_tex"]
-[ext_resource type="Texture2D" uid="uid://bmcxmfx42b3ln" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_001.png" id="128_tex"]
-[ext_resource type="Texture2D" uid="uid://uarqiwgnnhg7" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_002.png" id="129_tex"]
-[ext_resource type="Texture2D" uid="uid://vonykaign1s6" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_003.png" id="130_tex"]
-[ext_resource type="Texture2D" uid="uid://c8prdmskjvw56" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_004.png" id="131_tex"]
-[ext_resource type="Texture2D" uid="uid://dvcqsi2uqqugs" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_005.png" id="132_tex"]
-[ext_resource type="Texture2D" uid="uid://cpgngha6cgaq" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_006.png" id="133_tex"]
-[ext_resource type="Texture2D" uid="uid://3w1xcjwa4aqa" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_007.png" id="134_tex"]
-[ext_resource type="Texture2D" uid="uid://b2m46uvmy3bnl" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_008.png" id="135_tex"]
-[ext_resource type="Texture2D" uid="uid://bcd4apce4urct" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_000.png" id="136_tex"]
-[ext_resource type="Texture2D" uid="uid://bkynpyk61gu0a" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_001.png" id="137_tex"]
-[ext_resource type="Texture2D" uid="uid://jhemokyukke5" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_002.png" id="138_tex"]
-[ext_resource type="Texture2D" uid="uid://dswqnembtsw71" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_003.png" id="139_tex"]
-[ext_resource type="Texture2D" uid="uid://cunmfjfoegurr" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_004.png" id="140_tex"]
-[ext_resource type="Texture2D" uid="uid://6yao3fr3mqw" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_005.png" id="141_tex"]
-[ext_resource type="Texture2D" uid="uid://cmlk201pwpuy2" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_006.png" id="142_tex"]
-[ext_resource type="Texture2D" uid="uid://cen4ggy6rel84" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_007.png" id="143_tex"]
-[ext_resource type="Texture2D" uid="uid://bffqcyykjk6vx" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_008.png" id="144_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_000.png" id="1_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_001.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_002.png" id="3_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_003.png" id="4_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_004.png" id="5_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_005.png" id="6_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_006.png" id="7_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_007.png" id="8_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/east/frame_008.png" id="9_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_000.png" id="10_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_001.png" id="11_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_002.png" id="12_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_003.png" id="13_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_004.png" id="14_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_005.png" id="15_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_006.png" id="16_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_007.png" id="17_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/north/frame_008.png" id="18_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_000.png" id="19_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_001.png" id="20_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_002.png" id="21_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_003.png" id="22_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_004.png" id="23_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_005.png" id="24_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_006.png" id="25_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_007.png" id="26_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/south/frame_008.png" id="27_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_000.png" id="28_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_001.png" id="29_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_002.png" id="30_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_003.png" id="31_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_004.png" id="32_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_005.png" id="33_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_006.png" id="34_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_007.png" id="35_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/breathing-idle/west/frame_008.png" id="36_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_000.png" id="37_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_001.png" id="38_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_002.png" id="39_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_003.png" id="40_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_004.png" id="41_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_005.png" id="42_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_006.png" id="43_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_007.png" id="44_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/east/frame_008.png" id="45_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_000.png" id="46_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_001.png" id="47_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_002.png" id="48_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_003.png" id="49_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_004.png" id="50_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_005.png" id="51_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_006.png" id="52_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_007.png" id="53_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north/frame_008.png" id="54_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_000.png" id="55_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_001.png" id="56_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_002.png" id="57_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_003.png" id="58_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_004.png" id="59_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_005.png" id="60_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_006.png" id="61_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_007.png" id="62_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south/frame_008.png" id="63_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_000.png" id="64_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_001.png" id="65_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_002.png" id="66_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_003.png" id="67_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_004.png" id="68_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_005.png" id="69_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_006.png" id="70_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_007.png" id="71_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/west/frame_008.png" id="72_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_000.png" id="73_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_001.png" id="74_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_002.png" id="75_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_003.png" id="76_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_004.png" id="77_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_005.png" id="78_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_006.png" id="79_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_007.png" id="80_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/east/frame_008.png" id="81_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_000.png" id="82_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_001.png" id="83_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_002.png" id="84_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_003.png" id="85_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_004.png" id="86_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_005.png" id="87_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_006.png" id="88_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_007.png" id="89_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/north/frame_008.png" id="90_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_000.png" id="91_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_001.png" id="92_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_002.png" id="93_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_003.png" id="94_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_004.png" id="95_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_005.png" id="96_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_006.png" id="97_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_007.png" id="98_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/south/frame_008.png" id="99_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_000.png" id="100_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_001.png" id="101_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_002.png" id="102_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_003.png" id="103_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_004.png" id="104_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_005.png" id="105_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_006.png" id="106_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_007.png" id="107_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/shooting-bow/west/frame_008.png" id="108_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_000.png" id="109_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_001.png" id="110_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_002.png" id="111_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_003.png" id="112_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_004.png" id="113_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_005.png" id="114_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_006.png" id="115_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_007.png" id="116_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/east/frame_008.png" id="117_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_000.png" id="118_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_001.png" id="119_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_002.png" id="120_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_003.png" id="121_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_004.png" id="122_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_005.png" id="123_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_006.png" id="124_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_007.png" id="125_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/north/frame_008.png" id="126_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_000.png" id="127_s535u"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_000.png" id="127_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_001.png" id="128_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_001.png" id="128_ty5fk"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_002.png" id="129_omesy"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_002.png" id="129_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_003.png" id="130_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_003.png" id="130_vqwmh"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_004.png" id="131_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_004.png" id="131_wd3xj"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_005.png" id="132_ia8ua"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_005.png" id="132_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_006.png" id="133_mge1m"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_006.png" id="133_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_007.png" id="134_dsugq"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_007.png" id="134_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/south/frame_008.png" id="135_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-east/frame_008.png" id="135_yoqa8"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_000.png" id="136_482d2"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_000.png" id="136_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_001.png" id="137_ox6so"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_001.png" id="137_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_002.png" id="138_qpuoe"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_002.png" id="138_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_003.png" id="139_0hxxp"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_003.png" id="139_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_004.png" id="140_mcoj1"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_004.png" id="140_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_005.png" id="141_jv30n"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_005.png" id="141_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_006.png" id="142_nadg4"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_006.png" id="142_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_007.png" id="143_cmqqb"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_007.png" id="143_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/north-west/frame_008.png" id="144_6voit"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/falling-back-death/west/frame_008.png" id="144_tex"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_000.png" id="154_n76qe"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_001.png" id="155_2kqm0"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_002.png" id="156_pkfes"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_003.png" id="157_u56sm"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_004.png" id="158_w10fh"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_005.png" id="159_op2kd"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_006.png" id="160_q6y54"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_007.png" id="161_6if4s"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-east/frame_008.png" id="162_64sqd"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_000.png" id="163_ysera"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_001.png" id="164_8gexo"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_002.png" id="165_o2mq5"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_003.png" id="166_tskus"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_004.png" id="167_i3ep2"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_005.png" id="168_5l8le"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_006.png" id="169_yswo2"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_007.png" id="170_s3ttj"]
+[ext_resource type="Texture2D" path="res://assets/elf_ranger/animations/walk/south-west/frame_008.png" id="171_p7kou"]
 
 [resource]
 animations = [{
@@ -602,6 +638,70 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("127_s535u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("128_ty5fk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("129_omesy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("130_vqwmh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("131_wd3xj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("132_ia8ua")
+}, {
+"duration": 1.0,
+"texture": ExtResource("133_mge1m")
+}, {
+"duration": 1.0,
+"texture": ExtResource("134_dsugq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("135_yoqa8")
+}],
+"loop": true,
+"name": &"walk_north-east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("136_482d2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("137_ox6so")
+}, {
+"duration": 1.0,
+"texture": ExtResource("138_qpuoe")
+}, {
+"duration": 1.0,
+"texture": ExtResource("139_0hxxp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("140_mcoj1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("141_jv30n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("142_nadg4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("143_cmqqb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("144_6voit")
+}],
+"loop": true,
+"name": &"walk_north-west",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("55_tex")
 }, {
 "duration": 1.0,
@@ -630,6 +730,70 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("154_n76qe")
+}, {
+"duration": 1.0,
+"texture": ExtResource("155_2kqm0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("156_pkfes")
+}, {
+"duration": 1.0,
+"texture": ExtResource("157_u56sm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("158_w10fh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("159_op2kd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("160_q6y54")
+}, {
+"duration": 1.0,
+"texture": ExtResource("161_6if4s")
+}, {
+"duration": 1.0,
+"texture": ExtResource("162_64sqd")
+}],
+"loop": true,
+"name": &"walk_south-east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("163_ysera")
+}, {
+"duration": 1.0,
+"texture": ExtResource("164_8gexo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("165_o2mq5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("166_tskus")
+}, {
+"duration": 1.0,
+"texture": ExtResource("167_i3ep2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("168_5l8le")
+}, {
+"duration": 1.0,
+"texture": ExtResource("169_yswo2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("170_s3ttj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("171_p7kou")
+}],
+"loop": true,
+"name": &"walk_south-west",
 "speed": 5.0
 }, {
 "frames": [{
