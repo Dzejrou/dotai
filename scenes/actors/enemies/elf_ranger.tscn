@@ -25,7 +25,7 @@ script = ExtResource("1_elf_ranger_script")
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_elf_ranger_frames")
-animation = &"breathing-idle_south"
+animation = &""
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1849446510]
 

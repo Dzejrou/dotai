@@ -16,31 +16,31 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("1_east")
 }],
-"loop": true,
-"name": &"breathing-idle_east",
+"loop": false,
+"name": &"east",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("2_north")
 }],
-"loop": true,
-"name": &"breathing-idle_north",
+"loop": false,
+"name": &"north",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("3_south")
 }],
-"loop": true,
-"name": &"breathing-idle_south",
+"loop": false,
+"name": &"south",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("4_west")
 }],
-"loop": true,
-"name": &"breathing-idle_west",
+"loop": false,
+"name": &"west",
 "speed": 5.0
 }]

@@ -617,7 +617,7 @@ public partial class AssetManagerTool : Control
     {
         return animationName switch
         {
-            "breathing-idle" => true,
+            "idle" => true,
             "walk" => true,
             _ => false,
         };
@@ -625,12 +625,7 @@ public partial class AssetManagerTool : Control
 
     private static float ResolveSpeed(string animationName)
     {
-        return animationName switch
-        {
-            "shooting-bow" => 10.0f,
-            "bark" => 7.0f,
-            _ => DefaultAnimationSpeed,
-        };
+        return DefaultAnimationSpeed;
     }
 
     private static bool IsHeadlessRuntime()

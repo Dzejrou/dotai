@@ -19,7 +19,7 @@ DeathAnimation = &"death"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=891692441]
 sprite_frames = ExtResource("2_dryad_frames")
-animation = &"breathing-idle_south"
+animation = &""
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1940295191]
 position = Vector2(0, 6)

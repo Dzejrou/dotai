@@ -24,7 +24,7 @@ Speed = 60.0
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_ogre_frames")
-animation = &"breathing-idle_south"
+animation = &""
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=697161058]
 

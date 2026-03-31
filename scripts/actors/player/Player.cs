@@ -110,7 +110,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         {
             UpdateTargetingState();
             Velocity = Vector2.Zero;
-            ApplySlashDamage();
+            ApplyAttackDamage();
             return;
         }
 
@@ -177,21 +177,21 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         _attackCooldownTimer = AttackCooldown;
         _hitThisAttack.Clear();
 
-        var attackAnimation = ResolveDirectionalAnimationName("slash");
+        var attackAnimation = ResolveDirectionalAnimationName("attack");
         if (attackAnimation == null)
         {
-            ApplySlashDamage();
+            ApplyAttackDamage();
             _isAttacking = false;
             return;
         }
 
         AnimatedSprite.Play(attackAnimation, customSpeed: 6.0f);
-        ApplySlashDamage();
+        ApplyAttackDamage();
     }
 
     private void OnAnimationFinished()
     {
-        if (AnimatedSprite.Animation.ToString().StartsWith("slash_", StringComparison.Ordinal))
+        if (AnimatedSprite.Animation.ToString().StartsWith("attack_", StringComparison.Ordinal))
             _isAttacking = false;
     }
 
@@ -470,7 +470,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return actor.GetNodeOrNull<ActorHUD>("ActorHUD");
     }
 
-    private void ApplySlashDamage()
+    private void ApplyAttackDamage()
     {
         if (_isDead)
             return;

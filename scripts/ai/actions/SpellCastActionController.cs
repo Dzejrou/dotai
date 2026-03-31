@@ -31,7 +31,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
     public float AttackCooldown { get; set; } = 1.2f;
 
     [Export]
-    public StringName AttackAnimation { get; set; } = "cast_spell";
+    public StringName AttackAnimation { get; set; } = "cast";
 
     [Export]
     public float AnimationSpeedMultiplier { get; set; } = 1.0f;

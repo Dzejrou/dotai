@@ -1,322 +1,334 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://ci878vl3onm8s"]
 
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/east/frame_000.png" id="1_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/east/frame_001.png" id="2_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/east/frame_002.png" id="3_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/east/frame_003.png" id="4_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/east/frame_004.png" id="5_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/east/frame_005.png" id="6_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/east/frame_006.png" id="7_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/east/frame_007.png" id="8_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/north/frame_000.png" id="9_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/north/frame_001.png" id="10_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/north/frame_002.png" id="11_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/north/frame_003.png" id="12_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/north/frame_004.png" id="13_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/north/frame_005.png" id="14_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/north/frame_006.png" id="15_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/north/frame_007.png" id="16_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/south/frame_000.png" id="17_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/south/frame_001.png" id="18_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/south/frame_002.png" id="19_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/south/frame_003.png" id="20_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/south/frame_004.png" id="21_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/south/frame_005.png" id="22_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/south/frame_006.png" id="23_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/south/frame_007.png" id="24_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/west/frame_000.png" id="25_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/west/frame_001.png" id="26_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/west/frame_002.png" id="27_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/west/frame_003.png" id="28_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/west/frame_004.png" id="29_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/west/frame_005.png" id="30_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/west/frame_006.png" id="31_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/breathing-idle/west/frame_007.png" id="32_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/east/frame_000.png" id="1_svjr1"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/east/frame_001.png" id="2_so8ic"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/east/frame_002.png" id="3_sxqy7"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/east/frame_003.png" id="4_y6jvj"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/east/frame_004.png" id="5_j4sui"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/east/frame_005.png" id="6_peosv"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/north/frame_000.png" id="7_wkwrw"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/north/frame_001.png" id="8_6v6b2"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/north/frame_002.png" id="9_3q1ho"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/north/frame_003.png" id="10_mv5w1"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/north/frame_004.png" id="11_pxc55"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/north/frame_005.png" id="12_bgwkj"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/south/frame_000.png" id="13_vwuu0"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/south/frame_001.png" id="14_akdgd"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/south/frame_002.png" id="15_feuoo"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/south/frame_003.png" id="16_povgb"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/south/frame_004.png" id="17_c6713"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/south/frame_005.png" id="18_xyink"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/west/frame_000.png" id="19_ds04m"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/west/frame_001.png" id="20_plend"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/west/frame_002.png" id="21_mdjy8"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/west/frame_003.png" id="22_fecdr"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/west/frame_004.png" id="23_51m07"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/attack/west/frame_005.png" id="24_njggm"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_000.png" id="25_i2pdo"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_001.png" id="26_a26t3"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_002.png" id="27_y82nf"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_003.png" id="28_y5w5i"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_004.png" id="29_b63o6"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_005.png" id="30_6362v"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_006.png" id="31_crmou"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_007.png" id="32_hqhwt"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/east/frame_008.png" id="33_nt8sv"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/east/frame_000.png" id="33_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_000.png" id="34_covhh"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/east/frame_001.png" id="34_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_001.png" id="35_opmo3"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/east/frame_002.png" id="35_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_002.png" id="36_axh0v"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/east/frame_003.png" id="36_tex"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/north/frame_000.png" id="37_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_003.png" id="37_v6rie"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_004.png" id="38_qgj82"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/north/frame_001.png" id="38_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_005.png" id="39_c465a"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/north/frame_002.png" id="39_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_006.png" id="40_hhuky"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/north/frame_003.png" id="40_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_007.png" id="41_hwsjx"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/south/frame_000.png" id="41_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/north/frame_008.png" id="42_1gglv"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/south/frame_001.png" id="42_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_000.png" id="43_iatle"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/south/frame_002.png" id="43_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_001.png" id="44_ponub"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/south/frame_003.png" id="44_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_002.png" id="45_g4d8j"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/west/frame_000.png" id="45_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_003.png" id="46_mdg10"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/west/frame_001.png" id="46_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_004.png" id="47_egm7a"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/west/frame_002.png" id="47_tex"]
 [ext_resource type="Texture2D" path="res://assets/wolf_summon/walk/west/frame_003.png" id="48_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/east/frame_000.png" id="49_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/east/frame_001.png" id="50_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/east/frame_002.png" id="51_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/east/frame_003.png" id="52_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/east/frame_004.png" id="53_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/east/frame_005.png" id="54_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/north/frame_000.png" id="55_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/north/frame_001.png" id="56_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/north/frame_002.png" id="57_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/north/frame_003.png" id="58_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/north/frame_004.png" id="59_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/north/frame_005.png" id="60_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/south/frame_000.png" id="61_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/south/frame_001.png" id="62_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/south/frame_002.png" id="63_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/south/frame_003.png" id="64_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/south/frame_004.png" id="65_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/south/frame_005.png" id="66_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/west/frame_000.png" id="67_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/west/frame_001.png" id="68_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/west/frame_002.png" id="69_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/west/frame_003.png" id="70_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/west/frame_004.png" id="71_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/bark/west/frame_005.png" id="72_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_000.png" id="73_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_001.png" id="74_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_002.png" id="75_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_003.png" id="76_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_004.png" id="77_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_005.png" id="78_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_006.png" id="79_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_007.png" id="80_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/east/frame_008.png" id="81_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_000.png" id="82_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_001.png" id="83_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_002.png" id="84_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_003.png" id="85_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_004.png" id="86_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_005.png" id="87_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_006.png" id="88_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_007.png" id="89_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/north/frame_008.png" id="90_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_000.png" id="91_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_001.png" id="92_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_002.png" id="93_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_003.png" id="94_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_004.png" id="95_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_005.png" id="96_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_006.png" id="97_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_007.png" id="98_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/south/frame_008.png" id="99_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_000.png" id="100_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_001.png" id="101_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_002.png" id="102_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_003.png" id="103_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_004.png" id="104_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_005.png" id="105_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_006.png" id="106_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_007.png" id="107_tex"]
-[ext_resource type="Texture2D" path="res://assets/wolf_summon/falling-back-death/west/frame_008.png" id="108_tex"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_005.png" id="48_xg56j"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_006.png" id="49_pihom"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_007.png" id="50_ucpln"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/south/frame_008.png" id="51_rhk2j"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_000.png" id="52_g7xjx"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_001.png" id="53_yrd5o"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_002.png" id="54_1bjv0"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_003.png" id="55_esyyq"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_004.png" id="56_w4haa"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_005.png" id="57_3cqxc"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_006.png" id="58_w3d2u"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_007.png" id="59_6eua1"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/death/west/frame_008.png" id="60_yfhqs"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/east/frame_000.png" id="61_p8din"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/east/frame_001.png" id="62_cmf1h"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/east/frame_002.png" id="63_tcns2"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/east/frame_003.png" id="64_ooc36"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/east/frame_004.png" id="65_okngt"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/east/frame_005.png" id="66_6ch5l"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/east/frame_006.png" id="67_hlx0e"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/east/frame_007.png" id="68_r68xq"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/north/frame_000.png" id="69_g167h"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/north/frame_001.png" id="70_tw4hl"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/north/frame_002.png" id="71_btq18"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/north/frame_003.png" id="72_wh6my"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/north/frame_004.png" id="73_jnuhm"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/north/frame_005.png" id="74_l5835"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/north/frame_006.png" id="75_n2pgr"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/north/frame_007.png" id="76_6638u"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/south/frame_000.png" id="77_r5hey"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/south/frame_001.png" id="78_b0xgc"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/south/frame_002.png" id="79_dhfyd"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/south/frame_003.png" id="80_resa6"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/south/frame_004.png" id="81_spjjl"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/south/frame_005.png" id="82_lstpg"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/south/frame_006.png" id="83_17dgc"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/south/frame_007.png" id="84_gr482"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/west/frame_000.png" id="85_j5nru"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/west/frame_001.png" id="86_tudrc"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/west/frame_002.png" id="87_6rjx4"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/west/frame_003.png" id="88_666w4"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/west/frame_004.png" id="89_4yuo6"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/west/frame_005.png" id="90_v0w74"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/west/frame_006.png" id="91_pu15d"]
+[ext_resource type="Texture2D" path="res://assets/wolf_summon/idle/west/frame_007.png" id="92_atq1h"]
 
 [resource]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("49_tex")
+"texture": ExtResource("1_svjr1")
 }, {
 "duration": 1.0,
-"texture": ExtResource("50_tex")
+"texture": ExtResource("2_so8ic")
 }, {
 "duration": 1.0,
-"texture": ExtResource("51_tex")
+"texture": ExtResource("3_sxqy7")
 }, {
 "duration": 1.0,
-"texture": ExtResource("52_tex")
+"texture": ExtResource("4_y6jvj")
 }, {
 "duration": 1.0,
-"texture": ExtResource("53_tex")
+"texture": ExtResource("5_j4sui")
 }, {
 "duration": 1.0,
-"texture": ExtResource("54_tex")
+"texture": ExtResource("6_peosv")
 }],
 "loop": false,
-"name": &"bark_east",
-"speed": 7.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("55_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("56_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("57_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("58_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("59_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("60_tex")
-}],
-"loop": false,
-"name": &"bark_north",
-"speed": 7.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("61_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("62_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("63_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("64_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("65_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("66_tex")
-}],
-"loop": false,
-"name": &"bark_south",
-"speed": 7.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("67_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("68_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("69_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("70_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("71_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("72_tex")
-}],
-"loop": false,
-"name": &"bark_west",
-"speed": 7.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("1_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("2_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("3_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("4_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("5_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("6_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("7_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("8_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_east",
+"name": &"attack_east",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("9_tex")
+"texture": ExtResource("7_wkwrw")
 }, {
 "duration": 1.0,
-"texture": ExtResource("10_tex")
+"texture": ExtResource("8_6v6b2")
 }, {
 "duration": 1.0,
-"texture": ExtResource("11_tex")
+"texture": ExtResource("9_3q1ho")
 }, {
 "duration": 1.0,
-"texture": ExtResource("12_tex")
+"texture": ExtResource("10_mv5w1")
 }, {
 "duration": 1.0,
-"texture": ExtResource("13_tex")
+"texture": ExtResource("11_pxc55")
 }, {
 "duration": 1.0,
-"texture": ExtResource("14_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("15_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("16_tex")
+"texture": ExtResource("12_bgwkj")
 }],
-"loop": true,
-"name": &"breathing-idle_north",
+"loop": false,
+"name": &"attack_north",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("17_tex")
+"texture": ExtResource("13_vwuu0")
 }, {
 "duration": 1.0,
-"texture": ExtResource("18_tex")
+"texture": ExtResource("14_akdgd")
 }, {
 "duration": 1.0,
-"texture": ExtResource("19_tex")
+"texture": ExtResource("15_feuoo")
 }, {
 "duration": 1.0,
-"texture": ExtResource("20_tex")
+"texture": ExtResource("16_povgb")
 }, {
 "duration": 1.0,
-"texture": ExtResource("21_tex")
+"texture": ExtResource("17_c6713")
 }, {
 "duration": 1.0,
-"texture": ExtResource("22_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("23_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("24_tex")
+"texture": ExtResource("18_xyink")
 }],
-"loop": true,
-"name": &"breathing-idle_south",
+"loop": false,
+"name": &"attack_south",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("25_tex")
+"texture": ExtResource("19_ds04m")
 }, {
 "duration": 1.0,
-"texture": ExtResource("26_tex")
+"texture": ExtResource("20_plend")
 }, {
 "duration": 1.0,
-"texture": ExtResource("27_tex")
+"texture": ExtResource("21_mdjy8")
 }, {
 "duration": 1.0,
-"texture": ExtResource("28_tex")
+"texture": ExtResource("22_fecdr")
 }, {
 "duration": 1.0,
-"texture": ExtResource("29_tex")
+"texture": ExtResource("23_51m07")
 }, {
 "duration": 1.0,
-"texture": ExtResource("30_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("31_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("32_tex")
+"texture": ExtResource("24_njggm")
 }],
-"loop": true,
-"name": &"breathing-idle_west",
+"loop": false,
+"name": &"attack_west",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("25_i2pdo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_a26t3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_y82nf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_y5w5i")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_b63o6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_6362v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_crmou")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_hqhwt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_nt8sv")
+}],
+"loop": false,
+"name": &"death_east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("34_covhh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_opmo3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_axh0v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("37_v6rie")
+}, {
+"duration": 1.0,
+"texture": ExtResource("38_qgj82")
+}, {
+"duration": 1.0,
+"texture": ExtResource("39_c465a")
+}, {
+"duration": 1.0,
+"texture": ExtResource("40_hhuky")
+}, {
+"duration": 1.0,
+"texture": ExtResource("41_hwsjx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("42_1gglv")
+}],
+"loop": false,
+"name": &"death_north",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("43_iatle")
+}, {
+"duration": 1.0,
+"texture": ExtResource("44_ponub")
+}, {
+"duration": 1.0,
+"texture": ExtResource("45_g4d8j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("46_mdg10")
+}, {
+"duration": 1.0,
+"texture": ExtResource("47_egm7a")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_xg56j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_pihom")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_ucpln")
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_rhk2j")
+}],
+"loop": false,
+"name": &"death_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("52_g7xjx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("53_yrd5o")
+}, {
+"duration": 1.0,
+"texture": ExtResource("54_1bjv0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("55_esyyq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("56_w4haa")
+}, {
+"duration": 1.0,
+"texture": ExtResource("57_3cqxc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("58_w3d2u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("59_6eua1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("60_yfhqs")
+}],
+"loop": false,
+"name": &"death_west",
 "speed": 5.0
 }, {
 "frames": [],
@@ -326,130 +338,118 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("73_tex")
+"texture": ExtResource("61_p8din")
 }, {
 "duration": 1.0,
-"texture": ExtResource("74_tex")
+"texture": ExtResource("62_cmf1h")
 }, {
 "duration": 1.0,
-"texture": ExtResource("75_tex")
+"texture": ExtResource("63_tcns2")
 }, {
 "duration": 1.0,
-"texture": ExtResource("76_tex")
+"texture": ExtResource("64_ooc36")
 }, {
 "duration": 1.0,
-"texture": ExtResource("77_tex")
+"texture": ExtResource("65_okngt")
 }, {
 "duration": 1.0,
-"texture": ExtResource("78_tex")
+"texture": ExtResource("66_6ch5l")
 }, {
 "duration": 1.0,
-"texture": ExtResource("79_tex")
+"texture": ExtResource("67_hlx0e")
 }, {
 "duration": 1.0,
-"texture": ExtResource("80_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("81_tex")
+"texture": ExtResource("68_r68xq")
 }],
-"loop": false,
-"name": &"falling-back-death_east",
+"loop": true,
+"name": &"idle_east",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("82_tex")
+"texture": ExtResource("69_g167h")
 }, {
 "duration": 1.0,
-"texture": ExtResource("83_tex")
+"texture": ExtResource("70_tw4hl")
 }, {
 "duration": 1.0,
-"texture": ExtResource("84_tex")
+"texture": ExtResource("71_btq18")
 }, {
 "duration": 1.0,
-"texture": ExtResource("85_tex")
+"texture": ExtResource("72_wh6my")
 }, {
 "duration": 1.0,
-"texture": ExtResource("86_tex")
+"texture": ExtResource("73_jnuhm")
 }, {
 "duration": 1.0,
-"texture": ExtResource("87_tex")
+"texture": ExtResource("74_l5835")
 }, {
 "duration": 1.0,
-"texture": ExtResource("88_tex")
+"texture": ExtResource("75_n2pgr")
 }, {
 "duration": 1.0,
-"texture": ExtResource("89_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("90_tex")
+"texture": ExtResource("76_6638u")
 }],
-"loop": false,
-"name": &"falling-back-death_north",
+"loop": true,
+"name": &"idle_north",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("91_tex")
+"texture": ExtResource("77_r5hey")
 }, {
 "duration": 1.0,
-"texture": ExtResource("92_tex")
+"texture": ExtResource("78_b0xgc")
 }, {
 "duration": 1.0,
-"texture": ExtResource("93_tex")
+"texture": ExtResource("79_dhfyd")
 }, {
 "duration": 1.0,
-"texture": ExtResource("94_tex")
+"texture": ExtResource("80_resa6")
 }, {
 "duration": 1.0,
-"texture": ExtResource("95_tex")
+"texture": ExtResource("81_spjjl")
 }, {
 "duration": 1.0,
-"texture": ExtResource("96_tex")
+"texture": ExtResource("82_lstpg")
 }, {
 "duration": 1.0,
-"texture": ExtResource("97_tex")
+"texture": ExtResource("83_17dgc")
 }, {
 "duration": 1.0,
-"texture": ExtResource("98_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("99_tex")
+"texture": ExtResource("84_gr482")
 }],
-"loop": false,
-"name": &"falling-back-death_south",
+"loop": true,
+"name": &"idle_south",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("100_tex")
+"texture": ExtResource("85_j5nru")
 }, {
 "duration": 1.0,
-"texture": ExtResource("101_tex")
+"texture": ExtResource("86_tudrc")
 }, {
 "duration": 1.0,
-"texture": ExtResource("102_tex")
+"texture": ExtResource("87_6rjx4")
 }, {
 "duration": 1.0,
-"texture": ExtResource("103_tex")
+"texture": ExtResource("88_666w4")
 }, {
 "duration": 1.0,
-"texture": ExtResource("104_tex")
+"texture": ExtResource("89_4yuo6")
 }, {
 "duration": 1.0,
-"texture": ExtResource("105_tex")
+"texture": ExtResource("90_v0w74")
 }, {
 "duration": 1.0,
-"texture": ExtResource("106_tex")
+"texture": ExtResource("91_pu15d")
 }, {
 "duration": 1.0,
-"texture": ExtResource("107_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("108_tex")
+"texture": ExtResource("92_atq1h")
 }],
-"loop": false,
-"name": &"falling-back-death_west",
+"loop": true,
+"name": &"idle_west",
 "speed": 5.0
 }, {
 "frames": [{

@@ -17,7 +17,7 @@ public abstract partial class Actor : CombatCharacter
     private const float ShortRangeDirectMovementDistance = 24.0f;
 
     [Export]
-    public StringName DeathAnimation { get; set; } = "falling-back-death";
+    public StringName DeathAnimation { get; set; } = "death";
 
     [Export]
     public float HomeReturnTolerance { get; set; } = 4.0f;

@@ -276,8 +276,8 @@ public partial class DebugSpawner : Node2D
         }
 
         var spriteFrames = animatedSprite.SpriteFrames;
-        var animationName = spriteFrames.HasAnimation("breathing-idle_south") ?
-            (StringName)"breathing-idle_south" :
+        var animationName = spriteFrames.HasAnimation("idle_south") ?
+            (StringName)"idle_south" :
             (spriteFrames.HasAnimation("walk_south") ? (StringName)"walk_south" : new StringName());
         var texture = animationName.IsEmpty ? null : spriteFrames.GetFrameTexture(animationName, 0);
 

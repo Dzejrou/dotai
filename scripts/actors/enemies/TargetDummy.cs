@@ -6,12 +6,16 @@ using System;
 public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IFactionMember
 {
     private static readonly Color InactiveModulate = new Color(0.55f, 0.55f, 0.55f, 0.45f);
+    private const string DefaultVisualDirection = "south";
 
     [Export]
     public int MaxHealth { get; set; } = 99;
 
     [Export]
     public float RespawnDelaySeconds { get; set; } = 30.0f;
+
+    [Export(PropertyHint.Enum, "south,east,west,north")]
+    public string VisualDirection { get; set; } = DefaultVisualDirection;
 
     public bool CanBeTargeted => !_isDead;
     public Faction Faction => _faction.Current;
@@ -133,9 +137,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         if (_animatedSprite == null)
             return;
 
-        _animatedSprite.Modulate = Colors.White;
-        if (_animatedSprite.SpriteFrames != null && _animatedSprite.SpriteFrames.HasAnimation("breathing-idle_south"))
-            _animatedSprite.Play("breathing-idle_south");
+        ApplyVisualState(Colors.White);
     }
 
     private void ApplyInactiveVisualState()
@@ -143,9 +145,45 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         if (_animatedSprite == null)
             return;
 
+        ApplyVisualState(InactiveModulate);
+    }
+
+    private void ApplyVisualState(Color modulate)
+    {
+        if (_animatedSprite == null)
+            return;
+
         _animatedSprite.Stop();
-        _animatedSprite.Animation = "breathing-idle_south";
-        _animatedSprite.SetFrame(0);
-        _animatedSprite.Modulate = InactiveModulate;
+        _animatedSprite.Modulate = modulate;
+
+        var animationName = ResolveVisualAnimationName();
+        if (animationName.IsEmpty)
+            return;
+
+        _animatedSprite.Animation = animationName;
+        _animatedSprite.SetFrameAndProgress(0, 0.0f);
+    }
+
+    private StringName ResolveVisualAnimationName()
+    {
+        if (_animatedSprite?.SpriteFrames == null)
+            return new StringName();
+
+        var spriteFrames = _animatedSprite.SpriteFrames;
+        var requestedDirection = ResolveCardinalVisualDirection();
+        if (spriteFrames.HasAnimation(requestedDirection))
+            return requestedDirection;
+
+        if (spriteFrames.HasAnimation(DefaultVisualDirection))
+            return DefaultVisualDirection;
+
+        var animationNames = spriteFrames.GetAnimationNames();
+        return animationNames.Length > 0 ? animationNames[0] : new StringName();
+    }
+
+    private string ResolveCardinalVisualDirection()
+    {
+        var requestedDirection = string.IsNullOrWhiteSpace(VisualDirection) ? DefaultVisualDirection : VisualDirection;
+        return DirectionHelper.GetCardinalFallbackDirectionName(requestedDirection);
     }
 }

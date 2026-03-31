@@ -15,7 +15,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
     public float AttackCooldown { get; set; } = 1.0f;
 
     [Export]
-    public StringName AttackAnimation { get; set; } = "cross-punch";
+    public StringName AttackAnimation { get; set; } = "attack";
 
     [Export]
     public int MinimumDamage { get; set; } = 1;

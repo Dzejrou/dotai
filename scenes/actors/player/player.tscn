@@ -27,7 +27,7 @@ HealthRegenerationAmount = 2
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=630505674]
 sprite_frames = ExtResource("3_player_frames")
-animation = &"breathing-idle_south"
+animation = &""
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=994826957]
 position = Vector2(0, 6)

@@ -1,145 +1,145 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://chvtla7o3is13"]
 
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_000.png" id="1_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_001.png" id="2_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_002.png" id="3_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_003.png" id="4_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_004.png" id="5_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_005.png" id="6_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_006.png" id="7_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_007.png" id="8_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/east/frame_008.png" id="9_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_000.png" id="10_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_001.png" id="11_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_002.png" id="12_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_003.png" id="13_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_004.png" id="14_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_005.png" id="15_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_006.png" id="16_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_007.png" id="17_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north/frame_008.png" id="18_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-east/frame_000.png" id="19_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-east/frame_001.png" id="20_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-east/frame_002.png" id="21_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-east/frame_003.png" id="22_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-east/frame_004.png" id="23_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-east/frame_005.png" id="24_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-east/frame_006.png" id="25_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-east/frame_007.png" id="26_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-west/frame_000.png" id="27_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-west/frame_001.png" id="28_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-west/frame_002.png" id="29_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-west/frame_003.png" id="30_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-west/frame_004.png" id="31_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-west/frame_005.png" id="32_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-west/frame_006.png" id="33_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/north-west/frame_007.png" id="34_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_000.png" id="35_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_001.png" id="36_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_002.png" id="37_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_003.png" id="38_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_004.png" id="39_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_005.png" id="40_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_006.png" id="41_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_007.png" id="42_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south/frame_008.png" id="43_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-east/frame_000.png" id="44_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-east/frame_001.png" id="45_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-east/frame_002.png" id="46_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-east/frame_003.png" id="47_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-east/frame_004.png" id="48_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-east/frame_005.png" id="49_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-east/frame_006.png" id="50_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-east/frame_007.png" id="51_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-west/frame_000.png" id="52_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-west/frame_001.png" id="53_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-west/frame_002.png" id="54_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-west/frame_003.png" id="55_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-west/frame_004.png" id="56_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-west/frame_005.png" id="57_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-west/frame_006.png" id="58_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/south-west/frame_007.png" id="59_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_000.png" id="60_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_001.png" id="61_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_002.png" id="62_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_003.png" id="63_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_004.png" id="64_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_005.png" id="65_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_006.png" id="66_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_007.png" id="67_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/breathing-idle/west/frame_008.png" id="68_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_000.png" id="69_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_001.png" id="70_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_002.png" id="71_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_003.png" id="72_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_004.png" id="73_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_005.png" id="74_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_006.png" id="75_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_007.png" id="76_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/east/frame_008.png" id="77_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_000.png" id="78_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_001.png" id="79_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_002.png" id="80_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_003.png" id="81_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_004.png" id="82_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_005.png" id="83_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_006.png" id="84_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_007.png" id="85_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/north/frame_008.png" id="86_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_000.png" id="87_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_001.png" id="88_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_002.png" id="89_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_003.png" id="90_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_004.png" id="91_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_005.png" id="92_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_006.png" id="93_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_007.png" id="94_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/south/frame_008.png" id="95_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_000.png" id="96_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_001.png" id="97_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_002.png" id="98_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_003.png" id="99_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_004.png" id="100_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_005.png" id="101_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_006.png" id="102_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_007.png" id="103_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/cross-punch/west/frame_008.png" id="104_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_000.png" id="105_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_001.png" id="106_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_002.png" id="107_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_003.png" id="108_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_004.png" id="109_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_005.png" id="110_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_006.png" id="111_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_007.png" id="112_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/east/frame_008.png" id="113_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_000.png" id="114_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_001.png" id="115_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_002.png" id="116_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_003.png" id="117_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_004.png" id="118_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_005.png" id="119_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_006.png" id="120_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_007.png" id="121_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/north/frame_008.png" id="122_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_000.png" id="123_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_001.png" id="124_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_002.png" id="125_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_003.png" id="126_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_004.png" id="127_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_005.png" id="128_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_006.png" id="129_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_007.png" id="130_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/south/frame_008.png" id="131_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_000.png" id="132_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_001.png" id="133_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_002.png" id="134_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_003.png" id="135_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_004.png" id="136_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_005.png" id="137_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_006.png" id="138_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_007.png" id="139_tex"]
-[ext_resource type="Texture2D" path="res://assets/skeleton/falling-back-death/west/frame_008.png" id="140_tex"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_000.png" id="1_ovvfe"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_001.png" id="2_xdfcy"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_002.png" id="3_6chbe"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_003.png" id="4_q4er6"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_004.png" id="5_nc5h4"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_005.png" id="6_mrbyb"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_006.png" id="7_144gu"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_007.png" id="8_mkn6i"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/east/frame_008.png" id="9_4m7dq"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_000.png" id="10_vaac4"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_001.png" id="11_jl7ou"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_002.png" id="12_cfwdn"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_003.png" id="13_werkn"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_004.png" id="14_sua1u"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_005.png" id="15_qwxd5"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_006.png" id="16_kpoxi"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_007.png" id="17_ah6tq"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/north/frame_008.png" id="18_2wdvw"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_000.png" id="19_tdaku"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_001.png" id="20_8gjxu"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_002.png" id="21_cajjn"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_003.png" id="22_1i2vw"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_004.png" id="23_tynn1"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_005.png" id="24_b286o"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_006.png" id="25_45dvg"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_007.png" id="26_upcsl"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/south/frame_008.png" id="27_hce4h"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_000.png" id="28_o6cwv"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_001.png" id="29_61fcg"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_002.png" id="30_jvvrh"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_003.png" id="31_pthaj"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_004.png" id="32_tbke8"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_005.png" id="33_ifkcv"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_006.png" id="34_beaqt"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_007.png" id="35_bwb0a"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/attack/west/frame_008.png" id="36_44edy"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_000.png" id="37_5sd8j"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_001.png" id="38_tpwqu"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_002.png" id="39_ybm0b"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_003.png" id="40_lit8a"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_004.png" id="41_ac4qm"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_005.png" id="42_x33j7"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_006.png" id="43_3sbng"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_007.png" id="44_so2gj"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/east/frame_008.png" id="45_0602c"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_000.png" id="46_1fgg3"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_001.png" id="47_on8un"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_002.png" id="48_oq3pq"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_003.png" id="49_rxpu3"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_004.png" id="50_xx76s"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_005.png" id="51_3pwea"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_006.png" id="52_gegje"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_007.png" id="53_g7qy6"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/north/frame_008.png" id="54_d4sve"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_000.png" id="55_ln2j0"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_001.png" id="56_h4jpr"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_002.png" id="57_75iha"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_003.png" id="58_0cylr"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_004.png" id="59_ms2hv"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_005.png" id="60_ik2tc"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_006.png" id="61_u5yev"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_007.png" id="62_o4gm2"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/south/frame_008.png" id="63_rrsqh"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_000.png" id="64_t17mw"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_001.png" id="65_urnfa"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_002.png" id="66_ecxcr"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_003.png" id="67_thmer"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_004.png" id="68_xx65o"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_005.png" id="69_tjvx7"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_006.png" id="70_cbghx"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_007.png" id="71_1cdf8"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/death/west/frame_008.png" id="72_v7oa6"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_000.png" id="73_k128l"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_001.png" id="74_cseme"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_002.png" id="75_4rpkd"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_003.png" id="76_h7il1"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_004.png" id="77_t6t4j"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_005.png" id="78_yx5wo"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_006.png" id="79_tiqpx"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_007.png" id="80_v800h"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/east/frame_008.png" id="81_4sbtu"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_000.png" id="82_3n3g7"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_001.png" id="83_q7eqw"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_002.png" id="84_4jmw5"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_003.png" id="85_xoblh"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_004.png" id="86_t2udr"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_005.png" id="87_35me1"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_006.png" id="88_vmgra"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_007.png" id="89_bsmkf"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north/frame_008.png" id="90_io708"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-east/frame_000.png" id="91_qt7us"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-east/frame_001.png" id="92_jht5x"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-east/frame_002.png" id="93_gue7g"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-east/frame_003.png" id="94_hwbh3"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-east/frame_004.png" id="95_phe5w"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-east/frame_005.png" id="96_segbj"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-east/frame_006.png" id="97_r3kn1"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-east/frame_007.png" id="98_ln38c"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-west/frame_000.png" id="99_x3jta"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-west/frame_001.png" id="100_vgc3e"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-west/frame_002.png" id="101_ytf8y"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-west/frame_003.png" id="102_yxnno"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-west/frame_004.png" id="103_647ek"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-west/frame_005.png" id="104_dh8es"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-west/frame_006.png" id="105_bpygl"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/north-west/frame_007.png" id="106_6x8f5"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_000.png" id="107_ntejh"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_001.png" id="108_16xb7"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_002.png" id="109_kwu5f"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_003.png" id="110_5v2wt"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_004.png" id="111_lovwu"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_005.png" id="112_bggon"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_006.png" id="113_t2i13"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_007.png" id="114_gu0eq"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south/frame_008.png" id="115_50cry"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-east/frame_000.png" id="116_c1rln"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-east/frame_001.png" id="117_oawjs"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-east/frame_002.png" id="118_llfeh"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-east/frame_003.png" id="119_qrqij"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-east/frame_004.png" id="120_0iwpq"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-east/frame_005.png" id="121_l6kgh"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-east/frame_006.png" id="122_dbdya"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-east/frame_007.png" id="123_dqt1k"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-west/frame_000.png" id="124_er27b"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-west/frame_001.png" id="125_krqjy"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-west/frame_002.png" id="126_di43i"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-west/frame_003.png" id="127_j836c"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-west/frame_004.png" id="128_1bh8r"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-west/frame_005.png" id="129_axiwb"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-west/frame_006.png" id="130_srkbt"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/south-west/frame_007.png" id="131_kj16c"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_000.png" id="132_t8sn8"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_001.png" id="133_73alv"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_002.png" id="134_uqiw2"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_003.png" id="135_75jw3"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_004.png" id="136_nk3lo"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_005.png" id="137_lo5fd"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_006.png" id="138_rj8k3"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_007.png" id="139_yny5i"]
+[ext_resource type="Texture2D" path="res://assets/skeleton/idle/west/frame_008.png" id="140_fmq33"]
 [ext_resource type="Texture2D" path="res://assets/skeleton/walk/east/frame_000.png" id="141_tex"]
 [ext_resource type="Texture2D" path="res://assets/skeleton/walk/east/frame_001.png" id="142_tex"]
 [ext_resource type="Texture2D" path="res://assets/skeleton/walk/east/frame_002.png" id="143_tex"]
@@ -213,374 +213,258 @@
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_tex")
+"texture": ExtResource("1_ovvfe")
 }, {
 "duration": 1.0,
-"texture": ExtResource("2_tex")
+"texture": ExtResource("2_xdfcy")
 }, {
 "duration": 1.0,
-"texture": ExtResource("3_tex")
+"texture": ExtResource("3_6chbe")
 }, {
 "duration": 1.0,
-"texture": ExtResource("4_tex")
+"texture": ExtResource("4_q4er6")
 }, {
 "duration": 1.0,
-"texture": ExtResource("5_tex")
+"texture": ExtResource("5_nc5h4")
 }, {
 "duration": 1.0,
-"texture": ExtResource("6_tex")
+"texture": ExtResource("6_mrbyb")
 }, {
 "duration": 1.0,
-"texture": ExtResource("7_tex")
+"texture": ExtResource("7_144gu")
 }, {
 "duration": 1.0,
-"texture": ExtResource("8_tex")
+"texture": ExtResource("8_mkn6i")
 }, {
 "duration": 1.0,
-"texture": ExtResource("9_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_east",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("10_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("11_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("12_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("13_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("14_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("15_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("16_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("17_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("18_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_north",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("19_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("20_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("21_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("22_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("23_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("24_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("25_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("26_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_north-east",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("27_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("28_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("29_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("30_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("31_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("32_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("33_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("34_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_north-west",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("35_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("36_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("37_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("38_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("39_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("40_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("41_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("42_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("43_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_south",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("44_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("45_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("46_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("47_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("48_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("49_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("50_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("51_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_south-east",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("52_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("53_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("54_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("55_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("56_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("57_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("58_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("59_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_south-west",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("60_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("61_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("62_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("63_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("64_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("65_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("66_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("67_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("68_tex")
-}],
-"loop": true,
-"name": &"breathing-idle_west",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("69_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("70_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("71_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("72_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("73_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("74_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("75_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("76_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("77_tex")
+"texture": ExtResource("9_4m7dq")
 }],
 "loop": false,
-"name": &"cross-punch_east",
+"name": &"attack_east",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("78_tex")
+"texture": ExtResource("10_vaac4")
 }, {
 "duration": 1.0,
-"texture": ExtResource("79_tex")
+"texture": ExtResource("11_jl7ou")
 }, {
 "duration": 1.0,
-"texture": ExtResource("80_tex")
+"texture": ExtResource("12_cfwdn")
 }, {
 "duration": 1.0,
-"texture": ExtResource("81_tex")
+"texture": ExtResource("13_werkn")
 }, {
 "duration": 1.0,
-"texture": ExtResource("82_tex")
+"texture": ExtResource("14_sua1u")
 }, {
 "duration": 1.0,
-"texture": ExtResource("83_tex")
+"texture": ExtResource("15_qwxd5")
 }, {
 "duration": 1.0,
-"texture": ExtResource("84_tex")
+"texture": ExtResource("16_kpoxi")
 }, {
 "duration": 1.0,
-"texture": ExtResource("85_tex")
+"texture": ExtResource("17_ah6tq")
 }, {
 "duration": 1.0,
-"texture": ExtResource("86_tex")
+"texture": ExtResource("18_2wdvw")
 }],
 "loop": false,
-"name": &"cross-punch_north",
+"name": &"attack_north",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("87_tex")
+"texture": ExtResource("19_tdaku")
 }, {
 "duration": 1.0,
-"texture": ExtResource("88_tex")
+"texture": ExtResource("20_8gjxu")
 }, {
 "duration": 1.0,
-"texture": ExtResource("89_tex")
+"texture": ExtResource("21_cajjn")
 }, {
 "duration": 1.0,
-"texture": ExtResource("90_tex")
+"texture": ExtResource("22_1i2vw")
 }, {
 "duration": 1.0,
-"texture": ExtResource("91_tex")
+"texture": ExtResource("23_tynn1")
 }, {
 "duration": 1.0,
-"texture": ExtResource("92_tex")
+"texture": ExtResource("24_b286o")
 }, {
 "duration": 1.0,
-"texture": ExtResource("93_tex")
+"texture": ExtResource("25_45dvg")
 }, {
 "duration": 1.0,
-"texture": ExtResource("94_tex")
+"texture": ExtResource("26_upcsl")
 }, {
 "duration": 1.0,
-"texture": ExtResource("95_tex")
+"texture": ExtResource("27_hce4h")
 }],
 "loop": false,
-"name": &"cross-punch_south",
+"name": &"attack_south",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("96_tex")
+"texture": ExtResource("28_o6cwv")
 }, {
 "duration": 1.0,
-"texture": ExtResource("97_tex")
+"texture": ExtResource("29_61fcg")
 }, {
 "duration": 1.0,
-"texture": ExtResource("98_tex")
+"texture": ExtResource("30_jvvrh")
 }, {
 "duration": 1.0,
-"texture": ExtResource("99_tex")
+"texture": ExtResource("31_pthaj")
 }, {
 "duration": 1.0,
-"texture": ExtResource("100_tex")
+"texture": ExtResource("32_tbke8")
 }, {
 "duration": 1.0,
-"texture": ExtResource("101_tex")
+"texture": ExtResource("33_ifkcv")
 }, {
 "duration": 1.0,
-"texture": ExtResource("102_tex")
+"texture": ExtResource("34_beaqt")
 }, {
 "duration": 1.0,
-"texture": ExtResource("103_tex")
+"texture": ExtResource("35_bwb0a")
 }, {
 "duration": 1.0,
-"texture": ExtResource("104_tex")
+"texture": ExtResource("36_44edy")
 }],
 "loop": false,
-"name": &"cross-punch_west",
+"name": &"attack_west",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("37_5sd8j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("38_tpwqu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("39_ybm0b")
+}, {
+"duration": 1.0,
+"texture": ExtResource("40_lit8a")
+}, {
+"duration": 1.0,
+"texture": ExtResource("41_ac4qm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("42_x33j7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("43_3sbng")
+}, {
+"duration": 1.0,
+"texture": ExtResource("44_so2gj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("45_0602c")
+}],
+"loop": false,
+"name": &"death_east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("46_1fgg3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("47_on8un")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_oq3pq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_rxpu3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_xx76s")
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_3pwea")
+}, {
+"duration": 1.0,
+"texture": ExtResource("52_gegje")
+}, {
+"duration": 1.0,
+"texture": ExtResource("53_g7qy6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("54_d4sve")
+}],
+"loop": false,
+"name": &"death_north",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("55_ln2j0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("56_h4jpr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("57_75iha")
+}, {
+"duration": 1.0,
+"texture": ExtResource("58_0cylr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("59_ms2hv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("60_ik2tc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("61_u5yev")
+}, {
+"duration": 1.0,
+"texture": ExtResource("62_o4gm2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("63_rrsqh")
+}],
+"loop": false,
+"name": &"death_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("64_t17mw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("65_urnfa")
+}, {
+"duration": 1.0,
+"texture": ExtResource("66_ecxcr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("67_thmer")
+}, {
+"duration": 1.0,
+"texture": ExtResource("68_xx65o")
+}, {
+"duration": 1.0,
+"texture": ExtResource("69_tjvx7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("70_cbghx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("71_1cdf8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("72_v7oa6")
+}],
+"loop": false,
+"name": &"death_west",
 "speed": 5.0
 }, {
 "frames": [],
@@ -590,130 +474,246 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("105_tex")
+"texture": ExtResource("73_k128l")
 }, {
 "duration": 1.0,
-"texture": ExtResource("106_tex")
+"texture": ExtResource("74_cseme")
 }, {
 "duration": 1.0,
-"texture": ExtResource("107_tex")
+"texture": ExtResource("75_4rpkd")
 }, {
 "duration": 1.0,
-"texture": ExtResource("108_tex")
+"texture": ExtResource("76_h7il1")
 }, {
 "duration": 1.0,
-"texture": ExtResource("109_tex")
+"texture": ExtResource("77_t6t4j")
 }, {
 "duration": 1.0,
-"texture": ExtResource("110_tex")
+"texture": ExtResource("78_yx5wo")
 }, {
 "duration": 1.0,
-"texture": ExtResource("111_tex")
+"texture": ExtResource("79_tiqpx")
 }, {
 "duration": 1.0,
-"texture": ExtResource("112_tex")
+"texture": ExtResource("80_v800h")
 }, {
 "duration": 1.0,
-"texture": ExtResource("113_tex")
+"texture": ExtResource("81_4sbtu")
 }],
-"loop": false,
-"name": &"falling-back-death_east",
+"loop": true,
+"name": &"idle_east",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("114_tex")
+"texture": ExtResource("82_3n3g7")
 }, {
 "duration": 1.0,
-"texture": ExtResource("115_tex")
+"texture": ExtResource("83_q7eqw")
 }, {
 "duration": 1.0,
-"texture": ExtResource("116_tex")
+"texture": ExtResource("84_4jmw5")
 }, {
 "duration": 1.0,
-"texture": ExtResource("117_tex")
+"texture": ExtResource("85_xoblh")
 }, {
 "duration": 1.0,
-"texture": ExtResource("118_tex")
+"texture": ExtResource("86_t2udr")
 }, {
 "duration": 1.0,
-"texture": ExtResource("119_tex")
+"texture": ExtResource("87_35me1")
 }, {
 "duration": 1.0,
-"texture": ExtResource("120_tex")
+"texture": ExtResource("88_vmgra")
 }, {
 "duration": 1.0,
-"texture": ExtResource("121_tex")
+"texture": ExtResource("89_bsmkf")
 }, {
 "duration": 1.0,
-"texture": ExtResource("122_tex")
+"texture": ExtResource("90_io708")
 }],
-"loop": false,
-"name": &"falling-back-death_north",
+"loop": true,
+"name": &"idle_north",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("123_tex")
+"texture": ExtResource("91_qt7us")
 }, {
 "duration": 1.0,
-"texture": ExtResource("124_tex")
+"texture": ExtResource("92_jht5x")
 }, {
 "duration": 1.0,
-"texture": ExtResource("125_tex")
+"texture": ExtResource("93_gue7g")
 }, {
 "duration": 1.0,
-"texture": ExtResource("126_tex")
+"texture": ExtResource("94_hwbh3")
 }, {
 "duration": 1.0,
-"texture": ExtResource("127_tex")
+"texture": ExtResource("95_phe5w")
 }, {
 "duration": 1.0,
-"texture": ExtResource("128_tex")
+"texture": ExtResource("96_segbj")
 }, {
 "duration": 1.0,
-"texture": ExtResource("129_tex")
+"texture": ExtResource("97_r3kn1")
 }, {
 "duration": 1.0,
-"texture": ExtResource("130_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("131_tex")
+"texture": ExtResource("98_ln38c")
 }],
-"loop": false,
-"name": &"falling-back-death_south",
+"loop": true,
+"name": &"idle_north-east",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("132_tex")
+"texture": ExtResource("99_x3jta")
 }, {
 "duration": 1.0,
-"texture": ExtResource("133_tex")
+"texture": ExtResource("100_vgc3e")
 }, {
 "duration": 1.0,
-"texture": ExtResource("134_tex")
+"texture": ExtResource("101_ytf8y")
 }, {
 "duration": 1.0,
-"texture": ExtResource("135_tex")
+"texture": ExtResource("102_yxnno")
 }, {
 "duration": 1.0,
-"texture": ExtResource("136_tex")
+"texture": ExtResource("103_647ek")
 }, {
 "duration": 1.0,
-"texture": ExtResource("137_tex")
+"texture": ExtResource("104_dh8es")
 }, {
 "duration": 1.0,
-"texture": ExtResource("138_tex")
+"texture": ExtResource("105_bpygl")
 }, {
 "duration": 1.0,
-"texture": ExtResource("139_tex")
-}, {
-"duration": 1.0,
-"texture": ExtResource("140_tex")
+"texture": ExtResource("106_6x8f5")
 }],
-"loop": false,
-"name": &"falling-back-death_west",
+"loop": true,
+"name": &"idle_north-west",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("107_ntejh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("108_16xb7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("109_kwu5f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("110_5v2wt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("111_lovwu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("112_bggon")
+}, {
+"duration": 1.0,
+"texture": ExtResource("113_t2i13")
+}, {
+"duration": 1.0,
+"texture": ExtResource("114_gu0eq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("115_50cry")
+}],
+"loop": true,
+"name": &"idle_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("116_c1rln")
+}, {
+"duration": 1.0,
+"texture": ExtResource("117_oawjs")
+}, {
+"duration": 1.0,
+"texture": ExtResource("118_llfeh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("119_qrqij")
+}, {
+"duration": 1.0,
+"texture": ExtResource("120_0iwpq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("121_l6kgh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("122_dbdya")
+}, {
+"duration": 1.0,
+"texture": ExtResource("123_dqt1k")
+}],
+"loop": true,
+"name": &"idle_south-east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("124_er27b")
+}, {
+"duration": 1.0,
+"texture": ExtResource("125_krqjy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("126_di43i")
+}, {
+"duration": 1.0,
+"texture": ExtResource("127_j836c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("128_1bh8r")
+}, {
+"duration": 1.0,
+"texture": ExtResource("129_axiwb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("130_srkbt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("131_kj16c")
+}],
+"loop": true,
+"name": &"idle_south-west",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("132_t8sn8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("133_73alv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("134_uqiw2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("135_75jw3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("136_nk3lo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("137_lo5fd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("138_rj8k3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("139_yny5i")
+}, {
+"duration": 1.0,
+"texture": ExtResource("140_fmq33")
+}],
+"loop": true,
+"name": &"idle_west",
 "speed": 5.0
 }, {
 "frames": [{

@@ -24,7 +24,7 @@ script = ExtResource("1_wolf_script")
 position = Vector2(0, 4)
 scale = Vector2(1.05, 1.05)
 sprite_frames = ExtResource("2_wolf_frames")
-animation = &"breathing-idle_south"
+animation = &""
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1268675786]
 avoidance_enabled = true
@@ -50,7 +50,8 @@ script = ExtResource("14_faction_state")
 script = ExtResource("15_melee_action")
 PreferredRange = 42.0
 AttackCooldown = 0.85
-AttackAnimation = &"bark"
+AttackAnimation = &"attack"
+AnimationSpeedMultiplier = 1.4
 MaximumDamage = 3
 
 [node name="Behaviors" type="Node" parent="." unique_id=24580142]

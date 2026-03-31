@@ -20,7 +20,7 @@ public partial class RangedAttackController : Node, ICombatActionController
     public float AttackCooldown { get; set; } = 1.2f;
 
     [Export]
-    public StringName AttackAnimation { get; set; } = "shooting-bow";
+    public StringName AttackAnimation { get; set; } = "attack";
 
     [Export]
     public PackedScene ProjectileScene { get; set; }
@@ -38,7 +38,7 @@ public partial class RangedAttackController : Node, ICombatActionController
     public float ProjectileMaxTravelDistance { get; set; } = 320.0f;
 
     [Export]
-    public float AnimationSpeedMultiplier { get; set; } = 1.0f;
+    public float AnimationSpeedMultiplier { get; set; } = 2.0f;
 
     public override void _Ready()
     {

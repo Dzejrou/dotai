@@ -40,7 +40,7 @@ public abstract partial class AnimatedCharacter : CharacterBody2D
 
     protected string GetIdleAnimationName()
     {
-        return ResolveDirectionalAnimationName("breathing-idle") ?? GetDirectionalAnimationName("breathing-idle");
+        return ResolveDirectionalAnimationName("idle") ?? GetDirectionalAnimationName("idle");
     }
 
     protected string GetWalkAnimationName()
