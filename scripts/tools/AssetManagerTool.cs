@@ -25,6 +25,7 @@ public partial class AssetManagerTool : Control
     private LineEdit _sourceDirectoryInput;
     private Label _sourceSummaryLabel;
     private Label _selectionLabel;
+    private ItemList _sourceBrowserList;
     private ItemList _asepriteFilesList;
     private Button _refreshButton;
     private Button _inspectButton;
@@ -34,6 +35,7 @@ public partial class AssetManagerTool : Control
     private Button _syncButton;
     private TextEdit _statusOutput;
     private bool _isBusy;
+    private List<SourceBrowserEntry> _sourceBrowserEntries = new();
     private List<string> _asepriteFiles = new();
 
     public override void _Ready()
@@ -72,6 +74,7 @@ public partial class AssetManagerTool : Control
         _sourceDirectoryInput = GetNode<LineEdit>("Margin/Panel/VBox/SourceRow/SourceDirectoryInput");
         _sourceSummaryLabel = GetNode<Label>("Margin/Panel/VBox/SummaryRow/SourceSummaryLabel");
         _selectionLabel = GetNode<Label>("Margin/Panel/VBox/SummaryRow/SelectionLabel");
+        _sourceBrowserList = GetNode<ItemList>("Margin/Panel/VBox/Body/FilesPanel/FilesVBox/SourceBrowser");
         _asepriteFilesList = GetNode<ItemList>("Margin/Panel/VBox/Body/FilesPanel/FilesVBox/AsepriteFiles");
         _refreshButton = GetNode<Button>("Margin/Panel/VBox/SourceRow/RefreshButton");
         _inspectButton = GetNode<Button>("Margin/Panel/VBox/Actions/InspectButton");
@@ -91,6 +94,9 @@ public partial class AssetManagerTool : Control
         _exportButton.Pressed += OnExportPressed;
         _syncButton.Pressed += OnSyncPressed;
         _sourceDirectoryInput.TextSubmitted += OnSourceDirectorySubmitted;
+        _sourceBrowserList.ItemSelected += OnSourceBrowserItemSelected;
+        _sourceBrowserList.ItemActivated += OnSourceBrowserItemActivated;
+        _sourceBrowserList.EmptyClicked += OnSourceBrowserEmptyClicked;
         _asepriteFilesList.ItemSelected += OnFileSelected;
         _asepriteFilesList.EmptyClicked += OnEmptyListClicked;
     }
@@ -267,6 +273,7 @@ public partial class AssetManagerTool : Control
     private void OnSourceDirectorySubmitted(string _submittedText)
     {
         OnRefreshPressed();
+        _sourceBrowserList.GrabFocus();
     }
 
     private void OnFileSelected(long _index)
@@ -278,6 +285,31 @@ public partial class AssetManagerTool : Control
     private void OnEmptyListClicked(Vector2 _position, long _mouseButtonIndex)
     {
         UpdateSelectionLabel();
+        UpdateActionState();
+    }
+
+    private void OnSourceBrowserItemSelected(long index)
+    {
+        UpdateActionState();
+    }
+
+    private void OnSourceBrowserItemActivated(long index)
+    {
+        var entry = GetSourceBrowserEntry(index);
+        if (entry == null)
+            return;
+
+        switch (entry.Type)
+        {
+            case SourceBrowserEntryType.ParentDirectory:
+            case SourceBrowserEntryType.Directory:
+                NavigateToSourceDirectory(entry.FullPath);
+                break;
+        }
+    }
+
+    private void OnSourceBrowserEmptyClicked(Vector2 _position, long _mouseButtonIndex)
+    {
         UpdateActionState();
     }
 
@@ -326,6 +358,8 @@ public partial class AssetManagerTool : Control
     private void RefreshAsepriteFiles()
     {
         var previousSelection = GetSelectedSourceFilePath();
+        _sourceBrowserList.Clear();
+        _sourceBrowserEntries = new List<SourceBrowserEntry>();
         _asepriteFilesList.Clear();
         _asepriteFiles = new List<string>();
 
@@ -339,8 +373,10 @@ public partial class AssetManagerTool : Control
             return;
         }
 
+        PopulateSourceBrowserEntries();
         _asepriteFiles = Directory
             .EnumerateFiles(ExternalSourceDirectory, "*.aseprite", SearchOption.TopDirectoryOnly)
+            .Where(path => !IsHiddenEntryName(Path.GetFileName(path)))
             .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -368,7 +404,6 @@ public partial class AssetManagerTool : Control
             selectedIndex = 0;
 
         _asepriteFilesList.Select(selectedIndex);
-        _asepriteFilesList.GrabFocus();
         UpdateSelectionLabel();
         UpdateActionState();
     }
@@ -405,6 +440,63 @@ public partial class AssetManagerTool : Control
     {
         var sourceFilePath = GetSelectedSourceFilePath();
         return sourceFilePath == null ? null : InferCharacterNameFromSourceFile(sourceFilePath);
+    }
+
+    private void PopulateSourceBrowserEntries()
+    {
+        var parentDirectory = Directory.GetParent(ExternalSourceDirectory);
+        if (parentDirectory != null)
+            AddSourceBrowserEntry(new SourceBrowserEntry("..", parentDirectory.FullName, SourceBrowserEntryType.ParentDirectory));
+
+        foreach (var directoryPath in Directory.EnumerateDirectories(ExternalSourceDirectory).OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+        {
+            if (IsHiddenEntryName(Path.GetFileName(directoryPath)))
+                continue;
+
+            var directoryName = $"{Path.GetFileName(directoryPath)}/";
+            AddSourceBrowserEntry(new SourceBrowserEntry(directoryName, directoryPath, SourceBrowserEntryType.Directory));
+        }
+
+        if (_sourceBrowserEntries.Count > 0)
+            _sourceBrowserList.Select(0);
+    }
+
+    private void AddSourceBrowserEntry(SourceBrowserEntry entry)
+    {
+        var index = _sourceBrowserEntries.Count;
+        _sourceBrowserEntries.Add(entry);
+        _sourceBrowserList.AddItem(entry.DisplayName);
+        _sourceBrowserList.SetItemTooltip(index, entry.FullPath);
+    }
+
+    private SourceBrowserEntry GetSourceBrowserEntry(long index)
+    {
+        if (index < 0 || index >= _sourceBrowserEntries.Count)
+            return null;
+
+        return _sourceBrowserEntries[(int)index];
+    }
+
+    private void NavigateToSourceDirectory(string directoryPath)
+    {
+        ExternalSourceDirectory = NormalizeDirectoryPath(directoryPath);
+        _sourceDirectoryInput.Text = ExternalSourceDirectory;
+        RefreshAsepriteFiles();
+        _sourceBrowserList.GrabFocus();
+    }
+
+    private void SelectAsepriteFile(string sourceFilePath, bool focusFileList)
+    {
+        var selectedIndex = _asepriteFiles.FindIndex(path => string.Equals(path, sourceFilePath, StringComparison.Ordinal));
+        if (selectedIndex < 0)
+            return;
+
+        _asepriteFilesList.Select(selectedIndex);
+        if (focusFileList)
+            _asepriteFilesList.GrabFocus();
+
+        UpdateSelectionLabel();
+        UpdateActionState();
     }
 
     private ExportResult ExportAsepriteFile(string sourceFilePath)
@@ -957,6 +1049,11 @@ public partial class AssetManagerTool : Control
         return Path.GetFileNameWithoutExtension(sourceFilePath);
     }
 
+    private static bool IsHiddenEntryName(string entryName)
+    {
+        return !string.IsNullOrEmpty(entryName) && entryName.StartsWith(".", StringComparison.Ordinal);
+    }
+
     private static bool DirExists(string path)
     {
         return DirAccess.Open(path) != null;
@@ -1224,6 +1321,17 @@ public partial class AssetManagerTool : Control
     private sealed record SourceInspection(
         string InputPath,
         IReadOnlyList<SourceAnimationGroup> Groups);
+
+    private sealed record SourceBrowserEntry(
+        string DisplayName,
+        string FullPath,
+        SourceBrowserEntryType Type);
+
+    private enum SourceBrowserEntryType
+    {
+        ParentDirectory,
+        Directory,
+    }
 
     private sealed record VerificationResult(
         string CharacterName,

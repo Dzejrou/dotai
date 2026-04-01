@@ -92,6 +92,16 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="BrowserLabel" type="Label" parent="Margin/Panel/VBox/Body/FilesPanel/FilesVBox"]
+layout_mode = 2
+text = "Directories"
+
+[node name="SourceBrowser" type="ItemList" parent="Margin/Panel/VBox/Body/FilesPanel/FilesVBox"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_horizontal = 3
+allow_reselect = true
+
 [node name="FilesLabel" type="Label" parent="Margin/Panel/VBox/Body/FilesPanel/FilesVBox"]
 layout_mode = 2
 text = "Aseprite Files"
