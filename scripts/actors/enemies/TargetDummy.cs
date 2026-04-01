@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IFactionMember
+public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFactionMember
 {
     private static readonly Color InactiveModulate = new Color(0.55f, 0.55f, 0.55f, 0.45f);
     private const string DefaultVisualDirection = "south";
@@ -14,14 +14,21 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
     [Export]
     public float RespawnDelaySeconds { get; set; } = 30.0f;
 
-    [Export(PropertyHint.Enum, "south,east,west,north")]
+    [Export(PropertyHint.Enum, "east,south-east,south,south-west,west,north-west,north,north-east")]
     public string VisualDirection { get; set; } = DefaultVisualDirection;
+
+    [Export] public Texture2D EastTexture { get; set; }
+    [Export] public Texture2D SouthEastTexture { get; set; }
+    [Export] public Texture2D SouthTexture { get; set; }
+    [Export] public Texture2D SouthWestTexture { get; set; }
+    [Export] public Texture2D WestTexture { get; set; }
+    [Export] public Texture2D NorthWestTexture { get; set; }
+    [Export] public Texture2D NorthTexture { get; set; }
+    [Export] public Texture2D NorthEastTexture { get; set; }
 
     public bool CanBeTargeted => !_isDead;
     public Faction Faction => _faction.Current;
 
-    private AnimatedSprite2D _animatedSprite;
-    private CollisionShape2D _collisionShape;
     private Timer _respawnTimer;
     private ActorHUD _actorHud;
     private FactionState _faction;
@@ -33,8 +40,7 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
 
     public override void _Ready()
     {
-        _animatedSprite = GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
-        _collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+        InitializeWorldObject();
         _respawnTimer = GetNodeOrNull<Timer>("RespawnTimer");
         _faction = GetNode<FactionState>("FactionState");
         _spawnPosition = GlobalPosition;
@@ -86,7 +92,6 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
 
         _isDead = true;
         _currentHealth = 0;
-        Velocity = Vector2.Zero;
         UpdateHud();
         SetCollisionEnabled(false);
         ApplyInactiveVisualState();
@@ -109,7 +114,6 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         GlobalPosition = _spawnPosition;
         _currentHealth = ResolvedMaxHealth;
         _isDead = false;
-        Velocity = Vector2.Zero;
         UpdateHud();
         SetCollisionEnabled(true);
         ApplyActiveVisualState();
@@ -124,66 +128,57 @@ public partial class TargetDummy : CharacterBody2D, IAttackable, ITargetable, IF
         _actorHud.SetFaction(Faction);
     }
 
-    private void SetCollisionEnabled(bool enabled)
-    {
-        if (_collisionShape == null)
-            return;
-
-        _collisionShape.SetDeferred("disabled", !enabled);
-    }
-
     private void ApplyActiveVisualState()
     {
-        if (_animatedSprite == null)
+        if (VisualSprite == null)
             return;
 
-        ApplyVisualState(Colors.White);
+        ApplyVisualState(ResolveVisualTexture(), Colors.White);
     }
 
     private void ApplyInactiveVisualState()
     {
-        if (_animatedSprite == null)
+        if (VisualSprite == null)
             return;
 
-        ApplyVisualState(InactiveModulate);
+        ApplyVisualState(ResolveVisualTexture(), InactiveModulate);
     }
 
-    private void ApplyVisualState(Color modulate)
+    private void ApplyVisualState(Texture2D texture, Color modulate)
     {
-        if (_animatedSprite == null)
+        if (VisualSprite == null)
             return;
 
-        _animatedSprite.Stop();
-        _animatedSprite.Modulate = modulate;
-
-        var animationName = ResolveVisualAnimationName();
-        if (animationName.IsEmpty)
-            return;
-
-        _animatedSprite.Animation = animationName;
-        _animatedSprite.SetFrameAndProgress(0, 0.0f);
+        VisualSprite.Texture = texture;
+        VisualSprite.Modulate = modulate;
     }
 
-    private StringName ResolveVisualAnimationName()
-    {
-        if (_animatedSprite?.SpriteFrames == null)
-            return new StringName();
-
-        var spriteFrames = _animatedSprite.SpriteFrames;
-        var requestedDirection = ResolveCardinalVisualDirection();
-        if (spriteFrames.HasAnimation(requestedDirection))
-            return requestedDirection;
-
-        if (spriteFrames.HasAnimation(DefaultVisualDirection))
-            return DefaultVisualDirection;
-
-        var animationNames = spriteFrames.GetAnimationNames();
-        return animationNames.Length > 0 ? animationNames[0] : new StringName();
-    }
-
-    private string ResolveCardinalVisualDirection()
+    private Texture2D ResolveVisualTexture()
     {
         var requestedDirection = string.IsNullOrWhiteSpace(VisualDirection) ? DefaultVisualDirection : VisualDirection;
-        return DirectionHelper.GetCardinalFallbackDirectionName(requestedDirection);
+        var fallbackDirection = DirectionHelper.GetCardinalFallbackDirectionName(requestedDirection);
+
+        return ResolveTextureForDirection(requestedDirection) ??
+               ResolveTextureForDirection(fallbackDirection) ??
+               SouthTexture ??
+               EastTexture ??
+               WestTexture ??
+               NorthTexture;
+    }
+
+    private Texture2D ResolveTextureForDirection(string direction)
+    {
+        return direction switch
+        {
+            "east" => EastTexture,
+            "south-east" => SouthEastTexture,
+            "south" => SouthTexture,
+            "south-west" => SouthWestTexture,
+            "west" => WestTexture,
+            "north-west" => NorthWestTexture,
+            "north" => NorthTexture,
+            "north-east" => NorthEastTexture,
+            _ => SouthTexture,
+        };
     }
 }

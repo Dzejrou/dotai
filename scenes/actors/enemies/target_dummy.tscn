@@ -1,22 +1,29 @@
 [gd_scene format=3 uid="uid://bt4xu4bcnkoj8"]
 
 [ext_resource type="Script" uid="uid://dv8pveudkxu6d" path="res://scripts/actors/enemies/TargetDummy.cs" id="1_target_dummy_script"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/target_dummy_spriteframes.tres" id="2_target_dummy_frames"]
-[ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
-[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
-[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="5_faction_state"]
+[ext_resource type="Texture2D" uid="uid://b1bqsk4quggtm" path="res://assets/target_dummy/rotations/east.png" id="2_east"]
+[ext_resource type="Texture2D" uid="uid://b5kjywmcvd2av" path="res://assets/target_dummy/rotations/north.png" id="3_north"]
+[ext_resource type="Texture2D" uid="uid://cbu6fkw68hivo" path="res://assets/target_dummy/rotations/south.png" id="4_south"]
+[ext_resource type="Texture2D" uid="uid://dkjr7wk0oh2re" path="res://assets/target_dummy/rotations/west.png" id="5_west"]
+[ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="6_actor_hud"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="7_combat_state"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="8_faction_state"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_target_dummy"]
 radius = 5.0
 height = 24.0
 
-[node name="TargetDummy" type="CharacterBody2D" unique_id=420334247]
+[node name="TargetDummy" type="StaticBody2D" unique_id=420334247]
 z_index = -1
 script = ExtResource("1_target_dummy_script")
+EastTexture = ExtResource("2_east")
+NorthTexture = ExtResource("3_north")
+SouthTexture = ExtResource("4_south")
+WestTexture = ExtResource("5_west")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=855488886]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=855488886]
 position = Vector2(0, -4)
-sprite_frames = ExtResource("2_target_dummy_frames")
+texture = ExtResource("4_south")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=653097583]
 position = Vector2(0, 12)
@@ -26,11 +33,11 @@ shape = SubResource("CapsuleShape2D_target_dummy")
 wait_time = 30.0
 one_shot = true
 
-[node name="ActorHUD" parent="." unique_id=329917461 instance=ExtResource("3_actor_hud")]
+[node name="ActorHUD" parent="." unique_id=329917461 instance=ExtResource("6_actor_hud")]
 
 [node name="CombatState" type="Node" parent="." unique_id=338730228]
-script = ExtResource("4_combat_state")
+script = ExtResource("7_combat_state")
 
 [node name="FactionState" type="Node" parent="." unique_id=1281307099]
-script = ExtResource("5_faction_state")
+script = ExtResource("8_faction_state")
 FactionKey = "neutral"
