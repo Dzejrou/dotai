@@ -50,6 +50,7 @@ script = ExtResource("15_faction_state")
 
 [node name="PrimaryActionController" type="Node" parent="." unique_id=272517061]
 script = ExtResource("16_melee_action")
+PreferredRange = 48.0
 AttackCooldown = 1.1
 MaximumDamage = 5
 
