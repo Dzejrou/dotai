@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 public partial class AssetManagerTool : Control
 {
@@ -15,6 +16,7 @@ public partial class AssetManagerTool : Control
     private const float DefaultAnimationSpeed = 5.0f;
     private const string DefaultExternalSourceDirectory = "/Users/jjindrak/Projects/pixelart/characters";
     private const string ExporterWrapperPath = "/Users/jjindrak/Projects/pixelart/scripts/export";
+    private const string InspectorWrapperPath = "/Users/jjindrak/Projects/pixelart/scripts/inspect";
 
     [Export]
     public string ExternalSourceDirectory { get; set; } = DefaultExternalSourceDirectory;
@@ -24,6 +26,8 @@ public partial class AssetManagerTool : Control
     private Label _selectionLabel;
     private ItemList _asepriteFilesList;
     private Button _refreshButton;
+    private Button _inspectButton;
+    private Button _verifyButton;
     private Button _exportButton;
     private Button _syncButton;
     private TextEdit _statusOutput;
@@ -53,7 +57,7 @@ public partial class AssetManagerTool : Control
 
         if (IsHeadlessRuntime())
         {
-            HandleStartupFailure(new InvalidOperationException("No headless action specified. Use --sync [--character NAME] or --export FILE."));
+            HandleStartupFailure(new InvalidOperationException("No headless action specified. Use --inspect FILE, --verify FILE, --sync [--character NAME], or --export FILE."));
             return;
         }
 
@@ -68,6 +72,8 @@ public partial class AssetManagerTool : Control
         _selectionLabel = GetNode<Label>("Margin/Panel/VBox/SummaryRow/SelectionLabel");
         _asepriteFilesList = GetNode<ItemList>("Margin/Panel/VBox/Body/FilesPanel/FilesVBox/AsepriteFiles");
         _refreshButton = GetNode<Button>("Margin/Panel/VBox/SourceRow/RefreshButton");
+        _inspectButton = GetNode<Button>("Margin/Panel/VBox/Actions/InspectButton");
+        _verifyButton = GetNode<Button>("Margin/Panel/VBox/Actions/VerifyButton");
         _exportButton = GetNode<Button>("Margin/Panel/VBox/Actions/ExportButton");
         _syncButton = GetNode<Button>("Margin/Panel/VBox/Actions/SyncButton");
         _statusOutput = GetNode<TextEdit>("Margin/Panel/VBox/Body/StatusPanel/StatusVBox/StatusOutput");
@@ -76,6 +82,8 @@ public partial class AssetManagerTool : Control
     private void WireUiSignals()
     {
         _refreshButton.Pressed += OnRefreshPressed;
+        _inspectButton.Pressed += OnInspectPressed;
+        _verifyButton.Pressed += OnVerifyPressed;
         _exportButton.Pressed += OnExportPressed;
         _syncButton.Pressed += OnSyncPressed;
         _sourceDirectoryInput.TextSubmitted += OnSourceDirectorySubmitted;
@@ -90,6 +98,7 @@ public partial class AssetManagerTool : Control
         _statusOutput.Text = string.Empty;
         RefreshAsepriteFiles();
         AppendStatus("Ready. Export and sync are separate actions.");
+        AppendStatus("Inspect shows source details. Verify compares source against assets/<character>.");
         AppendStatus("Run Godot import outside this tool after export and before sync.");
     }
 
@@ -102,13 +111,23 @@ public partial class AssetManagerTool : Control
             switch (command.Action)
             {
                 case ToolAction.Export:
-                    var exportResult = ExportAsepriteFile(command.ExportFilePath);
+                    var exportResult = ExportAsepriteFile(command.SourceFilePath);
                     foreach (var line in FormatExportResult(exportResult))
+                        GD.Print(line);
+                    break;
+                case ToolAction.Inspect:
+                    var inspectResult = InspectAsepriteFile(command.SourceFilePath);
+                    foreach (var line in FormatInspectResult(inspectResult))
                         GD.Print(line);
                     break;
                 case ToolAction.Sync:
                     var syncSummary = RunSync(command.RequestedCharacters);
                     foreach (var line in FormatSyncSummary(syncSummary))
+                        GD.Print(line);
+                    break;
+                case ToolAction.Verify:
+                    var verificationResult = VerifyAsepriteFile(command.SourceFilePath);
+                    foreach (var line in FormatVerificationResult(verificationResult))
                         GD.Print(line);
                     break;
             }
@@ -157,6 +176,26 @@ public partial class AssetManagerTool : Control
         });
     }
 
+    private void OnInspectPressed()
+    {
+        if (_isBusy)
+            return;
+
+        var sourceFilePath = GetSelectedSourceFilePath();
+        if (sourceFilePath == null)
+        {
+            AppendStatus("Select a .aseprite file before inspecting.");
+            return;
+        }
+
+        ExecuteUiAction(() =>
+        {
+            var result = InspectAsepriteFile(sourceFilePath);
+            foreach (var line in FormatInspectResult(result))
+                AppendStatus(line);
+        });
+    }
+
     private void OnSyncPressed()
     {
         if (_isBusy)
@@ -178,6 +217,26 @@ public partial class AssetManagerTool : Control
 
             var summary = RunSync(requestedCharacters);
             foreach (var line in FormatSyncSummary(summary))
+                AppendStatus(line);
+        });
+    }
+
+    private void OnVerifyPressed()
+    {
+        if (_isBusy)
+            return;
+
+        var sourceFilePath = GetSelectedSourceFilePath();
+        if (sourceFilePath == null)
+        {
+            AppendStatus("Select a .aseprite file before verifying.");
+            return;
+        }
+
+        ExecuteUiAction(() =>
+        {
+            var result = VerifyAsepriteFile(sourceFilePath);
+            foreach (var line in FormatVerificationResult(result))
                 AppendStatus(line);
         });
     }
@@ -228,6 +287,8 @@ public partial class AssetManagerTool : Control
     {
         var hasSelection = GetSelectedSourceFilePath() != null;
         _refreshButton.Disabled = _isBusy;
+        _inspectButton.Disabled = _isBusy || !hasSelection;
+        _verifyButton.Disabled = _isBusy || !hasSelection;
         _exportButton.Disabled = _isBusy || !hasSelection;
         _syncButton.Disabled = _isBusy || !hasSelection;
     }
@@ -324,12 +385,7 @@ public partial class AssetManagerTool : Control
 
     private ExportResult ExportAsepriteFile(string sourceFilePath)
     {
-        if (!File.Exists(ExporterWrapperPath))
-            throw new InvalidOperationException($"Exporter wrapper not found at {ExporterWrapperPath}.");
-
-        if (!File.Exists(sourceFilePath))
-            throw new InvalidOperationException($"Source file not found at {sourceFilePath}.");
-
+        EnsureSourceFileExists(sourceFilePath);
         var characterName = InferCharacterNameFromSourceFile(sourceFilePath);
         if (string.IsNullOrWhiteSpace(characterName))
             throw new InvalidOperationException($"Could not infer a character name from {sourceFilePath}.");
@@ -337,26 +393,66 @@ public partial class AssetManagerTool : Control
         var outputDirectory = ProjectSettings.GlobalizePath($"{AssetsRoot}/{characterName}");
         Directory.CreateDirectory(outputDirectory);
 
-        Godot.Collections.Array output = new();
-        var exitCode = OS.Execute(
+        var processResult = RunExternalTool(
             ExporterWrapperPath,
             new[] { "--in", sourceFilePath, "--out", outputDirectory, "--replace-all" },
-            output,
-            true,
-            false);
+            $"Exporter failed for {characterName}");
 
-        var outputLines = output
-            .Select(item => item.ToString())
-            .SelectMany(text => text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .ToList();
+        return new ExportResult(characterName, sourceFilePath, outputDirectory, processResult.OutputLines);
+    }
 
-        if (exitCode != 0)
+    private InspectResult InspectAsepriteFile(string sourceFilePath)
+    {
+        EnsureSourceFileExists(sourceFilePath);
+
+        var processResult = RunExternalTool(
+            InspectorWrapperPath,
+            new[] { "--in", sourceFilePath },
+            $"Inspect failed for {Path.GetFileName(sourceFilePath)}");
+
+        return new InspectResult(sourceFilePath, processResult.OutputLines);
+    }
+
+    private VerificationResult VerifyAsepriteFile(string sourceFilePath)
+    {
+        EnsureSourceFileExists(sourceFilePath);
+
+        var sourceInspection = LoadSourceInspection(sourceFilePath);
+        var characterName = InferCharacterNameFromSourceFile(sourceFilePath);
+        var characterRoot = $"{AssetsRoot}/{characterName}";
+        var mismatches = new List<string>();
+
+        if (!DirExists(characterRoot))
         {
-            var details = outputLines.Count == 0 ? string.Empty : $" Output: {string.Join(" | ", outputLines)}";
-            throw new InvalidOperationException($"Exporter failed for {characterName} with exit code {exitCode}.{details}");
+            mismatches.Add($"missing asset directory: assets/{characterName}");
+            return new VerificationResult(characterName, sourceFilePath, sourceInspection.Groups.Count, mismatches);
         }
 
-        return new ExportResult(characterName, sourceFilePath, outputDirectory, outputLines);
+        var assetFrameCounts = BuildAssetFrameCounts(characterRoot);
+        foreach (var group in sourceInspection.Groups)
+        {
+            if (!assetFrameCounts.TryGetValue(group.Name, out var assetDirections))
+            {
+                mismatches.Add($"missing animation group in assets: {group.Name}");
+                continue;
+            }
+
+            foreach (var direction in group.Directions.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            {
+                if (!assetDirections.TryGetValue(direction.Key, out var assetFrameCount))
+                {
+                    mismatches.Add($"missing direction in assets: {group.Name}/{direction.Key}");
+                    continue;
+                }
+
+                if (assetFrameCount != direction.Value)
+                {
+                    mismatches.Add($"frame count mismatch: {group.Name}/{direction.Key} source {direction.Value}, assets {assetFrameCount}");
+                }
+            }
+        }
+
+        return new VerificationResult(characterName, sourceFilePath, sourceInspection.Groups.Count, mismatches);
     }
 
     private SyncSummary RunSync(ISet<string> requestedCharacters = null)
@@ -567,6 +663,20 @@ public partial class AssetManagerTool : Control
             yield return $" - exporter: {result.OutputLines[0]}";
     }
 
+    private static IEnumerable<string> FormatInspectResult(InspectResult result)
+    {
+        yield return $"Inspect output: {Path.GetFileName(result.SourceFilePath)}";
+
+        if (result.OutputLines.Count == 0)
+        {
+            yield return " - no output";
+            yield break;
+        }
+
+        foreach (var line in result.OutputLines)
+            yield return $" {line}";
+    }
+
     private static IEnumerable<string> FormatSyncSummary(SyncSummary summary)
     {
         var createdCount = summary.Results.Count(result => result.Status == SyncStatus.Created);
@@ -600,6 +710,19 @@ public partial class AssetManagerTool : Control
         }
     }
 
+    private static IEnumerable<string> FormatVerificationResult(VerificationResult result)
+    {
+        if (result.IsClean)
+        {
+            yield return $"Verify clean: {result.CharacterName} ({result.SourceGroupCount} source groups matched assets)";
+            yield break;
+        }
+
+        yield return $"Verify found {result.Mismatches.Count} mismatch(es): {result.CharacterName}";
+        foreach (var mismatch in result.Mismatches)
+            yield return $" - {mismatch}";
+    }
+
     private static bool HasManagedAnimationFrames(string characterRoot)
     {
         foreach (var animationName in GetSubdirectories(characterRoot))
@@ -617,6 +740,129 @@ public partial class AssetManagerTool : Control
         }
 
         return false;
+    }
+
+    private static void EnsureSourceFileExists(string sourceFilePath)
+    {
+        if (!File.Exists(sourceFilePath))
+            throw new InvalidOperationException($"Source file not found at {sourceFilePath}.");
+    }
+
+    private static ProcessResult RunExternalTool(string executablePath, IReadOnlyList<string> arguments, string failurePrefix)
+    {
+        if (!File.Exists(executablePath))
+            throw new InvalidOperationException($"Tool not found at {executablePath}.");
+
+        Godot.Collections.Array output = new();
+        var exitCode = OS.Execute(executablePath, arguments.ToArray(), output, true, false);
+        var rawOutput = string.Join("\n", output.Select(item => item.ToString())).Trim();
+        var outputLines = string.IsNullOrWhiteSpace(rawOutput)
+            ? new List<string>()
+            : rawOutput
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+
+        if (exitCode != 0)
+        {
+            var details = outputLines.Count == 0 ? string.Empty : $" Output: {string.Join(" | ", outputLines)}";
+            throw new InvalidOperationException($"{failurePrefix} with exit code {exitCode}.{details}");
+        }
+
+        return new ProcessResult(rawOutput, outputLines);
+    }
+
+    private static SourceInspection LoadSourceInspection(string sourceFilePath)
+    {
+        var processResult = RunExternalTool(
+            InspectorWrapperPath,
+            new[] { "--in", sourceFilePath, "--json" },
+            $"Verify inspect failed for {Path.GetFileName(sourceFilePath)}");
+
+        if (string.IsNullOrWhiteSpace(processResult.RawOutput))
+            throw new InvalidOperationException($"Verify inspect returned no JSON output for {Path.GetFileName(sourceFilePath)}.");
+
+        using var document = JsonDocument.Parse(processResult.RawOutput);
+        var root = document.RootElement;
+        var inputPath = root.TryGetProperty("input", out var inputElement)
+            ? inputElement.GetString() ?? sourceFilePath
+            : sourceFilePath;
+        var groups = new List<SourceAnimationGroup>();
+
+        if (root.TryGetProperty("items", out var itemsElement) && itemsElement.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var itemElement in itemsElement.EnumerateArray())
+            {
+                var itemType = itemElement.TryGetProperty("type", out var typeElement)
+                    ? typeElement.GetString()
+                    : string.Empty;
+                if (!string.Equals(itemType, "group", StringComparison.Ordinal))
+                    continue;
+
+                var groupName = itemElement.TryGetProperty("name", out var nameElement)
+                    ? nameElement.GetString() ?? string.Empty
+                    : string.Empty;
+                if (string.IsNullOrWhiteSpace(groupName) || string.Equals(groupName, BaseDirectoryName, StringComparison.Ordinal))
+                    continue;
+
+                var directions = new System.Collections.Generic.Dictionary<string, int>(StringComparer.Ordinal);
+                if (itemElement.TryGetProperty("children", out var childrenElement) && childrenElement.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var childElement in childrenElement.EnumerateArray())
+                    {
+                        var childType = childElement.TryGetProperty("type", out var childTypeElement)
+                            ? childTypeElement.GetString()
+                            : string.Empty;
+                        if (!string.Equals(childType, "layer", StringComparison.Ordinal))
+                            continue;
+
+                        var directionName = childElement.TryGetProperty("name", out var directionNameElement)
+                            ? directionNameElement.GetString() ?? string.Empty
+                            : string.Empty;
+                        if (string.IsNullOrWhiteSpace(directionName))
+                            continue;
+
+                        var frameCount = childElement.TryGetProperty("non_empty_frames", out var frameCountElement) &&
+                                         frameCountElement.TryGetInt32(out var parsedFrameCount)
+                            ? parsedFrameCount
+                            : 0;
+
+                        directions[directionName] = frameCount;
+                    }
+                }
+
+                groups.Add(new SourceAnimationGroup(groupName, directions));
+            }
+        }
+
+        return new SourceInspection(
+            inputPath,
+            groups.OrderBy(group => group.Name, StringComparer.Ordinal).ToList());
+    }
+
+    private static System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, int>> BuildAssetFrameCounts(string characterRoot)
+    {
+        var frameCounts = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, int>>(StringComparer.Ordinal);
+
+        foreach (var animationName in GetSubdirectories(characterRoot)
+                     .Where(name => !string.Equals(name, BaseDirectoryName, StringComparison.Ordinal))
+                     .OrderBy(name => name, StringComparer.Ordinal))
+        {
+            var animationRoot = $"{characterRoot}/{animationName}";
+            var directionCounts = new System.Collections.Generic.Dictionary<string, int>(StringComparer.Ordinal);
+
+            foreach (var directionName in GetSubdirectories(animationRoot).OrderBy(name => name, StringComparer.Ordinal))
+            {
+                var directionRoot = $"{animationRoot}/{directionName}";
+                var frameCount = GetFiles(directionRoot).Count(fileName => fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase));
+                if (frameCount > 0)
+                    directionCounts[directionName] = frameCount;
+            }
+
+            if (directionCounts.Count > 0)
+                frameCounts[animationName] = directionCounts;
+        }
+
+        return frameCounts;
     }
 
     private static bool ResolveLoop(string animationName)
@@ -890,7 +1136,9 @@ public partial class AssetManagerTool : Control
     {
         None,
         Export,
+        Inspect,
         Sync,
+        Verify,
     }
 
     private enum SyncStatus
@@ -906,6 +1154,31 @@ public partial class AssetManagerTool : Control
         string SourceFilePath,
         string OutputDirectory,
         IReadOnlyList<string> OutputLines);
+
+    private sealed record InspectResult(
+        string SourceFilePath,
+        IReadOnlyList<string> OutputLines);
+
+    private sealed record ProcessResult(
+        string RawOutput,
+        IReadOnlyList<string> OutputLines);
+
+    private sealed record SourceAnimationGroup(
+        string Name,
+        IReadOnlyDictionary<string, int> Directions);
+
+    private sealed record SourceInspection(
+        string InputPath,
+        IReadOnlyList<SourceAnimationGroup> Groups);
+
+    private sealed record VerificationResult(
+        string CharacterName,
+        string SourceFilePath,
+        int SourceGroupCount,
+        IReadOnlyList<string> Mismatches)
+    {
+        public bool IsClean => Mismatches.Count == 0;
+    }
 
     private sealed record CharacterSyncResult(
         SyncStatus Status,
@@ -941,12 +1214,12 @@ public partial class AssetManagerTool : Control
         public List<CharacterSyncResult> Results { get; } = new();
     }
 
-    private sealed record HeadlessCommand(ToolAction Action, string ExportFilePath, HashSet<string> RequestedCharacters)
+    private sealed record HeadlessCommand(ToolAction Action, string SourceFilePath, HashSet<string> RequestedCharacters)
     {
         public static HeadlessCommand Parse(IReadOnlyList<string> args)
         {
             var action = ToolAction.None;
-            string exportFilePath = null;
+            string sourceFilePath = null;
             var requestedCharacters = new HashSet<string>(StringComparer.Ordinal);
 
             for (var index = 0; index < args.Count; index++)
@@ -962,7 +1235,7 @@ public partial class AssetManagerTool : Control
                 if (argument.StartsWith("--export=", StringComparison.Ordinal))
                 {
                     action = ResolveAction(action, ToolAction.Export);
-                    exportFilePath = ExpandHomeDirectory(argument["--export=".Length..]);
+                    sourceFilePath = ExpandHomeDirectory(argument["--export=".Length..]);
                     continue;
                 }
 
@@ -973,7 +1246,43 @@ public partial class AssetManagerTool : Control
 
                     action = ResolveAction(action, ToolAction.Export);
                     index++;
-                    exportFilePath = ExpandHomeDirectory(args[index]);
+                    sourceFilePath = ExpandHomeDirectory(args[index]);
+                    continue;
+                }
+
+                if (argument.StartsWith("--inspect=", StringComparison.Ordinal))
+                {
+                    action = ResolveAction(action, ToolAction.Inspect);
+                    sourceFilePath = ExpandHomeDirectory(argument["--inspect=".Length..]);
+                    continue;
+                }
+
+                if (string.Equals(argument, "--inspect", StringComparison.Ordinal))
+                {
+                    if (index + 1 >= args.Count)
+                        throw new InvalidOperationException("Missing value for --inspect.");
+
+                    action = ResolveAction(action, ToolAction.Inspect);
+                    index++;
+                    sourceFilePath = ExpandHomeDirectory(args[index]);
+                    continue;
+                }
+
+                if (argument.StartsWith("--verify=", StringComparison.Ordinal))
+                {
+                    action = ResolveAction(action, ToolAction.Verify);
+                    sourceFilePath = ExpandHomeDirectory(argument["--verify=".Length..]);
+                    continue;
+                }
+
+                if (string.Equals(argument, "--verify", StringComparison.Ordinal))
+                {
+                    if (index + 1 >= args.Count)
+                        throw new InvalidOperationException("Missing value for --verify.");
+
+                    action = ResolveAction(action, ToolAction.Verify);
+                    index++;
+                    sourceFilePath = ExpandHomeDirectory(args[index]);
                     continue;
                 }
 
@@ -995,7 +1304,7 @@ public partial class AssetManagerTool : Control
                 }
             }
 
-            return new HeadlessCommand(action, exportFilePath, requestedCharacters);
+            return new HeadlessCommand(action, sourceFilePath, requestedCharacters);
         }
 
         private static ToolAction ResolveAction(ToolAction currentAction, ToolAction requestedAction)

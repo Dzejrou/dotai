@@ -127,6 +127,14 @@ editable = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="InspectButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+layout_mode = 2
+text = "Inspect Selected"
+
+[node name="VerifyButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+layout_mode = 2
+text = "Verify Selected"
+
 [node name="ExportButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
 text = "Export Selected"
