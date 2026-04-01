@@ -131,6 +131,11 @@ public partial class DebugSpawner : Node2D
         return _previewById.TryGetValue(spawnId, out var previewData) ? previewData.SpriteFrames : null;
     }
 
+    public Texture2D GetPreviewTexture(string spawnId)
+    {
+        return _previewById.TryGetValue(spawnId, out var previewData) ? previewData.Texture : null;
+    }
+
     public StringName GetPreviewAnimationName(string spawnId)
     {
         return _previewById.TryGetValue(spawnId, out var previewData) ? previewData.AnimationName : new StringName();
@@ -269,30 +274,45 @@ public partial class DebugSpawner : Node2D
             return null;
 
         var animatedSprite = enemy.GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
-        if (animatedSprite?.SpriteFrames == null)
+        if (animatedSprite?.SpriteFrames != null)
+        {
+            var spriteFrames = animatedSprite.SpriteFrames;
+            var animationName = spriteFrames.HasAnimation("idle_south") ?
+                (StringName)"idle_south" :
+                (spriteFrames.HasAnimation("walk_south") ? (StringName)"walk_south" : new StringName());
+            var texture = animationName.IsEmpty ? null : spriteFrames.GetFrameTexture(animationName, 0);
+
+            var previewData = new PreviewData
+            {
+                SpriteFrames = spriteFrames,
+                AnimationName = animationName,
+                Texture = texture,
+                Scale = animatedSprite.Scale,
+                Offset = animatedSprite.Position,
+                DefaultFaction = ResolvePreviewFaction(enemy),
+            };
+
+            enemy.Free();
+            return previewData;
+        }
+
+        var sprite = enemy.GetNodeOrNull<Sprite2D>("Sprite2D");
+        if (sprite?.Texture == null)
         {
             enemy.Free();
             return null;
         }
 
-        var spriteFrames = animatedSprite.SpriteFrames;
-        var animationName = spriteFrames.HasAnimation("idle_south") ?
-            (StringName)"idle_south" :
-            (spriteFrames.HasAnimation("walk_south") ? (StringName)"walk_south" : new StringName());
-        var texture = animationName.IsEmpty ? null : spriteFrames.GetFrameTexture(animationName, 0);
-
-        var previewData = new PreviewData
+        var staticPreviewData = new PreviewData
         {
-            SpriteFrames = spriteFrames,
-            AnimationName = animationName,
-            Texture = texture,
-            Scale = animatedSprite.Scale,
-            Offset = animatedSprite.Position,
+            Texture = sprite.Texture,
+            Scale = sprite.Scale,
+            Offset = sprite.Position,
             DefaultFaction = ResolvePreviewFaction(enemy),
         };
 
         enemy.Free();
-        return previewData;
+        return staticPreviewData;
     }
 
     private static Faction ResolvePreviewFaction(Node enemy)

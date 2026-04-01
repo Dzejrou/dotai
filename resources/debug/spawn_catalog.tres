@@ -62,7 +62,7 @@ SortOrder = 45
 script = ExtResource("2_spawn_catalog_entry_script")
 Id = "target_dummy"
 DisplayName = "Target Dummy"
-Category = "Practice"
+Category = "Objects"
 SpawnScene = ExtResource("7_target_dummy_scene")
 SortOrder = 50
 

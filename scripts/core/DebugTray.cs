@@ -273,11 +273,19 @@ public partial class DebugTray : Control
         };
         previewContainer.AddChild(previewViewport);
 
-        var previewSprite = new AnimatedSprite2D
+        var animatedPreviewSprite = new AnimatedSprite2D
         {
-            Name = "PreviewSprite",
+            Name = "AnimatedPreviewSprite",
         };
-        previewViewport.AddChild(previewSprite);
+        previewViewport.AddChild(animatedPreviewSprite);
+
+        var staticPreviewSprite = new Sprite2D
+        {
+            Name = "StaticPreviewSprite",
+            Centered = true,
+            Visible = false,
+        };
+        previewViewport.AddChild(staticPreviewSprite);
 
         var label = new Label
         {
@@ -287,32 +295,51 @@ public partial class DebugTray : Control
         };
         vBox.AddChild(label);
 
-        ConfigurePreview(entry.Id, previewSprite);
+        ConfigurePreview(entry.Id, animatedPreviewSprite, staticPreviewSprite);
         return card;
     }
 
-    private void ConfigurePreview(string enemyId, AnimatedSprite2D previewSprite)
+    private void ConfigurePreview(string enemyId, AnimatedSprite2D animatedPreviewSprite, Sprite2D staticPreviewSprite)
     {
-        if (_debugSpawner == null || previewSprite == null)
+        if (_debugSpawner == null)
             return;
 
         var spriteFrames = _debugSpawner.GetPreviewFrames(enemyId);
-        var animationName = _debugSpawner.GetPreviewAnimationName(enemyId);
-        previewSprite.SpriteFrames = spriteFrames;
-        previewSprite.Scale = _debugSpawner.GetPreviewScale(enemyId);
-        previewSprite.Position = PreviewCenter + _debugSpawner.GetPreviewOffset(enemyId);
-
-        if (spriteFrames == null)
-            return;
-
-        if (!animationName.IsEmpty && spriteFrames.HasAnimation(animationName))
+        if (spriteFrames != null && animatedPreviewSprite != null)
         {
-            previewSprite.Play(animationName);
-            return;
+            var animationName = _debugSpawner.GetPreviewAnimationName(enemyId);
+            animatedPreviewSprite.SpriteFrames = spriteFrames;
+            animatedPreviewSprite.Scale = _debugSpawner.GetPreviewScale(enemyId);
+            animatedPreviewSprite.Position = PreviewCenter + _debugSpawner.GetPreviewOffset(enemyId);
+            animatedPreviewSprite.Visible = true;
+
+            if (!animationName.IsEmpty && spriteFrames.HasAnimation(animationName))
+            {
+                animatedPreviewSprite.Play(animationName);
+                if (staticPreviewSprite != null)
+                    staticPreviewSprite.Visible = false;
+                return;
+            }
+
+            if (spriteFrames.HasAnimation("walk_south"))
+            {
+                animatedPreviewSprite.Play("walk_south");
+                if (staticPreviewSprite != null)
+                    staticPreviewSprite.Visible = false;
+                return;
+            }
         }
 
-        if (spriteFrames.HasAnimation("walk_south"))
-            previewSprite.Play("walk_south");
+        var texture = _debugSpawner.GetPreviewTexture(enemyId);
+        if (texture == null || staticPreviewSprite == null)
+            return;
+
+        staticPreviewSprite.Texture = texture;
+        staticPreviewSprite.Scale = _debugSpawner.GetPreviewScale(enemyId);
+        staticPreviewSprite.Position = PreviewCenter + _debugSpawner.GetPreviewOffset(enemyId);
+        staticPreviewSprite.Visible = true;
+        if (animatedPreviewSprite != null)
+            animatedPreviewSprite.Visible = false;
     }
 
     private void HandleMouseMotion(InputEventMouseMotion mouseMotion)
