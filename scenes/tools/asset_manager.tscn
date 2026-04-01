@@ -41,7 +41,7 @@ text = "Asset Manager"
 layout_mode = 2
 size_flags_horizontal = 3
 autowrap_mode = 2
-text = "Export selected .aseprite files into this project's assets tree, then sync SpriteFrames as a separate step."
+text = "Import the selected .aseprite file, verify the imported assets, run Godot import, then sync SpriteFrames."
 
 [node name="SourceRow" type="HBoxContainer" parent="Margin/Panel/VBox"]
 layout_mode = 2
@@ -127,24 +127,28 @@ editable = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="InspectButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+[node name="ExportButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
-text = "Inspect Selected"
+text = "Import (Aseprite)"
 
 [node name="VerifyButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
 text = "Verify Selected"
 
-[node name="ExportButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+[node name="ImportButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
-text = "Export Selected"
+text = "Import (Godot)"
 
 [node name="SyncButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
-text = "Sync Selected SpriteFrames"
+text = "Sync SpriteFrames"
+
+[node name="InspectButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+layout_mode = 2
+text = "Inspect Selected"
 
 [node name="Note" type="Label" parent="Margin/Panel/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 autowrap_mode = 2
-text = "Export writes directly into assets/<character> with --replace-all. Run Godot import outside this tool before syncing."
+text = "Import (Aseprite) writes directly into assets/<character> with --replace-all. Import (Godot) and Sync SpriteFrames remain separate steps."

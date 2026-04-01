@@ -17,6 +17,7 @@ public partial class AssetManagerTool : Control
     private const string DefaultExternalSourceDirectory = "/Users/jjindrak/Projects/pixelart/characters";
     private const string ExporterWrapperPath = "/Users/jjindrak/Projects/pixelart/scripts/export";
     private const string InspectorWrapperPath = "/Users/jjindrak/Projects/pixelart/scripts/inspect";
+    private const string GodotBinaryPath = "/Applications/Godot_mono.app/Contents/MacOS/Godot";
 
     [Export]
     public string ExternalSourceDirectory { get; set; } = DefaultExternalSourceDirectory;
@@ -28,6 +29,7 @@ public partial class AssetManagerTool : Control
     private Button _refreshButton;
     private Button _inspectButton;
     private Button _verifyButton;
+    private Button _importButton;
     private Button _exportButton;
     private Button _syncButton;
     private TextEdit _statusOutput;
@@ -57,7 +59,7 @@ public partial class AssetManagerTool : Control
 
         if (IsHeadlessRuntime())
         {
-            HandleStartupFailure(new InvalidOperationException("No headless action specified. Use --inspect FILE, --verify FILE, --sync [--character NAME], or --export FILE."));
+            HandleStartupFailure(new InvalidOperationException("No headless action specified. Use --inspect FILE, --verify FILE, --import-project, --sync [--character NAME], or --export FILE."));
             return;
         }
 
@@ -74,6 +76,7 @@ public partial class AssetManagerTool : Control
         _refreshButton = GetNode<Button>("Margin/Panel/VBox/SourceRow/RefreshButton");
         _inspectButton = GetNode<Button>("Margin/Panel/VBox/Actions/InspectButton");
         _verifyButton = GetNode<Button>("Margin/Panel/VBox/Actions/VerifyButton");
+        _importButton = GetNode<Button>("Margin/Panel/VBox/Actions/ImportButton");
         _exportButton = GetNode<Button>("Margin/Panel/VBox/Actions/ExportButton");
         _syncButton = GetNode<Button>("Margin/Panel/VBox/Actions/SyncButton");
         _statusOutput = GetNode<TextEdit>("Margin/Panel/VBox/Body/StatusPanel/StatusVBox/StatusOutput");
@@ -84,6 +87,7 @@ public partial class AssetManagerTool : Control
         _refreshButton.Pressed += OnRefreshPressed;
         _inspectButton.Pressed += OnInspectPressed;
         _verifyButton.Pressed += OnVerifyPressed;
+        _importButton.Pressed += OnImportPressed;
         _exportButton.Pressed += OnExportPressed;
         _syncButton.Pressed += OnSyncPressed;
         _sourceDirectoryInput.TextSubmitted += OnSourceDirectorySubmitted;
@@ -97,9 +101,9 @@ public partial class AssetManagerTool : Control
         _sourceDirectoryInput.Text = ExternalSourceDirectory;
         _statusOutput.Text = string.Empty;
         RefreshAsepriteFiles();
-        AppendStatus("Ready. Export and sync are separate actions.");
-        AppendStatus("Inspect shows source details. Verify compares source against assets/<character>.");
-        AppendStatus("Run Godot import outside this tool after export and before sync.");
+        AppendStatus("Ready. Import (Aseprite), Verify Selected, Import (Godot), and Sync SpriteFrames are separate actions.");
+        AppendStatus("Inspect Selected shows source details. Verify Selected compares source against assets/<character>.");
+        AppendStatus("Import (Godot) runs the project's headless import pass as its own step.");
     }
 
     private void RunHeadlessCommand(HeadlessCommand command)
@@ -118,6 +122,11 @@ public partial class AssetManagerTool : Control
                 case ToolAction.Inspect:
                     var inspectResult = InspectAsepriteFile(command.SourceFilePath);
                     foreach (var line in FormatInspectResult(inspectResult))
+                        GD.Print(line);
+                    break;
+                case ToolAction.ImportProject:
+                    var importResult = RunGodotImport();
+                    foreach (var line in FormatImportResult(importResult))
                         GD.Print(line);
                     break;
                 case ToolAction.Sync:
@@ -164,7 +173,7 @@ public partial class AssetManagerTool : Control
         var sourceFilePath = GetSelectedSourceFilePath();
         if (sourceFilePath == null)
         {
-            AppendStatus("Select a .aseprite file before exporting.");
+            AppendStatus("Select a .aseprite file before running Import (Aseprite).");
             return;
         }
 
@@ -204,7 +213,7 @@ public partial class AssetManagerTool : Control
         var characterName = GetSelectedCharacterName();
         if (characterName == null)
         {
-            AppendStatus("Select a .aseprite file before syncing.");
+            AppendStatus("Select a .aseprite file before running Sync SpriteFrames.");
             return;
         }
 
@@ -217,6 +226,20 @@ public partial class AssetManagerTool : Control
 
             var summary = RunSync(requestedCharacters);
             foreach (var line in FormatSyncSummary(summary))
+                AppendStatus(line);
+        });
+    }
+
+    private void OnImportPressed()
+    {
+        if (_isBusy)
+            return;
+
+        ExecuteUiAction(() =>
+        {
+            AppendStatus("Starting Import (Godot)...");
+            var result = RunGodotImport();
+            foreach (var line in FormatImportResult(result))
                 AppendStatus(line);
         });
     }
@@ -289,6 +312,7 @@ public partial class AssetManagerTool : Control
         _refreshButton.Disabled = _isBusy;
         _inspectButton.Disabled = _isBusy || !hasSelection;
         _verifyButton.Disabled = _isBusy || !hasSelection;
+        _importButton.Disabled = _isBusy;
         _exportButton.Disabled = _isBusy || !hasSelection;
         _syncButton.Disabled = _isBusy || !hasSelection;
     }
@@ -453,6 +477,17 @@ public partial class AssetManagerTool : Control
         }
 
         return new VerificationResult(characterName, sourceFilePath, sourceInspection.Groups.Count, mismatches);
+    }
+
+    private ImportResult RunGodotImport()
+    {
+        var projectPath = ProjectSettings.GlobalizePath("res://");
+        var processResult = RunExternalTool(
+            GodotBinaryPath,
+            new[] { "--headless", "--path", projectPath, "--import" },
+            "Godot import failed");
+
+        return new ImportResult(projectPath, processResult.OutputLines);
     }
 
     private SyncSummary RunSync(ISet<string> requestedCharacters = null)
@@ -656,11 +691,11 @@ public partial class AssetManagerTool : Control
 
     private static IEnumerable<string> FormatExportResult(ExportResult result)
     {
-        yield return $"Export complete: {result.CharacterName} -> {result.OutputDirectory}";
+        yield return $"Import (Aseprite) complete: {result.CharacterName} -> {result.OutputDirectory}";
         yield return $" - source: {result.SourceFilePath}";
 
         if (result.OutputLines.Count > 0)
-            yield return $" - exporter: {result.OutputLines[0]}";
+            yield return $" - importer: {result.OutputLines[0]}";
     }
 
     private static IEnumerable<string> FormatInspectResult(InspectResult result)
@@ -708,6 +743,20 @@ public partial class AssetManagerTool : Control
                     break;
             }
         }
+    }
+
+    private static IEnumerable<string> FormatImportResult(ImportResult result)
+    {
+        yield return $"Import (Godot) complete: {result.ProjectPath}";
+
+        if (result.OutputLines.Count == 0)
+        {
+            yield return " - no output";
+            yield break;
+        }
+
+        foreach (var line in result.OutputLines)
+            yield return $" {line}";
     }
 
     private static IEnumerable<string> FormatVerificationResult(VerificationResult result)
@@ -1137,6 +1186,7 @@ public partial class AssetManagerTool : Control
         None,
         Export,
         Inspect,
+        ImportProject,
         Sync,
         Verify,
     }
@@ -1153,6 +1203,10 @@ public partial class AssetManagerTool : Control
         string CharacterName,
         string SourceFilePath,
         string OutputDirectory,
+        IReadOnlyList<string> OutputLines);
+
+    private sealed record ImportResult(
+        string ProjectPath,
         IReadOnlyList<string> OutputLines);
 
     private sealed record InspectResult(
@@ -1229,6 +1283,12 @@ public partial class AssetManagerTool : Control
                 if (string.Equals(argument, "--sync", StringComparison.Ordinal))
                 {
                     action = ResolveAction(action, ToolAction.Sync);
+                    continue;
+                }
+
+                if (string.Equals(argument, "--import-project", StringComparison.Ordinal))
+                {
+                    action = ResolveAction(action, ToolAction.ImportProject);
                     continue;
                 }
 
