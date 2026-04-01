@@ -145,6 +145,10 @@ text = "Import (Aseprite)"
 layout_mode = 2
 text = "Verify Selected"
 
+[node name="VerifyAllButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+layout_mode = 2
+text = "Verify All"
+
 [node name="ImportButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
 text = "Import (Godot)"

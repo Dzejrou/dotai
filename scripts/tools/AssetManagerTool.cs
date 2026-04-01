@@ -30,6 +30,7 @@ public partial class AssetManagerTool : Control
     private Button _refreshButton;
     private Button _inspectButton;
     private Button _verifyButton;
+    private Button _verifyAllButton;
     private Button _importButton;
     private Button _exportButton;
     private Button _syncButton;
@@ -37,6 +38,7 @@ public partial class AssetManagerTool : Control
     private bool _isBusy;
     private List<SourceBrowserEntry> _sourceBrowserEntries = new();
     private List<string> _asepriteFiles = new();
+    private readonly System.Collections.Generic.Dictionary<string, VerificationResult> _verificationCache = new(StringComparer.Ordinal);
 
     public override void _Ready()
     {
@@ -79,6 +81,7 @@ public partial class AssetManagerTool : Control
         _refreshButton = GetNode<Button>("Margin/Panel/VBox/SourceRow/RefreshButton");
         _inspectButton = GetNode<Button>("Margin/Panel/VBox/Actions/InspectButton");
         _verifyButton = GetNode<Button>("Margin/Panel/VBox/Actions/VerifyButton");
+        _verifyAllButton = GetNode<Button>("Margin/Panel/VBox/Actions/VerifyAllButton");
         _importButton = GetNode<Button>("Margin/Panel/VBox/Actions/ImportButton");
         _exportButton = GetNode<Button>("Margin/Panel/VBox/Actions/ExportButton");
         _syncButton = GetNode<Button>("Margin/Panel/VBox/Actions/SyncButton");
@@ -90,6 +93,7 @@ public partial class AssetManagerTool : Control
         _refreshButton.Pressed += OnRefreshPressed;
         _inspectButton.Pressed += OnInspectPressed;
         _verifyButton.Pressed += OnVerifyPressed;
+        _verifyAllButton.Pressed += OnVerifyAllPressed;
         _importButton.Pressed += OnImportPressed;
         _exportButton.Pressed += OnExportPressed;
         _syncButton.Pressed += OnSyncPressed;
@@ -107,8 +111,8 @@ public partial class AssetManagerTool : Control
         _sourceDirectoryInput.Text = ExternalSourceDirectory;
         _statusOutput.Text = string.Empty;
         RefreshAsepriteFiles();
-        AppendStatus("Ready. Import (Aseprite), Verify Selected, Import (Godot), and Sync SpriteFrames are separate actions.");
-        AppendStatus("Inspect Selected shows source details. Verify Selected compares source against assets/<character>.");
+        AppendStatus("Ready. Import (Aseprite), Verify Selected, Verify All, Import (Godot), and Sync SpriteFrames are separate actions.");
+        AppendStatus("Inspect Selected shows source details. Verify actions compare source against assets/<character> and mark the file list.");
         AppendStatus("Import (Godot) runs the project's headless import pass as its own step.");
     }
 
@@ -186,6 +190,9 @@ public partial class AssetManagerTool : Control
         ExecuteUiAction(() =>
         {
             var result = ExportAsepriteFile(sourceFilePath);
+            InvalidateVerificationCache(sourceFilePath);
+            RefreshAsepriteFiles();
+            SelectAsepriteFile(sourceFilePath, false);
             foreach (var line in FormatExportResult(result))
                 AppendStatus(line);
         });
@@ -264,8 +271,29 @@ public partial class AssetManagerTool : Control
 
         ExecuteUiAction(() =>
         {
-            var result = VerifyAsepriteFile(sourceFilePath);
+            var result = VerifyAndCacheFile(sourceFilePath, true);
+            RenderAsepriteFileList(sourceFilePath);
             foreach (var line in FormatVerificationResult(result))
+                AppendStatus(line);
+        });
+    }
+
+    private void OnVerifyAllPressed()
+    {
+        if (_isBusy)
+            return;
+
+        if (_asepriteFiles.Count == 0)
+        {
+            AppendStatus("No .aseprite files found in the current source directory.");
+            return;
+        }
+
+        ExecuteUiAction(() =>
+        {
+            var summary = VerifyCurrentDirectory(true);
+            RenderAsepriteFileList(GetSelectedSourceFilePath());
+            foreach (var line in FormatVerificationDirectorySummary(summary))
                 AppendStatus(line);
         });
     }
@@ -341,9 +369,11 @@ public partial class AssetManagerTool : Control
     private void UpdateActionState()
     {
         var hasSelection = GetSelectedSourceFilePath() != null;
+        var hasFiles = _asepriteFiles.Count > 0;
         _refreshButton.Disabled = _isBusy;
         _inspectButton.Disabled = _isBusy || !hasSelection;
         _verifyButton.Disabled = _isBusy || !hasSelection;
+        _verifyAllButton.Disabled = _isBusy || !hasFiles;
         _importButton.Disabled = _isBusy;
         _exportButton.Disabled = _isBusy || !hasSelection;
         _syncButton.Disabled = _isBusy || !hasSelection;
@@ -360,11 +390,11 @@ public partial class AssetManagerTool : Control
         var previousSelection = GetSelectedSourceFilePath();
         _sourceBrowserList.Clear();
         _sourceBrowserEntries = new List<SourceBrowserEntry>();
-        _asepriteFilesList.Clear();
         _asepriteFiles = new List<string>();
 
         if (!Directory.Exists(ExternalSourceDirectory))
         {
+            _asepriteFilesList.Clear();
             _sourceSummaryLabel.Text = $"Source directory not found.\n{ExternalSourceDirectory}";
             _sourceSummaryLabel.TooltipText = ExternalSourceDirectory;
             _selectionLabel.Text = "No file selected.";
@@ -380,16 +410,11 @@ public partial class AssetManagerTool : Control
             .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        for (var index = 0; index < _asepriteFiles.Count; index++)
-        {
-            var path = _asepriteFiles[index];
-            _asepriteFilesList.AddItem(Path.GetFileName(path));
-            _asepriteFilesList.SetItemTooltip(index, path);
-            _asepriteFilesList.SetItemMetadata(index, path);
-        }
-
         _sourceSummaryLabel.Text = $"{_asepriteFiles.Count} .aseprite files\n{ExternalSourceDirectory}";
         _sourceSummaryLabel.TooltipText = ExternalSourceDirectory;
+
+        VerifyCurrentDirectory(false);
+        RenderAsepriteFileList(previousSelection);
 
         if (_asepriteFiles.Count == 0)
         {
@@ -399,11 +424,6 @@ public partial class AssetManagerTool : Control
             return;
         }
 
-        var selectedIndex = previousSelection == null ? 0 : _asepriteFiles.FindIndex(path => string.Equals(path, previousSelection, StringComparison.Ordinal));
-        if (selectedIndex < 0)
-            selectedIndex = 0;
-
-        _asepriteFilesList.Select(selectedIndex);
         UpdateSelectionLabel();
         UpdateActionState();
     }
@@ -499,6 +519,29 @@ public partial class AssetManagerTool : Control
         UpdateActionState();
     }
 
+    private void RenderAsepriteFileList(string preferredSelection)
+    {
+        _asepriteFilesList.Clear();
+
+        for (var index = 0; index < _asepriteFiles.Count; index++)
+        {
+            var path = _asepriteFiles[index];
+            var cachedResult = GetCachedVerificationResult(path);
+            _asepriteFilesList.AddItem($"{GetVerificationMarker(cachedResult?.State ?? VerificationState.Unknown)} {Path.GetFileName(path)}");
+            _asepriteFilesList.SetItemTooltip(index, BuildAsepriteFileTooltip(path, cachedResult));
+            _asepriteFilesList.SetItemMetadata(index, path);
+        }
+
+        if (_asepriteFiles.Count == 0)
+            return;
+
+        var selectedIndex = preferredSelection == null ? 0 : _asepriteFiles.FindIndex(path => string.Equals(path, preferredSelection, StringComparison.Ordinal));
+        if (selectedIndex < 0)
+            selectedIndex = 0;
+
+        _asepriteFilesList.Select(selectedIndex);
+    }
+
     private ExportResult ExportAsepriteFile(string sourceFilePath)
     {
         EnsureSourceFileExists(sourceFilePath);
@@ -534,14 +577,22 @@ public partial class AssetManagerTool : Control
         EnsureSourceFileExists(sourceFilePath);
 
         var sourceInspection = LoadSourceInspection(sourceFilePath);
+        return BuildVerificationResult(sourceInspection, sourceFilePath);
+    }
+
+    private VerificationResult BuildVerificationResult(SourceInspection sourceInspection, string sourceFilePath)
+    {
         var characterName = InferCharacterNameFromSourceFile(sourceFilePath);
+        if (!string.Equals(sourceInspection.Status, "ok", StringComparison.OrdinalIgnoreCase))
+            return VerificationResult.Error(characterName, sourceFilePath, BuildInspectionStatusMessage(sourceInspection));
+
         var characterRoot = $"{AssetsRoot}/{characterName}";
         var mismatches = new List<string>();
 
         if (!DirExists(characterRoot))
         {
             mismatches.Add($"missing asset directory: assets/{characterName}");
-            return new VerificationResult(characterName, sourceFilePath, sourceInspection.Groups.Count, mismatches);
+            return VerificationResult.Mismatch(characterName, sourceFilePath, sourceInspection.Groups.Count, mismatches);
         }
 
         var assetFrameCounts = BuildAssetFrameCounts(characterRoot);
@@ -568,7 +619,9 @@ public partial class AssetManagerTool : Control
             }
         }
 
-        return new VerificationResult(characterName, sourceFilePath, sourceInspection.Groups.Count, mismatches);
+        return mismatches.Count == 0
+            ? VerificationResult.Clean(characterName, sourceFilePath, sourceInspection.Groups.Count)
+            : VerificationResult.Mismatch(characterName, sourceFilePath, sourceInspection.Groups.Count, mismatches);
     }
 
     private ImportResult RunGodotImport()
@@ -853,6 +906,13 @@ public partial class AssetManagerTool : Control
 
     private static IEnumerable<string> FormatVerificationResult(VerificationResult result)
     {
+        if (result.State == VerificationState.Error)
+        {
+            yield return $"Verify error: {Path.GetFileName(result.SourceFilePath)}";
+            yield return $" - {result.ErrorMessage}";
+            yield break;
+        }
+
         if (result.IsClean)
         {
             yield return $"Verify clean: {result.CharacterName} ({result.SourceGroupCount} source groups matched assets)";
@@ -862,6 +922,25 @@ public partial class AssetManagerTool : Control
         yield return $"Verify found {result.Mismatches.Count} mismatch(es): {result.CharacterName}";
         foreach (var mismatch in result.Mismatches)
             yield return $" - {mismatch}";
+    }
+
+    private static IEnumerable<string> FormatVerificationDirectorySummary(VerificationDirectorySummary summary)
+    {
+        yield return $"Verify All complete: {summary.TotalFiles} file(s), {summary.CleanCount} clean, {summary.MismatchCount} mismatch, {summary.ErrorCount} error.";
+
+        foreach (var result in summary.Results.Where(result => result.State != VerificationState.Clean).OrderBy(result => Path.GetFileName(result.SourceFilePath), StringComparer.OrdinalIgnoreCase))
+        {
+            if (result.State == VerificationState.Error)
+            {
+                yield return $" - error: {Path.GetFileName(result.SourceFilePath)}";
+                yield return $"   {result.ErrorMessage}";
+                continue;
+            }
+
+            yield return $" - mismatch: {Path.GetFileName(result.SourceFilePath)} ({result.Mismatches.Count})";
+            foreach (var mismatch in result.Mismatches)
+                yield return $"   {mismatch}";
+        }
     }
 
     private static bool HasManagedAnimationFrames(string characterRoot)
@@ -923,10 +1002,46 @@ public partial class AssetManagerTool : Control
             throw new InvalidOperationException($"Verify inspect returned no JSON output for {Path.GetFileName(sourceFilePath)}.");
 
         using var document = JsonDocument.Parse(processResult.RawOutput);
-        var root = document.RootElement;
+        return document.RootElement.ValueKind switch
+        {
+            JsonValueKind.Array when document.RootElement.GetArrayLength() > 0 => ParseSourceInspection(document.RootElement[0], sourceFilePath),
+            JsonValueKind.Object => ParseSourceInspection(document.RootElement, sourceFilePath),
+            _ => throw new InvalidOperationException($"Verify inspect returned an unexpected JSON shape for {Path.GetFileName(sourceFilePath)}."),
+        };
+    }
+
+    private static IReadOnlyList<SourceInspection> LoadSourceInspectionsForDirectory(string sourceDirectory)
+    {
+        var processResult = RunExternalTool(
+            InspectorWrapperPath,
+            new[] { "--dir", sourceDirectory, "--json" },
+            $"Verify inspect failed for directory {sourceDirectory}");
+
+        if (string.IsNullOrWhiteSpace(processResult.RawOutput))
+            throw new InvalidOperationException($"Verify inspect returned no JSON output for {sourceDirectory}.");
+
+        using var document = JsonDocument.Parse(processResult.RawOutput);
+        return document.RootElement.ValueKind switch
+        {
+            JsonValueKind.Array => document.RootElement
+                .EnumerateArray()
+                .Select(element => ParseSourceInspection(element, sourceDirectory))
+                .ToList(),
+            JsonValueKind.Object => new List<SourceInspection> { ParseSourceInspection(document.RootElement, sourceDirectory) },
+            _ => throw new InvalidOperationException($"Verify inspect returned an unexpected JSON shape for {sourceDirectory}."),
+        };
+    }
+
+    private static SourceInspection ParseSourceInspection(JsonElement root, string fallbackInputPath)
+    {
         var inputPath = root.TryGetProperty("input", out var inputElement)
-            ? inputElement.GetString() ?? sourceFilePath
-            : sourceFilePath;
+            ? inputElement.GetString() ?? fallbackInputPath
+            : fallbackInputPath;
+        var status = root.TryGetProperty("status", out var statusElement)
+            ? statusElement.GetString() ?? "ok"
+            : "ok";
+        var missingGroups = ReadJsonStringArray(root, "missing_groups");
+        var missingLayers = ReadJsonStringArray(root, "missing_layers");
         var groups = new List<SourceAnimationGroup>();
 
         if (root.TryGetProperty("items", out var itemsElement) && itemsElement.ValueKind == JsonValueKind.Array)
@@ -976,8 +1091,41 @@ public partial class AssetManagerTool : Control
         }
 
         return new SourceInspection(
-            inputPath,
-            groups.OrderBy(group => group.Name, StringComparer.Ordinal).ToList());
+            Path.GetFullPath(inputPath),
+            status,
+            groups.OrderBy(group => group.Name, StringComparer.Ordinal).ToList(),
+            missingGroups,
+            missingLayers);
+    }
+
+    private static IReadOnlyList<string> ReadJsonStringArray(JsonElement root, string propertyName)
+    {
+        var values = new List<string>();
+        if (!root.TryGetProperty(propertyName, out var propertyElement) || propertyElement.ValueKind != JsonValueKind.Array)
+            return values;
+
+        foreach (var element in propertyElement.EnumerateArray())
+        {
+            if (element.ValueKind != JsonValueKind.String)
+                continue;
+
+            var value = element.GetString();
+            if (!string.IsNullOrWhiteSpace(value))
+                values.Add(value);
+        }
+
+        return values;
+    }
+
+    private static string BuildInspectionStatusMessage(SourceInspection sourceInspection)
+    {
+        var details = new List<string> { $"Inspector status: {sourceInspection.Status}" };
+        if (sourceInspection.MissingGroups.Count > 0)
+            details.Add($"missing groups: {string.Join(", ", sourceInspection.MissingGroups)}");
+        if (sourceInspection.MissingLayers.Count > 0)
+            details.Add($"missing layers: {string.Join(", ", sourceInspection.MissingLayers)}");
+
+        return string.Join(" | ", details);
     }
 
     private static System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, int>> BuildAssetFrameCounts(string characterRoot)
@@ -1052,6 +1200,107 @@ public partial class AssetManagerTool : Control
     private static bool IsHiddenEntryName(string entryName)
     {
         return !string.IsNullOrEmpty(entryName) && entryName.StartsWith(".", StringComparison.Ordinal);
+    }
+
+    private VerificationDirectorySummary VerifyCurrentDirectory(bool forceRefresh)
+    {
+        if (_asepriteFiles.Count == 0)
+            return new VerificationDirectorySummary(ExternalSourceDirectory, new List<VerificationResult>());
+
+        var missingCachedFiles = forceRefresh
+            ? _asepriteFiles
+            : _asepriteFiles.Where(sourceFilePath => !_verificationCache.ContainsKey(sourceFilePath)).ToList();
+
+        if (forceRefresh || missingCachedFiles.Any())
+            RefreshVerificationCacheForCurrentDirectory();
+
+        var results = _asepriteFiles
+            .Select(sourceFilePath => GetCachedVerificationResult(sourceFilePath) ?? VerificationResult.Unknown(InferCharacterNameFromSourceFile(sourceFilePath), sourceFilePath))
+            .ToList();
+
+        return new VerificationDirectorySummary(ExternalSourceDirectory, results);
+    }
+
+    private VerificationResult VerifyAndCacheFile(string sourceFilePath, bool forceRefresh)
+    {
+        if (!forceRefresh && _verificationCache.TryGetValue(sourceFilePath, out var cachedResult))
+            return cachedResult;
+
+        VerificationResult result;
+        try
+        {
+            result = VerifyAsepriteFile(sourceFilePath);
+        }
+        catch (Exception exception)
+        {
+            var characterName = InferCharacterNameFromSourceFile(sourceFilePath);
+            result = VerificationResult.Error(characterName, sourceFilePath, exception.Message);
+        }
+
+        _verificationCache[sourceFilePath] = result;
+        return result;
+    }
+
+    private void RefreshVerificationCacheForCurrentDirectory()
+    {
+        var sourceFilesByPath = _asepriteFiles.ToDictionary(path => Path.GetFullPath(path), StringComparer.Ordinal);
+        var inspections = LoadSourceInspectionsForDirectory(ExternalSourceDirectory);
+        var updatedPaths = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var sourceInspection in inspections)
+        {
+            if (!sourceFilesByPath.TryGetValue(sourceInspection.InputPath, out var sourceFilePath))
+                continue;
+
+            _verificationCache[sourceFilePath] = BuildVerificationResult(sourceInspection, sourceFilePath);
+            updatedPaths.Add(sourceFilePath);
+        }
+
+        foreach (var sourceFilePath in _asepriteFiles)
+        {
+            if (updatedPaths.Contains(sourceFilePath))
+                continue;
+
+            var characterName = InferCharacterNameFromSourceFile(sourceFilePath);
+            _verificationCache[sourceFilePath] = VerificationResult.Error(characterName, sourceFilePath, "Batched inspect returned no result for this file.");
+        }
+    }
+
+    private VerificationResult GetCachedVerificationResult(string sourceFilePath)
+    {
+        return _verificationCache.TryGetValue(sourceFilePath, out var cachedResult) ? cachedResult : null;
+    }
+
+    private void InvalidateVerificationCache(string sourceFilePath)
+    {
+        if (!string.IsNullOrWhiteSpace(sourceFilePath))
+            _verificationCache.Remove(sourceFilePath);
+    }
+
+    private static string BuildAsepriteFileTooltip(string sourceFilePath, VerificationResult cachedResult)
+    {
+        if (cachedResult == null || cachedResult.State == VerificationState.Unknown)
+            return $"{sourceFilePath}\nStatus: Unknown";
+
+        if (cachedResult.State == VerificationState.Error)
+            return $"{sourceFilePath}\nStatus: Error\n{cachedResult.ErrorMessage}";
+
+        if (cachedResult.State == VerificationState.Clean)
+            return $"{sourceFilePath}\nStatus: Clean";
+
+        var mismatchSummary = string.Join("\n", cachedResult.Mismatches.Select(mismatch => $"- {mismatch}"));
+        return $"{sourceFilePath}\nStatus: Mismatch\n{mismatchSummary}";
+    }
+
+    private static string GetVerificationMarker(VerificationState state)
+    {
+        return state switch
+        {
+            VerificationState.Clean => "[OK]",
+            VerificationState.Mismatch => "[!]",
+            VerificationState.Error => "[ERR]",
+            _ => "[?]",
+        };
     }
 
     private static bool DirExists(string path)
@@ -1296,6 +1545,14 @@ public partial class AssetManagerTool : Control
         Skipped,
     }
 
+    private enum VerificationState
+    {
+        Unknown,
+        Clean,
+        Mismatch,
+        Error,
+    }
+
     private sealed record ExportResult(
         string CharacterName,
         string SourceFilePath,
@@ -1320,7 +1577,10 @@ public partial class AssetManagerTool : Control
 
     private sealed record SourceInspection(
         string InputPath,
-        IReadOnlyList<SourceAnimationGroup> Groups);
+        string Status,
+        IReadOnlyList<SourceAnimationGroup> Groups,
+        IReadOnlyList<string> MissingGroups,
+        IReadOnlyList<string> MissingLayers);
 
     private sealed record SourceBrowserEntry(
         string DisplayName,
@@ -1334,12 +1594,50 @@ public partial class AssetManagerTool : Control
     }
 
     private sealed record VerificationResult(
+        VerificationState State,
         string CharacterName,
         string SourceFilePath,
         int SourceGroupCount,
-        IReadOnlyList<string> Mismatches)
+        IReadOnlyList<string> Mismatches,
+        string ErrorMessage)
     {
-        public bool IsClean => Mismatches.Count == 0;
+        public bool IsClean => State == VerificationState.Clean;
+
+        public static VerificationResult Clean(string characterName, string sourceFilePath, int sourceGroupCount)
+        {
+            return new VerificationResult(VerificationState.Clean, characterName, sourceFilePath, sourceGroupCount, System.Array.Empty<string>(), string.Empty);
+        }
+
+        public static VerificationResult Mismatch(string characterName, string sourceFilePath, int sourceGroupCount, IReadOnlyList<string> mismatches)
+        {
+            return new VerificationResult(VerificationState.Mismatch, characterName, sourceFilePath, sourceGroupCount, mismatches, string.Empty);
+        }
+
+        public static VerificationResult Error(string characterName, string sourceFilePath, string errorMessage)
+        {
+            return new VerificationResult(VerificationState.Error, characterName, sourceFilePath, 0, System.Array.Empty<string>(), errorMessage);
+        }
+
+        public static VerificationResult Unknown(string characterName, string sourceFilePath)
+        {
+            return new VerificationResult(VerificationState.Unknown, characterName, sourceFilePath, 0, System.Array.Empty<string>(), string.Empty);
+        }
+    }
+
+    private sealed class VerificationDirectorySummary
+    {
+        public VerificationDirectorySummary(string directoryPath, IReadOnlyList<VerificationResult> results)
+        {
+            DirectoryPath = directoryPath;
+            Results = results;
+        }
+
+        public string DirectoryPath { get; }
+        public IReadOnlyList<VerificationResult> Results { get; }
+        public int TotalFiles => Results.Count;
+        public int CleanCount => Results.Count(result => result.State == VerificationState.Clean);
+        public int MismatchCount => Results.Count(result => result.State == VerificationState.Mismatch);
+        public int ErrorCount => Results.Count(result => result.State == VerificationState.Error);
     }
 
     private sealed record CharacterSyncResult(
