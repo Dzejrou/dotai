@@ -1,9 +1,9 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://oujptp7od5tj"]
 
-[ext_resource type="Texture2D" path="res://assets/target_dummy/rotations/east.png" id="1_east"]
-[ext_resource type="Texture2D" path="res://assets/target_dummy/rotations/north.png" id="2_north"]
-[ext_resource type="Texture2D" path="res://assets/target_dummy/rotations/south.png" id="3_south"]
-[ext_resource type="Texture2D" path="res://assets/target_dummy/rotations/west.png" id="4_west"]
+[ext_resource type="Texture2D" uid="uid://b1bqsk4quggtm" path="res://assets/target_dummy/rotations/east.png" id="1_east"]
+[ext_resource type="Texture2D" uid="uid://b5kjywmcvd2av" path="res://assets/target_dummy/rotations/north.png" id="2_north"]
+[ext_resource type="Texture2D" uid="uid://cbu6fkw68hivo" path="res://assets/target_dummy/rotations/south.png" id="3_south"]
+[ext_resource type="Texture2D" uid="uid://dkjr7wk0oh2re" path="res://assets/target_dummy/rotations/west.png" id="4_west"]
 
 [resource]
 animations = [{
