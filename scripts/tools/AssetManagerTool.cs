@@ -90,7 +90,7 @@ public partial class AssetManagerTool : Control
         _statusOutput.Text = string.Empty;
         RefreshAsepriteFiles();
         AppendStatus("Ready. Export and sync are separate actions.");
-        AppendStatus("Export writes directly into this project's assets directory. Run Godot import separately before syncing.");
+        AppendStatus("Run Godot import outside this tool after export and before sync.");
     }
 
     private void RunHeadlessCommand(HeadlessCommand command)
@@ -246,8 +246,10 @@ public partial class AssetManagerTool : Control
 
         if (!Directory.Exists(ExternalSourceDirectory))
         {
-            _sourceSummaryLabel.Text = "Source directory not found.";
+            _sourceSummaryLabel.Text = $"Source directory not found.\n{ExternalSourceDirectory}";
+            _sourceSummaryLabel.TooltipText = ExternalSourceDirectory;
             _selectionLabel.Text = "No file selected.";
+            _selectionLabel.TooltipText = string.Empty;
             UpdateActionState();
             return;
         }
@@ -265,11 +267,13 @@ public partial class AssetManagerTool : Control
             _asepriteFilesList.SetItemMetadata(index, path);
         }
 
-        _sourceSummaryLabel.Text = $"{_asepriteFiles.Count} .aseprite files in {ExternalSourceDirectory}";
+        _sourceSummaryLabel.Text = $"{_asepriteFiles.Count} .aseprite files\n{ExternalSourceDirectory}";
+        _sourceSummaryLabel.TooltipText = ExternalSourceDirectory;
 
         if (_asepriteFiles.Count == 0)
         {
             _selectionLabel.Text = "No file selected.";
+            _selectionLabel.TooltipText = string.Empty;
             UpdateActionState();
             return;
         }
@@ -290,11 +294,13 @@ public partial class AssetManagerTool : Control
         if (sourceFilePath == null)
         {
             _selectionLabel.Text = "No file selected.";
+            _selectionLabel.TooltipText = string.Empty;
             return;
         }
 
         var characterName = InferCharacterNameFromSourceFile(sourceFilePath);
-        _selectionLabel.Text = $"Selected: {Path.GetFileName(sourceFilePath)} -> assets/{characterName}";
+        _selectionLabel.Text = $"Selected: {Path.GetFileName(sourceFilePath)}\nTarget: assets/{characterName}";
+        _selectionLabel.TooltipText = sourceFilePath;
     }
 
     private string GetSelectedSourceFilePath()

@@ -16,10 +16,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = 16.0
-offset_right = -16.0
-offset_bottom = -16.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -30,27 +30,29 @@ size_flags_vertical = 3
 
 [node name="VBox" type="VBoxContainer" parent="Margin/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="Margin/Panel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 22
 text = "Asset Manager"
 
 [node name="Intro" type="Label" parent="Margin/Panel/VBox"]
 layout_mode = 2
-text = "Select external .aseprite sources, export into this project's assets tree, then sync SpriteFrames separately."
+size_flags_horizontal = 3
+autowrap_mode = 2
+text = "Export selected .aseprite files into this project's assets tree, then sync SpriteFrames as a separate step."
 
 [node name="SourceRow" type="HBoxContainer" parent="Margin/Panel/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="SourceLabel" type="Label" parent="Margin/Panel/VBox/SourceRow"]
 layout_mode = 2
-text = "Source Dir"
+text = "Source"
 
 [node name="SourceDirectoryInput" type="LineEdit" parent="Margin/Panel/VBox/SourceRow"]
-custom_minimum_size = Vector2(420, 0)
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "/Users/jjindrak/Projects/pixelart/characters"
@@ -59,23 +61,24 @@ placeholder_text = "/Users/jjindrak/Projects/pixelart/characters"
 layout_mode = 2
 text = "Refresh"
 
-[node name="SummaryRow" type="HBoxContainer" parent="Margin/Panel/VBox"]
+[node name="SummaryRow" type="VBoxContainer" parent="Margin/Panel/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 4
 
 [node name="SourceSummaryLabel" type="Label" parent="Margin/Panel/VBox/SummaryRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+autowrap_mode = 2
 text = "0 .aseprite files"
 
 [node name="SelectionLabel" type="Label" parent="Margin/Panel/VBox/SummaryRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-horizontal_alignment = 2
+autowrap_mode = 2
 text = "No file selected."
 
-[node name="Body" type="HSplitContainer" parent="Margin/Panel/VBox"]
-custom_minimum_size = Vector2(0, 420)
+[node name="Body" type="VSplitContainer" parent="Margin/Panel/VBox"]
+custom_minimum_size = Vector2(0, 340)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -94,7 +97,7 @@ layout_mode = 2
 text = "Aseprite Files"
 
 [node name="AsepriteFiles" type="ItemList" parent="Margin/Panel/VBox/Body/FilesPanel/FilesVBox"]
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -114,19 +117,15 @@ layout_mode = 2
 text = "Status"
 
 [node name="StatusOutput" type="TextEdit" parent="Margin/Panel/VBox/Body/StatusPanel/StatusVBox"]
-custom_minimum_size = Vector2(0, 0)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 editable = false
 
-[node name="Actions" type="HBoxContainer" parent="Margin/Panel/VBox"]
+[node name="Actions" type="HFlowContainer" parent="Margin/Panel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
-
-[node name="RefreshButtonSpacer" type="Control" parent="Margin/Panel/VBox/Actions"]
-layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="ExportButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
@@ -138,4 +137,6 @@ text = "Sync Selected SpriteFrames"
 
 [node name="Note" type="Label" parent="Margin/Panel/VBox"]
 layout_mode = 2
-text = "Export uses the external wrapper with --replace-all and writes directly into assets/<character>. Godot import stays outside this tool."
+size_flags_horizontal = 3
+autowrap_mode = 2
+text = "Export writes directly into assets/<character> with --replace-all. Run Godot import outside this tool before syncing."
