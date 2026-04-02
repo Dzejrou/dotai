@@ -41,7 +41,7 @@ text = "Asset Manager"
 layout_mode = 2
 size_flags_horizontal = 3
 autowrap_mode = 2
-text = "Import the selected .aseprite file, verify the imported assets, run Godot import, then sync SpriteFrames."
+text = "Import the selected .aseprite file as animated or static assets, verify the imported assets, run Godot import, then sync SpriteFrames."
 
 [node name="SourceRow" type="HBoxContainer" parent="Margin/Panel/VBox"]
 layout_mode = 2
@@ -137,9 +137,13 @@ editable = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ExportButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+[node name="ImportAsepriteButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
 text = "Import (Aseprite)"
+
+[node name="ImportAsepriteStaticButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+layout_mode = 2
+text = "Import (Aseprite Static)"
 
 [node name="VerifyButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
@@ -165,4 +169,4 @@ text = "Inspect Selected"
 layout_mode = 2
 size_flags_horizontal = 3
 autowrap_mode = 2
-text = "Import (Aseprite) writes directly into assets/<character> with --replace-all. Import (Godot) and Sync SpriteFrames remain separate steps."
+text = "Import (Aseprite) writes animated exports into assets/<character> with --replace-all. Import (Aseprite Static) writes static directional exports with --export-static. Import (Godot) and Sync SpriteFrames remain separate steps."
