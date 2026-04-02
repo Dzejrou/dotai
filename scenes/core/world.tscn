@@ -9,6 +9,7 @@
 [ext_resource type="Resource" uid="uid://dywxbx4vl0ax3" path="res://resources/debug/spawn_catalog.tres" id="7_spawn_catalog"]
 [ext_resource type="PackedScene" path="res://scenes/world/altar.tscn" id="10_epgnc"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="10_vn8ag"]
+[ext_resource type="PackedScene" path="res://scenes/effects/poison_cloud_area.tscn" id="11_1j3no"]
 [ext_resource type="Texture2D" uid="uid://b65b0optd443s" path="res://assets/graveyard.png" id="11_epgnc"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_world_navigation"]
@@ -88,3 +89,8 @@ position = Vector2(423, 524)
 
 [node name="Altar" parent="." unique_id=487314875 instance=ExtResource("10_epgnc")]
 position = Vector2(867, 379)
+
+[node name="PoisonCloudArea" parent="." unique_id=441088313 instance=ExtResource("11_1j3no")]
+position = Vector2(877, 663)
+CloudLifetime = 1400.0
+PoisonDuration = 6.0
