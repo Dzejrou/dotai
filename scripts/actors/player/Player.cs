@@ -81,6 +81,11 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public bool HasInteractionTarget => _activeInteractable != null;
     public string CurrentInteractionLabel => _activeInteractableLabel;
 
+    public void ShowFloatingText(string text, Color color)
+    {
+        FloatingNumberHelper.ShowFloatingNumber(this, text, color);
+    }
+
     public override void _Ready()
     {
         SetAnimatedSprite(GetNode<AnimatedSprite2D>("AnimatedSprite2D"));

@@ -9,6 +9,14 @@ public partial class StatusEffectController : Node
     [Signal]
     public delegate void StatusVisualStateChangedEventHandler(StringName statusKey, bool active);
 
+    [Signal]
+    public delegate void StatusFloatingTextRequestedEventHandler(string text, Color color);
+
+    private static readonly Color DebuffAppliedColor = new(0.92f, 0.28f, 0.28f, 1.0f);
+    private static readonly Color DebuffRemovedColor = new(0.42f, 0.92f, 0.42f, 1.0f);
+    private static readonly Color BuffAppliedColor = new(0.42f, 0.92f, 0.42f, 1.0f);
+    private static readonly Color BuffRemovedColor = new(0.92f, 0.28f, 0.28f, 1.0f);
+
     private readonly Dictionary<(StringName StatusKey, ulong SourceId), StatusEffect> _activeEffects = new();
     private readonly Dictionary<StringName, int> _activeStatusCounts = new();
     private Node2D _owner;
@@ -111,6 +119,7 @@ public partial class StatusEffectController : Node
         effect.Start(_owner, source);
         _activeEffects[effectKey] = effect;
         AdjustStatusCount(statusKey, 1);
+        EmitStatusFloatingText(effect, applied: true);
     }
 
     private void RemoveEffect(StringName statusKey, ulong sourceId, StatusEffect effect, bool expired)
@@ -118,6 +127,8 @@ public partial class StatusEffectController : Node
         var effectKey = (StatusKey: statusKey, SourceId: sourceId);
         if (_activeEffects.Remove(effectKey))
             AdjustStatusCount(statusKey, -1);
+
+        EmitStatusFloatingText(effect, applied: false);
 
         if (effect != null && GodotObject.IsInstanceValid(effect))
         {
@@ -140,5 +151,39 @@ public partial class StatusEffectController : Node
             EmitSignal(SignalName.StatusVisualStateChanged, statusKey, true);
         else if (currentCount > 0 && nextCount <= 0)
             EmitSignal(SignalName.StatusVisualStateChanged, statusKey, false);
+    }
+
+    private void EmitStatusFloatingText(StatusEffect effect, bool applied)
+    {
+        if (effect == null)
+            return;
+
+        var displayName = string.IsNullOrWhiteSpace(effect.DisplayName)
+            ? effect.StatusKey.ToString()
+            : effect.DisplayName.Trim();
+
+        if (string.IsNullOrWhiteSpace(displayName))
+            return;
+
+        var prefix = applied ? "+" : "-";
+        var color = ResolveStatusFloatingTextColor(effect.Category, applied);
+        CallDeferred(nameof(EmitStatusFloatingTextDeferred), $"{prefix}{displayName.ToUpperInvariant()}", color);
+    }
+
+    private void EmitStatusFloatingTextDeferred(string text, Color color)
+    {
+        if (!IsInsideTree())
+            return;
+
+        EmitSignal(SignalName.StatusFloatingTextRequested, text, color);
+    }
+
+    private static Color ResolveStatusFloatingTextColor(StatusCategory category, bool applied)
+    {
+        return category switch
+        {
+            StatusCategory.Buff => applied ? BuffAppliedColor : BuffRemovedColor,
+            _ => applied ? DebuffAppliedColor : DebuffRemovedColor,
+        };
     }
 }

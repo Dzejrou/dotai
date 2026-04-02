@@ -28,6 +28,7 @@ public partial class Main : Node2D
 
     private World _world;
     private Player _player;
+    private StatusEffectController _playerStatusEffectController;
     private Control _gameOverRoot;
     private PauseMenu _pauseMenuRoot;
     private DebugTray _debugTrayRoot;
@@ -99,8 +100,14 @@ public partial class Main : Node2D
         if (player != null)
         {
             player.Connect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
-            var playerStatusController = player.GetNodeOrNull<StatusEffectController>("StatusEffectController");
-            _playerIsPoisoned = playerStatusController?.HasStatus(PoisonedEffect.StatusKeyName) ?? false;
+            _playerStatusEffectController = player.GetNodeOrNull<StatusEffectController>("StatusEffectController");
+            if (_playerStatusEffectController != null)
+            {
+                _playerStatusEffectController.Connect(
+                    StatusEffectController.SignalName.StatusFloatingTextRequested,
+                    new Callable(this, nameof(OnPlayerStatusFloatingTextRequested)));
+                _playerIsPoisoned = _playerStatusEffectController.HasStatus(PoisonedEffect.StatusKeyName);
+            }
             RefreshPlayerHealthColors();
             UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealableHealth);
             UpdatePlayerManaHud(player.CurrentMana, player.MaxManaValue);
@@ -123,25 +130,39 @@ public partial class Main : Node2D
         if (_world == null)
             return;
 
-        if (_world.IsConnected(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
             _world.Disconnect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
 
-        if (_world.IsConnected(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
             _world.Disconnect(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
 
-        if (_world.IsConnected(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged))))
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged))))
             _world.Disconnect(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
 
-        if (_world.IsConnected(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged))))
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged))))
             _world.Disconnect(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged)));
 
-        if (_player != null && _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
+        if (GodotObject.IsInstanceValid(_player) &&
+            _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
             _player.Disconnect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
 
-        if (_pauseMenuRoot != null && _pauseMenuRoot.IsConnected(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested))))
+        if (GodotObject.IsInstanceValid(_playerStatusEffectController))
+        {
+            var textCallable = new Callable(this, nameof(OnPlayerStatusFloatingTextRequested));
+            if (_playerStatusEffectController.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
+                _playerStatusEffectController.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
+        }
+
+        if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
+            _pauseMenuRoot.IsConnected(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested))))
             _pauseMenuRoot.Disconnect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
 
-        if (_pauseMenuRoot != null && _pauseMenuRoot.IsConnected(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested))))
+        if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
+            _pauseMenuRoot.IsConnected(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested))))
             _pauseMenuRoot.Disconnect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
     }
 
@@ -203,6 +224,11 @@ public partial class Main : Node2D
     private void OnPlayerInteractionAvailabilityChanged(bool available, string label)
     {
         UpdateInteractionPrompt(available, label);
+    }
+
+    private void OnPlayerStatusFloatingTextRequested(string text, Color color)
+    {
+        _player?.ShowFloatingText(text, color);
     }
 
     private void RestartFromGameOver()

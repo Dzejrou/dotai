@@ -420,6 +420,10 @@ public abstract partial class Actor : CombatCharacter
             StatusEffectController.SignalName.StatusVisualStateChanged,
             new Callable(this, nameof(OnStatusVisualStateChanged)));
 
+        _statusEffectController.Connect(
+            StatusEffectController.SignalName.StatusFloatingTextRequested,
+            new Callable(this, nameof(OnStatusFloatingTextRequested)));
+
         OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, _statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
     }
 
@@ -431,6 +435,10 @@ public abstract partial class Actor : CombatCharacter
         var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
         if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
             _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
+
+        var textCallable = new Callable(this, nameof(OnStatusFloatingTextRequested));
+        if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
+            _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
     }
 
     private void OnStatusVisualStateChanged(StringName statusKey, bool active)
@@ -439,6 +447,11 @@ public abstract partial class Actor : CombatCharacter
             return;
 
         _actorHud?.SetPoisoned(active);
+    }
+
+    private void OnStatusFloatingTextRequested(string text, Color color)
+    {
+        _actorHud?.ShowFloatingText(text, color);
     }
 
     private void OnAnimatedSpriteAnimationFinished()

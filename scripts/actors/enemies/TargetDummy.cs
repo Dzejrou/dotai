@@ -175,6 +175,10 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
             StatusEffectController.SignalName.StatusVisualStateChanged,
             new Callable(this, nameof(OnStatusVisualStateChanged)));
 
+        _statusEffectController.Connect(
+            StatusEffectController.SignalName.StatusFloatingTextRequested,
+            new Callable(this, nameof(OnStatusFloatingTextRequested)));
+
         OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, _statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
     }
 
@@ -186,6 +190,10 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
         var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
         if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
             _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
+
+        var textCallable = new Callable(this, nameof(OnStatusFloatingTextRequested));
+        if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
+            _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
     }
 
     private void ClearStatuses()
@@ -200,6 +208,11 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
             return;
 
         _actorHud?.SetPoisoned(active);
+    }
+
+    private void OnStatusFloatingTextRequested(string text, Color color)
+    {
+        _actorHud?.ShowFloatingText(text, color);
     }
 
     private Texture2D ResolveVisualTexture()

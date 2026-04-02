@@ -2,6 +2,12 @@ using Godot;
 
 using System;
 
+public enum StatusCategory
+{
+    Buff,
+    Debuff,
+}
+
 [GlobalClass]
 public abstract partial class StatusEffect : Node
 {
@@ -10,6 +16,12 @@ public abstract partial class StatusEffect : Node
 
     [Export]
     public float TickIntervalSeconds { get; set; } = 1.0f;
+
+    [Export]
+    public string DisplayName { get; set; } = string.Empty;
+
+    [Export]
+    public StatusCategory Category { get; set; } = StatusCategory.Debuff;
 
     public Node2D OwnerNode { get; private set; }
     public Node2D Source { get; private set; }
@@ -84,6 +96,8 @@ public abstract partial class StatusEffect : Node
     {
         DurationSeconds = replacement.DurationSeconds;
         TickIntervalSeconds = replacement.TickIntervalSeconds;
+        DisplayName = replacement.DisplayName;
+        Category = replacement.Category;
     }
 
     protected virtual void OnApplied()

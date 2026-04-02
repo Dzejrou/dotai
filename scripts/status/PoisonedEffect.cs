@@ -7,6 +7,12 @@ public partial class PoisonedEffect : StatusEffect
 {
     public static readonly StringName StatusKeyName = "poisoned";
 
+    public PoisonedEffect()
+    {
+        DisplayName = "POISON";
+        Category = StatusCategory.Debuff;
+    }
+
     [Export]
     public int DamagePerTick { get; set; } = 2;
 
