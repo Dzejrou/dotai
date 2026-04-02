@@ -40,10 +40,15 @@ public partial class Main : Node2D
     private ColorRect _manaBackground;
     private ColorRect _manaFill;
     private PlayerSpellBar _spellBar;
+    private bool _playerIsPoisoned;
     private const int HealthBarWidth = 140;
     private const int HealthBarHeight = 16;
     private const int ManaBarWidth = 140;
     private const int ManaBarHeight = 16;
+    private static readonly Color PlayerHealthFillColor = new Color(0.88f, 0.24f, 0.24f, 1.0f);
+    private static readonly Color PlayerHealthBackgroundColor = new Color(0.32f, 0.12f, 0.12f, 0.85f);
+    private static readonly Color PoisonedPlayerHealthFillColor = new Color(0.42f, 0.92f, 0.42f, 1.0f);
+    private static readonly Color PoisonedPlayerHealthBackgroundColor = new Color(0.12f, 0.28f, 0.12f, 0.85f);
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private int _windowPresetIndex;
 
@@ -56,6 +61,7 @@ public partial class Main : Node2D
             _world.Connect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
             _world.Connect(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
             _world.Connect(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
+            _world.Connect(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged)));
         }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
@@ -87,6 +93,9 @@ public partial class Main : Node2D
         var player = _world?.GetNodeOrNull<Player>(playerPath);
         if (player != null)
         {
+            var playerStatusController = player.GetNodeOrNull<StatusEffectController>("StatusEffectController");
+            _playerIsPoisoned = playerStatusController?.HasStatus(PoisonedEffect.StatusKeyName) ?? false;
+            RefreshPlayerHealthColors();
             UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealableHealth);
             UpdatePlayerManaHud(player.CurrentMana, player.MaxManaValue);
             _spellBar?.Bind(player);
@@ -114,6 +123,9 @@ public partial class Main : Node2D
 
         if (_world.IsConnected(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged))))
             _world.Disconnect(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
+
+        if (_world.IsConnected(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged))))
+            _world.Disconnect(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged)));
 
         if (_pauseMenuRoot != null && _pauseMenuRoot.IsConnected(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested))))
             _pauseMenuRoot.Disconnect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
@@ -167,6 +179,15 @@ public partial class Main : Node2D
         UpdatePlayerManaHud(mana, maxMana);
     }
 
+    private void OnPlayerStatusVisualStateChanged(StringName statusKey, bool active)
+    {
+        if (statusKey != PoisonedEffect.StatusKeyName)
+            return;
+
+        _playerIsPoisoned = active;
+        RefreshPlayerHealthColors();
+    }
+
     private void RestartFromGameOver()
     {
         _restartingFromGameOver = true;
@@ -195,6 +216,7 @@ public partial class Main : Node2D
         var safeMax = Math.Max(1, maxHealth);
         var healthRatio = Math.Clamp((float)health / safeMax, 0.0f, 1.0f);
         _healthFill.Size = new Vector2(HealthBarWidth * healthRatio, HealthBarHeight);
+        RefreshPlayerHealthColors();
     }
 
     private void UpdatePlayerManaHud(int mana, int maxMana)
@@ -207,6 +229,22 @@ public partial class Main : Node2D
         var safeMax = Math.Max(1, maxMana);
         var manaRatio = Math.Clamp((float)mana / safeMax, 0.0f, 1.0f);
         _manaFill.Size = new Vector2(ManaBarWidth * manaRatio, ManaBarHeight);
+    }
+
+    private void RefreshPlayerHealthColors()
+    {
+        if (_healthFill == null || _healthBackground == null)
+            return;
+
+        if (_playerIsPoisoned)
+        {
+            _healthFill.Color = PoisonedPlayerHealthFillColor;
+            _healthBackground.Color = PoisonedPlayerHealthBackgroundColor;
+            return;
+        }
+
+        _healthFill.Color = PlayerHealthFillColor;
+        _healthBackground.Color = PlayerHealthBackgroundColor;
     }
 
     private void CreateHud()
@@ -231,7 +269,7 @@ public partial class Main : Node2D
         _healthBackground = new ColorRect
         {
             Name = "HealthBarBackground",
-            Color = Colors.Black,
+            Color = PlayerHealthBackgroundColor,
             Size = new Vector2(HealthBarWidth, HealthBarHeight)
         };
         healthPanel.AddChild(_healthBackground);
@@ -239,7 +277,7 @@ public partial class Main : Node2D
         _healthFill = new ColorRect
         {
             Name = "HealthBarFill",
-            Color = new Color(1.0f, 0.0f, 0.0f, 1.0f),
+            Color = PlayerHealthFillColor,
             Size = new Vector2(HealthBarWidth, HealthBarHeight)
         };
         healthPanel.AddChild(_healthFill);

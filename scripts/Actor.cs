@@ -40,6 +40,7 @@ public abstract partial class Actor : CombatCharacter
     private bool _hasNavigationDestination;
     private Vector2 _lastNavigationDestination;
     private ActorHUD _actorHud;
+    private StatusEffectController _statusEffectController;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
 
@@ -75,6 +76,7 @@ public abstract partial class Actor : CombatCharacter
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
         else
             _actorHud.Bind(this);
+        BindStatusEffects();
         RefreshHealthLabel();
 
         if (AnimatedSprite != null)
@@ -119,6 +121,7 @@ public abstract partial class Actor : CombatCharacter
             AnimatedSprite.AnimationFinished -= OnAnimatedSpriteAnimationFinished;
 
         UnsubscribeFromNavigationDebug();
+        UnbindStatusEffects();
         OnActorExitTree();
     }
 
@@ -393,6 +396,37 @@ public abstract partial class Actor : CombatCharacter
     }
 
     protected virtual void OnActorExitTree() { }
+
+    private void BindStatusEffects()
+    {
+        _statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
+        if (_statusEffectController == null)
+            return;
+
+        _statusEffectController.Connect(
+            StatusEffectController.SignalName.StatusVisualStateChanged,
+            new Callable(this, nameof(OnStatusVisualStateChanged)));
+
+        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, _statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
+    }
+
+    private void UnbindStatusEffects()
+    {
+        if (_statusEffectController == null)
+            return;
+
+        var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
+        if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
+            _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
+    }
+
+    private void OnStatusVisualStateChanged(StringName statusKey, bool active)
+    {
+        if (statusKey != PoisonedEffect.StatusKeyName)
+            return;
+
+        _actorHud?.SetPoisoned(active);
+    }
 
     private void OnAnimatedSpriteAnimationFinished()
     {

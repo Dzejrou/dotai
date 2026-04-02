@@ -35,7 +35,11 @@ public partial class World : Node2D
     [Signal]
     public delegate void PlayerManaChangedEventHandler(int mana, int maxMana);
 
+    [Signal]
+    public delegate void PlayerStatusVisualStateChangedEventHandler(StringName statusKey, bool active);
+
     private Player _player;
+    private StatusEffectController _playerStatusEffectController;
     private NavigationRegion2D _worldNavigation;
     private bool _isGameOver;
 
@@ -50,6 +54,13 @@ public partial class World : Node2D
             _player.Connect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
             _player.Connect(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
             _player.Connect(Player.SignalName.ManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
+            _playerStatusEffectController = _player.GetNodeOrNull<StatusEffectController>("StatusEffectController");
+            if (_playerStatusEffectController != null)
+            {
+                _playerStatusEffectController.Connect(
+                    StatusEffectController.SignalName.StatusVisualStateChanged,
+                    new Callable(this, nameof(OnPlayerStatusVisualStateChanged)));
+            }
             EmitSignal(SignalName.PlayerHealthChanged, _player.CurrentHealth, _player.MaxHealableHealth);
             EmitSignal(SignalName.PlayerManaChanged, _player.CurrentMana, _player.MaxManaValue);
         }
@@ -74,6 +85,13 @@ public partial class World : Node2D
         {
             _player.Disconnect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
         }
+
+        if (GodotObject.IsInstanceValid(_playerStatusEffectController))
+        {
+            var statusCallable = new Callable(this, nameof(OnPlayerStatusVisualStateChanged));
+            if (_playerStatusEffectController.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, statusCallable))
+                _playerStatusEffectController.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, statusCallable);
+        }
     }
 
     private void OnPlayerDied()
@@ -93,6 +111,11 @@ public partial class World : Node2D
     private void OnPlayerManaChanged(int mana, int maxMana)
     {
         EmitSignal(SignalName.PlayerManaChanged, mana, maxMana);
+    }
+
+    private void OnPlayerStatusVisualStateChanged(StringName statusKey, bool active)
+    {
+        EmitSignal(SignalName.PlayerStatusVisualStateChanged, statusKey, active);
     }
 
     private void BuildWorldNavigation()

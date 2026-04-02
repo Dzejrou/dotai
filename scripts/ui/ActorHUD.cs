@@ -7,6 +7,8 @@ public partial class ActorHUD : Node2D
 {
     private static readonly Color DefaultHealthFillColor = new Color(0.45f, 0.95f, 0.45f, 1.0f);
     private static readonly Color DefaultHealthBackgroundColor = new Color(0.16f, 0.36f, 0.16f, 0.85f);
+    private static readonly Color PoisonedHealthFillColor = new Color(0.42f, 0.92f, 0.42f, 1.0f);
+    private static readonly Color PoisonedHealthBackgroundColor = new Color(0.12f, 0.28f, 0.12f, 0.85f);
 
     [Export]
     public bool ShowName { get; set; } = true;
@@ -58,6 +60,7 @@ public partial class ActorHUD : Node2D
     private Faction _faction;
     private int _currentHealth;
     private int _maxHealth = 1;
+    private bool _isPoisoned;
 
     public override void _Ready()
     {
@@ -110,6 +113,15 @@ public partial class ActorHUD : Node2D
         _faction = faction;
         RefreshHealthColors();
         RefreshBracketColor();
+    }
+
+    public void SetPoisoned(bool isPoisoned)
+    {
+        if (_isPoisoned == isPoisoned)
+            return;
+
+        _isPoisoned = isPoisoned;
+        RefreshHealthColors();
     }
 
     public void SetTargetBracketVisible(bool visible)
@@ -205,6 +217,13 @@ public partial class ActorHUD : Node2D
     {
         if (_healthFill == null || _healthBackground == null)
             return;
+
+        if (_isPoisoned)
+        {
+            _healthFill.Color = PoisonedHealthFillColor;
+            _healthBackground.Color = PoisonedHealthBackgroundColor;
+            return;
+        }
 
         if (!ShouldUseFactionHealthColors())
         {
