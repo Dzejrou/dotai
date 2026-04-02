@@ -70,15 +70,17 @@ shape = SubResource("RectangleShape2D_z8t4t")
 
 [node name="TargetDummy" parent="." unique_id=1389461644 instance=ExtResource("6_slgso")]
 z_index = 0
-position = Vector2(728, 319)
+position = Vector2(866, 154)
 
 [node name="TargetDummy2" parent="." unique_id=1378294245 instance=ExtResource("6_slgso")]
 z_index = 0
-position = Vector2(748, 327)
+position = Vector2(915, 201)
+VisualDirection = "west"
 
 [node name="TargetDummy3" parent="." unique_id=1028788194 instance=ExtResource("6_slgso")]
 z_index = 0
-position = Vector2(700, 308)
+position = Vector2(803, 194)
+VisualDirection = "east"
 
 [node name="Dryad" parent="." unique_id=419684181 instance=ExtResource("10_vn8ag")]
 position = Vector2(423, 524)
