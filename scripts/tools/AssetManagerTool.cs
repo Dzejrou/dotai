@@ -251,10 +251,10 @@ public partial class AssetManagerTool : Control
         if (_isBusy)
             return;
 
-        var characterName = GetSelectedCharacterName();
+        var characterName = GetSelectedManagedCharacterName();
         if (characterName == null)
         {
-            AppendStatus("Select a .aseprite file before running Sync SpriteFrames.");
+            AppendStatus("Select a managed animated .aseprite file before running Sync SpriteFrames.");
             return;
         }
 
@@ -397,6 +397,7 @@ public partial class AssetManagerTool : Control
     private void UpdateActionState()
     {
         var hasSelection = GetSelectedSourceFilePath() != null;
+        var hasSyncTarget = GetSelectedManagedCharacterName() != null;
         var hasFiles = _asepriteFiles.Count > 0;
         _refreshButton.Disabled = _isBusy;
         _inspectButton.Disabled = _isBusy || !hasSelection;
@@ -405,7 +406,7 @@ public partial class AssetManagerTool : Control
         _importButton.Disabled = _isBusy;
         _importAsepriteButton.Disabled = _isBusy || !hasSelection;
         _importAsepriteStaticButton.Disabled = _isBusy || !hasSelection;
-        _syncButton.Disabled = _isBusy || !hasSelection;
+        _syncButton.Disabled = _isBusy || !hasSyncTarget;
     }
 
     private void ApplySourceDirectoryInput()
@@ -485,10 +486,14 @@ public partial class AssetManagerTool : Control
         return _asepriteFiles[index];
     }
 
-    private string GetSelectedCharacterName()
+    private string GetSelectedManagedCharacterName()
     {
         var sourceFilePath = GetSelectedSourceFilePath();
-        return sourceFilePath == null ? null : InferCharacterNameFromSourceFile(sourceFilePath);
+        if (sourceFilePath == null)
+            return null;
+
+        var characterName = InferCharacterNameFromSourceFile(sourceFilePath);
+        return HasManagedAnimationFrames($"{AssetsRoot}/{characterName}") ? characterName : null;
     }
 
     private void PopulateSourceBrowserEntries()
@@ -698,6 +703,8 @@ public partial class AssetManagerTool : Control
             .OrderBy(characterName => characterName, StringComparer.Ordinal)
             .ToList();
 
+        var summary = new SyncSummary();
+
         if (requestedCharacters != null && requestedCharacters.Count > 0)
         {
             var missingCharacters = requestedCharacters
@@ -705,15 +712,19 @@ public partial class AssetManagerTool : Control
                 .OrderBy(characterName => characterName, StringComparer.Ordinal)
                 .ToList();
 
-            if (missingCharacters.Count > 0)
-                throw new InvalidOperationException($"Requested character assets not found in the managed layout: {string.Join(", ", missingCharacters)}");
+            foreach (var missingCharacter in missingCharacters)
+            {
+                summary.Results.Add(CharacterSyncResult.Skipped(
+                    missingCharacter,
+                    $"{AssetsRoot}/{missingCharacter}_spriteframes.tres",
+                    "not a managed animated character asset"));
+            }
 
             characterNames = characterNames
                 .Where(characterName => requestedCharacters.Contains(characterName))
                 .ToList();
         }
 
-        var summary = new SyncSummary();
         foreach (var characterName in characterNames)
             summary.Results.Add(SyncCharacter(characterName));
 
