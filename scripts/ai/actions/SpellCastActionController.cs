@@ -10,13 +10,16 @@ public partial class SpellCastActionController : Node, ICombatActionController
         None,
         Basic,
         CloseRange,
+        LongRange,
     }
 
     private float _basicCooldownTimer;
     private float _closeRangeCooldownTimer;
+    private float _longRangeCooldownTimer;
     private SpellSlot _pendingSpell = SpellSlot.None;
     private Spell _basicSpell;
     private Spell _closeRangeSpell;
+    private Spell _longRangeSpell;
 
     [Export]
     public NodePath SpellNodePath { get; set; } = new("../Spells/Fireball");
@@ -45,6 +48,12 @@ public partial class SpellCastActionController : Node, ICombatActionController
     [Export]
     public float CloseRangeCooldown { get; set; } = 3.0f;
 
+    [Export]
+    public NodePath LongRangeSpellNodePath { get; set; }
+
+    [Export]
+    public float LongRangeCooldown { get; set; } = 10.0f;
+
     public override void _Ready()
     {
         MinimumRange = Math.Max(0.0f, MinimumRange);
@@ -55,6 +64,8 @@ public partial class SpellCastActionController : Node, ICombatActionController
         CloseRangeCooldown = Math.Max(0.0f, CloseRangeCooldown);
         _basicSpell = ResolveSpell(SpellNodePath);
         _closeRangeSpell = ResolveSpell(CloseRangeSpellNodePath);
+        LongRangeCooldown = Math.Max(0.0f, LongRangeCooldown);
+        _longRangeSpell = ResolveSpell(LongRangeSpellNodePath);
     }
 
     public void Update(Actor actor, double delta)
@@ -64,6 +75,9 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
         if (_closeRangeCooldownTimer > 0.0f)
             _closeRangeCooldownTimer -= (float)delta;
+
+        if (_longRangeCooldownTimer > 0.0f)
+            _longRangeCooldownTimer -= (float)delta;
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
@@ -136,6 +150,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
     {
         _basicCooldownTimer = 0.0f;
         _closeRangeCooldownTimer = 0.0f;
+        _longRangeCooldownTimer = 0.0f;
         ClearPendingCast();
     }
 
@@ -179,6 +194,9 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (CanUseCloseRangeSpell(caster, distance))
             return SpellSlot.CloseRange;
 
+        if (CanUseLongRangeSpell(caster, distance))
+            return SpellSlot.LongRange;
+
         if (CanUseBasicSpell(caster, distance))
             return SpellSlot.Basic;
 
@@ -202,11 +220,25 @@ public partial class SpellCastActionController : Node, ICombatActionController
                _closeRangeSpell.CanCast(caster);
     }
 
+    private bool CanUseLongRangeSpell(ISpellCaster caster, float distance)
+    {
+        return _longRangeCooldownTimer <= 0.0f &&
+               _longRangeSpell != null &&
+               distance > PreferredRange &&
+               _longRangeSpell.CanCast(caster);
+    }
+
     private void StartCooldown(SpellSlot spellSlot)
     {
         if (spellSlot == SpellSlot.CloseRange)
         {
             _closeRangeCooldownTimer = CloseRangeCooldown;
+            return;
+        }
+
+        if (spellSlot == SpellSlot.LongRange)
+        {
+            _longRangeCooldownTimer = LongRangeCooldown;
             return;
         }
 
@@ -234,6 +266,14 @@ public partial class SpellCastActionController : Node, ICombatActionController
                 _closeRangeSpell = ResolveSpell(CloseRangeSpellNodePath);
 
             return _closeRangeSpell;
+        }
+
+        if (spellSlot == SpellSlot.LongRange)
+        {
+            if (_longRangeSpell == null)
+                _longRangeSpell = ResolveSpell(LongRangeSpellNodePath);
+
+            return _longRangeSpell;
         }
 
         if (_basicSpell == null)

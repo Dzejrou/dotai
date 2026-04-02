@@ -16,6 +16,8 @@
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="15_mana_state"]
 [ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="16_fire_nova_vfx"]
 [ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="17_fire_nova_spell"]
+[ext_resource type="Script" path="res://scripts/spells/PoisonCloudSpell.cs" id="18_poison_cloud_spell"]
+[ext_resource type="PackedScene" path="res://scenes/effects/poison_cloud_area.tscn" id="19_poison_cloud_area"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -29,7 +31,7 @@ script = ExtResource("1_skeleton_mage")
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_skeleton_mage_frames")
-animation = &""
+animation = &"idle_south"
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=825643276]
 
@@ -56,7 +58,6 @@ script = ExtResource("15_mana_state")
 Max = 20
 RegenerationAmount = 2
 RegenerationInterval = 0.75
-RegenerationDelayAfterCast = 1.5
 
 [node name="Spells" type="Node" parent="." unique_id=1247757545]
 
@@ -72,11 +73,16 @@ ManaCost = 10
 MinimumDamage = 8
 MaximumDamage = 12
 
+[node name="PoisonCloud" type="Node" parent="Spells" unique_id=1804078723]
+script = ExtResource("18_poison_cloud_spell")
+AreaScene = ExtResource("19_poison_cloud_area")
+
 [node name="PrimaryActionController" type="Node" parent="." unique_id=612694339]
 script = ExtResource("11_spell_cast_action")
 AnimationSpeedMultiplier = 2.0
 CloseRangeSpellNodePath = NodePath("../Spells/FireNova")
 CloseRangeCooldown = 3.2
+LongRangeSpellNodePath = NodePath("../Spells/PoisonCloud")
 
 [node name="Behaviors" type="Node" parent="." unique_id=258315963]
 

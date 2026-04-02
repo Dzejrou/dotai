@@ -1,0 +1,42 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/poison_cloud/base/frame_000.png" id="1_pcloud_0"]
+[ext_resource type="Texture2D" path="res://assets/poison_cloud/base/frame_001.png" id="2_pcloud_1"]
+[ext_resource type="Texture2D" path="res://assets/poison_cloud/base/frame_002.png" id="3_pcloud_2"]
+[ext_resource type="Texture2D" path="res://assets/poison_cloud/base/frame_003.png" id="4_pcloud_3"]
+[ext_resource type="Texture2D" path="res://assets/poison_cloud/base/frame_004.png" id="5_pcloud_4"]
+[ext_resource type="Texture2D" path="res://assets/poison_cloud/base/frame_005.png" id="6_pcloud_5"]
+[ext_resource type="Texture2D" path="res://assets/poison_cloud/base/frame_006.png" id="7_pcloud_6"]
+[ext_resource type="Texture2D" path="res://assets/poison_cloud/base/frame_007.png" id="8_pcloud_7"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_pcloud_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_pcloud_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_pcloud_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_pcloud_3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_pcloud_4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_pcloud_5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_pcloud_6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_pcloud_7")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]

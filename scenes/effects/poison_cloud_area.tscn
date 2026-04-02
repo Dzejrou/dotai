@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/spells/PoisonCloudArea.cs" id="1_poison_cloud_area_script"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/poison_cloud_spriteframes.tres" id="2_poison_cloud_frames"]
+
+[node name="PoisonCloudArea" type="Node2D"]
+z_index = -2
+script = ExtResource("1_poison_cloud_area_script")
+CloudRadius = 48.0
+CloudLifetime = 14.0
+PoisonDuration = 10.0
+PoisonTickInterval = 2.0
+PoisonDamagePerTick = 5
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_poison_cloud_frames")
+animation = &"default"
+centered = true
+offset = Vector2(0, -8)
