@@ -4,7 +4,7 @@ using Godot;
 public partial class Altar : WorldObject, IInteractable
 {
     private const string DefaultVisualDirection = "south";
-    private const string DefaultInteractionLabel = "Interact";
+    private const string DefaultInteractionLabel = "Cleanse Poison";
 
     [Export(PropertyHint.Enum, "east,south-east,south,south-west,west,north-west,north,north-east")]
     public string VisualDirection { get; set; } = DefaultVisualDirection;
@@ -37,6 +37,14 @@ public partial class Altar : WorldObject, IInteractable
 
     public void Interact(Node interactor)
     {
+        if (interactor == null || !interactor.IsInsideTree())
+            return;
+
+        var statusEffectController = interactor.GetNodeOrNull<StatusEffectController>("StatusEffectController");
+        if (statusEffectController == null || !statusEffectController.HasStatus(PoisonedEffect.StatusKeyName))
+            return;
+
+        statusEffectController.RemoveStatus(PoisonedEffect.StatusKeyName);
     }
 
     private void ApplyVisualState()

@@ -53,7 +53,7 @@ public partial class Main : Node2D
     private static readonly Color PoisonedPlayerHealthBackgroundColor = new Color(0.12f, 0.28f, 0.12f, 0.85f);
     private static readonly Color InteractionPromptColor = new Color(0.98f, 0.86f, 0.42f, 1.0f);
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
-    private const string InteractionActionName = "interact";
+    private const string InteractionActionName = "interact_action";
     private int _windowPresetIndex;
 
     public override void _Ready()

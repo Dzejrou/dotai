@@ -52,7 +52,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public float TabTargetRange { get; set; } = 220.0f;
 
     [Export]
-    public float InteractionRange { get; set; } = 36.0f;
+    public float InteractionRange { get; set; } = 108.0f;
 
     private bool _isDead;
     private readonly RandomNumberGenerator _random = new();
@@ -116,7 +116,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (Input.IsActionJustPressed("clear_tab_target"))
             ClearTabTarget();
         UpdateInteractionState();
-        if (Input.IsActionJustPressed("interact"))
+        if (Input.IsActionJustPressed("interact_action"))
             TryInteract();
         TryCastEquippedSpells();
         var direction = GetInputDirection();
