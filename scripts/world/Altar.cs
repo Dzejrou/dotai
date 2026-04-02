@@ -1,9 +1,10 @@
 using Godot;
 
 [GlobalClass]
-public partial class Altar : WorldObject
+public partial class Altar : WorldObject, IInteractable
 {
     private const string DefaultVisualDirection = "south";
+    private const string DefaultInteractionLabel = "Interact";
 
     [Export(PropertyHint.Enum, "east,south-east,south,south-west,west,north-west,north,north-east")]
     public string VisualDirection { get; set; } = DefaultVisualDirection;
@@ -20,7 +21,22 @@ public partial class Altar : WorldObject
     public override void _Ready()
     {
         InitializeWorldObject();
+        AddToGroup(InteractionGroups.Interactables);
         ApplyVisualState();
+    }
+
+    public bool CanInteract(Node interactor)
+    {
+        return interactor != null && interactor.IsInsideTree();
+    }
+
+    public string GetInteractionLabel(Node interactor)
+    {
+        return DefaultInteractionLabel;
+    }
+
+    public void Interact(Node interactor)
+    {
     }
 
     private void ApplyVisualState()

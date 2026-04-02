@@ -27,6 +27,7 @@ public partial class Main : Node2D
     public NodePath DebugTrayPath { get; set; } = new NodePath("DebugTray/Root");
 
     private World _world;
+    private Player _player;
     private Control _gameOverRoot;
     private PauseMenu _pauseMenuRoot;
     private DebugTray _debugTrayRoot;
@@ -40,6 +41,7 @@ public partial class Main : Node2D
     private ColorRect _manaBackground;
     private ColorRect _manaFill;
     private PlayerSpellBar _spellBar;
+    private Label _interactionPrompt;
     private bool _playerIsPoisoned;
     private const int HealthBarWidth = 140;
     private const int HealthBarHeight = 16;
@@ -49,7 +51,9 @@ public partial class Main : Node2D
     private static readonly Color PlayerHealthBackgroundColor = new Color(0.32f, 0.12f, 0.12f, 0.85f);
     private static readonly Color PoisonedPlayerHealthFillColor = new Color(0.42f, 0.92f, 0.42f, 1.0f);
     private static readonly Color PoisonedPlayerHealthBackgroundColor = new Color(0.12f, 0.28f, 0.12f, 0.85f);
+    private static readonly Color InteractionPromptColor = new Color(0.98f, 0.86f, 0.42f, 1.0f);
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
+    private const string InteractionActionName = "interact";
     private int _windowPresetIndex;
 
     public override void _Ready()
@@ -91,20 +95,24 @@ public partial class Main : Node2D
 
         var playerPath = _world != null && !_world.PlayerPath.IsEmpty ? _world.PlayerPath : new NodePath("Player");
         var player = _world?.GetNodeOrNull<Player>(playerPath);
+        _player = player;
         if (player != null)
         {
+            player.Connect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
             var playerStatusController = player.GetNodeOrNull<StatusEffectController>("StatusEffectController");
             _playerIsPoisoned = playerStatusController?.HasStatus(PoisonedEffect.StatusKeyName) ?? false;
             RefreshPlayerHealthColors();
             UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealableHealth);
             UpdatePlayerManaHud(player.CurrentMana, player.MaxManaValue);
             _spellBar?.Bind(player);
+            UpdateInteractionPrompt(player.HasInteractionTarget, player.CurrentInteractionLabel);
         }
         else
         {
             UpdatePlayerHealthHud(0, 0);
             UpdatePlayerManaHud(0, 0);
             _spellBar?.Bind(null);
+            UpdateInteractionPrompt(false, string.Empty);
         }
 
         InitializeWindowPreset();
@@ -126,6 +134,9 @@ public partial class Main : Node2D
 
         if (_world.IsConnected(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged))))
             _world.Disconnect(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged)));
+
+        if (_player != null && _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
+            _player.Disconnect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
 
         if (_pauseMenuRoot != null && _pauseMenuRoot.IsConnected(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested))))
             _pauseMenuRoot.Disconnect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
@@ -160,6 +171,7 @@ public partial class Main : Node2D
 
         ClosePauseMenu();
         CloseDebugTray(false);
+        UpdateInteractionPrompt(false, string.Empty);
         _gameOverActive = true;
         GetTree().Paused = true;
 
@@ -188,6 +200,11 @@ public partial class Main : Node2D
         RefreshPlayerHealthColors();
     }
 
+    private void OnPlayerInteractionAvailabilityChanged(bool available, string label)
+    {
+        UpdateInteractionPrompt(available, label);
+    }
+
     private void RestartFromGameOver()
     {
         _restartingFromGameOver = true;
@@ -204,6 +221,19 @@ public partial class Main : Node2D
     {
         ClosePauseMenu();
         OpenDebugTray();
+    }
+
+    private void UpdateInteractionPrompt(bool available, string label)
+    {
+        if (_interactionPrompt == null)
+            return;
+
+        _interactionPrompt.Visible = available && !string.IsNullOrWhiteSpace(label);
+        if (!_interactionPrompt.Visible)
+            return;
+
+        var actionLabel = ResolveActionLabel(InteractionActionName);
+        _interactionPrompt.Text = $"{actionLabel}: {label}";
     }
 
     private void UpdatePlayerHealthHud(int health, int maxHealth)
@@ -338,6 +368,43 @@ public partial class Main : Node2D
             _spellBar = spellBar;
             hudCanvas.AddChild(_spellBar);
         }
+
+        _interactionPrompt = new Label
+        {
+            Name = "InteractionPrompt",
+            Visible = false,
+            Text = string.Empty,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Modulate = InteractionPromptColor,
+            CustomMinimumSize = new Vector2(240.0f, 24.0f),
+        };
+        _interactionPrompt.AnchorLeft = 0.5f;
+        _interactionPrompt.AnchorRight = 0.5f;
+        _interactionPrompt.AnchorTop = 1.0f;
+        _interactionPrompt.AnchorBottom = 1.0f;
+        _interactionPrompt.OffsetLeft = -120.0f;
+        _interactionPrompt.OffsetRight = 120.0f;
+        _interactionPrompt.OffsetTop = -92.0f;
+        _interactionPrompt.OffsetBottom = -68.0f;
+        _interactionPrompt.AddThemeFontSizeOverride("font_size", 18);
+        hudCanvas.AddChild(_interactionPrompt);
+    }
+
+    private string ResolveActionLabel(StringName action)
+    {
+        foreach (var inputEvent in InputMap.ActionGetEvents(action))
+        {
+            if (inputEvent is not InputEventKey keyEvent)
+                continue;
+
+            var keycode = keyEvent.PhysicalKeycode != Key.None
+                ? keyEvent.PhysicalKeycode
+                : keyEvent.Keycode;
+            if (keycode != Key.None)
+                return OS.GetKeycodeString(keycode).ToUpperInvariant();
+        }
+
+        return action.ToString();
     }
 
     private void InitializeWindowPreset()

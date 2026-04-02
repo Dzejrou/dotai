@@ -15,6 +15,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Signal]
     public delegate void ManaChangedEventHandler(int mana, int maxMana);
 
+    [Signal]
+    public delegate void InteractionAvailabilityChangedEventHandler(bool available, string label);
+
     [Export]
     public float Speed { get; set; } = 140.0f;
 
@@ -48,6 +51,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Export]
     public float TabTargetRange { get; set; } = 220.0f;
 
+    [Export]
+    public float InteractionRange { get; set; } = 36.0f;
+
     private bool _isDead;
     private readonly RandomNumberGenerator _random = new();
     private readonly HashSet<Node> _hitThisAttack = new();
@@ -57,6 +63,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private bool _isAttacking;
     private float _healthRegenTimer;
     private float _healthRegenDelayTimer;
+    private IInteractable _activeInteractable;
+    private Node2D _activeInteractableNode;
+    private string _activeInteractableLabel = string.Empty;
     private ActorHUD _activeTargetHud;
     private readonly HashSet<ActorHUD> _visibleTargetHuds = new();
     private readonly HashSet<ActorHUD> _nextVisibleTargetHuds = new();
@@ -69,6 +78,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public Node2D SpellTarget => Targeting.ActiveTarget;
     public Spell ArmedPlacementSpell => _pendingPlacementSpell as Spell;
     public bool CanCastSpells => !_isDead;
+    public bool HasInteractionTarget => _activeInteractable != null;
+    public string CurrentInteractionLabel => _activeInteractableLabel;
 
     public override void _Ready()
     {
@@ -81,6 +92,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         EmitHealthChanged();
         NotifyManaChanged();
+        UpdateInteractionState();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -103,6 +115,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             CycleTabTarget(-1);
         if (Input.IsActionJustPressed("clear_tab_target"))
             ClearTabTarget();
+        UpdateInteractionState();
+        if (Input.IsActionJustPressed("interact"))
+            TryInteract();
         TryCastEquippedSpells();
         var direction = GetInputDirection();
 
@@ -238,6 +253,104 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         ValidateTabTarget();
         UpdateSoftTarget();
         UpdateTargetHudVisibility();
+    }
+
+    private void UpdateInteractionState()
+    {
+        var currentIsValid = IsValidInteractionTarget(_activeInteractableNode, _activeInteractable);
+        var nextInteractable = currentIsValid ? _activeInteractable : FindClosestInteractable();
+        var nextInteractableNode = nextInteractable as Node2D;
+        var nextLabel = ResolveInteractionLabel(nextInteractable);
+
+        if (ReferenceEquals(nextInteractable, _activeInteractable) &&
+            ReferenceEquals(nextInteractableNode, _activeInteractableNode) &&
+            nextLabel == _activeInteractableLabel)
+        {
+            return;
+        }
+
+        _activeInteractable = nextInteractable;
+        _activeInteractableNode = nextInteractableNode;
+        _activeInteractableLabel = nextLabel;
+        EmitSignal(SignalName.InteractionAvailabilityChanged, nextInteractable != null, nextLabel);
+    }
+
+    private IInteractable FindClosestInteractable()
+    {
+        var interactionRange = Math.Max(0.0f, InteractionRange);
+        if (interactionRange <= 0.0f || !IsInsideTree() || GetTree() == null)
+            return null;
+
+        IInteractable closestInteractable = null;
+        var closestDistance = float.MaxValue;
+
+        foreach (var node in GetTree().GetNodesInGroup(InteractionGroups.Interactables))
+        {
+            if (!IsValidInteractableCandidate(node, out var targetNode, out var interactable))
+                continue;
+
+            var distance = GlobalPosition.DistanceTo(targetNode.GlobalPosition);
+            if (distance > interactionRange || distance >= closestDistance)
+                continue;
+
+            closestDistance = distance;
+            closestInteractable = interactable;
+        }
+
+        return closestInteractable;
+    }
+
+    private bool IsValidInteractableCandidate(Node node, out Node2D targetNode, out IInteractable interactable)
+    {
+        targetNode = null;
+        interactable = null;
+
+        if (!IsInstanceValid(node) || node is not Node2D node2D || !node2D.IsInsideTree())
+            return false;
+
+        if (node is not IInteractable interactableNode || !interactableNode.CanInteract(this))
+            return false;
+
+        targetNode = node2D;
+        interactable = interactableNode;
+        return true;
+    }
+
+    private bool IsValidInteractionTarget(Node2D targetNode, IInteractable interactable)
+    {
+        if (targetNode == null || interactable == null)
+            return false;
+
+        if (!IsInstanceValid(targetNode) || !targetNode.IsInsideTree())
+            return false;
+
+        if (!interactable.CanInteract(this))
+            return false;
+
+        return GlobalPosition.DistanceTo(targetNode.GlobalPosition) <= Math.Max(0.0f, InteractionRange);
+    }
+
+    private string ResolveInteractionLabel(IInteractable interactable)
+    {
+        if (interactable == null)
+            return string.Empty;
+
+        var label = interactable.GetInteractionLabel(this);
+        return string.IsNullOrWhiteSpace(label) ? "Interact" : label.Trim();
+    }
+
+    public bool TryInteract()
+    {
+        if (!IsValidInteractionTarget(_activeInteractableNode, _activeInteractable))
+        {
+            UpdateInteractionState();
+            if (!IsValidInteractionTarget(_activeInteractableNode, _activeInteractable))
+                return false;
+        }
+
+        _activeInteractable.Interact(this);
+        UpdateInteractionState();
+        return true;
     }
 
     private void UpdateSoftTarget()
