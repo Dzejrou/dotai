@@ -38,6 +38,7 @@ texture = ExtResource("3_8c1c8")
 
 [node name="Player" parent="." unique_id=643983542 instance=ExtResource("1_k6v4i")]
 position = Vector2(500, 397)
+HealthRegenerationAmount = 1
 
 [node name="DebugSpawner" type="Node2D" parent="." unique_id=59067455]
 script = ExtResource("6_debug_spawner")
