@@ -22,21 +22,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public float Speed { get; set; } = 140.0f;
 
     [Export]
-    public float AttackRange { get; set; } = 28.0f;
-
-    [Export]
-    public float AttackCooldown { get; set; } = 0.5f;
-
-    [Export]
-    public float AttackArcDegrees { get; set; } = 70.0f;
-
-    [Export]
-    public int MaxAttackDamage { get; set; } = 5;
-
-    [Export]
-    public int MinAttackDamage { get; set; } = 2;
-
-    [Export]
     public float HealthRegenerationInterval { get; set; } = 5.0f;
 
     [Export]
@@ -55,12 +40,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public float InteractionRange { get; set; } = 108.0f;
 
     private bool _isDead;
-    private readonly RandomNumberGenerator _random = new();
-    private readonly HashSet<Node> _hitThisAttack = new();
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
     private IPlacementSpell _pendingPlacementSpell;
-    private float _attackCooldownTimer;
-    private bool _isAttacking;
     private float _healthRegenTimer;
     private float _healthRegenDelayTimer;
     private IInteractable _activeInteractable;
@@ -92,7 +73,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         InitializeCombatCharacter(requireManaState: true);
         LoadEquippedSpells();
         SetAnimationSafe(GetIdleAnimationName());
-        AnimatedSprite.AnimationFinished += OnAnimationFinished;
         AddToGroup(CombatGroups.Actors);
 
         EmitHealthChanged();
@@ -125,27 +105,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             TryInteract();
         TryCastEquippedSpells();
         var direction = GetInputDirection();
-
-        if (_isAttacking)
-        {
-            UpdateTargetingState();
-            Velocity = Vector2.Zero;
-            ApplyAttackDamage();
-            return;
-        }
-
-        if (_attackCooldownTimer > 0.0f)
-            _attackCooldownTimer -= (float)delta;
-
-        if (Input.IsActionPressed("attack") && _attackCooldownTimer <= 0.0f)
-        {
-            if (direction != Vector2.Zero)
-                SetFacingDirection(direction);
-
-            UpdateTargetingState();
-            StartAttack();
-            return;
-        }
 
         if (direction == Vector2.Zero)
         {
@@ -186,33 +145,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             _pendingPlacementSpell = null;
 
         GetViewport().SetInputAsHandled();
-    }
-
-    private void StartAttack()
-    {
-        if (_isAttacking || _attackCooldownTimer > 0.0f)
-            return;
-
-        _isAttacking = true;
-        _attackCooldownTimer = AttackCooldown;
-        _hitThisAttack.Clear();
-
-        var attackAnimation = ResolveDirectionalAnimationName("attack");
-        if (attackAnimation == null)
-        {
-            ApplyAttackDamage();
-            _isAttacking = false;
-            return;
-        }
-
-        AnimatedSprite.Play(attackAnimation, customSpeed: 6.0f);
-        ApplyAttackDamage();
-    }
-
-    private void OnAnimationFinished()
-    {
-        if (AnimatedSprite.Animation.ToString().StartsWith("attack_", StringComparison.Ordinal))
-            _isAttacking = false;
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -515,7 +447,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             if (distanceComparison != 0)
                 return distanceComparison;
 
-            return left.GetInstanceId().CompareTo(right.GetInstanceId());
+        return left.GetInstanceId().CompareTo(right.GetInstanceId());
         });
 
         return candidates;
@@ -586,50 +518,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return null;
 
         return actor.GetNodeOrNull<ActorHUD>("ActorHUD");
-    }
-
-    private void ApplyAttackDamage()
-    {
-        if (_isDead)
-            return;
-
-        var facingVector = DirectionHelper.GetDirectionVector(LastDirection);
-        var minimumDot = Mathf.Cos(Mathf.DegToRad(AttackArcDegrees / 2.0f));
-
-        foreach (var node in TargetingHelper.EnumerateCandidateTargets(this))
-        {
-            if (_hitThisAttack.Contains(node) || node is not IAttackable attackable || !IsValidPlayerTargetCandidate(node, out var enemyNode))
-                continue;
-
-            var toEnemy = enemyNode.GlobalPosition - GlobalPosition;
-            if (toEnemy.Length() > AttackRange)
-                continue;
-
-            if (toEnemy == Vector2.Zero)
-            {
-                ApplyDamageToEnemy(node, attackable);
-                continue;
-            }
-
-            if (facingVector.Dot(toEnemy.Normalized()) < minimumDot)
-                continue;
-
-            ApplyDamageToEnemy(node, attackable);
-        }
-    }
-
-    private void ApplyDamageToEnemy(Node node, IAttackable enemy)
-    {
-        if (enemy == null || !_hitThisAttack.Add(node))
-            return;
-
-        var targetFactionState = FactionState.ResolveFor(node);
-        if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(FactionState))
-            return;
-
-        var maxDamage = Math.Max(MinAttackDamage, MaxAttackDamage);
-        var damage = _random.RandiRange(Math.Min(MinAttackDamage, maxDamage), maxDamage);
-        enemy.ApplyDamage(new DamageInfo(damage, this));
     }
 
     private void HandleHealthRegeneration(float delta)
