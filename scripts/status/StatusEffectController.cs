@@ -19,13 +19,24 @@ public partial class StatusEffectController : Node
 
     private readonly Dictionary<(StringName StatusKey, ulong SourceId), StatusEffect> _activeEffects = new();
     private readonly Dictionary<StringName, int> _activeStatusCounts = new();
+    private readonly HashSet<StringName> _immuneStatusKeys = new();
     private Node2D _owner;
+
+    [Export]
+    public string[] ImmuneStatusKeys { get; set; } = Array.Empty<string>();
 
     public override void _Ready()
     {
         _owner = GetParent() as Node2D;
         if (_owner == null)
             GD.PushError($"{GetPath()}: StatusEffectController requires a Node2D parent.");
+
+        _immuneStatusKeys.Clear();
+        foreach (var immuneKey in ImmuneStatusKeys)
+        {
+            if (!string.IsNullOrWhiteSpace(immuneKey))
+                _immuneStatusKeys.Add(immuneKey);
+        }
     }
 
     public override void _PhysicsProcess(double delta)
@@ -100,6 +111,12 @@ public partial class StatusEffectController : Node
             return;
 
         var statusKey = effect.StatusKey;
+        if (IsStatusImmune(statusKey))
+        {
+            effect.QueueFree();
+            return;
+        }
+
         var sourceId = source?.GetInstanceId() ?? 0UL;
         var effectKey = (StatusKey: statusKey, SourceId: sourceId);
 
@@ -120,6 +137,28 @@ public partial class StatusEffectController : Node
         _activeEffects[effectKey] = effect;
         AdjustStatusCount(statusKey, 1);
         EmitStatusFloatingText(effect, applied: true);
+    }
+
+    public bool IsStatusImmune(StringName statusKey)
+    {
+        return _immuneStatusKeys.Contains(statusKey);
+    }
+
+    public void AddStatusImmunity(StringName statusKey)
+    {
+        if (statusKey == default)
+            return;
+
+        // TODO: a future shield spell can call this to grant poison immunity and other status blocks.
+        _immuneStatusKeys.Add(statusKey);
+    }
+
+    public void RemoveStatusImmunity(StringName statusKey)
+    {
+        if (statusKey == default)
+            return;
+
+        _immuneStatusKeys.Remove(statusKey);
     }
 
     private void RemoveEffect(StringName statusKey, ulong sourceId, StatusEffect effect, bool expired)

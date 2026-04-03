@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="6_faction_state"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="7_wander_behavior"]
 [ext_resource type="Script" path="res://scripts/ai/actions/RejuvenationActionController.cs" id="8_heal_action"]
+[ext_resource type="Script" path="res://scripts/status/StatusEffectController.cs" id="9_status_effect_controller"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
@@ -37,6 +38,9 @@ Max = 18
 [node name="FactionState" type="Node" parent="." unique_id=218462241]
 script = ExtResource("6_faction_state")
 FactionKey = "neutral"
+
+[node name="StatusEffectController" type="Node" parent="." unique_id=163401227]
+script = ExtResource("9_status_effect_controller")
 
 [node name="PrimaryActionController" type="Node" parent="." unique_id=925153119]
 script = ExtResource("8_heal_action")

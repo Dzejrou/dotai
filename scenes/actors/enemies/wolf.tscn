@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="12_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="13_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="14_faction_state"]
+[ext_resource type="Script" path="res://scripts/status/StatusEffectController.cs" id="17_status_effect_controller"]
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="15_melee_action"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="16_wander_behavior"]
 
@@ -45,6 +46,9 @@ Max = 12
 
 [node name="FactionState" type="Node" parent="." unique_id=1175552823]
 script = ExtResource("14_faction_state")
+
+[node name="StatusEffectController" type="Node" parent="." unique_id=210672311]
+script = ExtResource("17_status_effect_controller")
 
 [node name="PrimaryActionController" type="Node" parent="." unique_id=703452880]
 script = ExtResource("15_melee_action")

@@ -63,7 +63,9 @@ public abstract partial class Actor : CombatCharacter
         HomePosition = GlobalPosition;
         InitializeCombatCharacter();
         ResetCombatState();
-        EnsureStatusEffectController();
+        _statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
+        if (_statusEffectController == null)
+            GD.PushError($"{GetPath()}: missing required StatusEffectController child.");
         var scenePrimaryActionController = GetNodeOrNull<Node>(PrimaryActionControllerPath);
         if (scenePrimaryActionController != null)
         {
@@ -397,19 +399,6 @@ public abstract partial class Actor : CombatCharacter
     }
 
     protected virtual void OnActorExitTree() { }
-
-    private void EnsureStatusEffectController()
-    {
-        _statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
-        if (_statusEffectController != null)
-            return;
-
-        _statusEffectController = new StatusEffectController
-        {
-            Name = "StatusEffectController",
-        };
-        AddChild(_statusEffectController);
-    }
 
     private void BindStatusEffects()
     {

@@ -31,7 +31,6 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
 
     private Timer _respawnTimer;
     private ActorHUD _actorHud;
-    private StatusEffectController _statusEffectController;
     private FactionState _faction;
     private Vector2 _spawnPosition;
     private int _currentHealth;
@@ -52,7 +51,6 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
         else
             _actorHud.Bind(this);
-        EnsureStatusEffectController();
 
         AddToGroup(CombatGroups.Actors);
         UpdateHud();
@@ -70,8 +68,6 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
     {
         if (_respawnTimer != null)
             _respawnTimer.Timeout -= OnRespawnTimerTimeout;
-
-        UnbindStatusEffects();
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
@@ -97,7 +93,6 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
         _isDead = true;
         _currentHealth = 0;
         UpdateHud();
-        ClearStatuses();
         SetCollisionEnabled(false);
         ApplyInactiveVisualState();
 
@@ -120,7 +115,6 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
         _currentHealth = ResolvedMaxHealth;
         _isDead = false;
         UpdateHud();
-        ClearStatuses();
         SetCollisionEnabled(true);
         ApplyActiveVisualState();
     }
@@ -157,62 +151,6 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
 
         VisualSprite.Texture = texture;
         VisualSprite.Modulate = modulate;
-    }
-
-    private void EnsureStatusEffectController()
-    {
-        _statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
-        if (_statusEffectController == null)
-        {
-            _statusEffectController = new StatusEffectController
-            {
-                Name = "StatusEffectController",
-            };
-            AddChild(_statusEffectController);
-        }
-
-        _statusEffectController.Connect(
-            StatusEffectController.SignalName.StatusVisualStateChanged,
-            new Callable(this, nameof(OnStatusVisualStateChanged)));
-
-        _statusEffectController.Connect(
-            StatusEffectController.SignalName.StatusFloatingTextRequested,
-            new Callable(this, nameof(OnStatusFloatingTextRequested)));
-
-        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, _statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
-    }
-
-    private void UnbindStatusEffects()
-    {
-        if (_statusEffectController == null)
-            return;
-
-        var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
-        if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
-            _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
-
-        var textCallable = new Callable(this, nameof(OnStatusFloatingTextRequested));
-        if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
-            _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
-    }
-
-    private void ClearStatuses()
-    {
-        _statusEffectController?.ClearAllEffects();
-        _actorHud?.SetPoisoned(false);
-    }
-
-    private void OnStatusVisualStateChanged(StringName statusKey, bool active)
-    {
-        if (statusKey != PoisonedEffect.StatusKeyName)
-            return;
-
-        _actorHud?.SetPoisoned(active);
-    }
-
-    private void OnStatusFloatingTextRequested(string text, Color color)
-    {
-        _actorHud?.ShowFloatingText(text, color);
     }
 
     private Texture2D ResolveVisualTexture()
