@@ -1,15 +1,14 @@
 using Godot;
 
 using System;
+using System.Collections.Generic;
 
-public sealed class HealNearbyFactionBehavior : IActorBehavior
+public sealed class HealLowestHealthFriendlyBehavior : IActorBehavior
 {
-    private readonly Faction _healedFaction;
     private readonly float _acquisitionRange;
 
-    public HealNearbyFactionBehavior(Faction healedFaction, float acquisitionRange)
+    public HealLowestHealthFriendlyBehavior(float acquisitionRange)
     {
-        _healedFaction = healedFaction ?? throw new ArgumentNullException(nameof(healedFaction));
         _acquisitionRange = Math.Max(0.0f, acquisitionRange);
     }
 
@@ -67,42 +66,74 @@ public sealed class HealNearbyFactionBehavior : IActorBehavior
 
     private Node2D ResolveHealingTarget(Actor actor)
     {
-        var currentTarget = actor.Target;
-        if (IsValidHealingTarget(actor, currentTarget))
-            return currentTarget;
+        Node2D bestTarget = null;
+        var bestHealth = int.MaxValue;
+        var bestDistance = float.MaxValue;
 
-        Node2D closest = null;
-        var closestDistance = float.MaxValue;
-        foreach (var candidate in TargetingHelper.EnumerateCandidateTargets(actor))
+        foreach (var candidate in EnumerateSupportCandidates(actor))
         {
-            if (!IsValidHealingTarget(actor, candidate))
+            if (!IsValidHealingTarget(actor, candidate, out var healable))
                 continue;
 
+            var currentHealth = healable.CurrentHealth;
             var distance = actor.GlobalPosition.DistanceTo(candidate.GlobalPosition);
-            if (distance >= closestDistance)
+
+            if (currentHealth > bestHealth)
                 continue;
 
-            closest = candidate;
-            closestDistance = distance;
+            if (currentHealth == bestHealth && distance > bestDistance)
+                continue;
+
+            if (currentHealth == bestHealth &&
+                Math.Abs(distance - bestDistance) <= 0.0001f &&
+                bestTarget != null &&
+                candidate.GetInstanceId() >= bestTarget.GetInstanceId())
+            {
+                continue;
+            }
+
+            bestTarget = candidate;
+            bestHealth = currentHealth;
+            bestDistance = distance;
         }
 
-        return closest;
+        return bestTarget;
     }
 
-    private bool IsValidHealingTarget(Actor actor, Node2D target)
+    private IEnumerable<Node2D> EnumerateSupportCandidates(Actor actor)
     {
+        if (actor != null)
+            yield return actor;
+
+        foreach (var node in TargetingHelper.EnumerateCandidateTargets(actor))
+            yield return node;
+    }
+
+    private bool IsValidHealingTarget(Actor actor, Node2D target, out IHealable healable)
+    {
+        healable = null;
+
         if (!Actor.IsStructurallyValidTarget(target))
             return false;
 
         if (target is not ITargetable targetable || !targetable.CanBeTargeted)
             return false;
 
-        if (target is not IFactionMember factionMember || !ReferenceEquals(factionMember.Faction, _healedFaction))
+        if (target is not IFactionMember factionMember ||
+            factionMember.Faction == null ||
+            actor.Faction == null ||
+            !actor.Faction.IsFriendlyTo(factionMember.Faction))
+        {
+            return false;
+        }
+
+        if (target is not IHealable targetHealable || !targetHealable.CanReceiveHealing)
             return false;
 
-        if (target is not IHealable healable || !healable.CanReceiveHealing)
+        if (actor.GlobalPosition.DistanceTo(target.GlobalPosition) > _acquisitionRange)
             return false;
 
-        return actor.GlobalPosition.DistanceTo(target.GlobalPosition) <= _acquisitionRange;
+        healable = targetHealable;
+        return true;
     }
 }

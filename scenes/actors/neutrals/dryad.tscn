@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="5_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="6_faction_state"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="7_wander_behavior"]
-[ext_resource type="Script" uid="uid://c7xifm5fh44t7" path="res://scripts/ai/actions/HealActionController.cs" id="8_heal_action"]
+[ext_resource type="Script" path="res://scripts/ai/actions/RejuvenationActionController.cs" id="8_heal_action"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
@@ -40,7 +40,14 @@ FactionKey = "neutral"
 
 [node name="PrimaryActionController" type="Node" parent="." unique_id=925153119]
 script = ExtResource("8_heal_action")
+PreferredRange = 256.0
+HealCooldown = 1.4
 AnimationSpeedMultiplier = 2.0
+RejuvenationDuration = 16.0
+RejuvenationTickInterval = 2.0
+RejuvenationHealPerTick = 3
+RejuvenationCooldown = 20.0
+HealAmount = 3
 
 [node name="Behaviors" type="Node" parent="." unique_id=1488017195]
 

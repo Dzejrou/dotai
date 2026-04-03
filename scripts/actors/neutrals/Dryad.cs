@@ -4,7 +4,7 @@ using Godot;
 public partial class Dryad : Actor, IAttackable, ITargetable
 {
     [Export]
-    public float HealAcquisitionRange { get; set; } = 96.0f;
+    public float HealAcquisitionRange { get; set; } = 256.0f;
 
     [Export]
     public float Speed { get; set; } = 44.0f;
@@ -17,7 +17,7 @@ public partial class Dryad : Actor, IAttackable, ITargetable
             GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"));
         SetMovementSpeed(Speed);
 
-        ConfigureBehaviors(new HealNearbyFactionBehavior(Factions.Allies, HealAcquisitionRange));
+        ConfigureBehaviors(new HealLowestHealthFriendlyBehavior(HealAcquisitionRange));
         PlayIdleIfAvailable();
     }
 
