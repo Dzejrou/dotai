@@ -79,6 +79,7 @@ public partial class FireNovaSpell : Spell
 
     private void ApplyAreaDamage(ISpellCaster caster, float range, Faction sourceFaction)
     {
+        // TODO: share this sweep with FrostNovaSpell once the nova spells converge on a common helper.
         var maximumDamage = Math.Max(MinimumDamage, MaximumDamage);
         foreach (var node in TargetingHelper.EnumerateCandidateTargets(caster.SpellOrigin))
         {

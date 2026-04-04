@@ -32,6 +32,7 @@ public partial class PoisonedEffect : StatusEffect
             return;
 
         var damage = Math.Max(1, DamagePerTick);
-        attackable.ApplyDamage(new DamageInfo(damage, Source ?? OwnerNode));
+        var damageSource = Source != null && GodotObject.IsInstanceValid(Source) ? Source : null;
+        attackable.ApplyDamage(new DamageInfo(damage, (Node)damageSource));
     }
 }

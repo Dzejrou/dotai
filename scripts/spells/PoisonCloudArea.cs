@@ -8,6 +8,7 @@ public partial class PoisonCloudArea : Node2D
     private static readonly StringName DefaultAnimationName = "default";
 
     private Node2D _damageSource;
+    private ulong _damageSourceInstanceId;
     private Faction _sourceFaction = Factions.Enemies;
     private float _elapsedTime;
     private float _nextTickTime;
@@ -38,6 +39,9 @@ public partial class PoisonCloudArea : Node2D
     public void Initialize(Node2D damageSource, Faction sourceFaction)
     {
         _damageSource = damageSource;
+        _damageSourceInstanceId = damageSource != null && GodotObject.IsInstanceValid(damageSource)
+            ? damageSource.GetInstanceId()
+            : 0UL;
         _sourceFaction = sourceFaction ?? Factions.Enemies;
         _elapsedTime = 0.0f;
         _nextTickTime = 0.0f;
@@ -96,7 +100,7 @@ public partial class PoisonCloudArea : Node2D
                 TickIntervalSeconds = poisonTickInterval,
                 DamagePerTick = poisonDamagePerTick,
             };
-            controller.ApplyStatusEffect(effect, _damageSource);
+            controller.ApplyStatusEffect(effect, _damageSource, _damageSourceInstanceId);
         }
     }
 

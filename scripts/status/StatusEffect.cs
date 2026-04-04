@@ -30,6 +30,7 @@ public abstract partial class StatusEffect : Node
 
     public Node2D OwnerNode { get; private set; }
     public Node2D Source { get; private set; }
+    public ulong SourceInstanceId { get; private set; }
     public float ElapsedSeconds { get; private set; }
     public float NextTickSeconds { get; private set; }
     public bool IsActive { get; private set; }
@@ -38,16 +39,17 @@ public abstract partial class StatusEffect : Node
 
     public abstract StringName StatusKey { get; }
 
-    internal void Start(Node2D owner, Node2D source)
+    internal void Start(Node2D owner, Node2D source, ulong sourceInstanceId)
     {
         OwnerNode = owner;
         Source = source;
+        SourceInstanceId = sourceInstanceId;
         IsActive = true;
         ResetTiming();
         OnApplied();
     }
 
-    internal void Refresh(StatusEffect replacement, Node2D source)
+    internal void Refresh(StatusEffect replacement, Node2D source, ulong sourceInstanceId)
     {
         var previousTickInterval = TickIntervalSeconds;
         var previousNextTickSeconds = NextTickSeconds;
@@ -55,6 +57,7 @@ public abstract partial class StatusEffect : Node
 
         CopyConfigurationFrom(replacement);
         Source = source;
+        SourceInstanceId = sourceInstanceId;
 
         _expiresAtSeconds = currentTime + Math.Max(0.0f, DurationSeconds);
         NextTickSeconds = CalculateRefreshedNextTickSeconds(
@@ -95,6 +98,7 @@ public abstract partial class StatusEffect : Node
         OnRemoved(expired);
         OwnerNode = null;
         Source = null;
+        SourceInstanceId = 0UL;
     }
 
     protected virtual void CopyConfigurationFrom(StatusEffect replacement)

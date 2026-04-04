@@ -105,7 +105,7 @@ public partial class StatusEffectController : Node
             RemoveEffect(entry.StatusKey, entry.SourceId, entry.Effect, expired: false);
     }
 
-    public void ApplyStatusEffect(StatusEffect effect, Node2D source = null)
+    public void ApplyStatusEffect(StatusEffect effect, Node2D source = null, ulong sourceInstanceId = 0UL)
     {
         if (_owner == null || effect == null)
             return;
@@ -119,19 +119,19 @@ public partial class StatusEffectController : Node
 
         if (effect.IsUniqueByStatusKey && TryGetEffectByStatusKey(statusKey, out var existingUniqueEffect))
         {
-            existingUniqueEffect.Effect.Refresh(effect, source);
+            existingUniqueEffect.Effect.Refresh(effect, source, ResolveSourceInstanceId(source, sourceInstanceId));
             effect.QueueFree();
             return;
         }
 
-        var sourceId = source?.GetInstanceId() ?? 0UL;
+        var sourceId = ResolveSourceInstanceId(source, sourceInstanceId);
         var effectKey = (StatusKey: statusKey, SourceId: sourceId);
 
         if (_activeEffects.TryGetValue(effectKey, out var existingEffect) &&
             existingEffect != null &&
             GodotObject.IsInstanceValid(existingEffect))
         {
-            existingEffect.Refresh(effect, source);
+            existingEffect.Refresh(effect, source, sourceId);
             effect.QueueFree();
             return;
         }
@@ -140,7 +140,7 @@ public partial class StatusEffectController : Node
             effect.GetParent().RemoveChild(effect);
 
         AddChild(effect);
-        effect.Start(_owner, source);
+        effect.Start(_owner, source, sourceId);
         _activeEffects[effectKey] = effect;
         AdjustStatusCount(statusKey, 1);
         EmitStatusFloatingText(effect, applied: true);
@@ -242,6 +242,17 @@ public partial class StatusEffectController : Node
         }
 
         return multiplier;
+    }
+
+    private static ulong ResolveSourceInstanceId(Node2D source, ulong sourceInstanceId)
+    {
+        if (sourceInstanceId != 0UL)
+            return sourceInstanceId;
+
+        if (source != null && GodotObject.IsInstanceValid(source))
+            return source.GetInstanceId();
+
+        return 0UL;
     }
 
     private void EmitStatusFloatingText(StatusEffect effect, bool applied)
