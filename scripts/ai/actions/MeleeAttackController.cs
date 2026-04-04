@@ -40,7 +40,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
     public void Update(Actor actor, double delta)
     {
         if (_cooldownTimer > 0.0f)
-            _cooldownTimer -= (float)delta;
+            _cooldownTimer -= (float)delta * Math.Max(0.0f, actor.AttackSpeedMultiplier);
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
@@ -77,7 +77,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         _cooldownTimer = AttackCooldown;
 
-        if (!actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier))
+        if (!actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.AttackSpeedMultiplier)))
         {
             actor.SetState(CombatUnitState.PursuingTarget);
         }

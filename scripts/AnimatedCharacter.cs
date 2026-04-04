@@ -2,6 +2,8 @@ using Godot;
 
 public abstract partial class AnimatedCharacter : CharacterBody2D
 {
+    protected static readonly Color SlowedSpriteTintColor = new(0.62f, 0.78f, 1.0f, 1.0f);
+
     public AnimatedSprite2D AnimatedSprite { get; private set; }
     public string LastDirection { get; private set; } = "south";
 
@@ -70,6 +72,17 @@ public abstract partial class AnimatedCharacter : CharacterBody2D
     public void PlayIdleIfAvailable()
     {
         SetAnimationSafe(GetIdleAnimationName());
+    }
+
+    protected void SetSpriteTint(Color color)
+    {
+        if (AnimatedSprite != null)
+            AnimatedSprite.Modulate = color;
+    }
+
+    protected void ResetSpriteTint()
+    {
+        SetSpriteTint(Colors.White);
     }
 
     private bool HasAnimation(string animationName)

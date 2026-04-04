@@ -6,6 +6,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     protected CombatState CombatStateNode { get; private set; }
     protected FactionState FactionStateNode { get; private set; }
     protected ManaState ManaStateNode { get; private set; }
+    protected StatusEffectController StatusEffectControllerNode { get; private set; }
 
     public CombatState Combat => CombatStateNode;
     public bool InCombat => CombatStateNode?.InCombat ?? false;
@@ -19,6 +20,9 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public int MaxManaValue => ManaStateNode?.Max ?? 0;
     public bool IsDead => HealthStateNode?.IsDead ?? false;
     public bool CanReceiveHealing => !IsDead && CurrentHealth < MaxHealableHealth;
+    public virtual float MovementSpeedMultiplier => StatusEffectControllerNode?.GetMovementSpeedMultiplier() ?? 1.0f;
+    public virtual float AttackSpeedMultiplier => StatusEffectControllerNode?.GetAttackSpeedMultiplier() ?? 1.0f;
+    public virtual float CastSpeedMultiplier => StatusEffectControllerNode?.GetCastSpeedMultiplier() ?? 1.0f;
 
     protected void InitializeCombatCharacter(bool requireManaState = false)
     {
@@ -36,6 +40,11 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     {
         CombatStateNode?.ClearTarget();
         CombatStateNode?.ExitCombat();
+    }
+
+    protected void SetStatusEffectController(StatusEffectController statusEffectController)
+    {
+        StatusEffectControllerNode = statusEffectController;
     }
 
     public abstract void ApplyHealing(int amount);

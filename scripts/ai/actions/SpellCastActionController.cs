@@ -70,14 +70,15 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
     public void Update(Actor actor, double delta)
     {
+        var castSpeedMultiplier = Math.Max(0.0f, actor.CastSpeedMultiplier);
         if (_basicCooldownTimer > 0.0f)
-            _basicCooldownTimer -= (float)delta;
+            _basicCooldownTimer -= (float)delta * castSpeedMultiplier;
 
         if (_closeRangeCooldownTimer > 0.0f)
-            _closeRangeCooldownTimer -= (float)delta;
+            _closeRangeCooldownTimer -= (float)delta * castSpeedMultiplier;
 
         if (_longRangeCooldownTimer > 0.0f)
-            _longRangeCooldownTimer -= (float)delta;
+            _longRangeCooldownTimer -= (float)delta * castSpeedMultiplier;
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
@@ -121,7 +122,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         StartCooldown(spellSlot);
 
-        if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier))
+        if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.CastSpeedMultiplier)))
         {
             _pendingSpell = spellSlot;
             return;

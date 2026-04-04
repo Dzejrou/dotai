@@ -60,11 +60,12 @@ public partial class RejuvenationActionController : Node, ICombatActionControlle
 
     public void Update(Actor actor, double delta)
     {
+        var castSpeedMultiplier = Math.Max(0.0f, actor.CastSpeedMultiplier);
         if (_cooldownTimer > 0.0f)
-            _cooldownTimer -= (float)delta;
+            _cooldownTimer -= (float)delta * castSpeedMultiplier;
 
         if (_rejuvenationCooldownTimer > 0.0f)
-            _rejuvenationCooldownTimer -= (float)delta;
+            _rejuvenationCooldownTimer -= (float)delta * castSpeedMultiplier;
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
@@ -117,7 +118,7 @@ public partial class RejuvenationActionController : Node, ICombatActionControlle
         else
             _cooldownTimer = HealCooldown;
 
-        if (actor.TryPlayDirectionalAnimation(CastAnimation.ToString(), AnimationSpeedMultiplier))
+        if (actor.TryPlayDirectionalAnimation(CastAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.CastSpeedMultiplier)))
         {
             return;
         }

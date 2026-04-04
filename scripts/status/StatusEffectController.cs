@@ -117,6 +117,13 @@ public partial class StatusEffectController : Node
             return;
         }
 
+        if (effect.IsUniqueByStatusKey && TryGetEffectByStatusKey(statusKey, out var existingUniqueEffect))
+        {
+            existingUniqueEffect.Effect.Refresh(effect, source);
+            effect.QueueFree();
+            return;
+        }
+
         var sourceId = source?.GetInstanceId() ?? 0UL;
         var effectKey = (StatusKey: statusKey, SourceId: sourceId);
 
@@ -161,6 +168,21 @@ public partial class StatusEffectController : Node
         _immuneStatusKeys.Remove(statusKey);
     }
 
+    public float GetMovementSpeedMultiplier()
+    {
+        return ResolveStatusSpeedMultiplier(effect => effect.MovementSpeedMultiplier);
+    }
+
+    public float GetAttackSpeedMultiplier()
+    {
+        return ResolveStatusSpeedMultiplier(effect => effect.AttackSpeedMultiplier);
+    }
+
+    public float GetCastSpeedMultiplier()
+    {
+        return ResolveStatusSpeedMultiplier(effect => effect.CastSpeedMultiplier);
+    }
+
     private void RemoveEffect(StringName statusKey, ulong sourceId, StatusEffect effect, bool expired)
     {
         var effectKey = (StatusKey: statusKey, SourceId: sourceId);
@@ -190,6 +212,36 @@ public partial class StatusEffectController : Node
             EmitSignal(SignalName.StatusVisualStateChanged, statusKey, true);
         else if (currentCount > 0 && nextCount <= 0)
             EmitSignal(SignalName.StatusVisualStateChanged, statusKey, false);
+    }
+
+    private bool TryGetEffectByStatusKey(StringName statusKey, out (StringName StatusKey, ulong SourceId, StatusEffect Effect) effectEntry)
+    {
+        foreach (var pair in _activeEffects)
+        {
+            if (pair.Key.StatusKey != statusKey)
+                continue;
+
+            effectEntry = (pair.Key.StatusKey, pair.Key.SourceId, pair.Value);
+            return true;
+        }
+
+        effectEntry = default;
+        return false;
+    }
+
+    private float ResolveStatusSpeedMultiplier(Func<StatusEffect, float> selector)
+    {
+        var multiplier = 1.0f;
+
+        foreach (var effect in _activeEffects.Values)
+        {
+            if (effect == null || !GodotObject.IsInstanceValid(effect))
+                continue;
+
+            multiplier *= Math.Max(0.0f, selector(effect));
+        }
+
+        return multiplier;
     }
 
     private void EmitStatusFloatingText(StatusEffect effect, bool applied)

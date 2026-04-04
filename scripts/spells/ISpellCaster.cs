@@ -8,5 +8,6 @@ public interface ISpellCaster : IFactionMember
     Node2D SpellTarget { get; }
     ManaState ManaState { get; }
     bool CanCastSpells { get; }
+    float CastSpeedMultiplier { get; }
     void NotifyManaChanged();
 }

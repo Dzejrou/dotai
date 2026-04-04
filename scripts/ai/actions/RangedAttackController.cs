@@ -58,7 +58,7 @@ public partial class RangedAttackController : Node, ICombatActionController
     public void Update(Actor actor, double delta)
     {
         if (_cooldownTimer > 0.0f)
-            _cooldownTimer -= (float)delta;
+            _cooldownTimer -= (float)delta * Math.Max(0.0f, actor.AttackSpeedMultiplier);
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
@@ -99,7 +99,7 @@ public partial class RangedAttackController : Node, ICombatActionController
         _cooldownTimer = AttackCooldown;
 
         var projectileDirection = toTarget != Vector2.Zero ? toTarget.Normalized() : DirectionHelper.GetDirectionVector(actor.LastDirection);
-        if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier))
+        if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.AttackSpeedMultiplier)))
         {
             _hasPendingProjectileShot = true;
             _pendingProjectileDirection = projectileDirection;

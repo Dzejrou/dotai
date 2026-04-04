@@ -23,6 +23,11 @@ public abstract partial class StatusEffect : Node
     [Export]
     public StatusCategory Category { get; set; } = StatusCategory.Debuff;
 
+    public virtual bool IsUniqueByStatusKey => false;
+    public virtual float MovementSpeedMultiplier => 1.0f;
+    public virtual float AttackSpeedMultiplier => 1.0f;
+    public virtual float CastSpeedMultiplier => 1.0f;
+
     public Node2D OwnerNode { get; private set; }
     public Node2D Source { get; private set; }
     public float ElapsedSeconds { get; private set; }

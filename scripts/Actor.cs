@@ -40,7 +40,6 @@ public abstract partial class Actor : CombatCharacter
     private bool _hasNavigationDestination;
     private Vector2 _lastNavigationDestination;
     private ActorHUD _actorHud;
-    private StatusEffectController _statusEffectController;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
 
@@ -63,8 +62,9 @@ public abstract partial class Actor : CombatCharacter
         HomePosition = GlobalPosition;
         InitializeCombatCharacter();
         ResetCombatState();
-        _statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
-        if (_statusEffectController == null)
+        var statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
+        SetStatusEffectController(statusEffectController);
+        if (statusEffectController == null)
             GD.PushError($"{GetPath()}: missing required StatusEffectController child.");
         var scenePrimaryActionController = GetNodeOrNull<Node>(PrimaryActionControllerPath);
         if (scenePrimaryActionController != null)
@@ -191,7 +191,7 @@ public abstract partial class Actor : CombatCharacter
         SetFacingDirection(normalizedMovement);
         SetAnimationSafe(GetWalkAnimationName());
 
-        Velocity = normalizedMovement * MovementSpeed * Math.Max(0.0f, speedMultiplier);
+        Velocity = normalizedMovement * MovementSpeed * Math.Max(0.0f, speedMultiplier) * Math.Max(0.0f, MovementSpeedMultiplier);
         return true;
     }
 
@@ -402,40 +402,50 @@ public abstract partial class Actor : CombatCharacter
 
     private void BindStatusEffects()
     {
-        if (_statusEffectController == null)
+        if (StatusEffectControllerNode == null)
             return;
 
-        _statusEffectController.Connect(
+        StatusEffectControllerNode.Connect(
             StatusEffectController.SignalName.StatusVisualStateChanged,
             new Callable(this, nameof(OnStatusVisualStateChanged)));
 
-        _statusEffectController.Connect(
+        StatusEffectControllerNode.Connect(
             StatusEffectController.SignalName.StatusFloatingTextRequested,
             new Callable(this, nameof(OnStatusFloatingTextRequested)));
 
-        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, _statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
+        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, StatusEffectControllerNode.HasStatus(PoisonedEffect.StatusKeyName));
+        OnStatusVisualStateChanged(SlowedEffect.StatusKeyName, StatusEffectControllerNode.HasStatus(SlowedEffect.StatusKeyName));
     }
 
     private void UnbindStatusEffects()
     {
-        if (_statusEffectController == null)
+        if (StatusEffectControllerNode == null || !GodotObject.IsInstanceValid(StatusEffectControllerNode))
             return;
 
         var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
-        if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
-            _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
+        if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
+            StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
 
         var textCallable = new Callable(this, nameof(OnStatusFloatingTextRequested));
-        if (_statusEffectController.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
-            _statusEffectController.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
+        if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
+            StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
     }
 
     private void OnStatusVisualStateChanged(StringName statusKey, bool active)
     {
-        if (statusKey != PoisonedEffect.StatusKeyName)
+        if (statusKey == PoisonedEffect.StatusKeyName)
+        {
+            _actorHud?.SetPoisoned(active);
             return;
+        }
 
-        _actorHud?.SetPoisoned(active);
+        if (statusKey == SlowedEffect.StatusKeyName)
+        {
+            if (active)
+                SetSpriteTint(SlowedSpriteTintColor);
+            else
+                ResetSpriteTint();
+        }
     }
 
     private void OnStatusFloatingTextRequested(string text, Color color)

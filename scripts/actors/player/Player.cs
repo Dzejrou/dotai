@@ -71,6 +71,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     {
         SetAnimatedSprite(GetNode<AnimatedSprite2D>("AnimatedSprite2D"));
         InitializeCombatCharacter(requireManaState: true);
+        BindStatusEffects();
         LoadEquippedSpells();
         SetAnimationSafe(GetIdleAnimationName());
         AddToGroup(CombatGroups.Actors);
@@ -78,6 +79,11 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         EmitHealthChanged();
         NotifyManaChanged();
         UpdateInteractionState();
+    }
+
+    public override void _ExitTree()
+    {
+        UnbindStatusEffects();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -118,7 +124,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         SetFacingDirection(direction);
         var isSprinting = Input.IsActionPressed("sprint");
         var moveSpeed = isSprinting ? Speed * 2.0f : Speed;
-        Velocity = direction * moveSpeed;
+        Velocity = direction * moveSpeed * Math.Max(0.0f, MovementSpeedMultiplier);
         MoveAndSlide();
         UpdateTargetingState();
 
@@ -183,6 +189,44 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         ShowFloatingHealingNumber(recovered);
         EmitHealthChanged();
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
+    }
+
+    private void BindStatusEffects()
+    {
+        var statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
+        SetStatusEffectController(statusEffectController);
+        if (statusEffectController == null)
+        {
+            GD.PushError($"{GetPath()}: missing required StatusEffectController child.");
+            return;
+        }
+
+        statusEffectController.Connect(
+            StatusEffectController.SignalName.StatusVisualStateChanged,
+            new Callable(this, nameof(OnStatusVisualStateChanged)));
+
+        OnStatusVisualStateChanged(SlowedEffect.StatusKeyName, statusEffectController.HasStatus(SlowedEffect.StatusKeyName));
+    }
+
+    private void UnbindStatusEffects()
+    {
+        if (StatusEffectControllerNode == null || !GodotObject.IsInstanceValid(StatusEffectControllerNode))
+            return;
+
+        var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
+        if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
+            StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
+    }
+
+    private void OnStatusVisualStateChanged(StringName statusKey, bool active)
+    {
+        if (statusKey != SlowedEffect.StatusKeyName)
+            return;
+
+        if (active)
+            SetSpriteTint(SlowedSpriteTintColor);
+        else
+            ResetSpriteTint();
     }
 
     private void UpdateTargetingState()
