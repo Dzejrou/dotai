@@ -5,11 +5,13 @@ using System;
 [GlobalClass]
 public partial class FireballSpell : Spell
 {
-    [Export]
-    public PackedScene ProjectileScene { get; set; }
+    public FireballSpell()
+    {
+        ManaCost = 0;
+    }
 
     [Export]
-    public int ManaCost { get; set; } = 0;
+    public PackedScene ProjectileScene { get; set; }
 
     [Export]
     public float ProjectileSpeed { get; set; } = 280.0f;
@@ -23,18 +25,11 @@ public partial class FireballSpell : Spell
     [Export]
     public float ProjectileMaxDistance { get; set; } = 320.0f;
 
-    public override int DisplayManaCost => Math.Max(0, ManaCost);
-
     public override bool CanCast(ISpellCaster caster)
     {
         if (!base.CanCast(caster) || ProjectileScene == null)
             return false;
-
-        var manaState = caster.ManaState;
-        if (manaState == null)
-            return false;
-
-        return manaState.Current >= Math.Max(0, ManaCost);
+        return true;
     }
 
     public override bool TryCast(ISpellCaster caster)
@@ -42,7 +37,6 @@ public partial class FireballSpell : Spell
         if (!CanCast(caster))
             return false;
 
-        var manaCost = Math.Max(0, ManaCost);
         var fireDirection = caster.SpellDirection;
         if (fireDirection == Vector2.Zero)
             fireDirection = DirectionHelper.GetDirectionVector(caster.SpellDirectionName);
@@ -69,7 +63,7 @@ public partial class FireballSpell : Spell
             return false;
         }
 
-        if (!TrySpendCastMana(caster, manaCost))
+        if (!TrySpendCastMana(caster))
         {
             projectile.QueueFree();
             return false;

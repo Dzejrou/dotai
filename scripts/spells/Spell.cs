@@ -11,15 +11,50 @@ public abstract partial class Spell : Node
     [Export]
     public string HudLabel { get; set; } = string.Empty;
 
+    [Export]
+    public int ManaCost { get; set; } = 0;
+
+    [Export]
+    public float Cooldown { get; set; } = 0.0f;
+
+    private float _cooldownRemaining;
+
     public string DisplayLabel => !string.IsNullOrWhiteSpace(HudLabel) ? HudLabel : Name;
-    public virtual int DisplayManaCost => 0;
-    public virtual float CooldownDuration => 0.0f;
-    public virtual float CooldownRemaining => 0.0f;
+    public virtual int DisplayManaCost => Math.Max(0, ManaCost);
+    public virtual float CooldownDuration => Math.Max(0.0f, Cooldown);
+    public virtual float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
 
     public virtual bool CanCast(ISpellCaster caster)
     {
-        return caster != null && caster.CanCastSpells && caster.SpellOrigin != null;
+        var spellOrigin = caster?.SpellOrigin;
+        if (caster == null ||
+            !caster.CanCastSpells ||
+            spellOrigin == null ||
+            !GodotObject.IsInstanceValid(spellOrigin) ||
+            IsOnCooldown)
+            return false;
+
+        var manaState = caster.ManaState;
+        return manaState != null && manaState.Current >= Math.Max(0, ManaCost);
     }
+
+    public override void _Process(double delta)
+    {
+        if (_cooldownRemaining > 0.0f)
+            _cooldownRemaining = Math.Max(0.0f, _cooldownRemaining - (float)delta);
+    }
+
+    protected bool TrySpendCastMana(ISpellCaster caster)
+    {
+        return TrySpendCastMana(caster, ManaCost);
+    }
+
+    protected void StartCooldown()
+    {
+        _cooldownRemaining = Math.Max(0.0f, Cooldown);
+    }
+
+    protected bool IsOnCooldown => _cooldownRemaining > 0.0f;
 
     protected static bool TrySpendCastMana(ISpellCaster caster, int manaCost)
     {

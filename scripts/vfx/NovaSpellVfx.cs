@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class FireNovaVfx : Node2D
+public partial class NovaSpellVfx : Node2D
 {
     [Export]
     public float Duration { get; set; } = 0.28f;

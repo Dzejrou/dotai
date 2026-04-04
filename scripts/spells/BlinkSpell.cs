@@ -6,39 +6,23 @@ using System;
 public partial class BlinkSpell : Spell
 {
     private const int BlinkDistanceSteps = 6;
-    private float _cooldownRemaining;
-
-    [Export]
-    public int ManaCost { get; set; } = 15;
 
     [Export]
     public float BlinkDistance { get; set; } = 64.0f;
 
-    [Export]
-    public float Cooldown { get; set; } = 1.5f;
-
-    public override int DisplayManaCost => Math.Max(0, ManaCost);
-    public override float CooldownDuration => Math.Max(0.0f, Cooldown);
-    public override float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
-
-    public override void _Process(double delta)
+    public BlinkSpell()
     {
-        if (_cooldownRemaining > 0.0f)
-            _cooldownRemaining = Math.Max(0.0f, _cooldownRemaining - (float)delta);
+        ManaCost = 15;
+        Cooldown = 1.5f;
     }
 
     public override bool CanCast(ISpellCaster caster)
     {
-        if (!base.CanCast(caster) || _cooldownRemaining > 0.0f)
-            return false;
-
-        var manaState = caster.ManaState;
-        if (manaState == null)
+        if (!base.CanCast(caster))
             return false;
 
         return ResolveBlinkBody(caster) != null &&
-               caster.SpellDirection != Vector2.Zero &&
-               manaState.Current >= Math.Max(0, ManaCost);
+               caster.SpellDirection != Vector2.Zero;
     }
 
     public override bool TryCast(ISpellCaster caster)
@@ -55,12 +39,11 @@ public partial class BlinkSpell : Spell
         if (blinkDistance <= 0.0f)
             return false;
 
-        var manaCost = Math.Max(0, ManaCost);
-        if (!TrySpendCastMana(caster, manaCost))
+        if (!TrySpendCastMana(caster))
             return false;
 
         blinkBody.GlobalPosition += direction * blinkDistance;
-        _cooldownRemaining = Math.Max(0.0f, Cooldown);
+        StartCooldown();
         return true;
     }
 

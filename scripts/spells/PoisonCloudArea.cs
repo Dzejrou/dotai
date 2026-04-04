@@ -100,6 +100,7 @@ public partial class PoisonCloudArea : Node2D
                 TickIntervalSeconds = poisonTickInterval,
                 DamagePerTick = poisonDamagePerTick,
             };
+            // TODO: move poison cloud onto the same child StatusEffect template model as NovaSpell.
             controller.ApplyStatusEffect(effect, _damageSource, _damageSourceInstanceId);
         }
     }

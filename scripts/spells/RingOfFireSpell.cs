@@ -5,18 +5,17 @@ using System;
 [GlobalClass]
 public partial class RingOfFireSpell : Spell, IPlacementSpell
 {
-    private float _cooldownRemaining;
     private RingOfFireArea _previewArea;
     private Node2D _previewOrigin;
 
+    public RingOfFireSpell()
+    {
+        ManaCost = 30;
+        Cooldown = 6.0f;
+    }
+
     [Export]
     public PackedScene AreaScene { get; set; }
-
-    [Export]
-    public int ManaCost { get; set; } = 30;
-
-    [Export]
-    public float Cooldown { get; set; } = 6.0f;
 
     [Export]
     public float Radius { get; set; } = 56.0f;
@@ -31,14 +30,9 @@ public partial class RingOfFireSpell : Spell, IPlacementSpell
     public int DamagePerTick { get; set; } = 8;
 
     public bool IsAwaitingPlacement { get; private set; }
-    public override int DisplayManaCost => Math.Max(0, ManaCost);
-    public override float CooldownDuration => Math.Max(0.0f, Cooldown);
-    public override float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
-
     public override void _Process(double delta)
     {
-        if (_cooldownRemaining > 0.0f)
-            _cooldownRemaining = Math.Max(0.0f, _cooldownRemaining - (float)delta);
+        base._Process(delta);
 
         if (!IsAwaitingPlacement || _previewArea == null)
             return;
@@ -54,13 +48,10 @@ public partial class RingOfFireSpell : Spell, IPlacementSpell
 
     public override bool CanCast(ISpellCaster caster)
     {
-        if (!base.CanCast(caster) || AreaScene == null || _cooldownRemaining > 0.0f)
+        if (!base.CanCast(caster) || AreaScene == null)
             return false;
 
-        var manaState = caster.ManaState;
-        return manaState != null &&
-               caster.Faction != null &&
-               manaState.Current >= Math.Max(0, ManaCost);
+        return caster.Faction != null;
     }
 
     public override bool TryCast(ISpellCaster caster)
@@ -106,7 +97,7 @@ public partial class RingOfFireSpell : Spell, IPlacementSpell
             return false;
         }
 
-        if (!TrySpendCastMana(caster, ManaCost))
+        if (!TrySpendCastMana(caster))
         {
             ringArea.QueueFree();
             CancelPlacement();
@@ -117,7 +108,7 @@ public partial class RingOfFireSpell : Spell, IPlacementSpell
         ringArea.GlobalPosition = worldPosition;
         ringArea.Initialize(caster.SpellOrigin, caster.Faction, Radius, Duration, TickInterval, DamagePerTick);
 
-        _cooldownRemaining = Math.Max(0.0f, Cooldown);
+        StartCooldown();
         CancelPlacement();
         return true;
     }

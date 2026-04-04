@@ -5,11 +5,13 @@ using System;
 [GlobalClass]
 public partial class PoisonCloudSpell : Spell
 {
-    [Export]
-    public PackedScene AreaScene { get; set; }
+    public PoisonCloudSpell()
+    {
+        ManaCost = 8;
+    }
 
     [Export]
-    public int ManaCost { get; set; } = 8;
+    public PackedScene AreaScene { get; set; }
 
     [Export]
     public float CloudRadius { get; set; } = 48.0f;
@@ -26,22 +28,17 @@ public partial class PoisonCloudSpell : Spell
     [Export]
     public int PoisonDamagePerTick { get; set; } = 5;
 
-    public override int DisplayManaCost => Math.Max(0, ManaCost);
-
     public override bool CanCast(ISpellCaster caster)
     {
         if (!base.CanCast(caster) || AreaScene == null)
             return false;
 
-        var manaState = caster.ManaState;
         var sourceFaction = caster.Faction;
         var target = caster.SpellTarget;
-        return manaState != null &&
-               sourceFaction != null &&
+        return sourceFaction != null &&
                target != null &&
                GodotObject.IsInstanceValid(target) &&
-               target.IsInsideTree() &&
-               manaState.Current >= Math.Max(0, ManaCost);
+               target.IsInsideTree();
     }
 
     public override bool TryCast(ISpellCaster caster)
@@ -64,7 +61,7 @@ public partial class PoisonCloudSpell : Spell
             return false;
         }
 
-        if (!TrySpendCastMana(caster, ManaCost))
+        if (!TrySpendCastMana(caster))
         {
             poisonCloud.QueueFree();
             return false;
