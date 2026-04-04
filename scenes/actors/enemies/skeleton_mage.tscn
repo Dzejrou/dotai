@@ -9,7 +9,6 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
-[ext_resource type="Script" path="res://scripts/status/StatusEffectController.cs" id="20_status_effect_controller"]
 [ext_resource type="Script" uid="uid://81lj2bds5kdy" path="res://scripts/ai/actions/SpellCastActionController.cs" id="11_spell_cast_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
@@ -17,8 +16,9 @@
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="15_mana_state"]
 [ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="16_fire_nova_vfx"]
 [ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="17_fire_nova_spell"]
-[ext_resource type="Script" path="res://scripts/spells/PoisonCloudSpell.cs" id="18_poison_cloud_spell"]
+[ext_resource type="Script" uid="uid://dlxqxvyam785x" path="res://scripts/spells/PoisonCloudSpell.cs" id="18_poison_cloud_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/poison_cloud_area.tscn" id="19_poison_cloud_area"]
+[ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="20_status_effect_controller"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -30,7 +30,7 @@ script = ExtResource("1_skeleton_mage")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=589380592]
 position = Vector2(0, -2)
-scale = Vector2(1.1, 1.1)
+scale = Vector2(0.7, 0.7)
 sprite_frames = ExtResource("2_skeleton_mage_frames")
 animation = &"idle_south"
 
