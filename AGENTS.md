@@ -1,5 +1,5 @@
 Always use the `godot` MCP server for Godot project inspection, scene operations, project runs, and debug output when available.
-Prefer headless Godot runs for verification and automation unless a non-headless/editor run is genuinely necessary for the task.
+Prefer headless Godot runs for verification and automation by default. Do not open the game window or editor as an additional verification step unless a non-headless/editor run is genuinely necessary for the task.
 Do not build using the `godot` MCP server or godot itself, use `dotnet build --verbosity quiet` instead.
 Do not use `dotnet build` without `--verbosity quiet` unless the user explicitly asks for verbose build logs or debugging requires it.
 Do not wrap `dotnet build --verbosity quiet` with `rtk`; use plain `dotnet build --verbosity quiet` because the unwrapped output is preferred.
