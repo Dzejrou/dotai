@@ -10,13 +10,14 @@
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="7_mana_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="8_faction_state"]
 [ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="9_fire_nova_spell"]
-[ext_resource type="Script" path="res://scripts/spells/FrostNovaSpell.cs" id="10_frost_nova_spell"]
+[ext_resource type="Script" uid="uid://bwlw8l3mpluct" path="res://scripts/spells/FrostNovaSpell.cs" id="10_frost_nova_spell"]
 [ext_resource type="Script" uid="uid://df50yybv2e8ng" path="res://scripts/spells/FireballSpell.cs" id="11_fireball_spell"]
 [ext_resource type="Script" uid="uid://casb8y51xl1h3" path="res://scripts/spells/BlinkSpell.cs" id="12_blink_spell"]
 [ext_resource type="Script" uid="uid://dtc0do7tcpgct" path="res://scripts/spells/RingOfFireSpell.cs" id="13_ring_of_fire_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ring_of_fire_area.tscn" id="14_ring_of_fire_area"]
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="15_status_effect_controller"]
-[ext_resource type="Script" path="res://scripts/status/SlowedEffect.cs" id="16_slowed_effect"]
+[ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="16_slowed_effect"]
+[ext_resource type="Script" path="res://scripts/status/BurningEffect.cs" id="17_burning_effect"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -72,9 +73,6 @@ HudLabel = "Frost Nova"
 [node name="SlowedEffect" type="Node" parent="Spells/FrostNova" unique_id=210873964]
 script = ExtResource("16_slowed_effect")
 DurationSeconds = 6.0
-MovementSpeedMultiplierValue = 0.5
-AttackSpeedMultiplierValue = 0.33
-CastSpeedMultiplierValue = 0.2
 
 [node name="Blink" type="Node" parent="Spells" unique_id=1496081750]
 script = ExtResource("12_blink_spell")
@@ -84,12 +82,17 @@ HudLabel = "Blink"
 [node name="RingOfFire" type="Node" parent="Spells" unique_id=1006917204]
 script = ExtResource("13_ring_of_fire_spell")
 AreaScene = ExtResource("14_ring_of_fire_area")
-ManaCost = 35
 CastAction = &"cast_spell4"
 HudLabel = "Ring of Fire"
+ManaCost = 35
 
 [node name="FireNova" type="Node" parent="Spells" unique_id=1734723264]
 script = ExtResource("9_fire_nova_spell")
 VfxScene = ExtResource("4_fire_nova_vfx")
 CastAction = &"cast_spell5"
 HudLabel = "Fire Nova"
+
+[node name="BurningEffect" type="Node" parent="Spells/FireNova" unique_id=2147247494]
+script = ExtResource("17_burning_effect")
+DurationSeconds = 6.0
+TickIntervalSeconds = 2.0
