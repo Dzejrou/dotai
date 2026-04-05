@@ -5,32 +5,24 @@ using System;
 [GlobalClass]
 public partial class PoisonCloudSpell : Spell
 {
+    private PoisonCloudArea _cloudTemplate;
+
     public PoisonCloudSpell()
     {
         ManaCost = 8;
     }
 
-    [Export]
-    public PackedScene AreaScene { get; set; }
+    public override void _Ready()
+    {
+        _cloudTemplate = FindCloudTemplate();
 
-    [Export]
-    public float CloudRadius { get; set; } = 48.0f;
-
-    [Export]
-    public float CloudLifetime { get; set; } = 14.0f;
-
-    [Export]
-    public float PoisonDuration { get; set; } = 10.0f;
-
-    [Export]
-    public float PoisonTickInterval { get; set; } = 2.0f;
-
-    [Export]
-    public int PoisonDamagePerTick { get; set; } = 5;
+        if (_cloudTemplate == null)
+            GD.PushError($"{GetPath()}: PoisonCloudSpell requires a PoisonCloudArea child template.");
+    }
 
     public override bool CanCast(ISpellCaster caster)
     {
-        if (!base.CanCast(caster) || AreaScene == null)
+        if (!base.CanCast(caster) || _cloudTemplate == null)
             return false;
 
         var sourceFaction = caster.Faction;
@@ -50,32 +42,34 @@ public partial class PoisonCloudSpell : Spell
         if (target == null || !GodotObject.IsInstanceValid(target) || !target.IsInsideTree())
             return false;
 
-        var poisonCloud = AreaScene.Instantiate<PoisonCloudArea>();
+        var parent = caster.SpellOrigin.GetParent();
+        if (parent == null)
+            return false;
+
+        if (!TrySpendCastMana(caster))
+            return false;
+
+        // TODO: run a broader dead-code analysis pass once spell-owned templates have settled.
+        var poisonCloud = _cloudTemplate.Duplicate() as PoisonCloudArea;
         if (poisonCloud == null)
             return false;
 
-        var parent = caster.SpellOrigin.GetParent();
-        if (parent == null)
-        {
-            poisonCloud.QueueFree();
-            return false;
-        }
-
-        if (!TrySpendCastMana(caster))
-        {
-            poisonCloud.QueueFree();
-            return false;
-        }
-
         parent.AddChild(poisonCloud);
         poisonCloud.GlobalPosition = target.GlobalPosition;
-        poisonCloud.CloudRadius = CloudRadius;
-        poisonCloud.CloudLifetime = CloudLifetime;
-        poisonCloud.PoisonDuration = PoisonDuration;
-        poisonCloud.PoisonTickInterval = PoisonTickInterval;
-        poisonCloud.PoisonDamagePerTick = PoisonDamagePerTick;
         poisonCloud.Initialize(caster.SpellOrigin, caster.Faction);
 
+        StartCooldown();
         return true;
+    }
+
+    private PoisonCloudArea FindCloudTemplate()
+    {
+        foreach (var child in GetChildren())
+        {
+            if (child is PoisonCloudArea poisonCloudArea)
+                return poisonCloudArea;
+        }
+
+        return null;
     }
 }

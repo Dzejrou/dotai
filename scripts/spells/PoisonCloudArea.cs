@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class PoisonCloudArea : Node2D
+public partial class PoisonCloudArea : Area2D
 {
     private static readonly StringName DefaultAnimationName = "default";
 
@@ -13,41 +13,47 @@ public partial class PoisonCloudArea : Node2D
     private float _elapsedTime;
     private float _nextTickTime;
     private AnimatedSprite2D _sprite;
-
-    [Export]
-    public float CloudRadius { get; set; } = 48.0f;
+    private StatusEffect _statusEffectTemplate;
 
     [Export]
     public float CloudLifetime { get; set; } = 14.0f;
 
-    [Export]
-    public float PoisonDuration { get; set; } = 10.0f;
-
-    [Export]
-    public float PoisonTickInterval { get; set; } = 2.0f;
-
-    [Export]
-    public int PoisonDamagePerTick { get; set; } = 5;
-
     public override void _Ready()
     {
-        _sprite = GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
+        CacheSceneReferences();
+
+        BodyEntered += OnBodyEntered;
         if (_sprite != null)
             _sprite.Play(DefaultAnimationName);
+
+        if (_statusEffectTemplate == null)
+            GD.PushError($"{GetPath()}: PoisonCloudArea requires a StatusEffect child template.");
     }
 
     public void Initialize(Node2D damageSource, Faction sourceFaction)
     {
+        CacheSceneReferences();
+        Visible = true;
+        ProcessMode = ProcessModeEnum.Inherit;
+        SetProcess(true);
+        SetPhysicsProcess(true);
+        Monitoring = true;
+        Monitorable = false;
+        CollisionLayer = 1;
+        CollisionMask = 1;
+        if (_sprite != null)
+        {
+            _sprite.Visible = true;
+            _sprite.Play(DefaultAnimationName);
+        }
+
         _damageSource = damageSource;
         _damageSourceInstanceId = damageSource != null && GodotObject.IsInstanceValid(damageSource)
             ? damageSource.GetInstanceId()
             : 0UL;
         _sourceFaction = sourceFaction ?? Factions.Enemies;
         _elapsedTime = 0.0f;
-        _nextTickTime = 0.0f;
-        if (_sprite != null && _sprite.SpriteFrames != null)
-            _sprite.Play(DefaultAnimationName);
-        QueueRedraw();
+        _nextTickTime = GetTickInterval();
     }
 
     public override void _Process(double delta)
@@ -56,7 +62,7 @@ public partial class PoisonCloudArea : Node2D
         _elapsedTime += deltaSeconds;
 
         var lifetime = Math.Max(0.1f, CloudLifetime);
-        var tickInterval = Math.Max(0.1f, PoisonTickInterval);
+        var tickInterval = GetTickInterval();
 
         while (_elapsedTime >= _nextTickTime && _nextTickTime <= lifetime + 0.001f)
         {
@@ -68,41 +74,67 @@ public partial class PoisonCloudArea : Node2D
             QueueFree();
     }
 
-    private void ApplyTickPoison()
+    private void OnBodyEntered(Node2D body)
     {
-        var poisonDamagePerTick = Math.Max(0, PoisonDamagePerTick);
-        if (_sourceFaction == null || poisonDamagePerTick <= 0)
+        if (body == null || !GodotObject.IsInstanceValid(body) || !body.IsInsideTree())
             return;
 
-        var radius = Math.Max(1.0f, CloudRadius);
-        var poisonDuration = Math.Max(0.1f, PoisonDuration);
-        var poisonTickInterval = Math.Max(0.1f, PoisonTickInterval);
+        ApplyPoisonToTarget(body);
+    }
 
-        foreach (var target in TargetingHelper.EnumerateCandidateTargets(this))
+    private void ApplyTickPoison()
+    {
+        foreach (var target in GetOverlappingBodies())
+            ApplyPoisonToTarget(target);
+    }
+
+    private void ApplyPoisonToTarget(Node target)
+    {
+        if (target is not IAttackable)
+            return;
+
+        var targetFactionState = FactionState.ResolveFor(target);
+        if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(_sourceFaction))
+            return;
+
+        var targetNode = target as Node2D;
+        if (targetNode == null || !GodotObject.IsInstanceValid(targetNode) || !targetNode.IsInsideTree())
+            return;
+
+        var controller = ResolveStatusEffectController(target);
+        if (controller == null || _statusEffectTemplate == null)
+            return;
+
+        var effect = _statusEffectTemplate.Duplicate() as StatusEffect;
+        if (effect == null)
+            return;
+
+        controller.ApplyStatusEffect(effect, _damageSource, _damageSourceInstanceId);
+    }
+
+    private void CacheSceneReferences()
+    {
+        _sprite ??= GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
+        _statusEffectTemplate ??= FindStatusEffectTemplate();
+    }
+
+    private float GetTickInterval()
+    {
+        if (_statusEffectTemplate == null)
+            return 0.1f;
+
+        return Math.Max(0.1f, _statusEffectTemplate.TickIntervalSeconds);
+    }
+
+    private StatusEffect FindStatusEffectTemplate()
+    {
+        foreach (var child in GetChildren())
         {
-            if (target is not IAttackable)
-                continue;
-
-            var targetFactionState = FactionState.ResolveFor(target);
-            if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(_sourceFaction))
-                continue;
-
-            if (GlobalPosition.DistanceTo(target.GlobalPosition) > radius)
-                continue;
-
-            var controller = ResolveStatusEffectController(target);
-            if (controller == null)
-                continue;
-
-            var effect = new PoisonedEffect
-            {
-                DurationSeconds = poisonDuration,
-                TickIntervalSeconds = poisonTickInterval,
-                DamagePerTick = poisonDamagePerTick,
-            };
-            // TODO: move poison cloud onto the same child StatusEffect template model as NovaSpell.
-            controller.ApplyStatusEffect(effect, _damageSource, _damageSourceInstanceId);
+            if (child is StatusEffect statusEffect)
+                return statusEffect;
         }
+
+        return null;
     }
 
     private static StatusEffectController ResolveStatusEffectController(Node target)
@@ -110,10 +142,6 @@ public partial class PoisonCloudArea : Node2D
         if (target == null || !GodotObject.IsInstanceValid(target) || !target.IsInsideTree())
             return null;
 
-        var controller = target.GetNodeOrNull<StatusEffectController>("StatusEffectController");
-        if (controller != null)
-            return controller;
-
-        return null;
+        return target.GetNodeOrNull<StatusEffectController>("StatusEffectController");
     }
 }
