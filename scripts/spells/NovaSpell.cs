@@ -11,13 +11,6 @@ public abstract partial class NovaSpell : Spell
     [Export]
     public float Range { get; set; } = 72.0f;
 
-    private StatusEffect _statusEffectTemplate;
-
-    public override void _Ready()
-    {
-        _statusEffectTemplate = FindStatusEffectTemplate();
-    }
-
     public override bool CanCast(ISpellCaster caster)
     {
         return base.CanCast(caster) && VfxScene != null && caster?.Faction != null;
@@ -44,20 +37,8 @@ public abstract partial class NovaSpell : Spell
 
     protected abstract int ResolveDamage(Node target);
 
-    protected virtual void ApplyHitTemplate(Node2D source, Node target)
+    protected virtual void OnTargetHit(ISpellCaster caster, Node target, IAttackable attackable)
     {
-        if (_statusEffectTemplate == null)
-            return;
-
-        var controller = ResolveStatusEffectController(target);
-        if (controller == null)
-            return;
-
-        var effect = _statusEffectTemplate.Duplicate() as StatusEffect;
-        if (effect == null)
-            return;
-
-        controller.ApplyStatusEffect(effect, source, ResolveSourceInstanceId(source));
     }
 
     protected virtual void SpawnVfx(Node2D spellOrigin, float range)
@@ -95,11 +76,11 @@ public abstract partial class NovaSpell : Spell
                 continue;
 
             attackable.ApplyDamage(new DamageInfo(Math.Max(1, ResolveDamage(node)), source));
-            ApplyHitTemplate(source, node);
+            OnTargetHit(caster, node, attackable);
         }
     }
 
-    private static StatusEffectController ResolveStatusEffectController(Node target)
+    protected static StatusEffectController ResolveStatusEffectController(Node target)
     {
         if (target == null || !GodotObject.IsInstanceValid(target) || !target.IsInsideTree())
             return null;
@@ -107,19 +88,8 @@ public abstract partial class NovaSpell : Spell
         return target.GetNodeOrNull<StatusEffectController>("StatusEffectController");
     }
 
-    private static ulong ResolveSourceInstanceId(Node2D source)
+    protected static ulong ResolveSourceInstanceId(Node2D source)
     {
         return source != null && GodotObject.IsInstanceValid(source) ? source.GetInstanceId() : 0UL;
-    }
-
-    private StatusEffect FindStatusEffectTemplate()
-    {
-        foreach (var child in GetChildren())
-        {
-            if (child is StatusEffect statusEffect)
-                return statusEffect;
-        }
-
-        return null;
     }
 }

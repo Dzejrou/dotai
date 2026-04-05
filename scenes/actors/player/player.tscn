@@ -18,6 +18,7 @@
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="15_status_effect_controller"]
 [ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="16_slowed_effect"]
 [ext_resource type="Script" uid="uid://cqsn11dvrfth1" path="res://scripts/status/BurningEffect.cs" id="17_burning_effect"]
+[ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="18_immobilized_effect"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -69,6 +70,10 @@ script = ExtResource("10_frost_nova_spell")
 VfxScene = ExtResource("5_frost_nova_vfx")
 CastAction = &"cast_spell2"
 HudLabel = "Frost Nova"
+
+[node name="ImmobilizedEffect" type="Node" parent="Spells/FrostNova" unique_id=2060857336]
+script = ExtResource("18_immobilized_effect")
+DurationSeconds = 2.0
 
 [node name="SlowedEffect" type="Node" parent="Spells/FrostNova" unique_id=210873964]
 script = ExtResource("16_slowed_effect")

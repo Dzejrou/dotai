@@ -5,8 +5,13 @@ using System;
 [GlobalClass]
 public partial class FrostNovaSpell : NovaSpell
 {
+    private readonly RandomNumberGenerator _random = new();
+
     [Export]
     public int DirectDamage { get; set; } = 5;
+
+    [Export]
+    public float ImmobilizeChance { get; set; } = 0.33f;
 
     public FrostNovaSpell()
     {
@@ -14,8 +19,30 @@ public partial class FrostNovaSpell : NovaSpell
         Cooldown = 15.0f;
     }
 
+    public override void _Ready()
+    {
+        _random.Randomize();
+    }
+
     protected override int ResolveDamage(Node target)
     {
         return Math.Max(1, DirectDamage);
+    }
+
+    protected override void OnTargetHit(ISpellCaster caster, Node target, IAttackable attackable)
+    {
+        var controller = ResolveStatusEffectController(target);
+        if (controller == null)
+            return;
+
+        var shouldImmobilize = _random.Randf() < Math.Clamp(ImmobilizeChance, 0.0f, 1.0f);
+        var templateName = shouldImmobilize ? "ImmobilizedEffect" : "SlowedEffect";
+        var statusTemplate = GetNodeOrNull<StatusEffect>(templateName);
+        var statusEffect = statusTemplate?.Duplicate() as StatusEffect;
+        if (statusEffect == null)
+            return;
+
+        var source = caster.SpellOrigin;
+        controller.ApplyStatusEffect(statusEffect, source, ResolveSourceInstanceId(source));
     }
 }
