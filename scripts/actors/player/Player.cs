@@ -122,6 +122,14 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         direction = direction.Normalized();
         SetFacingDirection(direction);
+        if (!CanMove)
+        {
+            Velocity = Vector2.Zero;
+            UpdateTargetingState();
+            SetAnimationSafe(GetIdleAnimationName());
+            return;
+        }
+
         var isSprinting = Input.IsActionPressed("sprint");
         var moveSpeed = isSprinting ? Speed * 2.0f : Speed;
         Velocity = direction * moveSpeed * Math.Max(0.0f, MovementSpeedMultiplier);

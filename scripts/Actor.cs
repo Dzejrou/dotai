@@ -513,6 +513,15 @@ public abstract partial class Actor : CombatCharacter
 
         if (intent.Destination.HasValue)
         {
+            if (!CanMove)
+            {
+                SetState(intent.State);
+                ResetNavigationPathState();
+                Velocity = Vector2.Zero;
+                PlayIdleIfAvailable();
+                return;
+            }
+
             if (TryMoveTowardDestination(intent.Destination.Value, intent.SpeedMultiplier, intent.State, delta))
             {
                 MoveAndSlide();

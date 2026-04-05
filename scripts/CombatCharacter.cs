@@ -20,6 +20,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public int MaxManaValue => ManaStateNode?.Max ?? 0;
     public bool IsDead => HealthStateNode?.IsDead ?? false;
     public bool CanReceiveHealing => !IsDead && CurrentHealth < MaxHealableHealth;
+    public virtual bool CanMove => StatusEffectControllerNode?.CanMove() ?? true;
     public virtual float MovementSpeedMultiplier => StatusEffectControllerNode?.GetMovementSpeedMultiplier() ?? 1.0f;
     public virtual float AttackSpeedMultiplier => StatusEffectControllerNode?.GetAttackSpeedMultiplier() ?? 1.0f;
     public virtual float CastSpeedMultiplier => StatusEffectControllerNode?.GetCastSpeedMultiplier() ?? 1.0f;

@@ -173,6 +173,20 @@ public partial class StatusEffectController : Node
         return ResolveStatusSpeedMultiplier(effect => effect.MovementSpeedMultiplier);
     }
 
+    public bool CanMove()
+    {
+        foreach (var effect in _activeEffects.Values)
+        {
+            if (effect == null || !GodotObject.IsInstanceValid(effect))
+                continue;
+
+            if (effect.PreventsMovement)
+                return false;
+        }
+
+        return true;
+    }
+
     public float GetAttackSpeedMultiplier()
     {
         return ResolveStatusSpeedMultiplier(effect => effect.AttackSpeedMultiplier);
