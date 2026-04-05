@@ -13,9 +13,6 @@ public partial class SpellCastActionController : Node, ICombatActionController
         LongRange,
     }
 
-    private float _basicCooldownTimer;
-    private float _closeRangeCooldownTimer;
-    private float _longRangeCooldownTimer;
     private SpellSlot _pendingSpell = SpellSlot.None;
     private Spell _basicSpell;
     private Spell _closeRangeSpell;
@@ -31,9 +28,6 @@ public partial class SpellCastActionController : Node, ICombatActionController
     public float PreferredRange { get; set; } = 120.0f;
 
     [Export]
-    public float AttackCooldown { get; set; } = 1.2f;
-
-    [Export]
     public StringName AttackAnimation { get; set; } = "cast";
 
     [Export]
@@ -46,39 +40,21 @@ public partial class SpellCastActionController : Node, ICombatActionController
     public float CloseRangeMaxDistance { get; set; } = 56.0f;
 
     [Export]
-    public float CloseRangeCooldown { get; set; } = 3.0f;
-
-    [Export]
     public NodePath LongRangeSpellNodePath { get; set; }
-
-    [Export]
-    public float LongRangeCooldown { get; set; } = 10.0f;
 
     public override void _Ready()
     {
         MinimumRange = Math.Max(0.0f, MinimumRange);
         PreferredRange = Math.Max(MinimumRange, PreferredRange);
-        AttackCooldown = Math.Max(0.0f, AttackCooldown);
         AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
         CloseRangeMaxDistance = Math.Max(0.0f, CloseRangeMaxDistance);
-        CloseRangeCooldown = Math.Max(0.0f, CloseRangeCooldown);
         _basicSpell = ResolveSpell(SpellNodePath);
         _closeRangeSpell = ResolveSpell(CloseRangeSpellNodePath);
-        LongRangeCooldown = Math.Max(0.0f, LongRangeCooldown);
         _longRangeSpell = ResolveSpell(LongRangeSpellNodePath);
     }
 
     public void Update(Actor actor, double delta)
     {
-        var castSpeedMultiplier = Math.Max(0.0f, actor.CastSpeedMultiplier);
-        if (_basicCooldownTimer > 0.0f)
-            _basicCooldownTimer -= (float)delta * castSpeedMultiplier;
-
-        if (_closeRangeCooldownTimer > 0.0f)
-            _closeRangeCooldownTimer -= (float)delta * castSpeedMultiplier;
-
-        if (_longRangeCooldownTimer > 0.0f)
-            _longRangeCooldownTimer -= (float)delta * castSpeedMultiplier;
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
@@ -120,7 +96,6 @@ public partial class SpellCastActionController : Node, ICombatActionController
             actor.SetFacingDirection(toTarget);
 
         actor.SetState(CombatUnitState.Attacking);
-        StartCooldown(spellSlot);
 
         if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.CastSpeedMultiplier)))
         {
@@ -149,9 +124,6 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
     public void Cancel(Actor actor)
     {
-        _basicCooldownTimer = 0.0f;
-        _closeRangeCooldownTimer = 0.0f;
-        _longRangeCooldownTimer = 0.0f;
         ClearPendingCast();
     }
 
@@ -206,8 +178,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
     private bool CanUseBasicSpell(ISpellCaster caster, float distance)
     {
-        return _basicCooldownTimer <= 0.0f &&
-               _basicSpell != null &&
+        return _basicSpell != null &&
                distance >= MinimumRange &&
                distance <= PreferredRange &&
                _basicSpell.CanCast(caster);
@@ -215,36 +186,16 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
     private bool CanUseCloseRangeSpell(ISpellCaster caster, float distance)
     {
-        return _closeRangeCooldownTimer <= 0.0f &&
-               _closeRangeSpell != null &&
+        return _closeRangeSpell != null &&
                distance <= CloseRangeMaxDistance &&
                _closeRangeSpell.CanCast(caster);
     }
 
     private bool CanUseLongRangeSpell(ISpellCaster caster, float distance)
     {
-        return _longRangeCooldownTimer <= 0.0f &&
-               _longRangeSpell != null &&
+        return _longRangeSpell != null &&
                distance > PreferredRange &&
                _longRangeSpell.CanCast(caster);
-    }
-
-    private void StartCooldown(SpellSlot spellSlot)
-    {
-        if (spellSlot == SpellSlot.CloseRange)
-        {
-            _closeRangeCooldownTimer = CloseRangeCooldown;
-            return;
-        }
-
-        if (spellSlot == SpellSlot.LongRange)
-        {
-            _longRangeCooldownTimer = LongRangeCooldown;
-            return;
-        }
-
-        if (spellSlot == SpellSlot.Basic)
-            _basicCooldownTimer = AttackCooldown;
     }
 
     private void TryCast(Actor actor, SpellSlot spellSlot)

@@ -79,6 +79,7 @@ public partial class FireballSpell : Spell
             ProjectileLifetime,
             ProjectileMaxDistance);
 
+        StartCooldown();
         return true;
     }
 }

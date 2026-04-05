@@ -69,6 +69,7 @@ RegenerationInterval = 0.75
 [node name="Fireball" type="Node" parent="Spells" unique_id=436095138]
 script = ExtResource("14_fireball_spell")
 ProjectileScene = ExtResource("12_projectile_scene")
+Cooldown = 1.2
 
 [node name="FireNova" type="Node" parent="Spells" unique_id=1734723264]
 script = ExtResource("17_fire_nova_spell")
@@ -77,6 +78,7 @@ MaximumDamage = 12
 VfxScene = ExtResource("16_fire_nova_vfx")
 Range = 56.0
 ManaCost = 10
+Cooldown = 3.2
 
 [node name="BurningEffect" type="Node" parent="Spells/FireNova" unique_id=557692296]
 script = ExtResource("21_burning_effect")
@@ -85,6 +87,7 @@ TickIntervalSeconds = 2.0
 
 [node name="PoisonCloud" type="Node" parent="Spells" unique_id=1804078723]
 script = ExtResource("18_poison_cloud_spell")
+Cooldown = 10.0
 
 [node name="PoisonCloudArea" parent="Spells/PoisonCloud" unique_id=211413475 instance=ExtResource("19_poison_cloud_area")]
 process_mode = 4
@@ -97,7 +100,6 @@ monitoring = false
 script = ExtResource("11_spell_cast_action")
 AnimationSpeedMultiplier = 2.0
 CloseRangeSpellNodePath = NodePath("../Spells/FireNova")
-CloseRangeCooldown = 3.2
 LongRangeSpellNodePath = NodePath("../Spells/PoisonCloud")
 
 [node name="Behaviors" type="Node" parent="." unique_id=258315963]
