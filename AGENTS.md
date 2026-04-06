@@ -1,5 +1,12 @@
-Always use the `godot` MCP server for Godot project inspection, scene operations, project runs, and debug output when available.
-Prefer headless Godot runs for verification and automation by default. Do not open the game window or editor as an additional verification step unless a non-headless/editor run is genuinely necessary for the task.
+Godot verification policy for this repo:
+- NEVER use `mcp__godot__run_project`; it launches a visible window.
+- NEVER launch the Godot editor for verification.
+- ALWAYS verify startup headlessly.
+- Preferred verification command:
+  `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path /Users/jjindrak/Projects/Dotai --quit-after 1`
+- If a Godot MCP tool does not support headless mode, do not use it for verification.
+
+Always use the `godot` MCP server for Godot project inspection, scene operations, and debug output when available.
 Do not build using the `godot` MCP server or godot itself, use `dotnet build --verbosity quiet` instead.
 Do not use `dotnet build` without `--verbosity quiet` unless the user explicitly asks for verbose build logs or debugging requires it.
 Do not wrap `dotnet build --verbosity quiet` with `rtk`; use plain `dotnet build --verbosity quiet` because the unwrapped output is preferred.
