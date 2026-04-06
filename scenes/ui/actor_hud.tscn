@@ -6,6 +6,10 @@
 script = ExtResource("1_actor_hud_script")
 ShowMana = true
 VerticalOffset = -40.0
+PlacementMode = 0
+ScreenAnchor = Vector2(0, 0)
+ScreenOffset = Vector2(0, 0)
+ScreenLayer = 100
 UseFactionHealthColors = true
 HealthTextColor = Color(0, 0, 0, 1)
 ManaTextColor = Color(0, 0, 0, 1)
@@ -14,13 +18,19 @@ HealthBackgroundColor = Color(0.16, 0.36, 0.16, 0.85)
 ManaFillColor = Color(0.35, 0.65, 1, 1)
 ManaBackgroundColor = Color(0.16, 0.2, 0.3, 0.85)
 
-[node name="UnitFrame" type="VBoxContainer" parent="."]
+[node name="ScreenLayer" type="CanvasLayer" parent="."]
+visible = false
+layer = 100
+
+[node name="ContentRoot" type="Node2D" parent="."]
+
+[node name="UnitFrame" type="VBoxContainer" parent="ContentRoot"]
 position = Vector2(-30, 0)
 z_index = 10
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="NameLabel" type="Label" parent="UnitFrame"]
+[node name="NameLabel" type="Label" parent="ContentRoot/UnitFrame"]
 visible = false
 custom_minimum_size = Vector2(60, 12)
 mouse_filter = 2
@@ -30,24 +40,24 @@ theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 11
 horizontal_alignment = 1
 
-[node name="HealthBar" type="Control" parent="UnitFrame"]
+[node name="HealthBar" type="Control" parent="ContentRoot/UnitFrame"]
 custom_minimum_size = Vector2(60, 14)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="HealthBackground" type="ColorRect" parent="UnitFrame/HealthBar"]
+[node name="HealthBackground" type="ColorRect" parent="ContentRoot/UnitFrame/HealthBar"]
 offset_right = 60.0
 offset_bottom = 14.0
 color = Color(0.18, 0.18, 0.18, 0.85)
 
-[node name="HealthFill" type="ColorRect" parent="UnitFrame/HealthBar"]
+[node name="HealthFill" type="ColorRect" parent="ContentRoot/UnitFrame/HealthBar"]
 offset_left = 1.0
 offset_top = 1.0
 offset_right = 59.0
 offset_bottom = 13.0
 color = Color(0.45, 0.95, 0.45, 1)
 
-[node name="HealthLabel" type="Label" parent="UnitFrame/HealthBar"]
+[node name="HealthLabel" type="Label" parent="ContentRoot/UnitFrame/HealthBar"]
 offset_right = 60.0
 offset_bottom = 14.0
 mouse_filter = 2
@@ -58,24 +68,24 @@ theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ManaBar" type="Control" parent="UnitFrame"]
+[node name="ManaBar" type="Control" parent="ContentRoot/UnitFrame"]
 custom_minimum_size = Vector2(60, 10)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="ManaBackground" type="ColorRect" parent="UnitFrame/ManaBar"]
+[node name="ManaBackground" type="ColorRect" parent="ContentRoot/UnitFrame/ManaBar"]
 offset_right = 60.0
 offset_bottom = 10.0
 color = Color(0.16, 0.2, 0.3, 0.85)
 
-[node name="ManaFill" type="ColorRect" parent="UnitFrame/ManaBar"]
+[node name="ManaFill" type="ColorRect" parent="ContentRoot/UnitFrame/ManaBar"]
 offset_left = 1.0
 offset_top = 1.0
 offset_right = 59.0
 offset_bottom = 9.0
 color = Color(0.35, 0.65, 1, 1)
 
-[node name="ManaLabel" type="Label" parent="UnitFrame/ManaBar"]
+[node name="ManaLabel" type="Label" parent="ContentRoot/UnitFrame/ManaBar"]
 offset_right = 60.0
 offset_bottom = 10.0
 mouse_filter = 2
@@ -86,16 +96,16 @@ theme_override_font_sizes/font_size = 9
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="TargetBracket" type="Node2D" parent="."]
+[node name="TargetBracket" type="Node2D" parent="ContentRoot"]
 visible = false
 z_index = 50
 
-[node name="LeftBracket" type="Line2D" parent="TargetBracket"]
+[node name="LeftBracket" type="Line2D" parent="ContentRoot/TargetBracket"]
 width = 2.0
 default_color = Color(1, 1, 1, 0.8)
 points = PackedVector2Array(-32, 0, -38, 0, -38, 26, -32, 26)
 
-[node name="RightBracket" type="Line2D" parent="TargetBracket"]
+[node name="RightBracket" type="Line2D" parent="ContentRoot/TargetBracket"]
 width = 2.0
 default_color = Color(1, 1, 1, 0.8)
 points = PackedVector2Array(32, 0, 38, 0, 38, 26, 32, 26)

@@ -38,6 +38,15 @@ position = Vector2(0, 6)
 shape = SubResource("RectangleShape2D_8r2s6")
 
 [node name="ActorHUD" parent="." unique_id=2138820049 instance=ExtResource("4_actor_hud")]
+ShowName = false
+HealthBarWidth = 140.0
+HealthBarHeight = 16.0
+ManaBarWidth = 140.0
+ManaBarHeight = 16.0
+PlacementMode = 1
+ScreenAnchor = Vector2(0, 0)
+ScreenOffset = Vector2(38, 8)
+ScreenLayer = 100
 VerticalOffset = -52.0
 HealthFillColor = Color(0.62352943, 0.09411765, 0.09411765, 1)
 HealthBackgroundColor = Color(0.4117647, 0.047058824, 0.047058824, 0.8509804)

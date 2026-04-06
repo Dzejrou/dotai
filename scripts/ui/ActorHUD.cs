@@ -5,6 +5,17 @@ using System;
 [GlobalClass]
 public partial class ActorHUD : Node2D
 {
+    public enum HudPlacementMode
+    {
+        WorldFollow = 0,
+        ScreenAnchored = 1,
+    }
+
+    private const float DefaultHealthBarWidth = 60.0f;
+    private const float DefaultHealthBarHeight = 14.0f;
+    private const float DefaultManaBarWidth = 60.0f;
+    private const float DefaultManaBarHeight = 10.0f;
+
     private static readonly Color DefaultHealthFillColor = new Color(0.45f, 0.95f, 0.45f, 1.0f);
     private static readonly Color DefaultHealthBackgroundColor = new Color(0.16f, 0.36f, 0.16f, 0.85f);
     private static readonly Color PoisonedHealthFillColor = new Color(0.42f, 0.92f, 0.42f, 1.0f);
@@ -21,6 +32,30 @@ public partial class ActorHUD : Node2D
 
     [Export]
     public float VerticalOffset { get; set; } = -40.0f;
+
+    [Export]
+    public float HealthBarWidth { get; set; } = DefaultHealthBarWidth;
+
+    [Export]
+    public float HealthBarHeight { get; set; } = DefaultHealthBarHeight;
+
+    [Export]
+    public float ManaBarWidth { get; set; } = DefaultManaBarWidth;
+
+    [Export]
+    public float ManaBarHeight { get; set; } = DefaultManaBarHeight;
+
+    [Export]
+    public HudPlacementMode PlacementMode { get; set; } = HudPlacementMode.WorldFollow;
+
+    [Export]
+    public Vector2 ScreenAnchor { get; set; } = Vector2.Zero;
+
+    [Export]
+    public Vector2 ScreenOffset { get; set; } = Vector2.Zero;
+
+    [Export]
+    public int ScreenLayer { get; set; } = 100;
 
     [Export]
     public bool UseFactionHealthColors { get; set; } = true;
@@ -43,7 +78,10 @@ public partial class ActorHUD : Node2D
     [Export]
     public Color ManaBackgroundColor { get; set; } = new Color(0.16f, 0.2f, 0.3f, 0.85f);
 
+    private Node2D _contentRoot;
+    private CanvasLayer _screenLayer;
     private Control _unitFrame;
+    private Control _healthBar;
     private Label _nameLabel;
     private ColorRect _healthBackground;
     private ColorRect _healthFill;
@@ -64,20 +102,24 @@ public partial class ActorHUD : Node2D
 
     public override void _Ready()
     {
-        _unitFrame = GetNodeOrNull<Control>("UnitFrame");
-        _nameLabel = GetNodeOrNull<Label>("UnitFrame/NameLabel");
-        _healthBackground = GetNodeOrNull<ColorRect>("UnitFrame/HealthBar/HealthBackground");
-        _healthFill = GetNodeOrNull<ColorRect>("UnitFrame/HealthBar/HealthFill");
-        _healthLabel = GetNodeOrNull<Label>("UnitFrame/HealthBar/HealthLabel");
-        _manaBar = GetNodeOrNull<Control>("UnitFrame/ManaBar");
-        _manaBackground = GetNodeOrNull<ColorRect>("UnitFrame/ManaBar/ManaBackground");
-        _manaFill = GetNodeOrNull<ColorRect>("UnitFrame/ManaBar/ManaFill");
-        _manaLabel = GetNodeOrNull<Label>("UnitFrame/ManaBar/ManaLabel");
-        _targetBracket = GetNodeOrNull<Node2D>("TargetBracket");
-        _leftBracket = GetNodeOrNull<Line2D>("TargetBracket/LeftBracket");
-        _rightBracket = GetNodeOrNull<Line2D>("TargetBracket/RightBracket");
+        _contentRoot = GetNodeOrNull<Node2D>("ContentRoot");
+        _screenLayer = GetNodeOrNull<CanvasLayer>("ScreenLayer");
+        _unitFrame = GetNodeOrNull<Control>("ContentRoot/UnitFrame");
+        _healthBar = GetNodeOrNull<Control>("ContentRoot/UnitFrame/HealthBar");
+        _nameLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/NameLabel");
+        _healthBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/HealthBar/HealthBackground");
+        _healthFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/HealthBar/HealthFill");
+        _healthLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/HealthBar/HealthLabel");
+        _manaBar = GetNodeOrNull<Control>("ContentRoot/UnitFrame/ManaBar");
+        _manaBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/ManaBar/ManaBackground");
+        _manaFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/ManaBar/ManaFill");
+        _manaLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/ManaBar/ManaLabel");
+        _targetBracket = GetNodeOrNull<Node2D>("ContentRoot/TargetBracket");
+        _leftBracket = GetNodeOrNull<Line2D>("ContentRoot/TargetBracket/LeftBracket");
+        _rightBracket = GetNodeOrNull<Line2D>("ContentRoot/TargetBracket/RightBracket");
         ActorHudSettings.Changed += OnActorHudSettingsChanged;
-        ApplyVerticalOffset();
+        ApplyBarSizes();
+        RefreshPlacement();
         RefreshName();
         RefreshTextColors();
         RefreshManaVisibility();
@@ -151,12 +193,37 @@ public partial class ActorHUD : Node2D
 
     public override void _Process(double delta)
     {
+        RefreshPlacement();
         RefreshManaBar();
     }
 
-    private void ApplyVerticalOffset()
+    private void RefreshPlacement()
     {
-        Position = new Vector2(0.0f, VerticalOffset);
+        if (_contentRoot == null || _screenLayer == null)
+            return;
+
+        var isScreenAnchored = PlacementMode == HudPlacementMode.ScreenAnchored;
+        var desiredParent = isScreenAnchored ? (Node)_screenLayer : this;
+        if (_contentRoot.GetParent() != desiredParent)
+            _contentRoot.Reparent(desiredParent, false);
+
+        _screenLayer.Visible = isScreenAnchored;
+        _screenLayer.Layer = ScreenLayer;
+
+        if (isScreenAnchored)
+        {
+            var viewportRect = GetViewportRect();
+            _contentRoot.Position = viewportRect.Position + (viewportRect.Size * ScreenAnchor) + ScreenOffset;
+            return;
+        }
+
+        _contentRoot.Position = new Vector2(0.0f, VerticalOffset);
+    }
+
+    private void ApplyBarSizes()
+    {
+        ApplyBarSize(_healthBar, _healthBackground, _healthLabel, HealthBarWidth, HealthBarHeight);
+        ApplyBarSize(_manaBar, _manaBackground, _manaLabel, ManaBarWidth, ManaBarHeight);
     }
 
     private void RefreshName()
@@ -282,6 +349,25 @@ public partial class ActorHUD : Node2D
                Mathf.IsEqualApprox(left.G, right.G) &&
                Mathf.IsEqualApprox(left.B, right.B) &&
                Mathf.IsEqualApprox(left.A, right.A);
+    }
+
+    private static void ApplyBarSize(Control container, ColorRect background, Label label, float width, float height)
+    {
+        var resolvedWidth = Math.Max(2.0f, width);
+        var resolvedHeight = Math.Max(2.0f, height);
+        var barSize = new Vector2(resolvedWidth, resolvedHeight);
+
+        if (container != null)
+        {
+            container.CustomMinimumSize = barSize;
+            container.Size = barSize;
+        }
+
+        if (background != null)
+            background.Size = barSize;
+
+        if (label != null)
+            label.Size = barSize;
     }
 
     private void OnActorHudSettingsChanged(bool _)
