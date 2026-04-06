@@ -3,16 +3,16 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class RejuvenationEffect : StatusEffect
+public partial class HealOverTimeEffect : StatusEffect
 {
-    public static readonly StringName StatusKeyName = "rejuvenation";
+    public static readonly StringName StatusKeyName = "heal_over_time";
 
     [Export]
     public int HealPerTick { get; set; } = 3;
 
-    public RejuvenationEffect()
+    public HealOverTimeEffect()
     {
-        DisplayName = "REJUVENATION";
+        DisplayName = "Heal Over Time";
         Category = StatusCategory.Buff;
         DurationSeconds = 16.0f;
         TickIntervalSeconds = 2.0f;
@@ -24,8 +24,8 @@ public partial class RejuvenationEffect : StatusEffect
     {
         base.CopyConfigurationFrom(replacement);
 
-        if (replacement is RejuvenationEffect rejuvenationEffect)
-            HealPerTick = rejuvenationEffect.HealPerTick;
+        if (replacement is HealOverTimeEffect healOverTimeEffect)
+            HealPerTick = healOverTimeEffect.HealPerTick;
     }
 
     protected override void OnTick()

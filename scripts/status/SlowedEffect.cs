@@ -19,6 +19,7 @@ public partial class SlowedEffect : StatusEffect
     public SlowedEffect()
     {
         DisplayName = "SLOWED";
+        FloatingTextLabel = "SLOWED";
         Category = StatusCategory.Debuff;
         DurationSeconds = 6.0f;
         TickIntervalSeconds = 0.0f;

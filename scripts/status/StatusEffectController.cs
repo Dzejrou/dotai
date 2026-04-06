@@ -274,16 +274,14 @@ public partial class StatusEffectController : Node
         if (effect == null)
             return;
 
-        var displayName = string.IsNullOrWhiteSpace(effect.DisplayName)
-            ? effect.StatusKey.ToString()
-            : effect.DisplayName.Trim();
+        var displayName = effect.FloatingTextLabel?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(displayName))
             return;
 
         var prefix = applied ? "+" : "-";
         var color = ResolveStatusFloatingTextColor(effect.Category, applied);
-        CallDeferred(nameof(EmitStatusFloatingTextDeferred), $"{prefix}{displayName.ToUpperInvariant()}", color);
+        CallDeferred(nameof(EmitStatusFloatingTextDeferred), $"{prefix}{displayName}", color);
     }
 
     private void EmitStatusFloatingTextDeferred(string text, Color color)

@@ -21,6 +21,9 @@ public abstract partial class StatusEffect : Node
     public string DisplayName { get; set; } = string.Empty;
 
     [Export]
+    public string FloatingTextLabel { get; set; } = string.Empty;
+
+    [Export]
     public StatusCategory Category { get; set; } = StatusCategory.Debuff;
 
     public virtual bool IsUniqueByStatusKey => false;
@@ -107,6 +110,7 @@ public abstract partial class StatusEffect : Node
         DurationSeconds = replacement.DurationSeconds;
         TickIntervalSeconds = replacement.TickIntervalSeconds;
         DisplayName = replacement.DisplayName;
+        FloatingTextLabel = replacement.FloatingTextLabel;
         Category = replacement.Category;
     }
 

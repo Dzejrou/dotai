@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class Dryad : Actor, IAttackable, ITargetable
+public partial class Dryad : Actor, IAttackable, ITargetable, ISpellCaster
 {
     [Export]
     public float HealAcquisitionRange { get; set; } = 256.0f;
@@ -10,6 +10,11 @@ public partial class Dryad : Actor, IAttackable, ITargetable
     public float Speed { get; set; } = 44.0f;
 
     public bool CanBeTargeted => !IsDead;
+    public Node2D SpellOrigin => this;
+    public string SpellDirectionName => LastDirection;
+    public Vector2 SpellDirection => DirectionHelper.GetDirectionVector(LastDirection);
+    public Node2D SpellTarget => Target;
+    public bool CanCastSpells => !IsDead;
 
     public override void _Ready()
     {
@@ -20,6 +25,15 @@ public partial class Dryad : Actor, IAttackable, ITargetable
         ConfigureBehaviors(new HealLowestHealthFriendlyBehavior(HealAcquisitionRange));
         PlayIdleIfAvailable();
     }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        base._PhysicsProcess(delta);
+        if (!Combat.InCombat)
+            ManaState?.Tick(delta);
+    }
+
+    public void NotifyManaChanged() { }
 
     public void ApplyDamage(DamageInfo damageInfo)
     {

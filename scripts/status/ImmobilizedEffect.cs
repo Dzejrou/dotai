@@ -8,6 +8,7 @@ public partial class ImmobilizedEffect : StatusEffect
     public ImmobilizedEffect()
     {
         DisplayName = "IMMOBILIZED";
+        FloatingTextLabel = "IMMOBILIZED";
         Category = StatusCategory.Debuff;
         DurationSeconds = 2.5f;
         TickIntervalSeconds = 0.0f;

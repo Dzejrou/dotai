@@ -13,6 +13,7 @@ public partial class BurningEffect : StatusEffect
     public BurningEffect()
     {
         DisplayName = "BURNING";
+        FloatingTextLabel = "BURNING";
         Category = StatusCategory.Debuff;
         DurationSeconds = 6.0f;
         TickIntervalSeconds = 2.0f;
