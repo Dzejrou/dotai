@@ -13,7 +13,6 @@ public partial class RingOfFireArea : Node2D
     private float _tickInterval = 1.0f;
     private float _elapsedTime;
     private float _nextTickTime = 1.0f;
-    private int _damagePerTick = 6;
 
     [Export]
     public Color FillColor { get; set; } = new Color(1.0f, 0.45f, 0.08f, 0.32f);
@@ -42,8 +41,7 @@ public partial class RingOfFireArea : Node2D
         Faction sourceFaction,
         float radius,
         float duration,
-        float tickInterval,
-        int damagePerTick)
+        float tickInterval)
     {
         _isPreview = false;
         _damageSource = damageSource;
@@ -51,7 +49,6 @@ public partial class RingOfFireArea : Node2D
         _radius = Math.Max(1.0f, radius);
         _duration = Math.Max(0.1f, duration);
         _tickInterval = Math.Max(0.1f, tickInterval);
-        _damagePerTick = Math.Max(0, damagePerTick);
         _elapsedTime = 0.0f;
         _nextTickTime = _tickInterval;
         QueueRedraw();
@@ -85,7 +82,7 @@ public partial class RingOfFireArea : Node2D
 
     private void ApplyTickDamage()
     {
-        if (_sourceFaction == null || _damagePerTick <= 0)
+        if (_sourceFaction == null)
             return;
 
         foreach (var target in TargetingHelper.EnumerateCandidateTargets(this))
@@ -100,7 +97,12 @@ public partial class RingOfFireArea : Node2D
             if (GlobalPosition.DistanceTo(target.GlobalPosition) > _radius)
                 continue;
 
-            attackable.ApplyDamage(new DamageInfo(_damagePerTick, ResolveDamageSource()));
+            var damage = Damage.DuplicateFrom(this);
+            if (damage == null)
+                continue;
+
+            damage.InitializeRuntime(ResolveDamageSource(), damage.ResolveAmount());
+            attackable.ApplyDamage(damage);
         }
     }
 

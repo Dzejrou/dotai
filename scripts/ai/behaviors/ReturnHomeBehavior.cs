@@ -69,7 +69,7 @@ public partial class ReturnHomeBehavior : Node, IActorBehavior, IActorDamageInte
         return true;
     }
 
-    public bool TryHandleIncomingDamage(Actor actor, DamageInfo damageInfo, out IncomingDamageDecision decision)
+    public bool TryHandleIncomingDamage(Actor actor, Damage damageInfo, out IncomingDamageDecision decision)
     {
         decision = default;
 

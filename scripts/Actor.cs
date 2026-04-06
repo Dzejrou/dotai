@@ -320,7 +320,7 @@ public abstract partial class Actor : CombatCharacter
         _actorHud.ShowFloatingText($"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
     }
 
-    protected bool TryApplyIncomingDamage(DamageInfo damageInfo, out int damage, out bool died)
+    protected bool TryApplyIncomingDamage(Damage damageInfo, out int damage, out bool died)
     {
         damage = 0;
         died = false;

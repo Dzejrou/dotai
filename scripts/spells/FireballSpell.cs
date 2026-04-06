@@ -1,7 +1,5 @@
 using Godot;
 
-using System;
-
 [GlobalClass]
 public partial class FireballSpell : Spell
 {
@@ -15,9 +13,6 @@ public partial class FireballSpell : Spell
 
     [Export]
     public float ProjectileSpeed { get; set; } = 280.0f;
-
-    [Export]
-    public int ProjectileDamage { get; set; } = 4;
 
     [Export]
     public float ProjectileLifetime { get; set; } = 2.5f;
@@ -71,10 +66,13 @@ public partial class FireballSpell : Spell
 
         projectile.GlobalPosition = caster.SpellOrigin.GlobalPosition;
         parent.AddChild(projectile);
+
+        var damagePayload = Damage.DuplicateFrom(this);
+        damagePayload?.InitializeRuntime((Node)caster.SpellOrigin, damagePayload.ResolveAmount());
         projectile.Initialize(
             fireDirection,
             (Node)caster.SpellOrigin,
-            ProjectileDamage,
+            damagePayload,
             ProjectileSpeed,
             ProjectileLifetime,
             ProjectileMaxDistance);

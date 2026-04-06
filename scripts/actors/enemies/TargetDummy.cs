@@ -70,7 +70,7 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
             _respawnTimer.Timeout -= OnRespawnTimerTimeout;
     }
 
-    public void ApplyDamage(DamageInfo damageInfo)
+    public void ApplyDamage(Damage damageInfo)
     {
         if (_isDead)
             return;

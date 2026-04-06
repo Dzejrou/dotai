@@ -18,7 +18,7 @@ public partial class ElfRanger : Actor, IAttackable, ITargetable
         PlayIdleIfAvailable();
     }
 
-    public void ApplyDamage(DamageInfo damageInfo)
+    public void ApplyDamage(Damage damageInfo)
     {
         if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;

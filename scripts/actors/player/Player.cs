@@ -165,7 +165,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         GetViewport().SetInputAsHandled();
     }
 
-    public void ApplyDamage(DamageInfo damageInfo)
+    public void ApplyDamage(Damage damageInfo)
     {
         if (_isDead)
             return;

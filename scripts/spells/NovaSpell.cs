@@ -35,7 +35,10 @@ public abstract partial class NovaSpell : Spell
         return true;
     }
 
-    protected abstract int ResolveDamage(Node target);
+    protected virtual int ResolveDamage(Damage damageTemplate, Node target)
+    {
+        return damageTemplate?.ResolveAmount() ?? 0;
+    }
 
     protected virtual void OnTargetHit(ISpellCaster caster, Node target, IAttackable attackable)
     {
@@ -62,6 +65,7 @@ public abstract partial class NovaSpell : Spell
     {
         var sourceFaction = caster.Faction;
         var source = caster.SpellOrigin;
+        var damageTemplate = GetNodeOrNull<Damage>("Damage");
 
         foreach (var node in TargetingHelper.EnumerateCandidateTargets(source))
         {
@@ -75,7 +79,12 @@ public abstract partial class NovaSpell : Spell
             if (source.GlobalPosition.DistanceTo(node.GlobalPosition) > range)
                 continue;
 
-            attackable.ApplyDamage(new DamageInfo(Math.Max(1, ResolveDamage(node)), source));
+            if (damageTemplate?.Duplicate() is Damage damagePayload)
+            {
+                damagePayload.InitializeRuntime(source, Math.Max(1, ResolveDamage(damageTemplate, node)));
+                attackable.ApplyDamage(damagePayload);
+            }
+
             OnTargetHit(caster, node, attackable);
         }
     }

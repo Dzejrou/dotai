@@ -20,7 +20,7 @@ public partial class Ogre : Actor, IAttackable, ITargetable
 
     public bool CanBeTargeted => !IsDead;
 
-    public void ApplyDamage(DamageInfo damageInfo)
+    public void ApplyDamage(Damage damageInfo)
     {
         if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;

@@ -1,4 +1,4 @@
 public interface IActorDamageInterceptor
 {
-    bool TryHandleIncomingDamage(Actor actor, DamageInfo damageInfo, out IncomingDamageDecision decision);
+    bool TryHandleIncomingDamage(Actor actor, Damage damageInfo, out IncomingDamageDecision decision);
 }

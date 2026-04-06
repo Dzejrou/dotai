@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://twoew2yv3fhj" path="res://scripts/spells/PoisonCloudArea.cs" id="1_poison_cloud_area_script"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/poison_cloud_spriteframes.tres" id="2_poison_cloud_frames"]
 [ext_resource type="Script" uid="uid://cq1ljwn1pf717" path="res://scripts/status/PoisonedEffect.cs" id="3_poisoned_effect"]
+[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="4_damage"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_poison_cloud"]
 radius = 55.0
@@ -22,6 +23,10 @@ offset = Vector2(0, -8)
 
 [node name="PoisonedEffect" type="Node" parent="." unique_id=2015812129]
 script = ExtResource("3_poisoned_effect")
-DamagePerTick = 5
 DurationSeconds = 10.0
 TickIntervalSeconds = 2.0
+
+[node name="Damage" type="Node" parent="PoisonedEffect" unique_id=2001900102]
+script = ExtResource("4_damage")
+MinimumDamage = 5
+MaximumDamage = 5

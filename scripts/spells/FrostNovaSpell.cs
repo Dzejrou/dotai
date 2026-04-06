@@ -8,9 +8,6 @@ public partial class FrostNovaSpell : NovaSpell
     private readonly RandomNumberGenerator _random = new();
 
     [Export]
-    public int DirectDamage { get; set; } = 5;
-
-    [Export]
     public float ImmobilizeChance { get; set; } = 0.33f;
 
     public FrostNovaSpell()
@@ -24,9 +21,9 @@ public partial class FrostNovaSpell : NovaSpell
         _random.Randomize();
     }
 
-    protected override int ResolveDamage(Node target)
+    protected override int ResolveDamage(Damage damageTemplate, Node target)
     {
-        return Math.Max(1, DirectDamage);
+        return damageTemplate?.ResolveAmount() ?? 0;
     }
 
     protected override void OnTargetHit(ISpellCaster caster, Node target, IAttackable attackable)

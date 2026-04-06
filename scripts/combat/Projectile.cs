@@ -6,9 +6,6 @@ public partial class Projectile : Area2D
     public float Speed { get; set; } = 280.0f;
 
     [Export]
-    public int Damage { get; set; } = 3;
-
-    [Export]
     public float Lifetime { get; set; } = 2.5f;
 
     [Export]
@@ -17,6 +14,7 @@ public partial class Projectile : Area2D
     private Vector2 _direction = Vector2.Right;
     private float _lifetimeTimer;
     private float _traveledDistance;
+    private Damage _damage;
     private Node _source;
     private bool _isActive;
     private bool _hasHitTarget;
@@ -54,15 +52,14 @@ public partial class Projectile : Area2D
     public void Initialize(
         Vector2 direction,
         Node source,
-        int? overrideDamage = null,
+        Damage damage = null,
         float? overrideSpeed = null,
         float? overrideLifetime = null,
         float? overrideMaxTravelDistance = null)
     {
         _source = source;
+        _damage = damage;
         _direction = direction.Length() > 0.0f ? direction.Normalized() : Vector2.Right;
-        if (overrideDamage.HasValue && overrideDamage.Value > 0)
-            Damage = overrideDamage.Value;
         if (overrideSpeed.HasValue)
             Speed = Mathf.Max(0.0f, overrideSpeed.Value);
         if (overrideLifetime.HasValue)
@@ -77,6 +74,10 @@ public partial class Projectile : Area2D
         _hasHitTarget = false;
         _isActive = true;
         SetPhysicsProcess(true);
+
+        if (_damage != null)
+            AddChild(_damage);
+
         QueueRedraw();
     }
 
@@ -97,8 +98,12 @@ public partial class Projectile : Area2D
             return;
 
         _hasHitTarget = true;
-        var attackable = (IAttackable)targetNode;
-        attackable.ApplyDamage(new DamageInfo(Damage, _source));
+        if (_damage != null)
+        {
+            var attackable = (IAttackable)targetNode;
+            attackable.ApplyDamage(_damage);
+        }
+
         CallDeferred(nameof(Despawn));
     }
 

@@ -1,7 +1,5 @@
 using Godot;
 
-using System;
-
 [GlobalClass]
 public partial class PoisonedEffect : StatusEffect
 {
@@ -14,17 +12,12 @@ public partial class PoisonedEffect : StatusEffect
         Category = StatusCategory.Debuff;
     }
 
-    [Export]
-    public int DamagePerTick { get; set; } = 2;
-
     public override StringName StatusKey => StatusKeyName;
 
     protected override void CopyConfigurationFrom(StatusEffect replacement)
     {
         base.CopyConfigurationFrom(replacement);
-
-        if (replacement is PoisonedEffect poisonedEffect)
-            DamagePerTick = poisonedEffect.DamagePerTick;
+        CopyDamageTemplateFrom(replacement);
     }
 
     protected override void OnTick()
@@ -32,8 +25,8 @@ public partial class PoisonedEffect : StatusEffect
         if (OwnerNode is not IAttackable attackable)
             return;
 
-        var damage = Math.Max(1, DamagePerTick);
-        var damageSource = Source != null && GodotObject.IsInstanceValid(Source) ? Source : null;
-        attackable.ApplyDamage(new DamageInfo(damage, (Node)damageSource));
+        var damage = DuplicateDamagePayload();
+        if (damage != null)
+            attackable.ApplyDamage(damage);
     }
 }

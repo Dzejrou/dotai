@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://cckkqobewqxb1" path="res://scripts/ai/actions/RangedAttackController.cs" id="11_ranged_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
+[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="15_damage"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_elf_ranger"]
 radius = 5.0
@@ -56,10 +57,14 @@ MinimumRange = 80.0
 PreferredRange = 140.0
 AttackCooldown = 1.35
 ProjectileScene = ExtResource("12_projectile_scene")
-ProjectileDamage = 3
 ProjectileSpeed = 320.0
 ProjectileLifetime = 2.4
 ProjectileMaxTravelDistance = 360.0
+
+[node name="Damage" type="Node" parent="PrimaryActionController" unique_id=2001900024]
+script = ExtResource("15_damage")
+MinimumDamage = 3
+MaximumDamage = 3
 
 [node name="Behaviors" type="Node" parent="." unique_id=545402278]
 

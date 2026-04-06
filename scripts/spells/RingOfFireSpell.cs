@@ -26,9 +26,6 @@ public partial class RingOfFireSpell : Spell, IPlacementSpell
     [Export]
     public float TickInterval { get; set; } = 1.0f;
 
-    [Export]
-    public int DamagePerTick { get; set; } = 8;
-
     public bool IsAwaitingPlacement { get; private set; }
     public override void _Process(double delta)
     {
@@ -106,7 +103,7 @@ public partial class RingOfFireSpell : Spell, IPlacementSpell
 
         parent.AddChild(ringArea);
         ringArea.GlobalPosition = worldPosition;
-        ringArea.Initialize(caster.SpellOrigin, caster.Faction, Radius, Duration, TickInterval, DamagePerTick);
+        ringArea.Initialize(caster.SpellOrigin, caster.Faction, Radius, Duration, TickInterval);
 
         StartCooldown();
         CancelPlacement();

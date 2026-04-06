@@ -35,7 +35,7 @@ public partial class Dryad : Actor, IAttackable, ITargetable, ISpellCaster
 
     public void NotifyManaChanged() { }
 
-    public void ApplyDamage(DamageInfo damageInfo)
+    public void ApplyDamage(Damage damageInfo)
     {
         if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;

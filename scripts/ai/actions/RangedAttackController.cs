@@ -26,9 +26,6 @@ public partial class RangedAttackController : Node, ICombatActionController
     public PackedScene ProjectileScene { get; set; }
 
     [Export]
-    public int ProjectileDamage { get; set; } = 4;
-
-    [Export]
     public float ProjectileSpeed { get; set; } = 280.0f;
 
     [Export]
@@ -45,7 +42,6 @@ public partial class RangedAttackController : Node, ICombatActionController
         MinimumRange = Math.Max(0.0f, MinimumRange);
         PreferredRange = Math.Max(MinimumRange, PreferredRange);
         AttackCooldown = Math.Max(0.0f, AttackCooldown);
-        ProjectileDamage = Math.Max(1, ProjectileDamage);
         ProjectileSpeed = Math.Max(0.0f, ProjectileSpeed);
         ProjectileLifetime = Math.Max(0.0f, ProjectileLifetime);
         ProjectileMaxTravelDistance = Math.Max(0.0f, ProjectileMaxTravelDistance);
@@ -149,10 +145,13 @@ public partial class RangedAttackController : Node, ICombatActionController
 
         projectile.GlobalPosition = actor.GlobalPosition;
         parent.AddChild(projectile);
+
+        var damagePayload = Damage.DuplicateFrom(this);
+        damagePayload?.InitializeRuntime(actor, damagePayload.ResolveAmount());
         projectile.Initialize(
             direction,
             actor,
-            ProjectileDamage,
+            damagePayload,
             ProjectileSpeed,
             ProjectileLifetime,
             ProjectileMaxTravelDistance);

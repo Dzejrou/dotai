@@ -18,12 +18,6 @@ public partial class MeleeAttackController : Node, ICombatActionController
     public StringName AttackAnimation { get; set; } = "attack";
 
     [Export]
-    public int MinimumDamage { get; set; } = 1;
-
-    [Export]
-    public int MaximumDamage { get; set; } = 1;
-
-    [Export]
     public float AnimationSpeedMultiplier { get; set; } = 1.0f;
 
     public float MinimumRange => 0.0f;
@@ -32,7 +26,6 @@ public partial class MeleeAttackController : Node, ICombatActionController
     {
         PreferredRange = Math.Max(0.0f, PreferredRange);
         AttackCooldown = Math.Max(0.0f, AttackCooldown);
-        MaximumDamage = Math.Max(MinimumDamage, MaximumDamage);
         AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
         _randomNumberGenerator.Randomize();
     }
@@ -82,8 +75,12 @@ public partial class MeleeAttackController : Node, ICombatActionController
             actor.SetState(CombatUnitState.PursuingTarget);
         }
 
-        var damage = _randomNumberGenerator.RandiRange(Math.Min(MinimumDamage, MaximumDamage), MaximumDamage);
-        attackable.ApplyDamage(new DamageInfo(damage, actor));
+        var damagePayload = Damage.DuplicateFrom(this);
+        if (damagePayload != null)
+        {
+            damagePayload.InitializeRuntime(actor, damagePayload.ResolveAmount(_randomNumberGenerator));
+            attackable.ApplyDamage(damagePayload);
+        }
     }
 
     public bool HandleAnimationFinished(Actor actor, StringName animationName)

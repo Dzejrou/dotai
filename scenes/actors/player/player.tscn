@@ -20,6 +20,7 @@
 [ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="16_slowed_effect"]
 [ext_resource type="Script" uid="uid://cqsn11dvrfth1" path="res://scripts/status/BurningEffect.cs" id="17_burning_effect"]
 [ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="18_immobilized_effect"]
+[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="19_damage"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -80,11 +81,21 @@ ProjectileScene = ExtResource("2_gx9kq")
 CastAction = &"cast_spell"
 HudLabel = "Fireball"
 
+[node name="Damage" type="Node" parent="Spells/Fireball" unique_id=2001900001]
+script = ExtResource("19_damage")
+MinimumDamage = 4
+MaximumDamage = 4
+
 [node name="FrostNova" type="Node" parent="Spells" unique_id=1504189636]
 script = ExtResource("10_frost_nova_spell")
 VfxScene = ExtResource("5_frost_nova_vfx")
 CastAction = &"cast_spell2"
 HudLabel = "Frost Nova"
+
+[node name="Damage" type="Node" parent="Spells/FrostNova" unique_id=2001900002]
+script = ExtResource("19_damage")
+MinimumDamage = 5
+MaximumDamage = 5
 
 [node name="ImmobilizedEffect" type="Node" parent="Spells/FrostNova" unique_id=2060857336]
 script = ExtResource("18_immobilized_effect")
@@ -112,7 +123,17 @@ VfxScene = ExtResource("4_fire_nova_vfx")
 CastAction = &"cast_spell5"
 HudLabel = "Fire Nova"
 
+[node name="Damage" type="Node" parent="Spells/FireNova" unique_id=2001900003]
+script = ExtResource("19_damage")
+MinimumDamage = 6
+MaximumDamage = 10
+
 [node name="BurningEffect" type="Node" parent="Spells/FireNova" unique_id=2147247494]
 script = ExtResource("17_burning_effect")
 DurationSeconds = 6.0
 TickIntervalSeconds = 2.0
+
+[node name="Damage" type="Node" parent="Spells/FireNova/BurningEffect" unique_id=2001900103]
+script = ExtResource("19_damage")
+MinimumDamage = 3
+MaximumDamage = 3

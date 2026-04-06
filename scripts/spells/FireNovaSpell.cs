@@ -1,17 +1,9 @@
 using Godot;
 
-using System;
-
 [GlobalClass]
 public partial class FireNovaSpell : NovaSpell
 {
     private readonly RandomNumberGenerator _random = new();
-
-    [Export]
-    public int MinimumDamage { get; set; } = 6;
-
-    [Export]
-    public int MaximumDamage { get; set; } = 10;
 
     public FireNovaSpell()
     {
@@ -24,10 +16,9 @@ public partial class FireNovaSpell : NovaSpell
         _random.Randomize();
     }
 
-    protected override int ResolveDamage(Node target)
+    protected override int ResolveDamage(Damage damageTemplate, Node target)
     {
-        var maximumDamage = Math.Max(MinimumDamage, MaximumDamage);
-        return _random.RandiRange(Math.Min(MinimumDamage, maximumDamage), maximumDamage);
+        return damageTemplate?.ResolveAmount(_random) ?? 0;
     }
 
     protected override void OnTargetHit(ISpellCaster caster, Node target, IAttackable attackable)

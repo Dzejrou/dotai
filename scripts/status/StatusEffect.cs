@@ -130,6 +130,31 @@ public abstract partial class StatusEffect : Node
     {
     }
 
+    protected Damage DuplicateDamagePayload()
+    {
+        var damage = Damage.DuplicateFrom(this);
+        if (damage == null)
+            return null;
+
+        var damageSource = Source != null && GodotObject.IsInstanceValid(Source) ? (Node)Source : null;
+        damage.InitializeRuntime(damageSource, damage.ResolveAmount());
+        return damage;
+    }
+
+    protected void CopyDamageTemplateFrom(StatusEffect replacement)
+    {
+        if (replacement == null)
+            return;
+
+        var replacementDamage = replacement.GetNodeOrNull<Damage>("Damage");
+        var damage = GetNodeOrNull<Damage>("Damage");
+        if (replacementDamage == null || damage == null)
+            return;
+
+        damage.MinimumDamage = replacementDamage.MinimumDamage;
+        damage.MaximumDamage = replacementDamage.MaximumDamage;
+    }
+
     private void ResetTiming()
     {
         ElapsedSeconds = 0.0f;
