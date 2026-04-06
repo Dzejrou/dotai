@@ -29,17 +29,7 @@ public partial class World : Node2D
     [Signal]
     public delegate void PlayerDiedEventHandler();
 
-    [Signal]
-    public delegate void PlayerHealthChangedEventHandler(int health, int maxHealth);
-
-    [Signal]
-    public delegate void PlayerManaChangedEventHandler(int mana, int maxMana);
-
-    [Signal]
-    public delegate void PlayerStatusVisualStateChangedEventHandler(StringName statusKey, bool active);
-
     private Player _player;
-    private StatusEffectController _playerStatusEffectController;
     private NavigationRegion2D _worldNavigation;
     private bool _isGameOver;
 
@@ -50,47 +40,15 @@ public partial class World : Node2D
 
         _player = GetNodeOrNull<Player>(PlayerPath);
         if (_player != null)
-        {
             _player.Connect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
-            _player.Connect(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
-            _player.Connect(Player.SignalName.ManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
-            _playerStatusEffectController = _player.GetNodeOrNull<StatusEffectController>("StatusEffectController");
-            if (_playerStatusEffectController != null)
-            {
-                _playerStatusEffectController.Connect(
-                    StatusEffectController.SignalName.StatusVisualStateChanged,
-                    new Callable(this, nameof(OnPlayerStatusVisualStateChanged)));
-            }
-            EmitSignal(SignalName.PlayerHealthChanged, _player.CurrentHealth, _player.MaxHealableHealth);
-            EmitSignal(SignalName.PlayerManaChanged, _player.CurrentMana, _player.MaxManaValue);
-        }
     }
 
     public override void _ExitTree()
     {
         if (GodotObject.IsInstanceValid(_player) &&
-            _player.IsConnected(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
-        {
-            _player.Disconnect(Player.SignalName.HealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
-        }
-
-        if (GodotObject.IsInstanceValid(_player) &&
-            _player.IsConnected(Player.SignalName.ManaChanged, new Callable(this, nameof(OnPlayerManaChanged))))
-        {
-            _player.Disconnect(Player.SignalName.ManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
-        }
-
-        if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
         {
             _player.Disconnect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
-        }
-
-        if (GodotObject.IsInstanceValid(_playerStatusEffectController))
-        {
-            var statusCallable = new Callable(this, nameof(OnPlayerStatusVisualStateChanged));
-            if (_playerStatusEffectController.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, statusCallable))
-                _playerStatusEffectController.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, statusCallable);
         }
     }
 
@@ -101,21 +59,6 @@ public partial class World : Node2D
 
         _isGameOver = true;
         EmitSignal(SignalName.PlayerDied);
-    }
-
-    private void OnPlayerHealthChanged(int health, int maxHealth)
-    {
-        EmitSignal(SignalName.PlayerHealthChanged, health, maxHealth);
-    }
-
-    private void OnPlayerManaChanged(int mana, int maxMana)
-    {
-        EmitSignal(SignalName.PlayerManaChanged, mana, maxMana);
-    }
-
-    private void OnPlayerStatusVisualStateChanged(StringName statusKey, bool active)
-    {
-        EmitSignal(SignalName.PlayerStatusVisualStateChanged, statusKey, active);
     }
 
     private void BuildWorldNavigation()

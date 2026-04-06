@@ -28,30 +28,14 @@ public partial class Main : Node2D
 
     private World _world;
     private Player _player;
-    private StatusEffectController _playerStatusEffectController;
     private Control _gameOverRoot;
     private PauseMenu _pauseMenuRoot;
     private DebugTray _debugTrayRoot;
     private bool _gameOverActive;
     private bool _restartingFromGameOver;
     private bool _pauseMenuOpen;
-    private Label _healthText;
-    private ColorRect _healthBackground;
-    private ColorRect _healthFill;
-    private Label _manaText;
-    private ColorRect _manaBackground;
-    private ColorRect _manaFill;
     private PlayerSpellBar _spellBar;
     private Label _interactionPrompt;
-    private bool _playerIsPoisoned;
-    private const int HealthBarWidth = 140;
-    private const int HealthBarHeight = 16;
-    private const int ManaBarWidth = 140;
-    private const int ManaBarHeight = 16;
-    private static readonly Color PlayerHealthFillColor = new Color(0.88f, 0.24f, 0.24f, 1.0f);
-    private static readonly Color PlayerHealthBackgroundColor = new Color(0.32f, 0.12f, 0.12f, 0.85f);
-    private static readonly Color PoisonedPlayerHealthFillColor = new Color(0.42f, 0.92f, 0.42f, 1.0f);
-    private static readonly Color PoisonedPlayerHealthBackgroundColor = new Color(0.12f, 0.28f, 0.12f, 0.85f);
     private static readonly Color InteractionPromptColor = new Color(0.98f, 0.86f, 0.42f, 1.0f);
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private const string InteractionActionName = "interact_action";
@@ -62,12 +46,7 @@ public partial class Main : Node2D
         ProcessMode = ProcessModeEnum.Always;
         _world = GetNodeOrNull<World>(WorldPath);
         if (_world != null)
-        {
             _world.Connect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
-            _world.Connect(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
-            _world.Connect(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
-            _world.Connect(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged)));
-        }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
         _pauseMenuRoot = GetNodeOrNull<PauseMenu>(PauseMenuPath);
@@ -100,24 +79,11 @@ public partial class Main : Node2D
         if (player != null)
         {
             player.Connect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
-            _playerStatusEffectController = player.GetNodeOrNull<StatusEffectController>("StatusEffectController");
-            if (_playerStatusEffectController != null)
-            {
-                _playerStatusEffectController.Connect(
-                    StatusEffectController.SignalName.StatusFloatingTextRequested,
-                    new Callable(this, nameof(OnPlayerStatusFloatingTextRequested)));
-                _playerIsPoisoned = _playerStatusEffectController.HasStatus(PoisonedEffect.StatusKeyName);
-            }
-            RefreshPlayerHealthColors();
-            UpdatePlayerHealthHud(player.CurrentHealth, player.MaxHealableHealth);
-            UpdatePlayerManaHud(player.CurrentMana, player.MaxManaValue);
             _spellBar?.Bind(player);
             UpdateInteractionPrompt(player.HasInteractionTarget, player.CurrentInteractionLabel);
         }
         else
         {
-            UpdatePlayerHealthHud(0, 0);
-            UpdatePlayerManaHud(0, 0);
             _spellBar?.Bind(null);
             UpdateInteractionPrompt(false, string.Empty);
         }
@@ -134,28 +100,9 @@ public partial class Main : Node2D
             _world.IsConnected(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
             _world.Disconnect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
 
-        if (GodotObject.IsInstanceValid(_world) &&
-            _world.IsConnected(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged))))
-            _world.Disconnect(World.SignalName.PlayerHealthChanged, new Callable(this, nameof(OnPlayerHealthChanged)));
-
-        if (GodotObject.IsInstanceValid(_world) &&
-            _world.IsConnected(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged))))
-            _world.Disconnect(World.SignalName.PlayerManaChanged, new Callable(this, nameof(OnPlayerManaChanged)));
-
-        if (GodotObject.IsInstanceValid(_world) &&
-            _world.IsConnected(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged))))
-            _world.Disconnect(World.SignalName.PlayerStatusVisualStateChanged, new Callable(this, nameof(OnPlayerStatusVisualStateChanged)));
-
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
             _player.Disconnect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
-
-        if (GodotObject.IsInstanceValid(_playerStatusEffectController))
-        {
-            var textCallable = new Callable(this, nameof(OnPlayerStatusFloatingTextRequested));
-            if (_playerStatusEffectController.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
-                _playerStatusEffectController.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
-        }
 
         if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
             _pauseMenuRoot.IsConnected(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested))))
@@ -202,33 +149,9 @@ public partial class Main : Node2D
         _gameOverRoot.Visible = true;
     }
 
-    private void OnPlayerHealthChanged(int health, int maxHealth)
-    {
-        UpdatePlayerHealthHud(health, maxHealth);
-    }
-
-    private void OnPlayerManaChanged(int mana, int maxMana)
-    {
-        UpdatePlayerManaHud(mana, maxMana);
-    }
-
-    private void OnPlayerStatusVisualStateChanged(StringName statusKey, bool active)
-    {
-        if (statusKey != PoisonedEffect.StatusKeyName)
-            return;
-
-        _playerIsPoisoned = active;
-        RefreshPlayerHealthColors();
-    }
-
     private void OnPlayerInteractionAvailabilityChanged(bool available, string label)
     {
         UpdateInteractionPrompt(available, label);
-    }
-
-    private void OnPlayerStatusFloatingTextRequested(string text, Color color)
-    {
-        _player?.ShowFloatingText(text, color);
     }
 
     private void RestartFromGameOver()
@@ -262,47 +185,6 @@ public partial class Main : Node2D
         _interactionPrompt.Text = $"{actionLabel}: {label}";
     }
 
-    private void UpdatePlayerHealthHud(int health, int maxHealth)
-    {
-        if (_healthText == null || _healthFill == null || _healthBackground == null)
-            return;
-
-        _healthText.Text = $"{health}/{maxHealth}";
-
-        var safeMax = Math.Max(1, maxHealth);
-        var healthRatio = Math.Clamp((float)health / safeMax, 0.0f, 1.0f);
-        _healthFill.Size = new Vector2(HealthBarWidth * healthRatio, HealthBarHeight);
-        RefreshPlayerHealthColors();
-    }
-
-    private void UpdatePlayerManaHud(int mana, int maxMana)
-    {
-        if (_manaText == null || _manaFill == null || _manaBackground == null)
-            return;
-
-        _manaText.Text = $"{mana}/{maxMana}";
-
-        var safeMax = Math.Max(1, maxMana);
-        var manaRatio = Math.Clamp((float)mana / safeMax, 0.0f, 1.0f);
-        _manaFill.Size = new Vector2(ManaBarWidth * manaRatio, ManaBarHeight);
-    }
-
-    private void RefreshPlayerHealthColors()
-    {
-        if (_healthFill == null || _healthBackground == null)
-            return;
-
-        if (_playerIsPoisoned)
-        {
-            _healthFill.Color = PoisonedPlayerHealthFillColor;
-            _healthBackground.Color = PoisonedPlayerHealthBackgroundColor;
-            return;
-        }
-
-        _healthFill.Color = PlayerHealthFillColor;
-        _healthBackground.Color = PlayerHealthBackgroundColor;
-    }
-
     private void CreateHud()
     {
         var hudCanvas = new CanvasLayer
@@ -311,82 +193,6 @@ public partial class Main : Node2D
             Layer = 100
         };
         AddChild(hudCanvas);
-
-        var healthPanel = new Control
-        {
-            Name = "HealthPanel",
-            CustomMinimumSize = new Vector2(220.0f, 24.0f),
-        };
-        healthPanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
-        healthPanel.OffsetLeft = 8.0f;
-        healthPanel.OffsetTop = 8.0f;
-        hudCanvas.AddChild(healthPanel);
-
-        _healthBackground = new ColorRect
-        {
-            Name = "HealthBarBackground",
-            Color = PlayerHealthBackgroundColor,
-            Size = new Vector2(HealthBarWidth, HealthBarHeight)
-        };
-        healthPanel.AddChild(_healthBackground);
-
-        _healthFill = new ColorRect
-        {
-            Name = "HealthBarFill",
-            Color = PlayerHealthFillColor,
-            Size = new Vector2(HealthBarWidth, HealthBarHeight)
-        };
-        healthPanel.AddChild(_healthFill);
-
-        _healthText = new Label
-        {
-            Name = "HealthText",
-            Text = "0/0",
-            Modulate = new Color(1.0f, 1.0f, 1.0f, 1.0f)
-        };
-        _healthText.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
-        _healthText.OffsetLeft = HealthBarWidth + 10.0f;
-        _healthText.OffsetTop = 1.0f;
-        _healthText.AddThemeFontSizeOverride("font_size", 18);
-        healthPanel.AddChild(_healthText);
-
-        var manaPanel = new Control
-        {
-            Name = "ManaPanel",
-            CustomMinimumSize = new Vector2(220.0f, 24.0f),
-        };
-        manaPanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
-        manaPanel.OffsetLeft = 8.0f;
-        manaPanel.OffsetTop = 32.0f;
-        hudCanvas.AddChild(manaPanel);
-
-        _manaBackground = new ColorRect
-        {
-            Name = "ManaBarBackground",
-            Color = Colors.Black,
-            Size = new Vector2(ManaBarWidth, ManaBarHeight)
-        };
-        manaPanel.AddChild(_manaBackground);
-
-        _manaFill = new ColorRect
-        {
-            Name = "ManaBarFill",
-            Color = new Color(0.2f, 0.45f, 1.0f, 1.0f),
-            Size = new Vector2(ManaBarWidth, ManaBarHeight)
-        };
-        manaPanel.AddChild(_manaFill);
-
-        _manaText = new Label
-        {
-            Name = "ManaText",
-            Text = "0/0",
-            Modulate = new Color(1.0f, 1.0f, 1.0f, 1.0f)
-        };
-        _manaText.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopLeft);
-        _manaText.OffsetLeft = ManaBarWidth + 10.0f;
-        _manaText.OffsetTop = 1.0f;
-        _manaText.AddThemeFontSizeOverride("font_size", 18);
-        manaPanel.AddChild(_manaText);
 
         var spellBarScene = ResourceLoader.Load<PackedScene>(PlayerSpellBarScenePath);
         if (spellBarScene?.Instantiate<PlayerSpellBar>() is PlayerSpellBar spellBar)

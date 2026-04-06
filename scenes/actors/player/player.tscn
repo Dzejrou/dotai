@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dvutl3mkyi0ph" path="res://scripts/actors/player/Player.cs" id="1_t1u7h"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="2_gx9kq"]
 [ext_resource type="SpriteFrames" uid="uid://dkc8t7728cd0u" path="res://resources/animations/player_spriteframes.tres" id="3_player_frames"]
+[ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="4_actor_hud"]
 [ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="4_fire_nova_vfx"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="5_combat_state"]
 [ext_resource type="PackedScene" path="res://scenes/effects/frost_nova_vfx.tscn" id="5_frost_nova_vfx"]
@@ -35,6 +36,11 @@ animation = &""
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=994826957]
 position = Vector2(0, 6)
 shape = SubResource("RectangleShape2D_8r2s6")
+
+[node name="ActorHUD" parent="." unique_id=2138820049 instance=ExtResource("4_actor_hud")]
+VerticalOffset = -52.0
+HealthFillColor = Color(0.62352943, 0.09411765, 0.09411765, 1)
+HealthBackgroundColor = Color(0.4117647, 0.047058824, 0.047058824, 0.8509804)
 
 [node name="CombatState" type="Node" parent="." unique_id=811087039]
 script = ExtResource("5_combat_state")

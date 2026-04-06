@@ -10,12 +10,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public delegate void PlayerDiedEventHandler();
 
     [Signal]
-    public delegate void HealthChangedEventHandler(int health, int maxHealth);
-
-    [Signal]
-    public delegate void ManaChangedEventHandler(int mana, int maxMana);
-
-    [Signal]
     public delegate void InteractionAvailabilityChangedEventHandler(bool available, string label);
 
     [Export]
@@ -47,6 +41,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private IInteractable _activeInteractable;
     private Node2D _activeInteractableNode;
     private string _activeInteractableLabel = string.Empty;
+    private ActorHUD _actorHud;
     private ActorHUD _activeTargetHud;
     private readonly HashSet<ActorHUD> _visibleTargetHuds = new();
     private readonly HashSet<ActorHUD> _nextVisibleTargetHuds = new();
@@ -64,19 +59,28 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     public void ShowFloatingText(string text, Color color)
     {
-        FloatingNumberHelper.ShowFloatingNumber(this, text, color);
+        _actorHud?.ShowFloatingText(text, color);
     }
 
     public override void _Ready()
     {
         SetAnimatedSprite(GetNode<AnimatedSprite2D>("AnimatedSprite2D"));
         InitializeCombatCharacter(requireManaState: true);
+        _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
+        if (_actorHud == null)
+            GD.PushError($"{GetPath()}: missing required ActorHUD child.");
+        else
+        {
+            _actorHud.Bind(this);
+            _actorHud.SetUnitFrameVisible(true);
+        }
+
         BindStatusEffects();
         LoadEquippedSpells();
         SetAnimationSafe(GetIdleAnimationName());
         AddToGroup(CombatGroups.Actors);
 
-        EmitHealthChanged();
+        RefreshActorHud();
         NotifyManaChanged();
         UpdateInteractionState();
     }
@@ -170,7 +174,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         damageInfo.RegisterHit(this, setReceiverTargetToSource: true);
 
         ShowFloatingDamageNumber(damage);
-        EmitHealthChanged();
+        RefreshActorHud();
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
 
         if (HealthStateNode.IsDead)
@@ -195,7 +199,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
 
         ShowFloatingHealingNumber(recovered);
-        EmitHealthChanged();
+        RefreshActorHud();
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
@@ -213,6 +217,11 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             StatusEffectController.SignalName.StatusVisualStateChanged,
             new Callable(this, nameof(OnStatusVisualStateChanged)));
 
+        statusEffectController.Connect(
+            StatusEffectController.SignalName.StatusFloatingTextRequested,
+            new Callable(this, nameof(OnStatusFloatingTextRequested)));
+
+        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
         OnStatusVisualStateChanged(SlowedEffect.StatusKeyName, statusEffectController.HasStatus(SlowedEffect.StatusKeyName));
     }
 
@@ -224,10 +233,20 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
         if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
             StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
+
+        var textCallable = new Callable(this, nameof(OnStatusFloatingTextRequested));
+        if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
+            StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
     }
 
     private void OnStatusVisualStateChanged(StringName statusKey, bool active)
     {
+        if (statusKey == PoisonedEffect.StatusKeyName)
+        {
+            _actorHud?.SetPoisoned(active);
+            return;
+        }
+
         if (statusKey != SlowedEffect.StatusKeyName)
             return;
 
@@ -235,6 +254,11 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             SetSpriteTint(SlowedSpriteTintColor);
         else
             ResetSpriteTint();
+    }
+
+    private void OnStatusFloatingTextRequested(string text, Color color)
+    {
+        ShowFloatingText(text, color);
     }
 
     private void UpdateTargetingState()
@@ -590,7 +614,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             var recovered = Math.Clamp(HealthRegenerationAmount, 1, missingHealth);
             ShowFloatingHealingNumber(recovered);
             HealthStateNode.ApplyHealing(recovered);
-            EmitHealthChanged();
+            RefreshActorHud();
         }
 
         var interval = Math.Max(HealthRegenerationInterval, 0.0f);
@@ -612,7 +636,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     private void ShowFloatingDamageNumber(int amount)
     {
-        FloatingNumberHelper.ShowFloatingNumber(this, amount.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
+        ShowFloatingText(amount.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
     }
 
     private void ShowFloatingHealingNumber(int amount)
@@ -620,17 +644,21 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (amount <= 0)
             return;
 
-        FloatingNumberHelper.ShowFloatingNumber(this, $"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+        ShowFloatingText($"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
     }
 
-    private void EmitHealthChanged()
+    private void RefreshActorHud()
     {
-        EmitSignal(SignalName.HealthChanged, CurrentHealth, MaxHealableHealth);
+        if (_actorHud == null)
+            return;
+
+        _actorHud.SetHealth(CurrentHealth, MaxHealableHealth);
+        _actorHud.SetFaction(Faction);
     }
 
     public void NotifyManaChanged()
     {
-        EmitSignal(SignalName.ManaChanged, CurrentMana, MaxManaValue);
+        RefreshActorHud();
     }
 
     private Vector2 GetSpellDirection()
