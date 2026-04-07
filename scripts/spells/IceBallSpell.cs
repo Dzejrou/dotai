@@ -9,6 +9,7 @@ public partial class IceBallSpell : ProjectileSpell
     public IceBallSpell()
     {
         ManaCost = 0;
+        ProjectileColor = new Color(0.35f, 0.72f, 1.0f, 1.0f);
     }
 
     protected override string ResolveStatusEffectTemplateName()

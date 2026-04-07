@@ -12,7 +12,7 @@
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="8_faction_state"]
 [ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="9_fire_nova_spell"]
 [ext_resource type="Script" uid="uid://bwlw8l3mpluct" path="res://scripts/spells/FrostNovaSpell.cs" id="10_frost_nova_spell"]
-[ext_resource type="Script" path="res://scripts/spells/FireBallSpell.cs" id="11_fireball_spell"]
+[ext_resource type="Script" uid="uid://df50yybv2e8ng" path="res://scripts/spells/FireBallSpell.cs" id="11_fireball_spell"]
 [ext_resource type="Script" uid="uid://casb8y51xl1h3" path="res://scripts/spells/BlinkSpell.cs" id="12_blink_spell"]
 [ext_resource type="Script" uid="uid://dtc0do7tcpgct" path="res://scripts/spells/RingOfFireSpell.cs" id="13_ring_of_fire_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ring_of_fire_area.tscn" id="14_ring_of_fire_area"]

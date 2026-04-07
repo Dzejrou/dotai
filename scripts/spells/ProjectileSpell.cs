@@ -6,6 +6,7 @@ using System;
 public abstract partial class ProjectileSpell : Spell
 {
     private readonly RandomNumberGenerator _random = new();
+    private static readonly Color DefaultProjectileColor = new(1.0f, 0.45f, 0.1f, 1.0f);
 
     [Export]
     public PackedScene ProjectileScene { get; set; }
@@ -18,6 +19,9 @@ public abstract partial class ProjectileSpell : Spell
 
     [Export]
     public float ProjectileMaxDistance { get; set; } = 320.0f;
+
+    [Export]
+    public Color ProjectileColor { get; set; } = DefaultProjectileColor;
 
     public override void _Ready()
     {
@@ -60,9 +64,10 @@ public abstract partial class ProjectileSpell : Spell
             (Node)spellOrigin,
             CreateDamagePayload(caster),
             CreateStatusEffectPayload(),
-            ProjectileSpeed,
-            ProjectileLifetime,
-            ProjectileMaxDistance);
+            overrideColor: ProjectileColor,
+            overrideSpeed: ProjectileSpeed,
+            overrideLifetime: ProjectileLifetime,
+            overrideMaxTravelDistance: ProjectileMaxDistance);
 
         StartCooldown();
         return true;

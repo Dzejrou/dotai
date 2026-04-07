@@ -2,6 +2,8 @@ using Godot;
 
 public partial class Projectile : Area2D
 {
+    private static readonly Color DefaultProjectileColor = new(1.0f, 0.45f, 0.1f, 1.0f);
+
     [Export]
     public float Speed { get; set; } = 280.0f;
 
@@ -17,6 +19,7 @@ public partial class Projectile : Area2D
     private Damage _damage;
     private StatusEffect _statusEffect;
     private Node _source;
+    private Color _color = DefaultProjectileColor;
     private bool _isActive;
     private bool _hasHitTarget;
 
@@ -55,6 +58,7 @@ public partial class Projectile : Area2D
         Node source,
         Damage damage = null,
         StatusEffect statusEffect = null,
+        Color? overrideColor = null,
         float? overrideSpeed = null,
         float? overrideLifetime = null,
         float? overrideMaxTravelDistance = null)
@@ -62,6 +66,7 @@ public partial class Projectile : Area2D
         _source = source;
         _damage = damage;
         _statusEffect = statusEffect;
+        _color = overrideColor ?? DefaultProjectileColor;
         _direction = direction.Length() > 0.0f ? direction.Normalized() : Vector2.Right;
         if (overrideSpeed.HasValue)
             Speed = Mathf.Max(0.0f, overrideSpeed.Value);
@@ -89,7 +94,7 @@ public partial class Projectile : Area2D
 
     public override void _Draw()
     {
-        DrawCircle(Vector2.Zero, 4.0f, new Color(1.0f, 0.45f, 0.1f, 1.0f));
+        DrawCircle(Vector2.Zero, 4.0f, _color);
     }
 
     private void TryDamageTarget(Node2D targetNode)
