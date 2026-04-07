@@ -19,7 +19,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
     private Spell _longRangeSpell;
 
     [Export]
-    public NodePath SpellNodePath { get; set; } = new("../Spells/Fireball");
+    public NodePath SpellNodePath { get; set; } = new("../Spells/FireBall");
 
     [Export]
     public float MinimumRange { get; set; } = 70.0f;

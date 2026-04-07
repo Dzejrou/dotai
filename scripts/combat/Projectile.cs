@@ -15,6 +15,7 @@ public partial class Projectile : Area2D
     private float _lifetimeTimer;
     private float _traveledDistance;
     private Damage _damage;
+    private StatusEffect _statusEffect;
     private Node _source;
     private bool _isActive;
     private bool _hasHitTarget;
@@ -53,12 +54,14 @@ public partial class Projectile : Area2D
         Vector2 direction,
         Node source,
         Damage damage = null,
+        StatusEffect statusEffect = null,
         float? overrideSpeed = null,
         float? overrideLifetime = null,
         float? overrideMaxTravelDistance = null)
     {
         _source = source;
         _damage = damage;
+        _statusEffect = statusEffect;
         _direction = direction.Length() > 0.0f ? direction.Normalized() : Vector2.Right;
         if (overrideSpeed.HasValue)
             Speed = Mathf.Max(0.0f, overrideSpeed.Value);
@@ -77,6 +80,9 @@ public partial class Projectile : Area2D
 
         if (_damage != null)
             AddChild(_damage);
+
+        if (_statusEffect != null)
+            AddChild(_statusEffect);
 
         QueueRedraw();
     }
@@ -102,6 +108,12 @@ public partial class Projectile : Area2D
         {
             var attackable = (IAttackable)targetNode;
             attackable.ApplyDamage(_damage);
+        }
+
+        if (_statusEffect != null)
+        {
+            var controller = ResolveStatusEffectController(targetNode);
+            controller?.ApplyStatusEffect(_statusEffect, _source as Node2D, ResolveSourceInstanceId(_source));
         }
 
         CallDeferred(nameof(Despawn));
@@ -132,5 +144,18 @@ public partial class Projectile : Area2D
             return;
 
         TryDamageTarget(area);
+    }
+
+    private static StatusEffectController ResolveStatusEffectController(Node target)
+    {
+        if (target == null || !GodotObject.IsInstanceValid(target) || !target.IsInsideTree())
+            return null;
+
+        return target.GetNodeOrNull<StatusEffectController>("StatusEffectController");
+    }
+
+    private static ulong ResolveSourceInstanceId(Node source)
+    {
+        return source != null && GodotObject.IsInstanceValid(source) ? source.GetInstanceId() : 0UL;
     }
 }

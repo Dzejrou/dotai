@@ -12,7 +12,7 @@
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="8_faction_state"]
 [ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="9_fire_nova_spell"]
 [ext_resource type="Script" uid="uid://bwlw8l3mpluct" path="res://scripts/spells/FrostNovaSpell.cs" id="10_frost_nova_spell"]
-[ext_resource type="Script" uid="uid://df50yybv2e8ng" path="res://scripts/spells/FireballSpell.cs" id="11_fireball_spell"]
+[ext_resource type="Script" path="res://scripts/spells/FireBallSpell.cs" id="11_fireball_spell"]
 [ext_resource type="Script" uid="uid://casb8y51xl1h3" path="res://scripts/spells/BlinkSpell.cs" id="12_blink_spell"]
 [ext_resource type="Script" uid="uid://dtc0do7tcpgct" path="res://scripts/spells/RingOfFireSpell.cs" id="13_ring_of_fire_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ring_of_fire_area.tscn" id="14_ring_of_fire_area"]
@@ -20,7 +20,8 @@
 [ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="16_slowed_effect"]
 [ext_resource type="Script" uid="uid://cqsn11dvrfth1" path="res://scripts/status/BurningEffect.cs" id="17_burning_effect"]
 [ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="18_immobilized_effect"]
-[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="19_damage"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="19_damage"]
+[ext_resource type="Script" path="res://scripts/spells/IceBallSpell.cs" id="20_ice_ball_spell"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -40,15 +41,13 @@ shape = SubResource("RectangleShape2D_8r2s6")
 
 [node name="ActorHUD" parent="." unique_id=2138820049 instance=ExtResource("4_actor_hud")]
 ShowName = false
+VerticalOffset = -52.0
 HealthBarWidth = 140.0
 HealthBarHeight = 16.0
 ManaBarWidth = 140.0
 ManaBarHeight = 16.0
 PlacementMode = 1
-ScreenAnchor = Vector2(0, 0)
 ScreenOffset = Vector2(38, 8)
-ScreenLayer = 100
-VerticalOffset = -52.0
 HealthFillColor = Color(0.62352943, 0.09411765, 0.09411765, 1)
 HealthBackgroundColor = Color(0.4117647, 0.047058824, 0.047058824, 0.8509804)
 
@@ -75,16 +74,26 @@ script = ExtResource("15_status_effect_controller")
 
 [node name="Spells" type="Node" parent="." unique_id=1018490496]
 
-[node name="Fireball" type="Node" parent="Spells" unique_id=1365317893]
+[node name="FireBall" type="Node" parent="Spells" unique_id=1365317893]
 script = ExtResource("11_fireball_spell")
 ProjectileScene = ExtResource("2_gx9kq")
 CastAction = &"cast_spell"
 HudLabel = "Fireball"
 
-[node name="Damage" type="Node" parent="Spells/Fireball" unique_id=2001900001]
+[node name="Damage" type="Node" parent="Spells/FireBall" unique_id=2001900001]
 script = ExtResource("19_damage")
 MinimumDamage = 4
 MaximumDamage = 4
+
+[node name="BurningEffect" type="Node" parent="Spells/FireBall" unique_id=1250739985]
+script = ExtResource("17_burning_effect")
+DurationSeconds = 6.0
+TickIntervalSeconds = 2.0
+
+[node name="Damage" type="Node" parent="Spells/FireBall/BurningEffect" unique_id=1746804838]
+script = ExtResource("19_damage")
+MinimumDamage = 3
+MaximumDamage = 3
 
 [node name="FrostNova" type="Node" parent="Spells" unique_id=1504189636]
 script = ExtResource("10_frost_nova_spell")
@@ -137,3 +146,18 @@ TickIntervalSeconds = 2.0
 script = ExtResource("19_damage")
 MinimumDamage = 3
 MaximumDamage = 3
+
+[node name="IceBall" type="Node" parent="Spells" unique_id=1205830724]
+script = ExtResource("20_ice_ball_spell")
+ProjectileScene = ExtResource("2_gx9kq")
+CastAction = &"cast_spell6"
+HudLabel = "Ice Ball"
+
+[node name="Damage" type="Node" parent="Spells/IceBall" unique_id=2125340228]
+script = ExtResource("19_damage")
+MinimumDamage = 4
+MaximumDamage = 4
+
+[node name="SlowedEffect" type="Node" parent="Spells/IceBall" unique_id=172386019]
+script = ExtResource("16_slowed_effect")
+DurationSeconds = 6.0

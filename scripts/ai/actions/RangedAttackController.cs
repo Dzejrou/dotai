@@ -152,8 +152,8 @@ public partial class RangedAttackController : Node, ICombatActionController
             direction,
             actor,
             damagePayload,
-            ProjectileSpeed,
-            ProjectileLifetime,
-            ProjectileMaxTravelDistance);
+            overrideSpeed: ProjectileSpeed,
+            overrideLifetime: ProjectileLifetime,
+            overrideMaxTravelDistance: ProjectileMaxTravelDistance);
     }
 }

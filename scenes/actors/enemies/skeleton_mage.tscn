@@ -12,7 +12,7 @@
 [ext_resource type="Script" uid="uid://81lj2bds5kdy" path="res://scripts/ai/actions/SpellCastActionController.cs" id="11_spell_cast_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
-[ext_resource type="Script" uid="uid://df50yybv2e8ng" path="res://scripts/spells/FireballSpell.cs" id="14_fireball_spell"]
+[ext_resource type="Script" path="res://scripts/spells/FireBallSpell.cs" id="14_fireball_spell"]
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="15_mana_state"]
 [ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="16_fire_nova_vfx"]
 [ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="17_fire_nova_spell"]
@@ -20,7 +20,7 @@
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="19_poison_cloud_area"]
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="20_status_effect_controller"]
 [ext_resource type="Script" uid="uid://cqsn11dvrfth1" path="res://scripts/status/BurningEffect.cs" id="21_burning_effect"]
-[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="22_damage"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="22_damage"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -67,12 +67,12 @@ RegenerationInterval = 0.75
 
 [node name="Spells" type="Node" parent="." unique_id=1247757545]
 
-[node name="Fireball" type="Node" parent="Spells" unique_id=436095138]
+[node name="FireBall" type="Node" parent="Spells" unique_id=436095138]
 script = ExtResource("14_fireball_spell")
 ProjectileScene = ExtResource("12_projectile_scene")
 Cooldown = 1.2
 
-[node name="Damage" type="Node" parent="Spells/Fireball" unique_id=2001900011]
+[node name="Damage" type="Node" parent="Spells/FireBall" unique_id=2001900011]
 script = ExtResource("22_damage")
 MinimumDamage = 4
 MaximumDamage = 4
