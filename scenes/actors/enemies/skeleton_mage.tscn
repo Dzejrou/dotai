@@ -103,12 +103,8 @@ MaximumDamage = 3
 script = ExtResource("18_poison_cloud_spell")
 Cooldown = 10.0
 
-[node name="PoisonCloudArea" parent="Spells/PoisonCloud" unique_id=211413475 instance=ExtResource("19_poison_cloud_area")]
-process_mode = 4
+[node name="PoisonCloudArea" parent="Spells/PoisonCloud" unique_id=2026040903 instance=ExtResource("19_poison_cloud_area")]
 visible = false
-collision_layer = 0
-collision_mask = 0
-monitoring = false
 
 [node name="PrimaryActionController" type="Node" parent="." unique_id=612694339]
 script = ExtResource("11_spell_cast_action")

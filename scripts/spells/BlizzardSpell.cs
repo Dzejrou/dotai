@@ -1,9 +1,9 @@
 using Godot;
 
 [GlobalClass]
-public partial class RingOfFireSpell : GroundPlacedSpell
+public partial class BlizzardSpell : GroundPlacedSpell
 {
-    public RingOfFireSpell()
+    public BlizzardSpell()
     {
         ManaCost = 30;
         Cooldown = 6.0f;

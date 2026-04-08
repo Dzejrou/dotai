@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://c5n8uvyjpudvn"]
+
+[ext_resource type="Script" uid="uid://bqaxa0at7jl4n" path="res://scripts/spells/BlizzardArea.cs" id="1_blizzard_area_script"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="2_damage"]
+[ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="3_slowed_effect"]
+[ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="4_immobilized_effect"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_blizzard"]
+radius = 56.0
+
+[node name="BlizzardArea" type="Area2D" unique_id=26160184]
+z_index = -2
+monitorable = false
+script = ExtResource("1_blizzard_area_script")
+EffectLifetime = 4.0
+FillColor = Color(0.55, 0.78, 1, 0.28)
+OutlineColor = Color(0.72, 0.88, 1, 0.88)
+PreviewFillColor = Color(0.55, 0.78, 1, 0.14)
+PreviewOutlineColor = Color(0.72, 0.88, 1, 0.45)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2026040801]
+shape = SubResource("CircleShape2D_blizzard")
+
+[node name="Damage" type="Node" parent="." unique_id=2026040802]
+script = ExtResource("2_damage")
+MaximumDamage = 3
+
+[node name="SlowedEffect" type="Node" parent="." unique_id=2026040803]
+script = ExtResource("3_slowed_effect")
+DurationSeconds = 6.0
+
+[node name="ImmobilizedEffect" type="Node" parent="." unique_id=2026040804]
+script = ExtResource("4_immobilized_effect")
+DurationSeconds = 2.0
