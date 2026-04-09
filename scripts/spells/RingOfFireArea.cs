@@ -3,15 +3,34 @@ using Godot;
 [GlobalClass]
 public partial class RingOfFireArea : AreaOfEffect
 {
+    private static readonly StringName DefaultAnimationName = "default";
+
+    private AnimatedSprite2D _sprite;
+
     public RingOfFireArea()
     {
         EffectLifetime = 5.0f;
         TickInterval = 1.0f;
         ApplyOnEnter = false;
         ApplyOnTick = true;
-        FillColor = new Color(1.0f, 0.45f, 0.08f, 0.32f);
-        OutlineColor = new Color(1.0f, 0.62f, 0.14f, 0.9f);
-        PreviewFillColor = new Color(1.0f, 0.45f, 0.08f, 0.14f);
-        PreviewOutlineColor = new Color(1.0f, 0.62f, 0.14f, 0.45f);
+        FillColor = Colors.Transparent;
+        OutlineColor = Colors.Transparent;
+        PreviewFillColor = Colors.Transparent;
+        PreviewOutlineColor = Colors.Transparent;
+    }
+
+    protected override void OnAreaReady()
+    {
+        _sprite ??= GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
+        _sprite?.Play(DefaultAnimationName);
+    }
+
+    protected override void OnRuntimeInitialized()
+    {
+        if (_sprite != null)
+        {
+            _sprite.Visible = true;
+            _sprite.Play(DefaultAnimationName);
+        }
     }
 }

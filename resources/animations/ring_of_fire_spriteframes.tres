@@ -1,0 +1,50 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_000.png" id="1_ring_fire_0"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_001.png" id="2_ring_fire_1"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_002.png" id="3_ring_fire_2"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_003.png" id="4_ring_fire_3"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_004.png" id="5_ring_fire_4"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_005.png" id="6_ring_fire_5"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_006.png" id="7_ring_fire_6"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_007.png" id="8_ring_fire_7"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_008.png" id="9_ring_fire_8"]
+[ext_resource type="Texture2D" path="res://assets/ring_of_fire/base/frame_009.png" id="10_ring_fire_9"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ring_fire_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_ring_fire_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ring_fire_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_ring_fire_3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_ring_fire_4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_ring_fire_5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ring_fire_6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_ring_fire_7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_ring_fire_8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_ring_fire_9")
+}],
+"loop": true,
+"name": &"default",
+"speed": 10.0
+}]
