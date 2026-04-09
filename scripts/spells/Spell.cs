@@ -24,7 +24,7 @@ public abstract partial class Spell : Node
     public virtual float CooldownDuration => Math.Max(0.0f, Cooldown);
     public virtual float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
 
-    public virtual bool CanCast(ISpellCaster caster)
+    public virtual bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {
         var spellOrigin = caster?.SpellOrigin;
         if (caster == null ||
@@ -56,6 +56,12 @@ public abstract partial class Spell : Node
 
     protected bool IsOnCooldown => _cooldownRemaining > 0.0f;
 
+    protected bool LogMissingCastRequestData(string message)
+    {
+        GD.PushWarning($"{GetPath()}: {message}");
+        return false;
+    }
+
     protected static bool TrySpendCastMana(ISpellCaster caster, int manaCost)
     {
         var manaState = caster?.ManaState;
@@ -73,5 +79,5 @@ public abstract partial class Spell : Node
         return true;
     }
 
-    public abstract bool TryCast(ISpellCaster caster);
+    public abstract bool TryCast(ISpellCaster caster, SpellCastRequest request);
 }

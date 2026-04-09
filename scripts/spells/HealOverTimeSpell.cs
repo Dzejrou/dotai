@@ -19,43 +19,36 @@ public partial class HealOverTimeSpell : Spell
             GD.PushError($"{GetPath()}: HealOverTimeSpell requires a HealOverTimeEffect child template.");
     }
 
-    public override bool CanCast(ISpellCaster caster)
+    public override bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {
-        return CanCastOn(caster, caster?.SpellTarget);
-    }
-
-    public override bool TryCast(ISpellCaster caster)
-    {
-        return TryCastOn(caster, caster?.SpellTarget);
-    }
-
-    public bool CanCastOn(ISpellCaster caster, Node2D target)
-    {
-        if (!base.CanCast(caster) || _effectTemplate == null)
+        if (!base.CanCast(caster, request) || _effectTemplate == null)
             return false;
 
         return TryResolveTarget(
             caster,
-            target,
+            request,
             requireRangeCheck: true,
             requireMissingHealOverTime: true,
             out _,
             out _);
     }
 
-    public bool TryCastOn(ISpellCaster caster, Node2D target)
+    public override bool TryCast(ISpellCaster caster, SpellCastRequest request)
     {
-        if (!base.CanCast(caster) || _effectTemplate == null)
+        if (!base.CanCast(caster, request) || _effectTemplate == null)
             return false;
 
         if (!TryResolveTarget(
                 caster,
-                target,
+                request,
                 requireRangeCheck: false,
                 requireMissingHealOverTime: false,
                 out _,
                 out var statusEffectController))
         {
+            if (request == null || !request.TryResolveTargetNode(out _))
+                return LogMissingCastRequestData("Heal-over-time spell requires a friendly target node.");
+
             return false;
         }
 
@@ -89,7 +82,7 @@ public partial class HealOverTimeSpell : Spell
 
     private bool TryResolveTarget(
         ISpellCaster caster,
-        Node2D target,
+        SpellCastRequest request,
         bool requireRangeCheck,
         bool requireMissingHealOverTime,
         out Node2D resolvedTarget,
@@ -98,12 +91,13 @@ public partial class HealOverTimeSpell : Spell
         resolvedTarget = null;
         statusEffectController = null;
 
+        if (request == null || !request.TryResolveTargetNode(out var target))
+            return false;
+
         if (caster == null ||
             caster.SpellOrigin == null ||
             !GodotObject.IsInstanceValid(caster.SpellOrigin) ||
-            target == null ||
-            !GodotObject.IsInstanceValid(target) ||
-            !target.IsInsideTree())
+            target == null)
         {
             return false;
         }

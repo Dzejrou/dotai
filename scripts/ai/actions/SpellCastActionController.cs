@@ -14,6 +14,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
     }
 
     private SpellSlot _pendingSpell = SpellSlot.None;
+    private SpellCastRequest _pendingRequest;
     private Spell _basicSpell;
     private Spell _closeRangeSpell;
     private Spell _longRangeSpell;
@@ -72,8 +73,8 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (targetFactionState == null || !targetFactionState.CanBeDamagedBy(actor.Faction))
             return false;
 
-        var distance = actor.GlobalPosition.DistanceTo(target.GlobalPosition);
-        return ResolveSpellSlot(caster, distance) != SpellSlot.None;
+        var request = CreateSpellCastRequest(actor, target);
+        return ResolveSpellSlot(caster, target, request) != SpellSlot.None;
     }
 
     public void StartAction(Actor actor, Node2D target)
@@ -81,7 +82,8 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (actor is not ISpellCaster caster)
             return;
 
-        var spellSlot = ResolveSpellSlot(caster, target);
+        var request = CreateSpellCastRequest(actor, target);
+        var spellSlot = ResolveSpellSlot(caster, target, request);
         if (spellSlot == SpellSlot.None)
         {
             if (target == null || !Actor.IsStructurallyValidTarget(target))
@@ -100,10 +102,11 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.CastSpeedMultiplier)))
         {
             _pendingSpell = spellSlot;
+            _pendingRequest = request;
             return;
         }
 
-        TryCast(actor, spellSlot);
+        TryCast(actor, spellSlot, request);
         actor.FinishAttackState();
     }
 
@@ -114,7 +117,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
         if (_pendingSpell != SpellSlot.None)
         {
-            TryCast(actor, _pendingSpell);
+            TryCast(actor, _pendingSpell, _pendingRequest);
             ClearPendingCast();
         }
 
@@ -130,6 +133,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
     private void ClearPendingCast()
     {
         _pendingSpell = SpellSlot.None;
+        _pendingRequest = null;
     }
 
     private Spell ResolveSpell(NodePath spellNodePath)
@@ -153,52 +157,52 @@ public partial class SpellCastActionController : Node, ICombatActionController
         return spell;
     }
 
-    private SpellSlot ResolveSpellSlot(ISpellCaster caster, Node2D target)
+    private SpellSlot ResolveSpellSlot(ISpellCaster caster, Node2D target, SpellCastRequest request)
     {
         if (caster == null || target == null || !Actor.IsStructurallyValidTarget(target))
             return SpellSlot.None;
 
         var distance = caster.SpellOrigin.GlobalPosition.DistanceTo(target.GlobalPosition);
-        return ResolveSpellSlot(caster, distance);
+        return ResolveSpellSlot(caster, distance, request);
     }
 
-    private SpellSlot ResolveSpellSlot(ISpellCaster caster, float distance)
+    private SpellSlot ResolveSpellSlot(ISpellCaster caster, float distance, SpellCastRequest request)
     {
-        if (CanUseCloseRangeSpell(caster, distance))
+        if (CanUseCloseRangeSpell(caster, distance, request))
             return SpellSlot.CloseRange;
 
-        if (CanUseLongRangeSpell(caster, distance))
+        if (CanUseLongRangeSpell(caster, distance, request))
             return SpellSlot.LongRange;
 
-        if (CanUseBasicSpell(caster, distance))
+        if (CanUseBasicSpell(caster, distance, request))
             return SpellSlot.Basic;
 
         return SpellSlot.None;
     }
 
-    private bool CanUseBasicSpell(ISpellCaster caster, float distance)
+    private bool CanUseBasicSpell(ISpellCaster caster, float distance, SpellCastRequest request)
     {
         return _basicSpell != null &&
                distance >= MinimumRange &&
                distance <= PreferredRange &&
-               _basicSpell.CanCast(caster);
+               _basicSpell.CanCast(caster, request);
     }
 
-    private bool CanUseCloseRangeSpell(ISpellCaster caster, float distance)
+    private bool CanUseCloseRangeSpell(ISpellCaster caster, float distance, SpellCastRequest request)
     {
         return _closeRangeSpell != null &&
                distance <= CloseRangeMaxDistance &&
-               _closeRangeSpell.CanCast(caster);
+               _closeRangeSpell.CanCast(caster, request);
     }
 
-    private bool CanUseLongRangeSpell(ISpellCaster caster, float distance)
+    private bool CanUseLongRangeSpell(ISpellCaster caster, float distance, SpellCastRequest request)
     {
         return _longRangeSpell != null &&
                distance > PreferredRange &&
-               _longRangeSpell.CanCast(caster);
+               _longRangeSpell.CanCast(caster, request);
     }
 
-    private void TryCast(Actor actor, SpellSlot spellSlot)
+    private void TryCast(Actor actor, SpellSlot spellSlot, SpellCastRequest request)
     {
         if (actor is not ISpellCaster caster)
             return;
@@ -207,7 +211,25 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (spell == null)
             return;
 
-        spell.TryCast(caster);
+        spell.TryCast(caster, request ?? SpellCastRequest.Empty);
+    }
+
+    private static SpellCastRequest CreateSpellCastRequest(Actor actor, Node2D target)
+    {
+        var request = new SpellCastRequest();
+        if (Actor.IsStructurallyValidTarget(target))
+        {
+            request.TargetNode = target;
+            request.TargetPosition = target.GlobalPosition;
+            var toTarget = target.GlobalPosition - actor.GlobalPosition;
+            if (toTarget != Vector2.Zero)
+                request.Direction = toTarget.Normalized();
+        }
+
+        if (!request.Direction.HasValue || request.Direction.Value == Vector2.Zero)
+            request.Direction = DirectionHelper.GetDirectionVector(actor.LastDirection);
+
+        return request;
     }
 
     private Spell ResolveSpellForSlot(SpellSlot spellSlot)

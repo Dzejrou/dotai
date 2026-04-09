@@ -11,9 +11,6 @@ public partial class Dryad : Actor, IAttackable, ITargetable, ISpellCaster
 
     public bool CanBeTargeted => !IsDead;
     public Node2D SpellOrigin => this;
-    public string SpellDirectionName => LastDirection;
-    public Vector2 SpellDirection => DirectionHelper.GetDirectionVector(LastDirection);
-    public Node2D SpellTarget => Target;
     public bool CanCastSpells => !IsDead;
 
     public override void _Ready()

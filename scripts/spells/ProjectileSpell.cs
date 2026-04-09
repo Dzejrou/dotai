@@ -29,15 +29,20 @@ public abstract partial class ProjectileSpell : Spell
         _random.Randomize();
     }
 
-    public override bool CanCast(ISpellCaster caster)
+    public override bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {
-        return base.CanCast(caster) && ProjectileScene != null;
+        return base.CanCast(caster, request) && ProjectileScene != null;
     }
 
-    public override bool TryCast(ISpellCaster caster)
+    public override bool TryCast(ISpellCaster caster, SpellCastRequest request)
     {
-        if (!CanCast(caster))
+        if (!CanCast(caster, request))
+        {
+            if (!TryResolveProjectileDirection(caster, request, out _))
+                return LogMissingCastRequestData("Projectile spell requires a target node, target position, or direction.");
+
             return false;
+        }
 
         var projectile = ProjectileScene.Instantiate<Projectile>();
         if (projectile == null)
@@ -59,8 +64,14 @@ public abstract partial class ProjectileSpell : Spell
 
         projectile.GlobalPosition = spellOrigin.GlobalPosition;
         parent.AddChild(projectile);
+        if (!TryResolveProjectileDirection(caster, request, out var projectileDirection))
+        {
+            projectile.QueueFree();
+            return LogMissingCastRequestData("Projectile spell requires a target node, target position, or direction.");
+        }
+
         projectile.Initialize(
-            ResolveProjectileDirection(caster),
+            projectileDirection,
             (Node)spellOrigin,
             CreateDamagePayload(caster),
             CreateStatusEffectPayload(),
@@ -73,24 +84,36 @@ public abstract partial class ProjectileSpell : Spell
         return true;
     }
 
-    protected virtual Vector2 ResolveProjectileDirection(ISpellCaster caster)
+    protected virtual bool TryResolveProjectileDirection(
+        ISpellCaster caster,
+        SpellCastRequest request,
+        out Vector2 projectileDirection)
     {
-        var fireDirection = caster.SpellDirection;
-        if (fireDirection == Vector2.Zero)
-            fireDirection = DirectionHelper.GetDirectionVector(caster.SpellDirectionName);
+        projectileDirection = Vector2.Zero;
 
-        var activeTarget = caster.SpellTarget;
-        if (activeTarget == null ||
-            !GodotObject.IsInstanceValid(activeTarget) ||
-            !activeTarget.IsInsideTree() ||
-            activeTarget is not ITargetable targetable ||
-            !targetable.CanBeTargeted)
+        if (request == null)
+            return false;
+
+        if (request.TryResolveTargetNode(out var activeTarget))
         {
-            return fireDirection;
+            if (activeTarget is ITargetable targetable && targetable.CanBeTargeted)
+            {
+                var toTarget = activeTarget.GlobalPosition - caster.SpellOrigin.GlobalPosition;
+                if (toTarget != Vector2.Zero)
+                {
+                    projectileDirection = toTarget.Normalized();
+                    return true;
+                }
+            }
         }
 
-        var toTarget = activeTarget.GlobalPosition - caster.SpellOrigin.GlobalPosition;
-        return toTarget != Vector2.Zero ? toTarget.Normalized() : fireDirection;
+        if (request.Direction.HasValue && request.Direction.Value != Vector2.Zero)
+        {
+            projectileDirection = request.Direction.Value.Normalized();
+            return true;
+        }
+
+        return false;
     }
 
     protected virtual Damage CreateDamagePayload(ISpellCaster caster)

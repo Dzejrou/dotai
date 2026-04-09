@@ -16,25 +16,32 @@ public partial class BlinkSpell : Spell
         Cooldown = 1.5f;
     }
 
-    public override bool CanCast(ISpellCaster caster)
+    public override bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {
-        if (!base.CanCast(caster))
+        if (!base.CanCast(caster, request))
             return false;
 
         return ResolveBlinkBody(caster) != null &&
-               caster.SpellDirection != Vector2.Zero;
+               request != null &&
+               request.Direction.HasValue &&
+               request.Direction.Value != Vector2.Zero;
     }
 
-    public override bool TryCast(ISpellCaster caster)
+    public override bool TryCast(ISpellCaster caster, SpellCastRequest request)
     {
-        if (!CanCast(caster))
+        if (!CanCast(caster, request))
+        {
+            if (request == null || !request.Direction.HasValue || request.Direction.Value == Vector2.Zero)
+                return LogMissingCastRequestData("Blink spell requires an explicit direction.");
+
             return false;
+        }
 
         var blinkBody = ResolveBlinkBody(caster);
         if (blinkBody == null)
             return false;
 
-        var direction = caster.SpellDirection.Normalized();
+        var direction = request.Direction.Value.Normalized();
         var blinkDistance = ResolveBlinkDistance(blinkBody, direction);
         if (blinkDistance <= 0.0f)
             return false;

@@ -17,31 +17,26 @@ public partial class HealSpell : Spell
         Range = Math.Max(0.0f, Range);
     }
 
-    public override bool CanCast(ISpellCaster caster)
+    public override bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {
-        return CanCastOn(caster, caster?.SpellTarget);
-    }
-
-    public override bool TryCast(ISpellCaster caster)
-    {
-        return TryCastOn(caster, caster?.SpellTarget);
-    }
-
-    public bool CanCastOn(ISpellCaster caster, Node2D target)
-    {
-        if (!base.CanCast(caster))
+        if (!base.CanCast(caster, request))
             return false;
 
-        return TryResolveTarget(caster, target, requireRangeCheck: true, out _, out _);
+        return TryResolveTarget(caster, request, requireRangeCheck: true, out _, out _);
     }
 
-    public bool TryCastOn(ISpellCaster caster, Node2D target)
+    public override bool TryCast(ISpellCaster caster, SpellCastRequest request)
     {
-        if (!base.CanCast(caster))
+        if (!base.CanCast(caster, request))
             return false;
 
-        if (!TryResolveTarget(caster, target, requireRangeCheck: false, out _, out var healable))
+        if (!TryResolveTarget(caster, request, requireRangeCheck: false, out _, out var healable))
+        {
+            if (request == null || !request.TryResolveTargetNode(out _))
+                return LogMissingCastRequestData("Heal spell requires a friendly target node.");
+
             return false;
+        }
 
         if (!TrySpendCastMana(caster))
             return false;
@@ -53,7 +48,7 @@ public partial class HealSpell : Spell
 
     private bool TryResolveTarget(
         ISpellCaster caster,
-        Node2D target,
+        SpellCastRequest request,
         bool requireRangeCheck,
         out Node2D resolvedTarget,
         out IHealable healable)
@@ -61,12 +56,13 @@ public partial class HealSpell : Spell
         resolvedTarget = null;
         healable = null;
 
+        if (request == null || !request.TryResolveTargetNode(out var target))
+            return false;
+
         if (caster == null ||
             caster.SpellOrigin == null ||
             !GodotObject.IsInstanceValid(caster.SpellOrigin) ||
-            target == null ||
-            !GodotObject.IsInstanceValid(target) ||
-            !target.IsInsideTree())
+            target == null)
         {
             return false;
         }

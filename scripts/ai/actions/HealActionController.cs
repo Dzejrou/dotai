@@ -7,6 +7,7 @@ public partial class HealActionController : Node, ICombatActionController
 {
     private Node2D _pendingTarget;
     private Spell _pendingSpell;
+    private SpellCastRequest _pendingRequest;
     private HealSpell _healSpell;
     private HealOverTimeSpell _healOverTimeSpell;
 
@@ -41,7 +42,7 @@ public partial class HealActionController : Node, ICombatActionController
         if (actor is not ISpellCaster caster || !IsValidSupportTarget(actor, target))
             return false;
 
-        return ResolveSpell(caster, target) != null;
+        return ResolveSpell(caster, CreateSpellCastRequest(target)) != null;
     }
 
     public void StartAction(Actor actor, Node2D target)
@@ -58,7 +59,8 @@ public partial class HealActionController : Node, ICombatActionController
 
         ClearPendingAction();
 
-        var spell = ResolveSpell(caster, target);
+        var request = CreateSpellCastRequest(target);
+        var spell = ResolveSpell(caster, request);
         if (spell == null)
             return;
 
@@ -69,6 +71,7 @@ public partial class HealActionController : Node, ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         _pendingTarget = target;
         _pendingSpell = spell;
+        _pendingRequest = request;
 
         if (actor.TryPlayDirectionalAnimation(
                 CastAnimation.ToString(),
@@ -77,7 +80,7 @@ public partial class HealActionController : Node, ICombatActionController
             return;
         }
 
-        TryCast(actor, target, spell);
+        TryCast(actor, target, spell, request);
         actor.FinishAttackState();
     }
 
@@ -87,7 +90,7 @@ public partial class HealActionController : Node, ICombatActionController
             return false;
 
         if (_pendingSpell != null && _pendingTarget != null)
-            TryCast(actor, _pendingTarget, _pendingSpell);
+            TryCast(actor, _pendingTarget, _pendingSpell, _pendingRequest);
 
         ClearPendingAction();
         actor.FinishAttackState();
@@ -103,30 +106,26 @@ public partial class HealActionController : Node, ICombatActionController
     {
         _pendingTarget = null;
         _pendingSpell = null;
+        _pendingRequest = null;
     }
 
-    private Spell ResolveSpell(ISpellCaster caster, Node2D target)
+    private Spell ResolveSpell(ISpellCaster caster, SpellCastRequest request)
     {
-        if (_healOverTimeSpell != null && _healOverTimeSpell.CanCastOn(caster, target))
+        if (_healOverTimeSpell != null && _healOverTimeSpell.CanCast(caster, request))
             return _healOverTimeSpell;
 
-        if (_healSpell != null && _healSpell.CanCastOn(caster, target))
+        if (_healSpell != null && _healSpell.CanCast(caster, request))
             return _healSpell;
 
         return null;
     }
 
-    private bool TryCast(Actor actor, Node2D target, Spell spell)
+    private bool TryCast(Actor actor, Node2D target, Spell spell, SpellCastRequest request)
     {
         if (actor is not ISpellCaster caster || !IsValidSupportTarget(actor, target))
             return false;
 
-        return spell switch
-        {
-            HealOverTimeSpell healOverTimeSpell => healOverTimeSpell.TryCastOn(caster, target),
-            HealSpell healSpell => healSpell.TryCastOn(caster, target),
-            _ => false,
-        };
+        return spell.TryCast(caster, request ?? SpellCastRequest.Empty);
     }
 
     private T ResolveSpell<T>(NodePath spellNodePath) where T : class
@@ -162,5 +161,17 @@ public partial class HealActionController : Node, ICombatActionController
                targetable.CanBeTargeted &&
                target is IHealable healable &&
                healable.CanReceiveHealing;
+    }
+
+    private static SpellCastRequest CreateSpellCastRequest(Node2D target)
+    {
+        var request = new SpellCastRequest();
+        if (Actor.IsStructurallyValidTarget(target))
+        {
+            request.TargetNode = target;
+            request.TargetPosition = target.GlobalPosition;
+        }
+
+        return request;
     }
 }

@@ -49,9 +49,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public bool CanBeTargeted => !_isDead;
     public PlayerTargetingState Targeting { get; } = new();
     public Node2D SpellOrigin => this;
-    public string SpellDirectionName => LastDirection;
-    public Vector2 SpellDirection => GetSpellDirection();
-    public Node2D SpellTarget => Targeting.ActiveTarget;
     public Spell ArmedPlacementSpell => _pendingPlacementSpell as Spell;
     public bool CanCastSpells => !_isDead;
     public bool HasInteractionTarget => _activeInteractable != null;
@@ -113,6 +110,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         UpdateInteractionState();
         if (Input.IsActionJustPressed("interact_action"))
             TryInteract();
+        UpdatePendingPlacementPreview();
         TryCastEquippedSpells();
         var direction = GetInputDirection();
 
@@ -158,7 +156,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (mouseButton.ButtonIndex != MouseButton.Left)
             return;
 
-        _pendingPlacementSpell.TryPlace(this, GetGlobalMousePosition());
+        _pendingPlacementSpell.TryPlace(this, CreatePlacementCastRequest(GetGlobalMousePosition()));
         if (!_pendingPlacementSpell.IsAwaitingPlacement)
             _pendingPlacementSpell = null;
 
@@ -661,6 +659,14 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         RefreshActorHud();
     }
 
+    private void UpdatePendingPlacementPreview()
+    {
+        if (_pendingPlacementSpell == null)
+            return;
+
+        _pendingPlacementSpell.UpdatePlacementPreview(CreatePlacementCastRequest(GetGlobalMousePosition()));
+    }
+
     private Vector2 GetSpellDirection()
     {
         var inputDirection = GetInputDirection();
@@ -699,7 +705,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
                     var tabTarget = Targeting.TabTarget;
                     if (IsValidTabTarget(tabTarget))
                     {
-                        placementSpell.TryPlace(this, tabTarget.GlobalPosition);
+                        placementSpell.TryPlace(this, CreatePlacementCastRequest(tabTarget.GlobalPosition, tabTarget));
                         if (!placementSpell.IsAwaitingPlacement)
                             _pendingPlacementSpell = null;
                     }
@@ -712,16 +718,55 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
                 }
 
                 ClearPendingPlacementSpell();
-                if (placementSpell.TryBeginPlacement(this))
+                if (placementSpell.TryBeginPlacement(this, CreatePlacementCastRequest(GetGlobalMousePosition())))
                     _pendingPlacementSpell = placementSpell;
 
                 return;
             }
 
             ClearPendingPlacementSpell();
-            pair.Value.TryCast(this);
+            pair.Value.TryCast(this, CreateSpellCastRequest());
             return;
         }
+    }
+
+    private SpellCastRequest CreateSpellCastRequest(Node2D target = null)
+    {
+        var spellTarget = ResolveSpellTarget(target);
+        var request = new SpellCastRequest
+        {
+            Direction = GetSpellDirection(),
+        };
+
+        if (spellTarget != null)
+        {
+            request.TargetNode = spellTarget;
+            request.TargetPosition = spellTarget.GlobalPosition;
+        }
+
+        return request;
+    }
+
+    private SpellCastRequest CreatePlacementCastRequest(Vector2 targetPosition, Node2D target = null)
+    {
+        var request = CreateSpellCastRequest(target);
+        request.TargetPosition = targetPosition;
+        return request;
+    }
+
+    private Node2D ResolveSpellTarget(Node2D preferredTarget = null)
+    {
+        if (IsValidSpellTarget(preferredTarget))
+            return preferredTarget;
+
+        return IsValidSpellTarget(Targeting.ActiveTarget) ? Targeting.ActiveTarget : null;
+    }
+
+    private static bool IsValidSpellTarget(Node2D target)
+    {
+        return target != null &&
+               GodotObject.IsInstanceValid(target) &&
+               target.IsInsideTree();
     }
 
     private void ClearPendingPlacementSpell()

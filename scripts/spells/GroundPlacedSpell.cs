@@ -5,7 +5,6 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
 {
     private AreaOfEffect _areaTemplate;
     private AreaOfEffect _previewArea;
-    private Node2D _previewOrigin;
 
     public bool IsAwaitingPlacement { get; private set; }
 
@@ -16,54 +15,52 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
             GD.PushError($"{GetPath()}: {GetType().Name} requires an AreaOfEffect child template.");
     }
 
-    public override void _Process(double delta)
+    public override bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {
-        base._Process(delta);
-
-        if (!IsAwaitingPlacement || _previewArea == null)
-            return;
-
-        if (_previewOrigin == null || !GodotObject.IsInstanceValid(_previewOrigin))
-        {
-            CancelPlacement();
-            return;
-        }
-
-        _previewArea.GlobalPosition = _previewOrigin.GetGlobalMousePosition();
+        return base.CanCast(caster, request) && ResolveAreaTemplate() != null && caster?.Faction != null;
     }
 
-    public override bool CanCast(ISpellCaster caster)
+    public override bool TryCast(ISpellCaster caster, SpellCastRequest request)
     {
-        return base.CanCast(caster) && ResolveAreaTemplate() != null && caster?.Faction != null;
-    }
-
-    public override bool TryCast(ISpellCaster caster)
-    {
-        if (TryResolvePlacementPosition(caster, out var worldPosition))
+        if (TryResolvePlacementPosition(caster, request, out var worldPosition))
             return SpawnArea(caster, worldPosition);
 
-        return TryBeginPlacement(caster);
+        return LogMissingCastRequestData("Ground-placed spell requires a target position or target node.");
     }
 
-    public bool TryBeginPlacement(ISpellCaster caster)
+    public bool TryBeginPlacement(ISpellCaster caster, SpellCastRequest request)
     {
-        if (!CanCast(caster))
+        if (!CanCast(caster, request))
             return false;
 
         CleanupPreview();
-        if (!ShowPreview(caster))
+        if (!ShowPreview(caster, request))
             return false;
 
         IsAwaitingPlacement = true;
         return true;
     }
 
-    public bool TryPlace(ISpellCaster caster, Vector2 worldPosition)
+    public bool TryPlace(ISpellCaster caster, SpellCastRequest request)
     {
         if (!IsAwaitingPlacement)
             return false;
 
+        if (!TryResolvePlacementPosition(caster, request, out var worldPosition))
+            return LogMissingCastRequestData("Ground-placed spell requires a target position or target node.");
+
         return SpawnArea(caster, worldPosition);
+    }
+
+    public void UpdatePlacementPreview(SpellCastRequest request)
+    {
+        if (!IsAwaitingPlacement || _previewArea == null)
+            return;
+
+        if (request == null || !request.TryResolveTargetPosition(out var worldPosition))
+            return;
+
+        _previewArea.GlobalPosition = worldPosition;
     }
 
     public void CancelPlacement()
@@ -77,8 +74,14 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
         CleanupPreview();
     }
 
-    protected virtual bool TryResolvePlacementPosition(ISpellCaster caster, out Vector2 worldPosition)
+    protected virtual bool TryResolvePlacementPosition(
+        ISpellCaster caster,
+        SpellCastRequest request,
+        out Vector2 worldPosition)
     {
+        if (request != null && request.TryResolveTargetPosition(out worldPosition))
+            return true;
+
         worldPosition = default;
         return false;
     }
@@ -89,7 +92,7 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
 
     private bool SpawnArea(ISpellCaster caster, Vector2 worldPosition)
     {
-        if (!CanCast(caster))
+        if (!CanCast(caster, SpellCastRequest.Empty))
         {
             CancelPlacement();
             return false;
@@ -125,7 +128,7 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
         return true;
     }
 
-    private bool ShowPreview(ISpellCaster caster)
+    private bool ShowPreview(ISpellCaster caster, SpellCastRequest request)
     {
         if (caster?.SpellOrigin == null || caster.SpellOrigin.GetParent() == null)
             return false;
@@ -133,10 +136,15 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
         if (ResolveAreaTemplate()?.Duplicate() is not AreaOfEffect previewArea)
             return false;
 
+        if (request == null || !request.TryResolveTargetPosition(out var previewPosition))
+        {
+            previewArea.QueueFree();
+            return LogMissingCastRequestData("Ground-placed spell preview requires a target position.");
+        }
+
         previewArea.InitializePreview();
-        previewArea.GlobalPosition = caster.SpellOrigin.GetGlobalMousePosition();
+        previewArea.GlobalPosition = previewPosition;
         caster.SpellOrigin.GetParent().AddChild(previewArea);
-        _previewOrigin = caster.SpellOrigin;
         _previewArea = previewArea;
         return true;
     }
@@ -147,7 +155,6 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
             _previewArea.QueueFree();
 
         _previewArea = null;
-        _previewOrigin = null;
     }
 
     private AreaOfEffect ResolveAreaTemplate()
