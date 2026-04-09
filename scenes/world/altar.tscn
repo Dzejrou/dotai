@@ -1,31 +1,32 @@
-[gd_scene format=3 uid="uid://y2ypl5ngb0n7"]
+[gd_scene format=3 uid="uid://cfh2mxlabwyir"]
 
-[ext_resource type="Script" uid="uid://f07785f25b614b" path="res://scripts/world/Altar.cs" id="1_altar_script"]
-[ext_resource type="Texture2D" path="res://assets/altar/east.png" id="2_east"]
-[ext_resource type="Texture2D" path="res://assets/altar/north-east.png" id="3_north_east"]
-[ext_resource type="Texture2D" path="res://assets/altar/north.png" id="4_north"]
-[ext_resource type="Texture2D" path="res://assets/altar/north-west.png" id="5_north_west"]
-[ext_resource type="Texture2D" path="res://assets/altar/south-east.png" id="6_south_east"]
-[ext_resource type="Texture2D" path="res://assets/altar/south.png" id="7_south"]
-[ext_resource type="Texture2D" path="res://assets/altar/south-west.png" id="8_south_west"]
-[ext_resource type="Texture2D" path="res://assets/altar/west.png" id="9_west"]
+[ext_resource type="Script" uid="uid://cytqnl4j23a72" path="res://scripts/world/Altar.cs" id="1_altar_script"]
+[ext_resource type="Texture2D" uid="uid://jj0lnbugge2t" path="res://assets/altar/east.png" id="2_east"]
+[ext_resource type="Texture2D" uid="uid://crmwp2330ra46" path="res://assets/altar/north-east.png" id="3_north_east"]
+[ext_resource type="Texture2D" uid="uid://bqscfhnj6guoc" path="res://assets/altar/north.png" id="4_north"]
+[ext_resource type="Texture2D" uid="uid://i5qrfjrmoeb6" path="res://assets/altar/north-west.png" id="5_north_west"]
+[ext_resource type="Texture2D" uid="uid://vg5048hield6" path="res://assets/altar/south-east.png" id="6_south_east"]
+[ext_resource type="Texture2D" uid="uid://sbprq8ior63f" path="res://assets/altar/south.png" id="7_south"]
+[ext_resource type="Texture2D" uid="uid://ciopiuqxhhasj" path="res://assets/altar/south-west.png" id="8_south_west"]
+[ext_resource type="Texture2D" uid="uid://crbf26y4jvox3" path="res://assets/altar/west.png" id="9_west"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_altar"]
-size = Vector2(48, 48)
+size = Vector2(70, 72)
 
 [node name="Altar" type="StaticBody2D" unique_id=487314875]
 script = ExtResource("1_altar_script")
 EastTexture = ExtResource("2_east")
-NorthEastTexture = ExtResource("3_north_east")
-NorthTexture = ExtResource("4_north")
-NorthWestTexture = ExtResource("5_north_west")
 SouthEastTexture = ExtResource("6_south_east")
 SouthTexture = ExtResource("7_south")
 SouthWestTexture = ExtResource("8_south_west")
 WestTexture = ExtResource("9_west")
+NorthWestTexture = ExtResource("5_north_west")
+NorthTexture = ExtResource("4_north")
+NorthEastTexture = ExtResource("3_north_east")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=125145582]
 texture = ExtResource("7_south")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1977437158]
+position = Vector2(0, 8)
 shape = SubResource("RectangleShape2D_altar")
