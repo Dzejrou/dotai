@@ -18,6 +18,7 @@ public partial class AssetManagerTool : Control
     private const string ExporterWrapperPath = "/Users/jjindrak/Projects/pixelart/scripts/export";
     private const string InspectorWrapperPath = "/Users/jjindrak/Projects/pixelart/scripts/inspect";
     private const string GodotBinaryPath = "/Applications/Godot_mono.app/Contents/MacOS/Godot";
+    private static readonly string[] ExcludedSourceGroupNames = { "dev", "wip" };
 
     [Export]
     public string ExternalSourceDirectory { get; set; } = DefaultExternalSourceDirectory;
@@ -633,9 +634,13 @@ public partial class AssetManagerTool : Control
             "--in", sourceFilePath,
             "--out", outputDirectory,
             "--replace-all",
-            "--exclude", "dev",
-            "--exclude", "wip",
         };
+
+        foreach (var excludedGroupName in ExcludedSourceGroupNames)
+        {
+            arguments.Add("--exclude");
+            arguments.Add(excludedGroupName);
+        }
 
         switch (mode)
         {
@@ -687,8 +692,11 @@ public partial class AssetManagerTool : Control
     private VerificationResult BuildVerificationResult(SourceInspection sourceInspection, string sourceFilePath)
     {
         var characterName = InferCharacterNameFromSourceFile(sourceFilePath);
-        if (!string.Equals(sourceInspection.Status, "ok", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(sourceInspection.Status, "ok", StringComparison.OrdinalIgnoreCase) &&
+            HasVerificationRelevantInspectionIssues(sourceInspection))
+        {
             return VerificationResult.Error(characterName, sourceFilePath, BuildInspectionStatusMessage(sourceInspection));
+        }
 
         var characterRoot = $"{AssetsRoot}/{characterName}";
         var mismatches = new List<string>();
@@ -1161,8 +1169,12 @@ public partial class AssetManagerTool : Control
         var status = root.TryGetProperty("status", out var statusElement)
             ? statusElement.GetString() ?? "ok"
             : "ok";
-        var missingGroups = ReadJsonStringArray(root, "missing_groups");
-        var missingLayers = ReadJsonStringArray(root, "missing_layers");
+        var missingGroups = ReadJsonStringArray(root, "missing_groups")
+            .Where(groupName => !IsExcludedSourceGroupReference(groupName))
+            .ToList();
+        var missingLayers = ReadJsonStringArray(root, "missing_layers")
+            .Where(layerReference => !IsExcludedSourceGroupReference(layerReference))
+            .ToList();
         var groups = new List<SourceAnimationGroup>();
 
         if (root.TryGetProperty("items", out var itemsElement) && itemsElement.ValueKind == JsonValueKind.Array)
@@ -1178,8 +1190,12 @@ public partial class AssetManagerTool : Control
                 var groupName = itemElement.TryGetProperty("name", out var nameElement)
                     ? nameElement.GetString() ?? string.Empty
                     : string.Empty;
-                if (string.IsNullOrWhiteSpace(groupName) || string.Equals(groupName, BaseDirectoryName, StringComparison.Ordinal))
+                if (string.IsNullOrWhiteSpace(groupName) ||
+                    string.Equals(groupName, BaseDirectoryName, StringComparison.Ordinal) ||
+                    IsExcludedSourceGroupReference(groupName))
+                {
                     continue;
+                }
 
                 var directions = new System.Collections.Generic.Dictionary<string, int>(StringComparer.Ordinal);
                 if (itemElement.TryGetProperty("children", out var childrenElement) && childrenElement.ValueKind == JsonValueKind.Array)
@@ -1247,6 +1263,33 @@ public partial class AssetManagerTool : Control
             details.Add($"missing layers: {string.Join(", ", sourceInspection.MissingLayers)}");
 
         return string.Join(" | ", details);
+    }
+
+    private static bool HasVerificationRelevantInspectionIssues(SourceInspection sourceInspection)
+    {
+        return sourceInspection.MissingGroups.Count > 0 ||
+               sourceInspection.MissingLayers.Count > 0;
+    }
+
+    private static bool IsExcludedSourceGroupReference(string groupReference)
+    {
+        if (string.IsNullOrWhiteSpace(groupReference))
+            return false;
+
+        foreach (var excludedGroupName in ExcludedSourceGroupNames)
+        {
+            if (string.Equals(groupReference, excludedGroupName, StringComparison.Ordinal))
+                return true;
+
+            if (groupReference.StartsWith($"{excludedGroupName}/", StringComparison.Ordinal) ||
+                groupReference.StartsWith($"{excludedGroupName}\\", StringComparison.Ordinal) ||
+                groupReference.StartsWith($"{excludedGroupName}:", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, int>> BuildAssetFrameCounts(string characterRoot)
