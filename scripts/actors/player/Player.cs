@@ -12,6 +12,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Signal]
     public delegate void InteractionAvailabilityChangedEventHandler(bool available, string label);
 
+    [Signal]
+    public delegate void SpellLoadoutChangedEventHandler();
+
     [Export]
     public float Speed { get; set; } = 140.0f;
 
@@ -50,6 +53,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public PlayerTargetingState Targeting { get; } = new();
     public Node2D SpellOrigin => this;
     public Spell ArmedPlacementSpell => _pendingPlacementSpell as Spell;
+    public SpellBook SpellBookNode { get; private set; }
+    public SpellLoadout SpellLoadoutNode { get; private set; }
     public bool CanCastSpells => !_isDead;
     public bool HasInteractionTarget => _activeInteractable != null;
     public string CurrentInteractionLabel => _activeInteractableLabel;
@@ -73,6 +78,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         }
 
         BindStatusEffects();
+        InitializeSpellInventory();
         LoadEquippedSpells();
         SetAnimationSafe(GetIdleAnimationName());
         AddToGroup(CombatGroups.Actors);
@@ -84,6 +90,13 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     public override void _ExitTree()
     {
+        if (SpellLoadoutNode != null &&
+            GodotObject.IsInstanceValid(SpellLoadoutNode) &&
+            SpellLoadoutNode.IsConnected(SpellLoadout.SignalName.LoadoutChanged, new Callable(this, nameof(OnSpellLoadoutChanged))))
+        {
+            SpellLoadoutNode.Disconnect(SpellLoadout.SignalName.LoadoutChanged, new Callable(this, nameof(OnSpellLoadoutChanged)));
+        }
+
         UnbindStatusEffects();
     }
 
@@ -659,6 +672,46 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         RefreshActorHud();
     }
 
+    private void InitializeSpellInventory()
+    {
+        SpellBookNode = GetNodeOrNull<SpellBook>("SpellBook");
+        SpellLoadoutNode = GetNodeOrNull<SpellLoadout>("SpellLoadout");
+
+        if (SpellBookNode == null)
+            GD.PushError($"{GetPath()}: missing required SpellBook child.");
+
+        if (SpellLoadoutNode == null)
+        {
+            GD.PushError($"{GetPath()}: missing required SpellLoadout child.");
+            return;
+        }
+
+        SpellLoadoutNode.ApplyDefaultAssignments(SpellBookNode);
+        SpellLoadoutNode.Connect(SpellLoadout.SignalName.LoadoutChanged, new Callable(this, nameof(OnSpellLoadoutChanged)));
+    }
+
+    private void OnSpellLoadoutChanged()
+    {
+        LoadEquippedSpells();
+        if (_pendingPlacementSpell == null)
+        {
+            EmitSignal(SignalName.SpellLoadoutChanged);
+            return;
+        }
+
+        foreach (var equippedSpell in _spellsByAction.Values)
+        {
+            if (ReferenceEquals(equippedSpell, _pendingPlacementSpell))
+            {
+                EmitSignal(SignalName.SpellLoadoutChanged);
+                return;
+            }
+        }
+
+        ClearPendingPlacementSpell();
+        EmitSignal(SignalName.SpellLoadoutChanged);
+    }
+
     private void UpdatePendingPlacementPreview()
     {
         if (_pendingPlacementSpell == null)
@@ -693,12 +746,15 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     private void TryCastEquippedSpells()
     {
-        foreach (var pair in _spellsByAction)
+        foreach (var slotAction in SpellLoadout.SlotActions)
         {
-            if (!Input.IsActionJustPressed(pair.Key))
+            if (!Input.IsActionJustPressed(slotAction))
                 continue;
 
-            if (pair.Value is IPlacementSpell placementSpell)
+            if (!_spellsByAction.TryGetValue(slotAction, out var spell) || spell == null)
+                return;
+
+            if (spell is IPlacementSpell placementSpell)
             {
                 if (ReferenceEquals(_pendingPlacementSpell, placementSpell))
                 {
@@ -725,7 +781,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             }
 
             ClearPendingPlacementSpell();
-            pair.Value.TryCast(this, CreateSpellCastRequest());
+            spell.TryCast(this, CreateSpellCastRequest());
             return;
         }
     }
@@ -779,14 +835,14 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     {
         _spellsByAction.Clear();
 
-        var spellsNode = GetNode<Node>("Spells");
-        foreach (var child in spellsNode.GetChildren())
+        if (SpellLoadoutNode == null || !GodotObject.IsInstanceValid(SpellLoadoutNode))
+            return;
+
+        foreach (var slotAction in SpellLoadout.SlotActions)
         {
-            if (child is not Spell spell)
-            {
-                GD.PushError($"{GetPath()}: Spells container child {child.Name} must inherit Spell.");
+            var spell = SpellLoadoutNode.GetEquippedSpell(slotAction);
+            if (spell == null)
                 continue;
-            }
 
             if (spell.CastAction == default)
             {

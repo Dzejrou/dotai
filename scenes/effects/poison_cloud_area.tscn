@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://twoew2yv3fhj" path="res://scripts/spells/PoisonCloudArea.cs" id="1_poison_cloud_area_script"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/poison_cloud_spriteframes.tres" id="2_poison_cloud_frames"]
 [ext_resource type="Script" uid="uid://cq1ljwn1pf717" path="res://scripts/status/PoisonedEffect.cs" id="3_poisoned_effect"]
-[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="4_damage"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="4_damage"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_poison_cloud"]
 radius = 55.0

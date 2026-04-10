@@ -54,6 +54,7 @@ Max = 100
 
 [node name="Heal" type="Node" parent="Spells" unique_id=1893190900]
 script = ExtResource("11_heal_spell")
+SpellId = "heal"
 Range = 256.0
 Cooldown = 1.4
 ManaCost = 1
@@ -61,6 +62,7 @@ HealAmount = 3
 
 [node name="Rejuvenation" type="Node" parent="Spells" unique_id=275029308]
 script = ExtResource("12_heal_over_time_spell")
+SpellId = "rejuvenation"
 Range = 256.0
 Cooldown = 20.0
 ManaCost = 15

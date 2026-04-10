@@ -6,6 +6,9 @@ using System;
 public abstract partial class Spell : Node
 {
     [Export]
+    public string SpellId { get; set; } = string.Empty;
+
+    [Export]
     public StringName CastAction { get; set; }
 
     [Export]
@@ -23,6 +26,12 @@ public abstract partial class Spell : Node
     public virtual int DisplayManaCost => Math.Max(0, ManaCost);
     public virtual float CooldownDuration => Math.Max(0.0f, Cooldown);
     public virtual float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
+
+    public override void _Ready()
+    {
+        if (string.IsNullOrWhiteSpace(SpellId))
+            GD.PushWarning($"{GetPath()}: Spell is missing SpellId.");
+    }
 
     public virtual bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {

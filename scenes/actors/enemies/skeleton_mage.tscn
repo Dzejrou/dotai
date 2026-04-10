@@ -69,6 +69,7 @@ RegenerationInterval = 0.75
 
 [node name="FireBall" type="Node" parent="Spells" unique_id=436095138]
 script = ExtResource("14_fireball_spell")
+SpellId = "fire_ball"
 ProjectileScene = ExtResource("12_projectile_scene")
 Cooldown = 1.2
 
@@ -79,6 +80,7 @@ MaximumDamage = 4
 
 [node name="FireNova" type="Node" parent="Spells" unique_id=1734723264]
 script = ExtResource("17_fire_nova_spell")
+SpellId = "fire_nova"
 VfxScene = ExtResource("16_fire_nova_vfx")
 Range = 56.0
 ManaCost = 10
@@ -101,6 +103,7 @@ MaximumDamage = 3
 
 [node name="PoisonCloud" type="Node" parent="Spells" unique_id=1804078723]
 script = ExtResource("18_poison_cloud_spell")
+SpellId = "poison_cloud"
 Cooldown = 10.0
 
 [node name="PoisonCloudArea" parent="Spells/PoisonCloud" unique_id=2026040903 instance=ExtResource("19_poison_cloud_area")]

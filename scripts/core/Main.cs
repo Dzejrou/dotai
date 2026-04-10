@@ -35,10 +35,13 @@ public partial class Main : Node2D
     private bool _restartingFromGameOver;
     private bool _pauseMenuOpen;
     private PlayerSpellBar _spellBar;
+    private PlayerSpellBindingWindow _spellBindingWindow;
     private Label _interactionPrompt;
     private static readonly Color InteractionPromptColor = new Color(0.98f, 0.86f, 0.42f, 1.0f);
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
+    private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
     private const string InteractionActionName = "interact_action";
+    private const string SpellBookActionName = "spell_book";
     private int _windowPresetIndex;
 
     public override void _Ready()
@@ -80,11 +83,13 @@ public partial class Main : Node2D
         {
             player.Connect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
             _spellBar?.Bind(player);
+            _spellBindingWindow?.Bind(player);
             UpdateInteractionPrompt(player.HasInteractionTarget, player.CurrentInteractionLabel);
         }
         else
         {
             _spellBar?.Bind(null);
+            _spellBindingWindow?.Bind(null);
             UpdateInteractionPrompt(false, string.Empty);
         }
 
@@ -129,6 +134,9 @@ public partial class Main : Node2D
             return;
         }
 
+        if (TryHandleSpellBookInput(@event))
+            return;
+
         TryHandlePauseMenuInput(@event);
     }
 
@@ -141,6 +149,7 @@ public partial class Main : Node2D
         CloseDebugTray(false);
         UpdateInteractionPrompt(false, string.Empty);
         _gameOverActive = true;
+        _spellBindingWindow?.CloseWindow();
         GetTree().Paused = true;
 
         if (_gameOverRoot == null)
@@ -199,6 +208,13 @@ public partial class Main : Node2D
         {
             _spellBar = spellBar;
             hudCanvas.AddChild(_spellBar);
+        }
+
+        var spellBindingWindowScene = ResourceLoader.Load<PackedScene>(PlayerSpellBindingWindowScenePath);
+        if (spellBindingWindowScene?.Instantiate<PlayerSpellBindingWindow>() is PlayerSpellBindingWindow spellBindingWindow)
+        {
+            _spellBindingWindow = spellBindingWindow;
+            hudCanvas.AddChild(_spellBindingWindow);
         }
 
         _interactionPrompt = new Label
@@ -297,6 +313,7 @@ public partial class Main : Node2D
 
         if (keyEvent.PhysicalKeycode == Key.P)
         {
+            _spellBindingWindow?.CloseWindow();
             if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
                 CloseDebugTray();
             else
@@ -329,6 +346,21 @@ public partial class Main : Node2D
         return true;
     }
 
+    private bool TryHandleSpellBookInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+            return false;
+
+        if (!InputMap.HasAction(SpellBookActionName) || !@event.IsActionPressed(SpellBookActionName))
+            return false;
+
+        if (_pauseMenuOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
+            return true;
+
+        _spellBindingWindow?.ToggleWindow();
+        return true;
+    }
+
     private bool TryHandleNavigationDebugInput(InputEvent @event)
     {
         if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
@@ -345,6 +377,7 @@ public partial class Main : Node2D
     private void OpenPauseMenu()
     {
         CloseDebugTray();
+        _spellBindingWindow?.CloseWindow();
         _pauseMenuOpen = true;
         if (_pauseMenuRoot != null)
             _pauseMenuRoot.Visible = true;

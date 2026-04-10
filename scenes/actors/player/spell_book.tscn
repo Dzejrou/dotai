@@ -1,0 +1,128 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/player/SpellBook.cs" id="1_spell_book"]
+[ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="2_projectile"]
+[ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="3_fire_nova_vfx"]
+[ext_resource type="PackedScene" path="res://scenes/effects/frost_nova_vfx.tscn" id="4_frost_nova_vfx"]
+[ext_resource type="Script" path="res://scripts/spells/FireNovaSpell.cs" id="5_fire_nova_spell"]
+[ext_resource type="Script" path="res://scripts/spells/FrostNovaSpell.cs" id="6_frost_nova_spell"]
+[ext_resource type="Script" path="res://scripts/spells/FireBallSpell.cs" id="7_fireball_spell"]
+[ext_resource type="Script" path="res://scripts/spells/BlinkSpell.cs" id="8_blink_spell"]
+[ext_resource type="Script" path="res://scripts/spells/RingOfFireSpell.cs" id="9_ring_of_fire_spell"]
+[ext_resource type="PackedScene" path="res://scenes/effects/ring_of_fire_area.tscn" id="10_ring_of_fire_area"]
+[ext_resource type="Script" path="res://scripts/status/SlowedEffect.cs" id="11_slowed_effect"]
+[ext_resource type="Script" path="res://scripts/status/BurningEffect.cs" id="12_burning_effect"]
+[ext_resource type="Script" path="res://scripts/status/ImmobilizedEffect.cs" id="13_immobilized_effect"]
+[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="14_damage"]
+[ext_resource type="Script" path="res://scripts/spells/IceBallSpell.cs" id="15_ice_ball_spell"]
+[ext_resource type="Script" path="res://scripts/spells/BlizzardSpell.cs" id="16_blizzard_spell"]
+[ext_resource type="PackedScene" path="res://scenes/effects/blizzard_area.tscn" id="17_blizzard_area"]
+
+[node name="SpellBook" type="Node"]
+script = ExtResource("1_spell_book")
+
+[node name="FireBall" type="Node" parent="."]
+script = ExtResource("7_fireball_spell")
+SpellId = "fire_ball"
+ProjectileScene = ExtResource("2_projectile")
+CastAction = &"cast_spell1"
+HudLabel = "Fireball"
+
+[node name="Damage" type="Node" parent="FireBall"]
+script = ExtResource("14_damage")
+MinimumDamage = 4
+MaximumDamage = 4
+
+[node name="BurningEffect" type="Node" parent="FireBall"]
+script = ExtResource("12_burning_effect")
+DurationSeconds = 6.0
+TickIntervalSeconds = 2.0
+
+[node name="Damage" type="Node" parent="FireBall/BurningEffect"]
+script = ExtResource("14_damage")
+MinimumDamage = 3
+MaximumDamage = 3
+
+[node name="FrostNova" type="Node" parent="."]
+script = ExtResource("6_frost_nova_spell")
+SpellId = "frost_nova"
+VfxScene = ExtResource("4_frost_nova_vfx")
+CastAction = &"cast_spell2"
+HudLabel = "Frost Nova"
+
+[node name="Damage" type="Node" parent="FrostNova"]
+script = ExtResource("14_damage")
+MinimumDamage = 5
+MaximumDamage = 5
+
+[node name="ImmobilizedEffect" type="Node" parent="FrostNova"]
+script = ExtResource("13_immobilized_effect")
+DurationSeconds = 2.0
+
+[node name="SlowedEffect" type="Node" parent="FrostNova"]
+script = ExtResource("11_slowed_effect")
+DurationSeconds = 6.0
+
+[node name="Blink" type="Node" parent="."]
+script = ExtResource("8_blink_spell")
+SpellId = "blink"
+CastAction = &"cast_spell3"
+HudLabel = "Blink"
+
+[node name="RingOfFire" type="Node" parent="."]
+script = ExtResource("9_ring_of_fire_spell")
+SpellId = "ring_of_fire"
+CastAction = &"cast_spell4"
+HudLabel = "Ring of Fire"
+ManaCost = 35
+
+[node name="RingOfFireArea" parent="RingOfFire" instance=ExtResource("10_ring_of_fire_area")]
+visible = false
+
+[node name="FireNova" type="Node" parent="."]
+script = ExtResource("5_fire_nova_spell")
+SpellId = "fire_nova"
+VfxScene = ExtResource("3_fire_nova_vfx")
+CastAction = &"cast_spell5"
+HudLabel = "Fire Nova"
+
+[node name="Damage" type="Node" parent="FireNova"]
+script = ExtResource("14_damage")
+MinimumDamage = 6
+MaximumDamage = 10
+
+[node name="BurningEffect" type="Node" parent="FireNova"]
+script = ExtResource("12_burning_effect")
+DurationSeconds = 6.0
+TickIntervalSeconds = 2.0
+
+[node name="Damage" type="Node" parent="FireNova/BurningEffect"]
+script = ExtResource("14_damage")
+MinimumDamage = 3
+MaximumDamage = 3
+
+[node name="IceBall" type="Node" parent="."]
+script = ExtResource("15_ice_ball_spell")
+SpellId = "ice_ball"
+ProjectileScene = ExtResource("2_projectile")
+CastAction = &"cast_spell6"
+HudLabel = "Ice Ball"
+
+[node name="Damage" type="Node" parent="IceBall"]
+script = ExtResource("14_damage")
+MinimumDamage = 4
+MaximumDamage = 4
+
+[node name="SlowedEffect" type="Node" parent="IceBall"]
+script = ExtResource("11_slowed_effect")
+DurationSeconds = 6.0
+
+[node name="Blizzard" type="Node" parent="."]
+script = ExtResource("16_blizzard_spell")
+SpellId = "blizzard"
+CastAction = &"cast_spell7"
+HudLabel = "Blizzard"
+ManaCost = 35
+
+[node name="BlizzardArea" parent="Blizzard" instance=ExtResource("17_blizzard_area")]
+visible = false

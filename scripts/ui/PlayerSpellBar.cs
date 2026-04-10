@@ -8,9 +8,11 @@ public partial class PlayerSpellBar : Control
 {
     private sealed class SpellSlotView
     {
-        public Spell Spell { get; init; }
+        public StringName SlotAction { get; init; }
+        public Spell Spell { get; set; }
         public Control Root { get; init; }
         public ColorRect Frame { get; init; }
+        public Label NameLabel { get; init; }
         public Label ManaLabel { get; init; }
         public ColorRect ArmedOverlay { get; init; }
         public ColorRect ManaUnavailableOverlay { get; init; }
@@ -30,6 +32,7 @@ public partial class PlayerSpellBar : Control
     private static readonly Color DefaultFrameColor = new(0.05f, 0.06f, 0.08f, 0.95f);
     private static readonly Color ArmedFrameColor = new(0.92f, 0.68f, 0.22f, 1.0f);
     private static readonly Color ArmedOverlayColor = new(0.98f, 0.78f, 0.18f, 0.18f);
+    private static readonly Color EmptyLabelColor = new(0.72f, 0.72f, 0.72f, 0.9f);
 
     private Player _player;
     private HBoxContainer _slots;
@@ -46,6 +49,7 @@ public partial class PlayerSpellBar : Control
     {
         foreach (var slotView in _slotViews)
         {
+            RefreshSlotView(slotView);
             UpdateArmedPlacementView(slotView);
             UpdateManaAvailabilityView(slotView);
             UpdateCooldownView(slotView);
@@ -63,34 +67,28 @@ public partial class PlayerSpellBar : Control
             return;
         }
 
-        var spellsNode = player.GetNodeOrNull<Node>("Spells");
-        if (spellsNode == null)
+        if (player.SpellLoadoutNode == null)
         {
             Visible = false;
             ApplyBarLayout();
             return;
         }
 
-        foreach (Node child in spellsNode.GetChildren())
-        {
-            if (child is not Spell spell)
-                continue;
-
-            _slotViews.Add(CreateSpellSlot(spell));
-        }
+        foreach (var slotAction in SpellLoadout.SlotActions)
+            _slotViews.Add(CreateSpellSlot(slotAction));
 
         Visible = _slotViews.Count > 0;
         ApplyBarLayout();
 
         foreach (var slotView in _slotViews)
-            UpdateCooldownView(slotView);
+            RefreshSlotView(slotView);
     }
 
-    private SpellSlotView CreateSpellSlot(Spell spell)
+    private SpellSlotView CreateSpellSlot(StringName slotAction)
     {
         var slotRoot = new Control
         {
-            Name = $"{spell.Name}Slot",
+            Name = $"{slotAction}Slot",
             CustomMinimumSize = SlotSize,
             Size = SlotSize,
             ClipContents = true,
@@ -118,7 +116,7 @@ public partial class PlayerSpellBar : Control
         var keybindLabel = new Label
         {
             Name = "Keybind",
-            Text = ResolveActionLabel(spell.CastAction),
+            Text = ResolveActionLabel(slotAction),
             Position = new Vector2(8.0f, 4.0f),
             Size = new Vector2(SlotSize.X - 16.0f, 14.0f),
         };
@@ -129,19 +127,19 @@ public partial class PlayerSpellBar : Control
         var nameLabel = new Label
         {
             Name = "Name",
-            Text = spell.DisplayLabel,
+            Text = "Empty",
             Position = new Vector2(8.0f, 18.0f),
             Size = new Vector2(SlotSize.X - 16.0f, 18.0f),
             HorizontalAlignment = HorizontalAlignment.Center,
         };
         nameLabel.AddThemeFontSizeOverride("font_size", 15);
-        nameLabel.AddThemeColorOverride("font_color", new Color(0.96f, 0.96f, 0.96f, 1.0f));
+        nameLabel.AddThemeColorOverride("font_color", EmptyLabelColor);
         slotRoot.AddChild(nameLabel);
 
         var manaLabel = new Label
         {
             Name = "ManaCost",
-            Text = $"{spell.DisplayManaCost} MP",
+            Text = "--",
             Position = new Vector2(8.0f, SlotSize.Y - 20.0f),
             Size = new Vector2(SlotSize.X - 16.0f, 14.0f),
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -195,9 +193,10 @@ public partial class PlayerSpellBar : Control
 
         return new SpellSlotView
         {
-            Spell = spell,
+            SlotAction = slotAction,
             Root = slotRoot,
             Frame = frame,
+            NameLabel = nameLabel,
             ManaLabel = manaLabel,
             ArmedOverlay = armedOverlay,
             ManaUnavailableOverlay = manaUnavailableOverlay,
@@ -255,6 +254,42 @@ public partial class PlayerSpellBar : Control
         return action.ToString();
     }
 
+    private void RefreshSlotView(SpellSlotView slotView)
+    {
+        if (slotView == null)
+            return;
+
+        slotView.Spell = ResolveEquippedSpell(slotView.SlotAction);
+        if (slotView.NameLabel == null || slotView.ManaLabel == null)
+            return;
+
+        if (slotView.Spell == null || !GodotObject.IsInstanceValid(slotView.Spell))
+        {
+            slotView.NameLabel.Text = "Empty";
+            slotView.NameLabel.AddThemeColorOverride("font_color", EmptyLabelColor);
+            slotView.ManaLabel.Text = "--";
+            slotView.ManaLabel.AddThemeColorOverride("font_color", EmptyLabelColor);
+            return;
+        }
+
+        slotView.NameLabel.Text = slotView.Spell.DisplayLabel;
+        slotView.NameLabel.AddThemeColorOverride("font_color", new Color(0.96f, 0.96f, 0.96f, 1.0f));
+        slotView.ManaLabel.Text = $"{slotView.Spell.DisplayManaCost} MP";
+    }
+
+    private Spell ResolveEquippedSpell(StringName slotAction)
+    {
+        if (_player == null ||
+            !GodotObject.IsInstanceValid(_player) ||
+            _player.SpellLoadoutNode == null ||
+            !GodotObject.IsInstanceValid(_player.SpellLoadoutNode))
+        {
+            return null;
+        }
+
+        return _player.SpellLoadoutNode.GetEquippedSpell(slotAction);
+    }
+
     private void UpdateManaAvailabilityView(SpellSlotView slotView)
     {
         if (_player == null ||
@@ -265,6 +300,8 @@ public partial class PlayerSpellBar : Control
             slotView.ManaUnavailableOverlay == null ||
             slotView.Root == null)
         {
+            if (slotView?.ManaUnavailableOverlay != null)
+                slotView.ManaUnavailableOverlay.Visible = false;
             return;
         }
 
@@ -294,6 +331,10 @@ public partial class PlayerSpellBar : Control
             slotView.ArmedOverlay == null ||
             slotView.Root == null)
         {
+            if (slotView?.Frame != null)
+                slotView.Frame.Color = DefaultFrameColor;
+            if (slotView?.ArmedOverlay != null)
+                slotView.ArmedOverlay.Visible = false;
             return;
         }
 
@@ -317,6 +358,10 @@ public partial class PlayerSpellBar : Control
             slotView.CooldownLabel == null ||
             slotView.Root == null)
         {
+            if (slotView?.Overlay != null)
+                slotView.Overlay.Visible = false;
+            if (slotView?.CooldownLabel != null)
+                slotView.CooldownLabel.Visible = false;
             return;
         }
 
