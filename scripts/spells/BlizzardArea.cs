@@ -6,15 +6,41 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class BlizzardArea : AreaOfEffect
 {
+    private static readonly StringName DefaultAnimationName = "default";
+
     private readonly RandomNumberGenerator _random = new();
+    private AnimatedSprite2D _sprite;
 
     [Export]
     public float ImmobilizeChance { get; set; } = 0.33f;
+
+    public BlizzardArea()
+    {
+        FillColor = Colors.Transparent;
+        OutlineColor = Colors.Transparent;
+        PreviewFillColor = Colors.Transparent;
+        PreviewOutlineColor = Colors.Transparent;
+    }
 
     public override void _Ready()
     {
         _random.Randomize();
         base._Ready();
+    }
+
+    protected override void OnAreaReady()
+    {
+        _sprite ??= GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
+        _sprite?.Play(DefaultAnimationName);
+    }
+
+    protected override void OnRuntimeInitialized()
+    {
+        if (_sprite != null)
+        {
+            _sprite.Visible = true;
+            _sprite.Play(DefaultAnimationName);
+        }
     }
 
     protected override IEnumerable<StatusEffect> CreateStatusEffectsForTarget(Node2D target)
