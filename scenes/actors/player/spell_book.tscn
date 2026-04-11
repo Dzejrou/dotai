@@ -26,7 +26,7 @@ script = ExtResource("1_spell_book")
 [node name="FireBall" type="Node" parent="." unique_id=1146765685]
 script = ExtResource("7_fireball_spell")
 ProjectileScene = ExtResource("2_projectile")
-ProjectileColor = Color(1, 0.45, 0.1, 1)
+ProjectileColor = Color(1, 0.4509804, 0.13725491, 1)
 SpellId = "fire_ball"
 CastAction = &"cast_spell1"
 HudLabel = "Fireball"
@@ -38,10 +38,10 @@ MaximumDamage = 4
 
 [node name="BurningEffect" type="Node" parent="FireBall" unique_id=345145974]
 script = ExtResource("12_burning_effect")
-DisplayName = "BURNING"
-FloatingTextLabel = "BURNING"
 DurationSeconds = 6.0
 TickIntervalSeconds = 2.0
+DisplayName = "BURNING"
+FloatingTextLabel = "BURNING"
 
 [node name="Damage" type="Node" parent="FireBall/BurningEffect" unique_id=166118693]
 script = ExtResource("14_damage")
@@ -51,11 +51,11 @@ MaximumDamage = 3
 [node name="FrostNova" type="Node" parent="." unique_id=1635029079]
 script = ExtResource("6_frost_nova_spell")
 VfxScene = ExtResource("4_frost_nova_vfx")
-ManaCost = 20
-Cooldown = 15.0
 SpellId = "frost_nova"
 CastAction = &"cast_spell2"
 HudLabel = "Frost Nova"
+ManaCost = 20
+Cooldown = 15.0
 
 [node name="Damage" type="Node" parent="FrostNova" unique_id=600181488]
 script = ExtResource("14_damage")
@@ -64,25 +64,25 @@ MaximumDamage = 5
 
 [node name="ImmobilizedEffect" type="Node" parent="FrostNova" unique_id=599701076]
 script = ExtResource("13_immobilized_effect")
-DisplayName = "IMMOBILIZED"
-FloatingTextLabel = "IMMOBILIZED"
 DurationSeconds = 2.0
 TickIntervalSeconds = 0.0
+DisplayName = "IMMOBILIZED"
+FloatingTextLabel = "IMMOBILIZED"
 
 [node name="SlowedEffect" type="Node" parent="FrostNova" unique_id=1948128082]
 script = ExtResource("11_slowed_effect")
-DisplayName = "SLOWED"
-FloatingTextLabel = "SLOWED"
 DurationSeconds = 6.0
 TickIntervalSeconds = 0.0
+DisplayName = "SLOWED"
+FloatingTextLabel = "SLOWED"
 
 [node name="Blink" type="Node" parent="." unique_id=211336057]
 script = ExtResource("8_blink_spell")
-ManaCost = 15
-Cooldown = 1.5
 SpellId = "blink"
 CastAction = &"cast_spell3"
 HudLabel = "Blink"
+ManaCost = 15
+Cooldown = 1.5
 
 [node name="RingOfFire" type="Node" parent="." unique_id=498327388]
 script = ExtResource("9_ring_of_fire_spell")
@@ -94,14 +94,15 @@ Cooldown = 6.0
 
 [node name="RingOfFireArea" parent="RingOfFire" unique_id=1053815237 instance=ExtResource("10_ring_of_fire_area")]
 visible = false
+ApplyOnEnter = true
 
 [node name="FireNova" type="Node" parent="." unique_id=1877980814]
 script = ExtResource("5_fire_nova_spell")
 VfxScene = ExtResource("3_fire_nova_vfx")
-ManaCost = 20
 SpellId = "fire_nova"
 CastAction = &"cast_spell5"
 HudLabel = "Fire Nova"
+ManaCost = 20
 
 [node name="Damage" type="Node" parent="FireNova" unique_id=1870933637]
 script = ExtResource("14_damage")
@@ -110,10 +111,10 @@ MaximumDamage = 10
 
 [node name="BurningEffect" type="Node" parent="FireNova" unique_id=1518510396]
 script = ExtResource("12_burning_effect")
-DisplayName = "BURNING"
-FloatingTextLabel = "BURNING"
 DurationSeconds = 6.0
 TickIntervalSeconds = 2.0
+DisplayName = "BURNING"
+FloatingTextLabel = "BURNING"
 
 [node name="Damage" type="Node" parent="FireNova/BurningEffect" unique_id=783734252]
 script = ExtResource("14_damage")
@@ -135,10 +136,10 @@ MaximumDamage = 4
 
 [node name="SlowedEffect" type="Node" parent="IceBall" unique_id=198852090]
 script = ExtResource("11_slowed_effect")
-DisplayName = "SLOWED"
-FloatingTextLabel = "SLOWED"
 DurationSeconds = 6.0
 TickIntervalSeconds = 0.0
+DisplayName = "SLOWED"
+FloatingTextLabel = "SLOWED"
 
 [node name="Blizzard" type="Node" parent="." unique_id=1345449359]
 script = ExtResource("16_blizzard_spell")
