@@ -102,6 +102,7 @@ TickInterval = 20.0
 position = Vector2(639, 749)
 EffectLifetime = 120.0
 TickInterval = 20.0
+ApplyOnEnter = true
 
 [node name="BlizzardArea" parent="." unique_id=26160184 instance=ExtResource("13_o57w4")]
 position = Vector2(368, 776)
