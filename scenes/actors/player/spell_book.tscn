@@ -26,7 +26,6 @@ script = ExtResource("1_spell_book")
 [node name="FireBall" type="Node" parent="." unique_id=1146765685]
 script = ExtResource("7_fireball_spell")
 ProjectileScene = ExtResource("2_projectile")
-ProjectileColor = Color(1, 0.4509804, 0.13725491, 1)
 SpellId = "fire_ball"
 CastAction = &"cast_spell1"
 HudLabel = "Fireball"
