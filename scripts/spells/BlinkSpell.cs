@@ -10,12 +10,6 @@ public partial class BlinkSpell : Spell
     [Export]
     public float BlinkDistance { get; set; } = 64.0f;
 
-    public BlinkSpell()
-    {
-        ManaCost = 15;
-        Cooldown = 1.5f;
-    }
-
     public override bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {
         if (!base.CanCast(caster, request))

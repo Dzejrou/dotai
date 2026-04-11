@@ -5,13 +5,6 @@ public partial class PoisonedEffect : StatusEffect
 {
     public static readonly StringName StatusKeyName = "poisoned";
 
-    public PoisonedEffect()
-    {
-        DisplayName = "POISON";
-        FloatingTextLabel = "POISON";
-        Category = StatusCategory.Debuff;
-    }
-
     public override StringName StatusKey => StatusKeyName;
 
     protected override void CopyConfigurationFrom(StatusEffect replacement)

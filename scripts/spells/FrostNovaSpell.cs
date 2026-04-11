@@ -10,12 +10,6 @@ public partial class FrostNovaSpell : NovaSpell
     [Export]
     public float ImmobilizeChance { get; set; } = 0.33f;
 
-    public FrostNovaSpell()
-    {
-        ManaCost = 20;
-        Cooldown = 15.0f;
-    }
-
     public override void _Ready()
     {
         _random.Randomize();

@@ -7,14 +7,6 @@ public partial class PoisonCloudArea : AreaOfEffect
 
     private AnimatedSprite2D _sprite;
 
-    public PoisonCloudArea()
-    {
-        EffectLifetime = 14.0f;
-        TickInterval = 2.0f;
-        ApplyOnEnter = true;
-        ApplyOnTick = true;
-    }
-
     protected override void OnAreaReady()
     {
         _sprite ??= GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");

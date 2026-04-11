@@ -16,15 +16,6 @@ public partial class SlowedEffect : StatusEffect
     [Export]
     public float CastSpeedMultiplierValue { get; set; } = 0.2f;
 
-    public SlowedEffect()
-    {
-        DisplayName = "SLOWED";
-        FloatingTextLabel = "SLOWED";
-        Category = StatusCategory.Debuff;
-        DurationSeconds = 6.0f;
-        TickIntervalSeconds = 0.0f;
-    }
-
     public override StringName StatusKey => StatusKeyName;
 
     public override bool IsUniqueByStatusKey => true;

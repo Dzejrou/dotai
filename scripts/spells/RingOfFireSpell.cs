@@ -3,9 +3,4 @@ using Godot;
 [GlobalClass]
 public partial class RingOfFireSpell : GroundPlacedSpell
 {
-    public RingOfFireSpell()
-    {
-        ManaCost = 30;
-        Cooldown = 6.0f;
-    }
 }

@@ -13,6 +13,12 @@ monitorable = false
 script = ExtResource("1_ring_of_fire_area_script")
 EffectLifetime = 6.0
 TickInterval = 2.0
+ApplyOnEnter = false
+ApplyOnTick = true
+FillColor = Color(1, 1, 1, 0)
+OutlineColor = Color(1, 1, 1, 0)
+PreviewFillColor = Color(1, 1, 1, 0)
+PreviewOutlineColor = Color(1, 1, 1, 0)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2026040805]
 shape = SubResource("CircleShape2D_ring_of_fire")

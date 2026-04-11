@@ -71,6 +71,7 @@ ManaCost = 15
 script = ExtResource("13_heal_over_time_effect")
 DisplayName = "Rejuvenation"
 FloatingTextLabel = "Rejuvenation"
+Category = 0
 DurationSeconds = 16.0
 TickIntervalSeconds = 2.0
 HealPerTick = 3

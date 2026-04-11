@@ -5,11 +5,6 @@ public partial class FireNovaSpell : NovaSpell
 {
     private readonly RandomNumberGenerator _random = new();
 
-    public FireNovaSpell()
-    {
-        ManaCost = 20;
-    }
-
     public override void _Ready()
     {
         base._Ready();

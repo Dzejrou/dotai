@@ -10,14 +10,6 @@ public partial class HealOverTimeEffect : StatusEffect
     [Export]
     public int HealPerTick { get; set; } = 3;
 
-    public HealOverTimeEffect()
-    {
-        DisplayName = "Heal Over Time";
-        Category = StatusCategory.Buff;
-        DurationSeconds = 16.0f;
-        TickIntervalSeconds = 2.0f;
-    }
-
     public override StringName StatusKey => StatusKeyName;
 
     protected override void CopyConfigurationFrom(StatusEffect replacement)

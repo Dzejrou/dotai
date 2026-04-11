@@ -14,14 +14,6 @@ public partial class BlizzardArea : AreaOfEffect
     [Export]
     public float ImmobilizeChance { get; set; } = 0.33f;
 
-    public BlizzardArea()
-    {
-        FillColor = Colors.Transparent;
-        OutlineColor = Colors.Transparent;
-        PreviewFillColor = Colors.Transparent;
-        PreviewOutlineColor = Colors.Transparent;
-    }
-
     public override void _Ready()
     {
         _random.Randomize();

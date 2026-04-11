@@ -12,6 +12,10 @@ radius = 55.0
 z_index = -2
 monitorable = false
 script = ExtResource("1_poison_cloud_area_script")
+EffectLifetime = 14.0
+TickInterval = 2.0
+ApplyOnEnter = true
+ApplyOnTick = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1750434900]
 shape = SubResource("CircleShape2D_poison_cloud")
@@ -23,6 +27,8 @@ offset = Vector2(0, -8)
 
 [node name="PoisonedEffect" type="Node" parent="." unique_id=2015812129]
 script = ExtResource("3_poisoned_effect")
+DisplayName = "POISON"
+FloatingTextLabel = "POISON"
 DurationSeconds = 10.0
 TickIntervalSeconds = 2.0
 
