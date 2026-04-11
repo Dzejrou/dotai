@@ -32,9 +32,6 @@ public partial class AreaOfEffect : Area2D
     public bool ApplyOnTick { get; set; } = true;
 
     [Export]
-    public bool AutoActivateOnReady { get; set; }
-
-    [Export]
     public Color FillColor { get; set; } = new Color(1.0f, 1.0f, 1.0f, 0.0f);
 
     [Export]
@@ -68,7 +65,7 @@ public partial class AreaOfEffect : Area2D
 
         OnAreaReady();
 
-        if (!_isPreview && !_runtimeInitialized && AutoActivateOnReady && GetParent() is not Spell)
+        if (!_isPreview && !_runtimeInitialized && GetParent() is not Spell)
             ActivateRuntime();
     }
 

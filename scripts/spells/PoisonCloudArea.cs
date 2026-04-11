@@ -13,7 +13,6 @@ public partial class PoisonCloudArea : AreaOfEffect
         TickInterval = 2.0f;
         ApplyOnEnter = true;
         ApplyOnTick = true;
-        AutoActivateOnReady = true;
     }
 
     protected override void OnAreaReady()
