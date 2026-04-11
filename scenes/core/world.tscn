@@ -96,13 +96,14 @@ scale = Vector2(0.6, 0.6)
 [node name="PoisonCloudArea" parent="." unique_id=1438068207 instance=ExtResource("11_1j3no")]
 position = Vector2(832, 617)
 EffectLifetime = 120.0
-TickInterval = 2.0
+TickInterval = 20.0
 
 [node name="RingOfFireArea" parent="." unique_id=2075497863 instance=ExtResource("12_y3ja1")]
 position = Vector2(639, 749)
 EffectLifetime = 120.0
+TickInterval = 20.0
 
 [node name="BlizzardArea" parent="." unique_id=26160184 instance=ExtResource("13_o57w4")]
 position = Vector2(368, 776)
 EffectLifetime = 120.0
-TickInterval = 3.0
+TickInterval = 20.0
