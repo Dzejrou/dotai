@@ -141,6 +141,17 @@ public abstract partial class StatusEffect : Node
         return damage;
     }
 
+    protected Healing DuplicateHealingPayload()
+    {
+        var healing = Healing.DuplicateFrom(this);
+        if (healing == null)
+            return null;
+
+        var healingSource = Source != null && GodotObject.IsInstanceValid(Source) ? (Node)Source : null;
+        healing.InitializeRuntime(healingSource, healing.ResolveAmount());
+        return healing;
+    }
+
     protected void CopyDamageTemplateFrom(StatusEffect replacement)
     {
         if (replacement == null)
@@ -153,6 +164,20 @@ public abstract partial class StatusEffect : Node
 
         damage.MinimumDamage = replacementDamage.MinimumDamage;
         damage.MaximumDamage = replacementDamage.MaximumDamage;
+    }
+
+    protected void CopyHealingTemplateFrom(StatusEffect replacement)
+    {
+        if (replacement == null)
+            return;
+
+        var replacementHealing = replacement.GetNodeOrNull<Healing>("Healing");
+        var healing = GetNodeOrNull<Healing>("Healing");
+        if (replacementHealing == null || healing == null)
+            return;
+
+        healing.MinimumHealing = replacementHealing.MinimumHealing;
+        healing.MaximumHealing = replacementHealing.MaximumHealing;
     }
 
     private void ResetTiming()

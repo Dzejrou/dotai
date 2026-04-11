@@ -35,6 +35,8 @@ public sealed class ReturnHomeRegenerationBehavior : IActorBehavior, IActorTickB
 
         _timer -= tickCount;
         var healPerTick = Math.Max(1, (int)MathF.Round(actor.ResolvedMaxHealth * _fractionPerSecond));
-        actor.ApplyHealing(Math.Min(actor.ResolvedMaxHealth - actor.CurrentHealth, tickCount * healPerTick));
+        var healing = new Healing();
+        healing.InitializeRuntime(actor, Math.Min(actor.ResolvedMaxHealth - actor.CurrentHealth, tickCount * healPerTick));
+        actor.ApplyHealing(healing);
     }
 }

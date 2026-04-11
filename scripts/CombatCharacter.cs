@@ -48,5 +48,5 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         StatusEffectControllerNode = statusEffectController;
     }
 
-    public abstract void ApplyHealing(int amount);
+    public abstract void ApplyHealing(Healing healing);
 }

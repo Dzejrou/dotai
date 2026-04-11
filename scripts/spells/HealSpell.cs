@@ -6,14 +6,10 @@ using System;
 public partial class HealSpell : Spell
 {
     [Export]
-    public int HealAmount { get; set; } = 3;
-
-    [Export]
     public float Range { get; set; } = 256.0f;
 
     public override void _Ready()
     {
-        HealAmount = Math.Max(1, HealAmount);
         Range = Math.Max(0.0f, Range);
     }
 
@@ -41,7 +37,12 @@ public partial class HealSpell : Spell
         if (!TrySpendCastMana(caster))
             return false;
 
-        healable.ApplyHealing(HealAmount);
+        if (Healing.DuplicateFrom(this) is Healing healing)
+        {
+            healing.InitializeRuntime((Node)caster.SpellOrigin, healing.ResolveAmount());
+            healable.ApplyHealing(healing);
+        }
+
         StartCooldown();
         return true;
     }

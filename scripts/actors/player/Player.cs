@@ -200,8 +200,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         }
     }
 
-    public override void ApplyHealing(int amount)
+    public override void ApplyHealing(Healing healing)
     {
+        var amount = healing?.Amount ?? 0;
         if (_isDead || amount <= 0)
             return;
 
@@ -623,9 +624,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         {
             var missingHealth = MaxHealableHealth - CurrentHealth;
             var recovered = Math.Clamp(HealthRegenerationAmount, 1, missingHealth);
-            ShowFloatingHealingNumber(recovered);
-            HealthStateNode.ApplyHealing(recovered);
-            RefreshActorHud();
+            var healing = new Healing();
+            healing.InitializeRuntime(this, recovered);
+            ApplyHealing(healing);
         }
 
         var interval = Math.Max(HealthRegenerationInterval, 0.0f);

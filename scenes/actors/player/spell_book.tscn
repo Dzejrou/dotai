@@ -159,4 +159,5 @@ ManaCost = 10
 Cooldown = 20.0
 
 [node name="PoisonCloudArea" parent="PoisonCloud" unique_id=1438068207 instance=ExtResource("19_y1cuy")]
+visible = false
 TickInterval = 2.0

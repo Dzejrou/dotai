@@ -166,8 +166,9 @@ public abstract partial class Actor : CombatCharacter
         return FactionState.IsFriendlyTo(target);
     }
 
-    public override void ApplyHealing(int amount)
+    public override void ApplyHealing(Healing healing)
     {
+        var amount = healing?.Amount ?? 0;
         if (amount <= 0 || IsDead)
             return;
 
