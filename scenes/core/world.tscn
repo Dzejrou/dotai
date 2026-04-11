@@ -11,6 +11,8 @@
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="10_vn8ag"]
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="11_1j3no"]
 [ext_resource type="Texture2D" uid="uid://b65b0optd443s" path="res://assets/graveyard.png" id="11_epgnc"]
+[ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="12_y3ja1"]
+[ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="13_o57w4"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_world_navigation"]
 
@@ -93,3 +95,14 @@ scale = Vector2(0.6, 0.6)
 
 [node name="PoisonCloudArea" parent="." unique_id=1438068207 instance=ExtResource("11_1j3no")]
 position = Vector2(832, 617)
+EffectLifetime = 120.0
+TickInterval = 2.0
+
+[node name="RingOfFireArea" parent="." unique_id=2075497863 instance=ExtResource("12_y3ja1")]
+position = Vector2(639, 749)
+EffectLifetime = 120.0
+
+[node name="BlizzardArea" parent="." unique_id=26160184 instance=ExtResource("13_o57w4")]
+position = Vector2(368, 776)
+EffectLifetime = 120.0
+TickInterval = 3.0
