@@ -3,13 +3,10 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFactionMember
+public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 {
-    private static readonly Color InactiveModulate = new Color(0.55f, 0.55f, 0.55f, 0.45f);
+    private static readonly Color InactiveModulate = new(0.55f, 0.55f, 0.55f, 0.45f);
     private const string DefaultVisualDirection = "south";
-
-    [Export]
-    public int MaxHealth { get; set; } = 99;
 
     [Export]
     public float RespawnDelaySeconds { get; set; } = 30.0f;
@@ -26,35 +23,48 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
     [Export] public Texture2D NorthTexture { get; set; }
     [Export] public Texture2D NorthEastTexture { get; set; }
 
-    public bool CanBeTargeted => !_isDead;
-    public Faction Faction => _faction.Current;
+    public bool CanBeTargeted => !IsDead;
 
     private Timer _respawnTimer;
     private ActorHUD _actorHud;
-    private FactionState _faction;
+    private Sprite2D _visualSprite;
+    private CollisionShape2D _collisionShape;
     private Vector2 _spawnPosition;
-    private int _currentHealth;
-    private bool _isDead;
-
-    private int ResolvedMaxHealth => Math.Max(1, MaxHealth);
+    private bool _isSlowed;
 
     public override void _Ready()
     {
-        InitializeWorldObject();
+        InitializeCombatCharacter();
+
         _respawnTimer = GetNodeOrNull<Timer>("RespawnTimer");
-        _faction = GetNode<FactionState>("FactionState");
-        _spawnPosition = GlobalPosition;
-        _currentHealth = ResolvedMaxHealth;
-        _isDead = false;
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
+        _visualSprite = GetNodeOrNull<Sprite2D>("Sprite2D");
+        _collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+        _spawnPosition = GlobalPosition;
+
+        var statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
+        SetStatusEffectController(statusEffectController);
+
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
         else
             _actorHud.Bind(this);
 
+        if (_visualSprite == null)
+            GD.PushError($"{GetPath()}: missing required Sprite2D child.");
+
+        if (_collisionShape == null)
+            GD.PushError($"{GetPath()}: missing required CollisionShape2D child.");
+
+        if (statusEffectController == null)
+            GD.PushError($"{GetPath()}: missing required StatusEffectController child.");
+        else
+            BindStatusEffects(statusEffectController);
+
         AddToGroup(CombatGroups.Actors);
+        ResetCombatState();
         UpdateHud();
-        ApplyActiveVisualState();
+        RefreshVisualState();
 
         if (_respawnTimer != null)
         {
@@ -64,37 +74,58 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
         }
     }
 
+    public override void _PhysicsProcess(double delta)
+    {
+        Combat?.Update(delta);
+    }
+
     public override void _ExitTree()
     {
         if (_respawnTimer != null)
             _respawnTimer.Timeout -= OnRespawnTimerTimeout;
+
+        UnbindStatusEffects();
     }
 
     public void ApplyDamage(Damage damageInfo)
     {
-        if (_isDead)
+        if (IsDead)
             return;
 
-        var damage = Math.Max(1, damageInfo.Amount);
-        _currentHealth = Math.Max(0, _currentHealth - damage);
+        var damage = HealthStateNode.ApplyDamage(damageInfo.Amount);
         damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
         UpdateHud();
         _actorHud?.ShowFloatingText(damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
 
-        if (_currentHealth <= 0)
+        if (HealthStateNode.IsDead)
             StartDeath();
+    }
+
+    public override void ApplyHealing(Healing healing)
+    {
+        var amount = healing?.Amount ?? 0;
+        if (amount <= 0 || IsDead)
+            return;
+
+        var recovered = HealthStateNode.ApplyHealing(amount);
+        if (recovered <= 0)
+            return;
+
+        UpdateHud();
+        _actorHud?.ShowFloatingText($"+{recovered}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
     }
 
     private void StartDeath()
     {
-        if (_isDead)
+        if (IsDead && _respawnTimer != null && _respawnTimer.TimeLeft > 0.0)
             return;
 
-        _isDead = true;
-        _currentHealth = 0;
+        HealthStateNode.SetDead(true);
+        ResetCombatState();
+        StatusEffectControllerNode?.ClearAllEffects();
         UpdateHud();
         SetCollisionEnabled(false);
-        ApplyInactiveVisualState();
+        RefreshVisualState();
 
         if (_respawnTimer != null)
         {
@@ -112,11 +143,11 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
     private void Respawn()
     {
         GlobalPosition = _spawnPosition;
-        _currentHealth = ResolvedMaxHealth;
-        _isDead = false;
-        UpdateHud();
+        HealthStateNode.SetCurrent(MaxHealableHealth);
+        ResetCombatState();
         SetCollisionEnabled(true);
-        ApplyActiveVisualState();
+        UpdateHud();
+        RefreshVisualState();
     }
 
     private void UpdateHud()
@@ -124,33 +155,81 @@ public partial class TargetDummy : WorldObject, IAttackable, ITargetable, IFacti
         if (_actorHud == null)
             return;
 
-        _actorHud.SetHealth(_currentHealth, ResolvedMaxHealth);
+        _actorHud.SetHealth(CurrentHealth, MaxHealableHealth);
         _actorHud.SetFaction(Faction);
     }
 
-    private void ApplyActiveVisualState()
+    private void BindStatusEffects(StatusEffectController statusEffectController)
     {
-        if (VisualSprite == null)
-            return;
+        statusEffectController.Connect(
+            StatusEffectController.SignalName.StatusVisualStateChanged,
+            new Callable(this, nameof(OnStatusVisualStateChanged)));
 
-        ApplyVisualState(ResolveVisualTexture(), Colors.White);
+        statusEffectController.Connect(
+            StatusEffectController.SignalName.StatusFloatingTextRequested,
+            new Callable(this, nameof(OnStatusFloatingTextRequested)));
+
+        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
+        OnStatusVisualStateChanged(SlowedEffect.StatusKeyName, statusEffectController.HasStatus(SlowedEffect.StatusKeyName));
     }
 
-    private void ApplyInactiveVisualState()
+    private void UnbindStatusEffects()
     {
-        if (VisualSprite == null)
+        if (StatusEffectControllerNode == null || !GodotObject.IsInstanceValid(StatusEffectControllerNode))
             return;
 
-        ApplyVisualState(ResolveVisualTexture(), InactiveModulate);
+        var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
+        if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusVisualStateChanged, callable))
+            StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusVisualStateChanged, callable);
+
+        var textCallable = new Callable(this, nameof(OnStatusFloatingTextRequested));
+        if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
+            StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
     }
 
-    private void ApplyVisualState(Texture2D texture, Color modulate)
+    private void OnStatusVisualStateChanged(StringName statusKey, bool active)
     {
-        if (VisualSprite == null)
+        if (statusKey == PoisonedEffect.StatusKeyName)
+        {
+            _actorHud?.SetPoisoned(active);
+            return;
+        }
+
+        if (statusKey != SlowedEffect.StatusKeyName)
             return;
 
-        VisualSprite.Texture = texture;
-        VisualSprite.Modulate = modulate;
+        _isSlowed = active;
+        RefreshVisualState();
+    }
+
+    private void OnStatusFloatingTextRequested(string text, Color color)
+    {
+        _actorHud?.ShowFloatingText(text, color);
+    }
+
+    private void RefreshVisualState()
+    {
+        if (_visualSprite == null)
+            return;
+
+        _visualSprite.Texture = ResolveVisualTexture();
+        _visualSprite.Modulate = ResolveVisualModulate();
+    }
+
+    private Color ResolveVisualModulate()
+    {
+        if (IsDead)
+            return InactiveModulate;
+
+        return _isSlowed ? SlowedSpriteTintColor : Colors.White;
+    }
+
+    private void SetCollisionEnabled(bool enabled)
+    {
+        if (_collisionShape == null)
+            return;
+
+        _collisionShape.SetDeferred("disabled", !enabled);
     }
 
     private Texture2D ResolveVisualTexture()

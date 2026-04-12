@@ -12,12 +12,14 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="10_actor_hud"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="11_combat_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="12_faction_state"]
+[ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="13_health_state"]
+[ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="14_status_effect_controller"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_target_dummy"]
 radius = 5.0
 height = 24.0
 
-[node name="TargetDummy" type="StaticBody2D" unique_id=420334247]
+[node name="TargetDummy" type="CharacterBody2D" unique_id=420334247]
 z_index = -1
 script = ExtResource("1_target_dummy_script")
 EastTexture = ExtResource("2_east")
@@ -46,6 +48,13 @@ one_shot = true
 [node name="CombatState" type="Node" parent="." unique_id=338730228]
 script = ExtResource("11_combat_state")
 
+[node name="HealthState" type="Node" parent="." unique_id=1261457113]
+script = ExtResource("13_health_state")
+Max = 99
+
 [node name="FactionState" type="Node" parent="." unique_id=1281307099]
 script = ExtResource("12_faction_state")
 FactionKey = "neutral"
+
+[node name="StatusEffectController" type="Node" parent="." unique_id=298856024]
+script = ExtResource("14_status_effect_controller")
