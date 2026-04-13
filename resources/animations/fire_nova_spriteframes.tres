@@ -1,0 +1,50 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_000.png" id="1_fire_nova_0"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_001.png" id="2_fire_nova_1"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_002.png" id="3_fire_nova_2"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_003.png" id="4_fire_nova_3"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_004.png" id="5_fire_nova_4"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_005.png" id="6_fire_nova_5"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_006.png" id="7_fire_nova_6"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_007.png" id="8_fire_nova_7"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_008.png" id="9_fire_nova_8"]
+[ext_resource type="Texture2D" path="res://assets/fire_nova/base/frame_009.png" id="10_fire_nova_9"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_fire_nova_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_fire_nova_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_fire_nova_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_fire_nova_3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_fire_nova_4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_fire_nova_5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_fire_nova_6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_fire_nova_7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_fire_nova_8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_fire_nova_9")
+}],
+"loop": false,
+"name": &"default",
+"speed": 36.0
+}]

@@ -21,7 +21,10 @@ public partial class NovaSpellVfx : Node2D
     private float _targetRadius;
     private bool _isPlaying;
 
-    public void Play(float radius)
+    protected float TargetRadius => _targetRadius;
+    protected bool IsPlayingEffect => _isPlaying;
+
+    public virtual void Play(float radius)
     {
         Duration = Math.Max(0.01f, Duration);
         RadiusScale = Math.Max(0.0f, RadiusScale);
@@ -46,15 +49,8 @@ public partial class NovaSpellVfx : Node2D
 
     public override void _Process(double delta)
     {
-        if (!_isPlaying)
+        if (!AdvancePlayback(delta, out _, out _))
             return;
-
-        _elapsed += (float)delta;
-        if (_elapsed >= Duration)
-        {
-            QueueFree();
-            return;
-        }
 
         QueueRedraw();
     }
@@ -72,5 +68,26 @@ public partial class NovaSpellVfx : Node2D
         var thickness = Mathf.Max(1.0f, LineThickness * (1.0f - (progress * 0.35f)));
 
         DrawArc(Vector2.Zero, currentRadius, 0.0f, Mathf.Tau, 64, color, thickness, true);
+    }
+
+    protected bool AdvancePlayback(double delta, out float progress, out float easedProgress)
+    {
+        progress = 0.0f;
+        easedProgress = 0.0f;
+
+        if (!_isPlaying)
+            return false;
+
+        _elapsed += (float)delta;
+        if (_elapsed >= Duration)
+        {
+            _isPlaying = false;
+            QueueFree();
+            return false;
+        }
+
+        progress = Mathf.Clamp(_elapsed / Duration, 0.0f, 1.0f);
+        easedProgress = 1.0f - Mathf.Pow(1.0f - progress, 2.0f);
+        return true;
     }
 }
