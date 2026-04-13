@@ -66,7 +66,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     public override void _Ready()
     {
-        SetAnimatedSprite(GetNode<AnimatedSprite2D>("AnimatedSprite2D"));
+        SetOmniSprite(GetNode<OmniSprite>("OmniSprite"));
         InitializeCombatCharacter(requireManaState: true);
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         if (_actorHud == null)
@@ -233,8 +233,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             StatusEffectController.SignalName.StatusFloatingTextRequested,
             new Callable(this, nameof(OnStatusFloatingTextRequested)));
 
-        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
-        OnStatusVisualStateChanged(SlowedEffect.StatusKeyName, statusEffectController.HasStatus(SlowedEffect.StatusKeyName));
+        foreach (var effect in statusEffectController.GetActiveStatusEffects())
+            OnStatusVisualStateChanged(effect.StatusKey, effect, true);
     }
 
     private void UnbindStatusEffects()
@@ -251,21 +251,12 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
     }
 
-    private void OnStatusVisualStateChanged(StringName statusKey, bool active)
+    private void OnStatusVisualStateChanged(StringName statusKey, StatusEffect effect, bool active)
     {
         if (statusKey == PoisonedEffect.StatusKeyName)
-        {
             _actorHud?.SetPoisoned(active);
-            return;
-        }
 
-        if (statusKey != SlowedEffect.StatusKeyName)
-            return;
-
-        if (active)
-            SetSpriteTint(SlowedSpriteTintColor);
-        else
-            ResetSpriteTint();
+        OmniSprite?.ReflectStatusEffect(effect, active);
     }
 
     private void OnStatusFloatingTextRequested(string text, Color color)

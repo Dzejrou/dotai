@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public partial class StatusEffectController : Node
 {
     [Signal]
-    public delegate void StatusVisualStateChangedEventHandler(StringName statusKey, bool active);
+    public delegate void StatusVisualStateChangedEventHandler(StringName statusKey, StatusEffect effect, bool active);
 
     [Signal]
     public delegate void StatusFloatingTextRequestedEventHandler(string text, Color color);
@@ -78,6 +78,20 @@ public partial class StatusEffectController : Node
         return _activeStatusCounts.TryGetValue(statusKey, out var count) ? count : 0;
     }
 
+    public IEnumerable<StatusEffect> GetActiveStatusEffects()
+    {
+        var seenStatusKeys = new HashSet<StringName>();
+
+        foreach (var effect in _activeEffects.Values)
+        {
+            if (effect == null || !GodotObject.IsInstanceValid(effect))
+                continue;
+
+            if (seenStatusKeys.Add(effect.StatusKey))
+                yield return effect;
+        }
+    }
+
     public void RemoveStatus(StringName statusKey)
     {
         var effectsToRemove = new List<(StringName StatusKey, ulong SourceId, StatusEffect Effect)>();
@@ -142,7 +156,7 @@ public partial class StatusEffectController : Node
         AddChild(effect);
         effect.Start(_owner, source, sourceId);
         _activeEffects[effectKey] = effect;
-        AdjustStatusCount(statusKey, 1);
+        AdjustStatusCount(statusKey, 1, effect);
         EmitStatusFloatingText(effect, applied: true);
     }
 
@@ -201,7 +215,7 @@ public partial class StatusEffectController : Node
     {
         var effectKey = (StatusKey: statusKey, SourceId: sourceId);
         if (_activeEffects.Remove(effectKey))
-            AdjustStatusCount(statusKey, -1);
+            AdjustStatusCount(statusKey, -1, effect);
 
         EmitStatusFloatingText(effect, applied: false);
 
@@ -212,7 +226,7 @@ public partial class StatusEffectController : Node
         }
     }
 
-    private void AdjustStatusCount(StringName statusKey, int amount)
+    private void AdjustStatusCount(StringName statusKey, int amount, StatusEffect effect)
     {
         var currentCount = GetStatusCount(statusKey);
         var nextCount = Math.Max(0, currentCount + amount);
@@ -223,9 +237,9 @@ public partial class StatusEffectController : Node
             _activeStatusCounts[statusKey] = nextCount;
 
         if (currentCount <= 0 && nextCount > 0)
-            EmitSignal(SignalName.StatusVisualStateChanged, statusKey, true);
+            EmitSignal(SignalName.StatusVisualStateChanged, statusKey, effect, true);
         else if (currentCount > 0 && nextCount <= 0)
-            EmitSignal(SignalName.StatusVisualStateChanged, statusKey, false);
+            EmitSignal(SignalName.StatusVisualStateChanged, statusKey, effect, false);
     }
 
     private bool TryGetEffectByStatusKey(StringName statusKey, out (StringName StatusKey, ulong SourceId, StatusEffect Effect) effectEntry)

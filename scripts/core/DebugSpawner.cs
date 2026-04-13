@@ -273,7 +273,8 @@ public partial class DebugSpawner : Node2D
         if (enemy == null)
             return null;
 
-        var animatedSprite = enemy.GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
+        var omniSprite = enemy.GetNodeOrNull<OmniSprite>("OmniSprite");
+        var animatedSprite = omniSprite?.AnimatedSprite ?? enemy.GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
         if (animatedSprite?.SpriteFrames != null)
         {
             var spriteFrames = animatedSprite.SpriteFrames;
@@ -296,7 +297,7 @@ public partial class DebugSpawner : Node2D
             return previewData;
         }
 
-        var sprite = enemy.GetNodeOrNull<Sprite2D>("Sprite2D");
+        var sprite = omniSprite?.StaticSprite ?? enemy.GetNodeOrNull<Sprite2D>("Sprite2D");
         if (sprite?.Texture == null)
         {
             enemy.Free();

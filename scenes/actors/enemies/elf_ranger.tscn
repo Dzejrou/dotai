@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://chmx43pfadld4"]
 
 [ext_resource type="Script" uid="uid://gosarrlge42r" path="res://scripts/actors/enemies/ElfRanger.cs" id="1_elf_ranger_script"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://dy0ma2kx46j4w" path="res://resources/animations/elf_ranger_spriteframes.tres" id="2_elf_ranger_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
@@ -23,7 +24,10 @@ height = 26.0
 z_index = -1
 script = ExtResource("1_elf_ranger_script")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1877841505]
+[node name="OmniSprite" type="Node2D" parent="." unique_id=1877841505]
+script = ExtResource("1_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_elf_ranger_frames")

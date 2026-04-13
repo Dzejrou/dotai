@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://7r3kh3tx2max"]
 
+[ext_resource type="PackedScene" uid="uid://cukjsuvqtgem0" path="res://scenes/actors/player/spell_book.tscn" id="1_spell_book_scene"]
+[ext_resource type="Script" uid="uid://dfrfl86atxwo6" path="res://scripts/actors/player/SpellLoadout.cs" id="1_spell_loadout"]
 [ext_resource type="Script" uid="uid://dvutl3mkyi0ph" path="res://scripts/actors/player/Player.cs" id="1_t1u7h"]
-[ext_resource type="Script" path="res://scripts/actors/player/SpellLoadout.cs" id="1_spell_loadout"]
-[ext_resource type="PackedScene" path="res://scenes/actors/player/spell_book.tscn" id="1_spell_book_scene"]
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="2_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://dkc8t7728cd0u" path="res://resources/animations/player_spriteframes.tres" id="3_player_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="4_actor_hud"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="5_combat_state"]
@@ -19,9 +20,12 @@ script = ExtResource("1_t1u7h")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=122948576]
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=630505674]
+[node name="OmniSprite" type="Node2D" parent="." unique_id=630505674]
+script = ExtResource("2_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=142228689]
 sprite_frames = ExtResource("3_player_frames")
-animation = &""
+animation = &"idle_south"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=994826957]
 position = Vector2(0, 6)
@@ -62,19 +66,19 @@ script = ExtResource("15_status_effect_controller")
 
 [node name="SpellBook" parent="." unique_id=1018490496 instance=ExtResource("1_spell_book_scene")]
 
-[node name="SpellLoadout" type="Node" parent="."]
+[node name="SpellLoadout" type="Node" parent="." unique_id=1185861155]
 script = ExtResource("1_spell_loadout")
 
-[node name="cast_spell1" type="Node" parent="SpellLoadout"]
+[node name="cast_spell1" type="Node" parent="SpellLoadout" unique_id=197042798]
 
-[node name="cast_spell2" type="Node" parent="SpellLoadout"]
+[node name="cast_spell2" type="Node" parent="SpellLoadout" unique_id=503707707]
 
-[node name="cast_spell3" type="Node" parent="SpellLoadout"]
+[node name="cast_spell3" type="Node" parent="SpellLoadout" unique_id=315798171]
 
-[node name="cast_spell4" type="Node" parent="SpellLoadout"]
+[node name="cast_spell4" type="Node" parent="SpellLoadout" unique_id=2106356288]
 
-[node name="cast_spell5" type="Node" parent="SpellLoadout"]
+[node name="cast_spell5" type="Node" parent="SpellLoadout" unique_id=2053509027]
 
-[node name="cast_spell6" type="Node" parent="SpellLoadout"]
+[node name="cast_spell6" type="Node" parent="SpellLoadout" unique_id=219161380]
 
-[node name="cast_spell7" type="Node" parent="SpellLoadout"]
+[node name="cast_spell7" type="Node" parent="SpellLoadout" unique_id=1180333478]

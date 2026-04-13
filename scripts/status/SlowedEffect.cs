@@ -5,6 +5,8 @@ using System;
 [GlobalClass]
 public partial class SlowedEffect : StatusEffect
 {
+    private static readonly Color SlowedTintColor = new(0.62f, 0.78f, 1.0f, 1.0f);
+
     public static readonly StringName StatusKeyName = "slowed";
 
     [Export]
@@ -25,6 +27,17 @@ public partial class SlowedEffect : StatusEffect
     public override float AttackSpeedMultiplier => Math.Max(0.0f, AttackSpeedMultiplierValue);
 
     public override float CastSpeedMultiplier => Math.Max(0.0f, CastSpeedMultiplierValue);
+
+    public override void ApplyVisualEffect(OmniSprite omniSprite, bool active)
+    {
+        if (omniSprite == null)
+            return;
+
+        if (active)
+            omniSprite.SetStatusTint(StatusKeyName, SlowedTintColor);
+        else
+            omniSprite.ClearStatusTint(StatusKeyName);
+    }
 
     protected override void CopyConfigurationFrom(StatusEffect replacement)
     {

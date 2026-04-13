@@ -16,7 +16,7 @@ public partial class Dryad : Actor, IAttackable, ITargetable, ISpellCaster
     public override void _Ready()
     {
         InitializeActor(
-            GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D"));
+            GetNodeOrNull<OmniSprite>("OmniSprite"));
         SetMovementSpeed(Speed);
 
         ConfigureBehaviors(new HealLowestHealthFriendlyBehavior(HealAcquisitionRange));

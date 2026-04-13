@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bvpoidanjqur5"]
 
 [ext_resource type="Script" uid="uid://cl1k5okddker6" path="res://scripts/actors/neutrals/Dryad.cs" id="1_dryad_script"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://dovt5sl4stpqa" path="res://resources/animations/dryad_spriteframes.tres" id="2_dryad_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
@@ -22,7 +23,10 @@ size = Vector2(16, 12)
 z_index = -1
 script = ExtResource("1_dryad_script")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=891692441]
+[node name="OmniSprite" type="Node2D" parent="." unique_id=891692441]
+script = ExtResource("1_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
 sprite_frames = ExtResource("2_dryad_frames")
 animation = &""
 

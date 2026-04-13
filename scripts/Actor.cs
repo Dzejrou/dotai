@@ -44,10 +44,10 @@ public abstract partial class Actor : CombatCharacter
     private static PackedScene _corpseScene;
 
     protected void InitializeActor(
-        AnimatedSprite2D animatedSprite,
+        OmniSprite omniSprite,
         NavigationAgent2D navigationAgent = null)
     {
-        SetAnimatedSprite(animatedSprite);
+        SetOmniSprite(omniSprite);
         NavigationAgent = navigationAgent;
 
         if (NavigationAgent != null)
@@ -82,8 +82,8 @@ public abstract partial class Actor : CombatCharacter
         BindStatusEffects();
         RefreshHealthLabel();
 
-        if (AnimatedSprite != null)
-            AnimatedSprite.AnimationFinished += OnAnimatedSpriteAnimationFinished;
+        if (OmniSprite != null)
+            OmniSprite.AnimationFinished += OnAnimatedSpriteAnimationFinished;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -120,8 +120,8 @@ public abstract partial class Actor : CombatCharacter
 
     public override void _ExitTree()
     {
-        if (AnimatedSprite != null)
-            AnimatedSprite.AnimationFinished -= OnAnimatedSpriteAnimationFinished;
+        if (OmniSprite != null)
+            OmniSprite.AnimationFinished -= OnAnimatedSpriteAnimationFinished;
 
         UnsubscribeFromNavigationDebug();
         UnbindStatusEffects();
@@ -414,8 +414,8 @@ public abstract partial class Actor : CombatCharacter
             StatusEffectController.SignalName.StatusFloatingTextRequested,
             new Callable(this, nameof(OnStatusFloatingTextRequested)));
 
-        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, StatusEffectControllerNode.HasStatus(PoisonedEffect.StatusKeyName));
-        OnStatusVisualStateChanged(SlowedEffect.StatusKeyName, StatusEffectControllerNode.HasStatus(SlowedEffect.StatusKeyName));
+        foreach (var effect in StatusEffectControllerNode.GetActiveStatusEffects())
+            OnStatusVisualStateChanged(effect.StatusKey, effect, true);
     }
 
     private void UnbindStatusEffects()
@@ -432,21 +432,12 @@ public abstract partial class Actor : CombatCharacter
             StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
     }
 
-    private void OnStatusVisualStateChanged(StringName statusKey, bool active)
+    private void OnStatusVisualStateChanged(StringName statusKey, StatusEffect effect, bool active)
     {
         if (statusKey == PoisonedEffect.StatusKeyName)
-        {
             _actorHud?.SetPoisoned(active);
-            return;
-        }
 
-        if (statusKey == SlowedEffect.StatusKeyName)
-        {
-            if (active)
-                SetSpriteTint(SlowedSpriteTintColor);
-            else
-                ResetSpriteTint();
-        }
+        OmniSprite?.ReflectStatusEffect(effect, active);
     }
 
     private void OnStatusFloatingTextRequested(string text, Color color)
@@ -456,10 +447,10 @@ public abstract partial class Actor : CombatCharacter
 
     private void OnAnimatedSpriteAnimationFinished()
     {
-        if (AnimatedSprite == null)
+        var animationName = OmniSprite?.CurrentAnimation ?? default;
+        if (animationName.IsEmpty)
             return;
 
-        var animationName = AnimatedSprite.Animation;
         PrimaryActionController?.HandleAnimationFinished(this, animationName);
     }
 
@@ -632,7 +623,8 @@ public abstract partial class Actor : CombatCharacter
 
     private void SpawnCorpse()
     {
-        if (AnimatedSprite?.SpriteFrames == null)
+        var animatedSprite = OmniSprite?.AnimatedSprite;
+        if (animatedSprite?.SpriteFrames == null)
             return;
 
         var parent = GetParent();
@@ -646,14 +638,14 @@ public abstract partial class Actor : CombatCharacter
 
         parent.AddChild(corpse);
         corpse.Initialize(
-            AnimatedSprite.SpriteFrames,
+            animatedSprite.SpriteFrames,
             DeathAnimation,
             LastDirection,
             GlobalPosition,
-            AnimatedSprite.Position,
-            AnimatedSprite.Scale,
-            AnimatedSprite.FlipH,
-            AnimatedSprite.FlipV,
+            animatedSprite.Position,
+            animatedSprite.Scale,
+            animatedSprite.FlipH,
+            animatedSprite.FlipV,
             ZIndex);
     }
 

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cr43ylglq08m5"]
 
 [ext_resource type="Script" uid="uid://bh7q0agjpycv1" path="res://scripts/actors/enemies/Skeleton.cs" id="1_8g1m3"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://chvtla7o3is13" path="res://resources/animations/skeleton_spriteframes.tres" id="2_skeleton_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="9_acquire_hostile"]
@@ -23,7 +24,10 @@ z_index = -1
 position = Vector2(240, 80)
 script = ExtResource("1_8g1m3")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2100045633]
+[node name="OmniSprite" type="Node2D" parent="." unique_id=2100045633]
+script = ExtResource("1_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_skeleton_frames")

@@ -27,10 +27,9 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
     private Timer _respawnTimer;
     private ActorHUD _actorHud;
-    private Sprite2D _visualSprite;
+    private OmniSprite _omniSprite;
     private CollisionShape2D _collisionShape;
     private Vector2 _spawnPosition;
-    private bool _isSlowed;
 
     public override void _Ready()
     {
@@ -38,7 +37,7 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
         _respawnTimer = GetNodeOrNull<Timer>("RespawnTimer");
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
-        _visualSprite = GetNodeOrNull<Sprite2D>("Sprite2D");
+        _omniSprite = GetNodeOrNull<OmniSprite>("OmniSprite");
         _collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
         _spawnPosition = GlobalPosition;
 
@@ -50,8 +49,8 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
         else
             _actorHud.Bind(this);
 
-        if (_visualSprite == null)
-            GD.PushError($"{GetPath()}: missing required Sprite2D child.");
+        if (_omniSprite == null)
+            GD.PushError($"{GetPath()}: missing required OmniSprite child.");
 
         if (_collisionShape == null)
             GD.PushError($"{GetPath()}: missing required CollisionShape2D child.");
@@ -169,8 +168,8 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
             StatusEffectController.SignalName.StatusFloatingTextRequested,
             new Callable(this, nameof(OnStatusFloatingTextRequested)));
 
-        OnStatusVisualStateChanged(PoisonedEffect.StatusKeyName, statusEffectController.HasStatus(PoisonedEffect.StatusKeyName));
-        OnStatusVisualStateChanged(SlowedEffect.StatusKeyName, statusEffectController.HasStatus(SlowedEffect.StatusKeyName));
+        foreach (var effect in statusEffectController.GetActiveStatusEffects())
+            OnStatusVisualStateChanged(effect.StatusKey, effect, true);
     }
 
     private void UnbindStatusEffects()
@@ -187,19 +186,12 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
             StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
     }
 
-    private void OnStatusVisualStateChanged(StringName statusKey, bool active)
+    private void OnStatusVisualStateChanged(StringName statusKey, StatusEffect effect, bool active)
     {
         if (statusKey == PoisonedEffect.StatusKeyName)
-        {
             _actorHud?.SetPoisoned(active);
-            return;
-        }
 
-        if (statusKey != SlowedEffect.StatusKeyName)
-            return;
-
-        _isSlowed = active;
-        RefreshVisualState();
+        _omniSprite?.ReflectStatusEffect(effect, active);
     }
 
     private void OnStatusFloatingTextRequested(string text, Color color)
@@ -209,19 +201,11 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
     private void RefreshVisualState()
     {
-        if (_visualSprite == null)
+        if (_omniSprite == null)
             return;
 
-        _visualSprite.Texture = ResolveVisualTexture();
-        _visualSprite.Modulate = ResolveVisualModulate();
-    }
-
-    private Color ResolveVisualModulate()
-    {
-        if (IsDead)
-            return InactiveModulate;
-
-        return _isSlowed ? SlowedSpriteTintColor : Colors.White;
+        _omniSprite.SetStaticTexture(ResolveVisualTexture());
+        _omniSprite.SetBaseModulate(IsDead ? InactiveModulate : Colors.White);
     }
 
     private void SetCollisionEnabled(bool enabled)

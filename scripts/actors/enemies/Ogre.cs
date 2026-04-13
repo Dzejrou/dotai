@@ -9,7 +9,7 @@ public partial class Ogre : Actor, IAttackable, ITargetable
     public override void _Ready()
     {
         InitializeActor(
-            GetNode<AnimatedSprite2D>("AnimatedSprite2D"),
+            GetNode<OmniSprite>("OmniSprite"),
             GetNodeOrNull<NavigationAgent2D>("NavigationAgent2D"));
         SetMovementSpeed(Speed);
 

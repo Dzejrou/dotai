@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cke5y8t7ihlt5"]
 
 [ext_resource type="Script" uid="uid://bm4rtntqv5ymu" path="res://scripts/actors/enemies/SkeletonMage.cs" id="1_skeleton_mage"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://ddlly7er2bfff" path="res://resources/animations/skeleton_mage_spriteframes.tres" id="2_skeleton_mage_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
@@ -30,7 +31,10 @@ height = 26.0
 z_index = -1
 script = ExtResource("1_skeleton_mage")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=589380592]
+[node name="OmniSprite" type="Node2D" parent="." unique_id=589380592]
+script = ExtResource("1_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
 position = Vector2(0, -2)
 scale = Vector2(0.7, 0.7)
 sprite_frames = ExtResource("2_skeleton_mage_frames")

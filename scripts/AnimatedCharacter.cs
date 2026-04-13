@@ -2,14 +2,12 @@ using Godot;
 
 public abstract partial class AnimatedCharacter : CharacterBody2D
 {
-    protected static readonly Color SlowedSpriteTintColor = new(0.62f, 0.78f, 1.0f, 1.0f);
-
-    public AnimatedSprite2D AnimatedSprite { get; private set; }
+    public OmniSprite OmniSprite { get; private set; }
     public string LastDirection { get; private set; } = "south";
 
-    protected void SetAnimatedSprite(AnimatedSprite2D animatedSprite)
+    protected void SetOmniSprite(OmniSprite omniSprite)
     {
-        AnimatedSprite = animatedSprite;
+        OmniSprite = omniSprite;
     }
 
     public void SetFacingDirection(Vector2 direction)
@@ -25,7 +23,7 @@ public abstract partial class AnimatedCharacter : CharacterBody2D
 
     public string ResolveDirectionalAnimationName(string animationPrefix)
     {
-        if (AnimatedSprite?.SpriteFrames == null || string.IsNullOrEmpty(animationPrefix))
+        if (OmniSprite?.SpriteFrames == null || string.IsNullOrEmpty(animationPrefix))
             return null;
 
         var exactAnimationName = $"{animationPrefix}_{LastDirection}";
@@ -55,8 +53,8 @@ public abstract partial class AnimatedCharacter : CharacterBody2D
         if (!HasAnimation(animationName))
             return;
 
-        if (!AnimatedSprite.IsPlaying() || AnimatedSprite.Animation != animationName)
-            AnimatedSprite.Play(animationName);
+        if (!OmniSprite.IsAnimationPlaying || OmniSprite.CurrentAnimation != animationName)
+            OmniSprite.TryPlay(animationName);
     }
 
     public bool TryPlayDirectionalAnimation(string animationPrefix, float customSpeed = 1.0f)
@@ -65,8 +63,7 @@ public abstract partial class AnimatedCharacter : CharacterBody2D
         if (animationName == null)
             return false;
 
-        AnimatedSprite.Play(animationName, customSpeed: customSpeed);
-        return true;
+        return OmniSprite != null && OmniSprite.TryPlay(animationName, customSpeed);
     }
 
     public void PlayIdleIfAvailable()
@@ -74,21 +71,8 @@ public abstract partial class AnimatedCharacter : CharacterBody2D
         SetAnimationSafe(GetIdleAnimationName());
     }
 
-    protected void SetSpriteTint(Color color)
-    {
-        if (AnimatedSprite != null)
-            AnimatedSprite.Modulate = color;
-    }
-
-    protected void ResetSpriteTint()
-    {
-        SetSpriteTint(Colors.White);
-    }
-
     private bool HasAnimation(string animationName)
     {
-        return AnimatedSprite?.SpriteFrames != null &&
-               AnimatedSprite.SpriteFrames.HasAnimation(animationName) &&
-               AnimatedSprite.SpriteFrames.GetFrameCount(animationName) > 0;
+        return OmniSprite?.HasAnimation(animationName) ?? false;
     }
 }

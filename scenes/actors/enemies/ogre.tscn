@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dqjxrcx1kyxj2"]
 
 [ext_resource type="Script" uid="uid://3q3d5wthumcl" path="res://scripts/actors/enemies/Ogre.cs" id="1_ogre"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://co10kk7yy8cpe" path="res://resources/animations/ogre_spriteframes.tres" id="2_ogre_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
@@ -22,7 +23,10 @@ height = 24.0
 script = ExtResource("1_ogre")
 Speed = 60.0
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2010721375]
+[node name="OmniSprite" type="Node2D" parent="." unique_id=2010721375]
+script = ExtResource("1_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_ogre_frames")

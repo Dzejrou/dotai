@@ -105,6 +105,10 @@ public abstract partial class StatusEffect : Node
         SourceInstanceId = 0UL;
     }
 
+    public virtual void ApplyVisualEffect(OmniSprite omniSprite, bool active)
+    {
+    }
+
     protected virtual void CopyConfigurationFrom(StatusEffect replacement)
     {
         DurationSeconds = replacement.DurationSeconds;
