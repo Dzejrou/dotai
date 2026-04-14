@@ -65,6 +65,7 @@ ProjectileScene = ExtResource("12_projectile_scene")
 ProjectileSpeed = 320.0
 ProjectileLifetime = 2.4
 ProjectileMaxTravelDistance = 360.0
+ProjectileVisualScale = 0.65
 ProjectileDirectionalTextures = ExtResource("16_arrow_directional_textures")
 
 [node name="Damage" type="Node" parent="PrimaryActionController" unique_id=2001900024]

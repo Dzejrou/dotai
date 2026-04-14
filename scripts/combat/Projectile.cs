@@ -19,6 +19,9 @@ public partial class Projectile : Area2D
     [Export]
     public float CollisionRadius { get; set; } = 4.0f;
 
+    [Export]
+    public float VisualScale { get; set; } = 1.0f;
+
     private Vector2 _direction = Vector2.Right;
     private float _lifetimeTimer;
     private float _traveledDistance;
@@ -32,6 +35,7 @@ public partial class Projectile : Area2D
     private SpriteFrames _configuredVisualFrames;
     private DirectionalTextureSet _configuredDirectionalTextures;
     private string _configuredAnimationName = DefaultAnimationName.ToString();
+    private float _configuredVisualScale = 1.0f;
 
     public override void _Ready()
     {
@@ -43,6 +47,7 @@ public partial class Projectile : Area2D
         CollisionLayer = 1;
         CollisionMask = 1;
         CollisionRadius = Math.Max(0.0f, CollisionRadius);
+        VisualScale = Math.Max(0.01f, VisualScale);
         ApplyCollisionRadius(CollisionRadius);
         ConfigureVisual(_configuredVisualFrames, _configuredDirectionalTextures, _configuredAnimationName);
         _lifetimeTimer = Mathf.Max(0.05f, Lifetime);
@@ -78,7 +83,8 @@ public partial class Projectile : Area2D
         float? overrideSpeed = null,
         float? overrideLifetime = null,
         float? overrideMaxTravelDistance = null,
-        float? overrideCollisionRadius = null)
+        float? overrideCollisionRadius = null,
+        float? overrideVisualScale = null)
     {
         _source = source;
         _damage = damage;
@@ -88,6 +94,7 @@ public partial class Projectile : Area2D
         _configuredAnimationName = string.IsNullOrEmpty(overrideAnimationName)
             ? DefaultAnimationName.ToString()
             : overrideAnimationName;
+        _configuredVisualScale = Mathf.Max(0.01f, overrideVisualScale ?? VisualScale);
         _direction = direction.Length() > 0.0f ? direction.Normalized() : Vector2.Right;
         if (overrideSpeed.HasValue)
             Speed = Mathf.Max(0.0f, overrideSpeed.Value);
@@ -208,6 +215,8 @@ public partial class Projectile : Area2D
 
         if (_omniSprite == null)
             return;
+
+        _omniSprite.Scale = Vector2.One * _configuredVisualScale;
 
         var directionalTexture = directionalTextures?.ResolveTexture(_direction);
         if (directionalTexture != null)

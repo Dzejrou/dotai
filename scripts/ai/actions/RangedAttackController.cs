@@ -39,6 +39,9 @@ public partial class RangedAttackController : Node, ICombatActionController
     public float ProjectileCollisionRadius { get; set; } = 4.0f;
 
     [Export]
+    public float ProjectileVisualScale { get; set; } = 1.0f;
+
+    [Export]
     public SpriteFrames ProjectileVisualFrames { get; set; }
 
     [Export]
@@ -59,6 +62,7 @@ public partial class RangedAttackController : Node, ICombatActionController
         ProjectileLifetime = Math.Max(0.0f, ProjectileLifetime);
         ProjectileMaxTravelDistance = Math.Max(0.0f, ProjectileMaxTravelDistance);
         ProjectileCollisionRadius = Math.Max(0.0f, ProjectileCollisionRadius);
+        ProjectileVisualScale = Math.Max(0.01f, ProjectileVisualScale);
         AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
 
         if (ProjectileScene == null)
@@ -172,6 +176,7 @@ public partial class RangedAttackController : Node, ICombatActionController
             overrideSpeed: ProjectileSpeed,
             overrideLifetime: ProjectileLifetime,
             overrideMaxTravelDistance: ProjectileMaxTravelDistance,
-            overrideCollisionRadius: ProjectileCollisionRadius);
+            overrideCollisionRadius: ProjectileCollisionRadius,
+            overrideVisualScale: ProjectileVisualScale);
     }
 }

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cke5y8t7ihlt5"]
 
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="Script" uid="uid://bm4rtntqv5ymu" path="res://scripts/actors/enemies/SkeletonMage.cs" id="1_skeleton_mage"]
-[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://ddlly7er2bfff" path="res://resources/animations/skeleton_mage_spriteframes.tres" id="2_skeleton_mage_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
@@ -13,7 +13,7 @@
 [ext_resource type="Script" uid="uid://81lj2bds5kdy" path="res://scripts/ai/actions/SpellCastActionController.cs" id="11_spell_cast_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
-[ext_resource type="Script" path="res://scripts/spells/FireBallSpell.cs" id="14_fireball_spell"]
+[ext_resource type="Script" uid="uid://df50yybv2e8ng" path="res://scripts/spells/FireBallSpell.cs" id="14_fireball_spell"]
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="15_mana_state"]
 [ext_resource type="PackedScene" path="res://scenes/effects/fire_nova_vfx.tscn" id="16_fire_nova_vfx"]
 [ext_resource type="Script" uid="uid://j3afrqtmkahr" path="res://scripts/spells/FireNovaSpell.cs" id="17_fire_nova_spell"]
@@ -35,7 +35,7 @@ script = ExtResource("1_skeleton_mage")
 [node name="OmniSprite" type="Node2D" parent="." unique_id=589380592]
 script = ExtResource("1_omni_sprite")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=982197244]
 position = Vector2(0, -2)
 scale = Vector2(0.7, 0.7)
 sprite_frames = ExtResource("2_skeleton_mage_frames")
@@ -74,10 +74,10 @@ RegenerationInterval = 0.75
 
 [node name="FireBall" type="Node" parent="Spells" unique_id=436095138]
 script = ExtResource("14_fireball_spell")
-SpellId = "fire_ball"
 ProjectileScene = ExtResource("12_projectile_scene")
-ProjectileCollisionRadius = 32.0
+ProjectileVisualScale = 0.4
 ProjectileVisualFrames = ExtResource("23_fire_ball_frames")
+SpellId = "fire_ball"
 Cooldown = 1.2
 
 [node name="Damage" type="Node" parent="Spells/FireBall" unique_id=2001900011]
@@ -87,9 +87,9 @@ MaximumDamage = 4
 
 [node name="FireNova" type="Node" parent="Spells" unique_id=1734723264]
 script = ExtResource("17_fire_nova_spell")
-SpellId = "fire_nova"
 VfxScene = ExtResource("16_fire_nova_vfx")
 Range = 56.0
+SpellId = "fire_nova"
 ManaCost = 10
 Cooldown = 3.2
 
@@ -100,10 +100,10 @@ MaximumDamage = 12
 
 [node name="BurningEffect" type="Node" parent="Spells/FireNova" unique_id=557692296]
 script = ExtResource("21_burning_effect")
-DisplayName = "BURNING"
-FloatingTextLabel = "BURNING"
 DurationSeconds = 6.0
 TickIntervalSeconds = 2.0
+DisplayName = "BURNING"
+FloatingTextLabel = "BURNING"
 
 [node name="Damage" type="Node" parent="Spells/FireNova/BurningEffect" unique_id=2001900104]
 script = ExtResource("22_damage")

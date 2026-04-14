@@ -23,6 +23,9 @@ public abstract partial class ProjectileSpell : Spell
     public float ProjectileCollisionRadius { get; set; } = 32.0f;
 
     [Export]
+    public float ProjectileVisualScale { get; set; } = 1.0f;
+
+    [Export]
     public SpriteFrames ProjectileVisualFrames { get; set; }
 
     [Export]
@@ -85,7 +88,8 @@ public abstract partial class ProjectileSpell : Spell
             overrideSpeed: ProjectileSpeed,
             overrideLifetime: ProjectileLifetime,
             overrideMaxTravelDistance: ProjectileMaxDistance,
-            overrideCollisionRadius: ProjectileCollisionRadius);
+            overrideCollisionRadius: ProjectileCollisionRadius,
+            overrideVisualScale: ProjectileVisualScale);
 
         StartCooldown();
         return true;
