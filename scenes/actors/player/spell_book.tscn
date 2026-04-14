@@ -54,7 +54,7 @@ SpellId = "frost_nova"
 CastAction = &"cast_spell2"
 HudLabel = "Frost Nova"
 ManaCost = 20
-Cooldown = 15.0
+Cooldown = 3.0
 
 [node name="Damage" type="Node" parent="FrostNova" unique_id=600181488]
 script = ExtResource("14_damage")
@@ -160,4 +160,3 @@ Cooldown = 20.0
 
 [node name="PoisonCloudArea" parent="PoisonCloud" unique_id=1438068207 instance=ExtResource("19_y1cuy")]
 visible = false
-TickInterval = 2.0
