@@ -5,20 +5,20 @@ public partial class PoisonCloudArea : AreaOfEffect
 {
     private static readonly StringName DefaultAnimationName = "default";
 
-    private AnimatedSprite2D _sprite;
+    private OmniSprite _omniSprite;
 
     protected override void OnAreaReady()
     {
-        _sprite ??= GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
-        _sprite?.Play(DefaultAnimationName);
+        _omniSprite ??= GetNodeOrNull<OmniSprite>("OmniSprite");
+        _omniSprite?.TryPlay(DefaultAnimationName);
     }
 
     protected override void OnRuntimeInitialized()
     {
-        if (_sprite != null)
+        if (_omniSprite != null)
         {
-            _sprite.Visible = true;
-            _sprite.Play(DefaultAnimationName);
+            _omniSprite.Visible = true;
+            _omniSprite.TryPlay(DefaultAnimationName);
         }
     }
 }

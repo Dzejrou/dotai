@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="3_slowed_effect"]
 [ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="4_immobilized_effect"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/blizzard_spriteframes.tres" id="5_blizzard_frames"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="6_omni_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_blizzard"]
 radius = 56.0
@@ -22,7 +23,10 @@ PreviewOutlineColor = Color(1, 1, 1, 0)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2026040801]
 shape = SubResource("CircleShape2D_blizzard")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="OmniSprite" type="Node2D" parent="."]
+script = ExtResource("6_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
 sprite_frames = ExtResource("5_blizzard_frames")
 
 [node name="Damage" type="Node" parent="." unique_id=2026040802]

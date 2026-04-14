@@ -4,6 +4,7 @@
 [ext_resource type="SpriteFrames" path="res://resources/animations/poison_cloud_spriteframes.tres" id="2_poison_cloud_frames"]
 [ext_resource type="Script" uid="uid://cq1ljwn1pf717" path="res://scripts/status/PoisonedEffect.cs" id="3_poisoned_effect"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="4_damage"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="5_omni_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_poison_cloud"]
 radius = 55.0
@@ -20,8 +21,10 @@ ApplyOnTick = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1750434900]
 shape = SubResource("CircleShape2D_poison_cloud")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2008032960]
-position = Vector2(-1, 13)
+[node name="OmniSprite" type="Node2D" parent="." position=Vector2(-1, 13)]
+script = ExtResource("5_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=2008032960]
 sprite_frames = ExtResource("2_poison_cloud_frames")
 offset = Vector2(0, -8)
 

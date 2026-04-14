@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dcsha1n335gj0" path="res://scripts/spells/RingOfFireArea.cs" id="1_ring_of_fire_area_script"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="2_damage"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/ring_of_fire_spriteframes.tres" id="3_ring_of_fire_frames"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="4_omni_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ring_of_fire"]
 radius = 56.0
@@ -23,7 +24,10 @@ PreviewOutlineColor = Color(1, 1, 1, 0)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2026040805]
 shape = SubResource("CircleShape2D_ring_of_fire")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="OmniSprite" type="Node2D" parent="."]
+script = ExtResource("4_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
 sprite_frames = ExtResource("3_ring_of_fire_frames")
 
 [node name="Damage" type="Node" parent="." unique_id=2001900101]
