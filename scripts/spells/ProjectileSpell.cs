@@ -1,12 +1,11 @@
 using Godot;
-
 using System;
 
 [GlobalClass]
 public abstract partial class ProjectileSpell : Spell
 {
     private readonly RandomNumberGenerator _random = new();
-    private static readonly Color DefaultProjectileColor = new(1.0f, 0.45f, 0.1f, 1.0f);
+    private static readonly StringName DefaultProjectileAnimationName = "default";
 
     [Export]
     public PackedScene ProjectileScene { get; set; }
@@ -21,7 +20,13 @@ public abstract partial class ProjectileSpell : Spell
     public float ProjectileMaxDistance { get; set; } = 320.0f;
 
     [Export]
-    public Color ProjectileColor { get; set; } = DefaultProjectileColor;
+    public float ProjectileCollisionRadius { get; set; } = 32.0f;
+
+    [Export]
+    public SpriteFrames ProjectileVisualFrames { get; set; }
+
+    [Export]
+    public StringName ProjectileAnimationName { get; set; } = DefaultProjectileAnimationName;
 
     public override void _Ready()
     {
@@ -75,10 +80,12 @@ public abstract partial class ProjectileSpell : Spell
             (Node)spellOrigin,
             CreateDamagePayload(caster),
             CreateStatusEffectPayload(),
-            overrideColor: ProjectileColor,
+            overrideVisualFrames: ProjectileVisualFrames,
+            overrideAnimationName: ProjectileAnimationName.ToString(),
             overrideSpeed: ProjectileSpeed,
             overrideLifetime: ProjectileLifetime,
-            overrideMaxTravelDistance: ProjectileMaxDistance);
+            overrideMaxTravelDistance: ProjectileMaxDistance,
+            overrideCollisionRadius: ProjectileCollisionRadius);
 
         StartCooldown();
         return true;

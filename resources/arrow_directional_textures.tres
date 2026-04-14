@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="DirectionalTextureSet" format=3]
+
+[ext_resource type="Script" path="res://scripts/shared/DirectionalTextureSet.cs" id="1_directional_texture_set"]
+[ext_resource type="Texture2D" path="res://assets/arrow/east.png" id="2_arrow_east"]
+[ext_resource type="Texture2D" path="res://assets/arrow/south-east.png" id="3_arrow_south_east"]
+[ext_resource type="Texture2D" path="res://assets/arrow/south.png" id="4_arrow_south"]
+[ext_resource type="Texture2D" path="res://assets/arrow/south-west.png" id="5_arrow_south_west"]
+[ext_resource type="Texture2D" path="res://assets/arrow/west.png" id="6_arrow_west"]
+[ext_resource type="Texture2D" path="res://assets/arrow/north-west.png" id="7_arrow_north_west"]
+[ext_resource type="Texture2D" path="res://assets/arrow/north.png" id="8_arrow_north"]
+[ext_resource type="Texture2D" path="res://assets/arrow/north-east.png" id="9_arrow_north_east"]
+
+[resource]
+script = ExtResource("1_directional_texture_set")
+EastTexture = ExtResource("2_arrow_east")
+SouthEastTexture = ExtResource("3_arrow_south_east")
+SouthTexture = ExtResource("4_arrow_south")
+SouthWestTexture = ExtResource("5_arrow_south_west")
+WestTexture = ExtResource("6_arrow_west")
+NorthWestTexture = ExtResource("7_arrow_north_west")
+NorthTexture = ExtResource("8_arrow_north")
+NorthEastTexture = ExtResource("9_arrow_north_east")

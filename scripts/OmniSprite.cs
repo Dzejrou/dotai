@@ -88,6 +88,19 @@ public partial class OmniSprite : Node2D
         RefreshVisualState();
     }
 
+    public void SetAnimatedSpriteFrames(SpriteFrames spriteFrames, string animationName = null)
+    {
+        var animatedSprite = AnimatedSprite;
+        if (animatedSprite == null)
+            return;
+
+        animatedSprite.SpriteFrames = spriteFrames;
+        if (!string.IsNullOrEmpty(animationName))
+            animatedSprite.Animation = animationName;
+
+        RefreshVisualState();
+    }
+
     public void SetStaticTexture(Texture2D texture)
     {
         _configuredStaticTexture = texture;

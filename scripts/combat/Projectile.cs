@@ -1,8 +1,11 @@
 using Godot;
+using System;
 
 public partial class Projectile : Area2D
 {
-    private static readonly Color DefaultProjectileColor = new(1.0f, 0.45f, 0.1f, 1.0f);
+    private const string CollisionShapeNodeName = "CollisionShape2D";
+    private const string OmniSpriteNodeName = "OmniSprite";
+    private static readonly StringName DefaultAnimationName = "default";
 
     [Export]
     public float Speed { get; set; } = 280.0f;
@@ -13,24 +16,35 @@ public partial class Projectile : Area2D
     [Export]
     public float MaxTravelDistance { get; set; } = 320.0f;
 
+    [Export]
+    public float CollisionRadius { get; set; } = 4.0f;
+
     private Vector2 _direction = Vector2.Right;
     private float _lifetimeTimer;
     private float _traveledDistance;
     private Damage _damage;
     private StatusEffect _statusEffect;
     private Node _source;
-    private Color _color = DefaultProjectileColor;
     private bool _isActive;
     private bool _hasHitTarget;
+    private CollisionShape2D _collisionShape;
+    private OmniSprite _omniSprite;
+    private SpriteFrames _configuredVisualFrames;
+    private DirectionalTextureSet _configuredDirectionalTextures;
+    private string _configuredAnimationName = DefaultAnimationName.ToString();
 
     public override void _Ready()
     {
+        CacheSceneReferences();
         BodyEntered += OnBodyEntered;
         AreaEntered += OnAreaEntered;
         Monitoring = true;
         Monitorable = true;
         CollisionLayer = 1;
         CollisionMask = 1;
+        CollisionRadius = Math.Max(0.0f, CollisionRadius);
+        ApplyCollisionRadius(CollisionRadius);
+        ConfigureVisual(_configuredVisualFrames, _configuredDirectionalTextures, _configuredAnimationName);
         _lifetimeTimer = Mathf.Max(0.05f, Lifetime);
         SetPhysicsProcess(false);
     }
@@ -58,15 +72,22 @@ public partial class Projectile : Area2D
         Node source,
         Damage damage = null,
         StatusEffect statusEffect = null,
-        Color? overrideColor = null,
+        SpriteFrames overrideVisualFrames = null,
+        DirectionalTextureSet overrideDirectionalTextures = null,
+        string overrideAnimationName = null,
         float? overrideSpeed = null,
         float? overrideLifetime = null,
-        float? overrideMaxTravelDistance = null)
+        float? overrideMaxTravelDistance = null,
+        float? overrideCollisionRadius = null)
     {
         _source = source;
         _damage = damage;
         _statusEffect = statusEffect;
-        _color = overrideColor ?? DefaultProjectileColor;
+        _configuredVisualFrames = overrideVisualFrames;
+        _configuredDirectionalTextures = overrideDirectionalTextures;
+        _configuredAnimationName = string.IsNullOrEmpty(overrideAnimationName)
+            ? DefaultAnimationName.ToString()
+            : overrideAnimationName;
         _direction = direction.Length() > 0.0f ? direction.Normalized() : Vector2.Right;
         if (overrideSpeed.HasValue)
             Speed = Mathf.Max(0.0f, overrideSpeed.Value);
@@ -78,10 +99,17 @@ public partial class Projectile : Area2D
         if (overrideMaxTravelDistance.HasValue)
             MaxTravelDistance = Mathf.Max(0.0f, overrideMaxTravelDistance.Value);
 
+        if (overrideCollisionRadius.HasValue)
+            ApplyCollisionRadius(Mathf.Max(0.0f, overrideCollisionRadius.Value));
+        else
+            ApplyCollisionRadius(CollisionRadius);
+
         _traveledDistance = 0.0f;
         _hasHitTarget = false;
         _isActive = true;
         SetPhysicsProcess(true);
+
+        ConfigureVisual(_configuredVisualFrames, _configuredDirectionalTextures, _configuredAnimationName);
 
         if (_damage != null)
             AddChild(_damage);
@@ -90,11 +118,6 @@ public partial class Projectile : Area2D
             AddChild(_statusEffect);
 
         QueueRedraw();
-    }
-
-    public override void _Draw()
-    {
-        DrawCircle(Vector2.Zero, 4.0f, _color);
     }
 
     private void TryDamageTarget(Node2D targetNode)
@@ -162,5 +185,44 @@ public partial class Projectile : Area2D
     private static ulong ResolveSourceInstanceId(Node source)
     {
         return source != null && GodotObject.IsInstanceValid(source) ? source.GetInstanceId() : 0UL;
+    }
+
+    private void CacheSceneReferences()
+    {
+        _collisionShape ??= GetNodeOrNull<CollisionShape2D>(CollisionShapeNodeName);
+        _omniSprite ??= GetNodeOrNull<OmniSprite>(OmniSpriteNodeName);
+    }
+
+    private void ApplyCollisionRadius(float radius)
+    {
+        CacheSceneReferences();
+
+        CollisionRadius = Mathf.Max(0.0f, radius);
+        if (_collisionShape?.Shape is CircleShape2D circleShape)
+            circleShape.Radius = CollisionRadius;
+    }
+
+    private void ConfigureVisual(SpriteFrames spriteFrames, DirectionalTextureSet directionalTextures, string animationName)
+    {
+        CacheSceneReferences();
+
+        if (_omniSprite == null)
+            return;
+
+        var directionalTexture = directionalTextures?.ResolveTexture(_direction);
+        if (directionalTexture != null)
+        {
+            _omniSprite.SetAnimatedSpriteFrames(null, animationName);
+            _omniSprite.SetStaticTexture(directionalTexture);
+            return;
+        }
+
+        var resolvedAnimationName = string.IsNullOrEmpty(animationName)
+            ? DefaultAnimationName.ToString()
+            : animationName;
+
+        _omniSprite.SetStaticTexture(null);
+        _omniSprite.SetAnimatedSpriteFrames(spriteFrames, resolvedAnimationName);
+        _omniSprite.TryPlay(resolvedAnimationName);
     }
 }

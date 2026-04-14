@@ -6,6 +6,7 @@ using System;
 public partial class RangedAttackController : Node, ICombatActionController
 {
     private const string DefaultProjectileScenePath = "res://scenes/projectiles/projectile.tscn";
+    private static readonly StringName DefaultProjectileAnimationName = "default";
     private float _cooldownTimer;
     private bool _hasPendingProjectileShot;
     private Vector2 _pendingProjectileDirection;
@@ -35,6 +36,18 @@ public partial class RangedAttackController : Node, ICombatActionController
     public float ProjectileMaxTravelDistance { get; set; } = 320.0f;
 
     [Export]
+    public float ProjectileCollisionRadius { get; set; } = 4.0f;
+
+    [Export]
+    public SpriteFrames ProjectileVisualFrames { get; set; }
+
+    [Export]
+    public DirectionalTextureSet ProjectileDirectionalTextures { get; set; }
+
+    [Export]
+    public StringName ProjectileAnimationName { get; set; } = DefaultProjectileAnimationName;
+
+    [Export]
     public float AnimationSpeedMultiplier { get; set; } = 2.0f;
 
     public override void _Ready()
@@ -45,6 +58,7 @@ public partial class RangedAttackController : Node, ICombatActionController
         ProjectileSpeed = Math.Max(0.0f, ProjectileSpeed);
         ProjectileLifetime = Math.Max(0.0f, ProjectileLifetime);
         ProjectileMaxTravelDistance = Math.Max(0.0f, ProjectileMaxTravelDistance);
+        ProjectileCollisionRadius = Math.Max(0.0f, ProjectileCollisionRadius);
         AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
 
         if (ProjectileScene == null)
@@ -152,8 +166,12 @@ public partial class RangedAttackController : Node, ICombatActionController
             direction,
             actor,
             damagePayload,
+            overrideVisualFrames: ProjectileVisualFrames,
+            overrideDirectionalTextures: ProjectileDirectionalTextures,
+            overrideAnimationName: ProjectileAnimationName.ToString(),
             overrideSpeed: ProjectileSpeed,
             overrideLifetime: ProjectileLifetime,
-            overrideMaxTravelDistance: ProjectileMaxTravelDistance);
+            overrideMaxTravelDistance: ProjectileMaxTravelDistance,
+            overrideCollisionRadius: ProjectileCollisionRadius);
     }
 }

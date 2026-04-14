@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
 [ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="15_damage"]
+[ext_resource type="Resource" path="res://resources/arrow_directional_textures.tres" id="16_arrow_directional_textures"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_elf_ranger"]
 radius = 5.0
@@ -64,6 +65,7 @@ ProjectileScene = ExtResource("12_projectile_scene")
 ProjectileSpeed = 320.0
 ProjectileLifetime = 2.4
 ProjectileMaxTravelDistance = 360.0
+ProjectileDirectionalTextures = ExtResource("16_arrow_directional_textures")
 
 [node name="Damage" type="Node" parent="PrimaryActionController" unique_id=2001900024]
 script = ExtResource("15_damage")

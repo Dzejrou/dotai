@@ -19,6 +19,8 @@
 [ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="17_blizzard_area"]
 [ext_resource type="Script" uid="uid://dlxqxvyam785x" path="res://scripts/spells/PoisonCloudSpell.cs" id="18_y1cuy"]
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="19_y1cuy"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="20_fire_ball_frames"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/ice_ball_spriteframes.tres" id="21_ice_ball_frames"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -26,6 +28,8 @@ script = ExtResource("1_spell_book")
 [node name="FireBall" type="Node" parent="." unique_id=1146765685]
 script = ExtResource("7_fireball_spell")
 ProjectileScene = ExtResource("2_projectile")
+ProjectileCollisionRadius = 32.0
+ProjectileVisualFrames = ExtResource("20_fire_ball_frames")
 SpellId = "fire_ball"
 CastAction = &"cast_spell1"
 HudLabel = "Fireball"
@@ -123,7 +127,8 @@ MaximumDamage = 3
 [node name="IceBall" type="Node" parent="." unique_id=1339289238]
 script = ExtResource("15_ice_ball_spell")
 ProjectileScene = ExtResource("2_projectile")
-ProjectileColor = Color(0.35, 0.72, 1, 1)
+ProjectileCollisionRadius = 32.0
+ProjectileVisualFrames = ExtResource("21_ice_ball_frames")
 SpellId = "ice_ball"
 CastAction = &"cast_spell6"
 HudLabel = "Ice Ball"

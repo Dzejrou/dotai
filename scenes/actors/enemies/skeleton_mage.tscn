@@ -22,6 +22,7 @@
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="20_status_effect_controller"]
 [ext_resource type="Script" uid="uid://cqsn11dvrfth1" path="res://scripts/status/BurningEffect.cs" id="21_burning_effect"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="22_damage"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="23_fire_ball_frames"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -75,7 +76,8 @@ RegenerationInterval = 0.75
 script = ExtResource("14_fireball_spell")
 SpellId = "fire_ball"
 ProjectileScene = ExtResource("12_projectile_scene")
-ProjectileColor = Color(1, 0.45, 0.1, 1)
+ProjectileCollisionRadius = 32.0
+ProjectileVisualFrames = ExtResource("23_fire_ball_frames")
 Cooldown = 1.2
 
 [node name="Damage" type="Node" parent="Spells/FireBall" unique_id=2001900011]
