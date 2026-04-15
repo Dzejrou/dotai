@@ -15,6 +15,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Signal]
     public delegate void SpellLoadoutChangedEventHandler();
 
+    [Signal]
+    public delegate void GoldChangedEventHandler(int totalGold);
+
     [Export]
     public float Speed { get; set; } = 140.0f;
 
@@ -58,6 +61,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public bool CanCastSpells => !_isDead;
     public bool HasInteractionTarget => _activeInteractable != null;
     public string CurrentInteractionLabel => _activeInteractableLabel;
+    public int Gold { get; private set; }
 
     public void ShowFloatingText(string text, Color color)
     {
@@ -213,6 +217,31 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         ShowFloatingHealingNumber(recovered);
         RefreshActorHud();
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
+    }
+
+    public int AddGold(int amount)
+    {
+        if (_isDead || amount <= 0)
+            return 0;
+
+        Gold += amount;
+        ShowFloatingText($"+{amount} gold", new Color(1.0f, 0.88f, 0.32f, 1.0f));
+        EmitSignal(SignalName.GoldChanged, Gold);
+        return amount;
+    }
+
+    public int RestoreManaFromDrop(int amount)
+    {
+        if (_isDead || amount <= 0 || ManaState == null)
+            return 0;
+
+        var restored = ManaState.Restore(amount);
+        NotifyManaChanged();
+
+        if (restored > 0)
+            ShowFloatingText($"+{restored} mana", new Color(0.45f, 0.78f, 1.0f, 1.0f));
+
+        return restored;
     }
 
     private void BindStatusEffects()

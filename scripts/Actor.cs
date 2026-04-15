@@ -42,6 +42,10 @@ public abstract partial class Actor : CombatCharacter
     private ActorHUD _actorHud;
     private bool _subscribedToNavigationDebug;
     private static PackedScene _corpseScene;
+    private static readonly RandomNumberGenerator LootRandom = CreateLootRandom();
+
+    [Export]
+    public LootTable LootTable { get; set; }
 
     protected void InitializeActor(
         OmniSprite omniSprite,
@@ -300,6 +304,7 @@ public abstract partial class Actor : CombatCharacter
         PrepareForRemoval();
         Velocity = Vector2.Zero;
         ResetPrimaryActionController();
+        SpawnLootDrops();
         SpawnCorpse();
         QueueFree();
     }
@@ -522,6 +527,46 @@ public abstract partial class Actor : CombatCharacter
         }
 
         StopAndIdle();
+    }
+
+    private void SpawnLootDrops()
+    {
+        if (LootTable == null)
+            return;
+
+        var dropParent = GetParent();
+        if (dropParent == null)
+            return;
+
+        var rolledDefinitions = LootTable.Roll(LootRandom);
+        foreach (var definition in rolledDefinitions)
+        {
+            if (definition == null)
+                continue;
+
+            var drop = definition.CreateDropInstance();
+            if (drop == null)
+                continue;
+
+            if (dropParent is Node2D node2DParent)
+                drop.Position = node2DParent.ToLocal(GlobalPosition + ResolveDropSpawnOffset());
+
+            dropParent.CallDeferred(Node.MethodName.AddChild, drop);
+        }
+    }
+
+    private static RandomNumberGenerator CreateLootRandom()
+    {
+        var random = new RandomNumberGenerator();
+        random.Randomize();
+        return random;
+    }
+
+    private Vector2 ResolveDropSpawnOffset()
+    {
+        var angle = LootRandom.RandfRange(0.0f, Mathf.Tau);
+        var distance = LootRandom.RandfRange(0.0f, 10.0f);
+        return Vector2.Right.Rotated(angle) * distance;
     }
 
     private void StopAndIdle()

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="DropDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/loot/DropDefinition.cs" id="1_drop_definition_script"]
+[ext_resource type="PackedScene" path="res://scenes/world/drops/big_mana_potion_drop.tscn" id="2_big_mana_potion_drop_scene"]
+
+[resource]
+script = ExtResource("1_drop_definition_script")
+Id = "big_mana_potion"
+DisplayName = "Big Mana Potion"
+DropScene = ExtResource("2_big_mana_potion_drop_scene")
