@@ -35,6 +35,7 @@ public partial class Projectile : Area2D
     private SpriteFrames _configuredVisualFrames;
     private DirectionalTextureSet _configuredDirectionalTextures;
     private string _configuredAnimationName = DefaultAnimationName.ToString();
+    private float _configuredCollisionRadius = 4.0f;
     private float _configuredVisualScale = 1.0f;
 
     public override void _Ready()
@@ -48,7 +49,9 @@ public partial class Projectile : Area2D
         CollisionMask = 1;
         CollisionRadius = Math.Max(0.0f, CollisionRadius);
         VisualScale = Math.Max(0.01f, VisualScale);
-        ApplyCollisionRadius(CollisionRadius);
+        _configuredCollisionRadius = CollisionRadius;
+        _configuredVisualScale = VisualScale;
+        ApplyCollisionRadius(_configuredCollisionRadius);
         ConfigureVisual(_configuredVisualFrames, _configuredDirectionalTextures, _configuredAnimationName);
         _lifetimeTimer = Mathf.Max(0.05f, Lifetime);
         SetPhysicsProcess(false);
@@ -106,10 +109,8 @@ public partial class Projectile : Area2D
         if (overrideMaxTravelDistance.HasValue)
             MaxTravelDistance = Mathf.Max(0.0f, overrideMaxTravelDistance.Value);
 
-        if (overrideCollisionRadius.HasValue)
-            ApplyCollisionRadius(Mathf.Max(0.0f, overrideCollisionRadius.Value));
-        else
-            ApplyCollisionRadius(CollisionRadius);
+        _configuredCollisionRadius = Mathf.Max(0.0f, overrideCollisionRadius ?? CollisionRadius);
+        ApplyCollisionRadius(_configuredCollisionRadius);
 
         _traveledDistance = 0.0f;
         _hasHitTarget = false;
@@ -206,7 +207,12 @@ public partial class Projectile : Area2D
 
         CollisionRadius = Mathf.Max(0.0f, radius);
         if (_collisionShape?.Shape is CircleShape2D circleShape)
-            circleShape.Radius = CollisionRadius;
+            circleShape.Radius = ResolveEffectiveCollisionRadius();
+    }
+
+    private float ResolveEffectiveCollisionRadius()
+    {
+        return Mathf.Max(0.0f, CollisionRadius * _configuredVisualScale);
     }
 
     private void ConfigureVisual(SpriteFrames spriteFrames, DirectionalTextureSet directionalTextures, string animationName)
