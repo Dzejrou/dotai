@@ -549,7 +549,11 @@ public abstract partial class Actor : CombatCharacter
                 continue;
 
             if (dropParent is Node2D node2DParent)
-                drop.Position = node2DParent.ToLocal(GlobalPosition + ResolveDropSpawnOffset());
+            {
+                var spawnStartPosition = node2DParent.ToLocal(GlobalPosition);
+                var spawnTargetPosition = node2DParent.ToLocal(GlobalPosition + ResolveDropSpawnOffset());
+                drop.ConfigureSpawnMotion(spawnStartPosition, spawnTargetPosition);
+            }
 
             dropParent.CallDeferred(Node.MethodName.AddChild, drop);
         }
@@ -565,7 +569,7 @@ public abstract partial class Actor : CombatCharacter
     private Vector2 ResolveDropSpawnOffset()
     {
         var angle = LootRandom.RandfRange(0.0f, Mathf.Tau);
-        var distance = LootRandom.RandfRange(0.0f, 10.0f);
+        var distance = LootRandom.RandfRange(6.0f, 12.0f);
         return Vector2.Right.Rotated(angle) * distance;
     }
 
