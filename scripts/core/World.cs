@@ -15,6 +15,9 @@ public partial class World : Node2D
     public NodePath WorldNavigationPath { get; set; } = new NodePath("WorldNavigation");
 
     [Export]
+    public NodePath CorpseManagerPath { get; set; } = new NodePath("CorpseManager");
+
+    [Export]
     public Rect2 NavigationBounds { get; set; } = new Rect2(0.0f, 0.0f, 1640.0f, 1360.0f);
 
     [Export]
@@ -31,6 +34,7 @@ public partial class World : Node2D
 
     private Player _player;
     private NavigationRegion2D _worldNavigation;
+    private CorpseManager _corpseManager;
     private bool _isGameOver;
 
     public override void _Ready()
@@ -38,6 +42,7 @@ public partial class World : Node2D
         _worldNavigation = GetNodeOrNull<NavigationRegion2D>(WorldNavigationPath);
         BuildWorldNavigation();
 
+        _corpseManager = ResolveCorpseManager();
         _player = GetNodeOrNull<Player>(PlayerPath);
         if (_player != null)
             _player.Connect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
@@ -52,6 +57,11 @@ public partial class World : Node2D
         }
     }
 
+    public void RegisterCorpse(Corpse corpse)
+    {
+        ResolveCorpseManager()?.Register(corpse);
+    }
+
     private void OnPlayerDied()
     {
         if (_isGameOver)
@@ -59,6 +69,15 @@ public partial class World : Node2D
 
         _isGameOver = true;
         EmitSignal(SignalName.PlayerDied);
+    }
+
+    private CorpseManager ResolveCorpseManager()
+    {
+        if (_corpseManager != null || CorpseManagerPath.IsEmpty)
+            return _corpseManager;
+
+        _corpseManager = GetNodeOrNull<CorpseManager>(CorpseManagerPath);
+        return _corpseManager;
     }
 
     private void BuildWorldNavigation()

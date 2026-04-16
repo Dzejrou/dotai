@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://b65b0optd443s" path="res://assets/graveyard.png" id="11_epgnc"]
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="12_y3ja1"]
 [ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="13_o57w4"]
+[ext_resource type="Script" path="res://scripts/world/CorpseManager.cs" id="14_corpse_manager"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_world_navigation"]
 
@@ -108,3 +109,7 @@ ApplyOnEnter = true
 position = Vector2(368, 776)
 EffectLifetime = 120.0
 TickInterval = 20.0
+
+[node name="CorpseManager" type="Node" parent="." unique_id=624362729]
+script = ExtResource("14_corpse_manager")
+CorpseLimit = 20

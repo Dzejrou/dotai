@@ -704,6 +704,7 @@ public abstract partial class Actor : CombatCharacter
             animatedSprite.FlipH,
             animatedSprite.FlipV,
             ZIndex);
+        (parent as World)?.RegisterCorpse(corpse);
     }
 
     private static PackedScene ResolveCorpseScene()
