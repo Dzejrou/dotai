@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="15_melee_action"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="16_wander_behavior"]
 [ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="18_damage"]
+[ext_resource type="Resource" path="res://resources/loot_tables/wolf_loot_table.tres" id="19_wolf_loot_table"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wolf"]
 radius = 6.0
@@ -22,6 +23,7 @@ height = 18.0
 [node name="Wolf" type="CharacterBody2D" unique_id=1429792280]
 z_index = -1
 script = ExtResource("1_wolf_script")
+LootTable = ExtResource("19_wolf_loot_table")
 
 [node name="OmniSprite" type="Node2D" parent="." unique_id=1644367980]
 script = ExtResource("1_omni_sprite")

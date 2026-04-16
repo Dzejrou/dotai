@@ -16,6 +16,7 @@
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
 [ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="15_damage"]
 [ext_resource type="Resource" path="res://resources/arrow_directional_textures.tres" id="16_arrow_directional_textures"]
+[ext_resource type="Resource" path="res://resources/loot_tables/elf_ranger_loot_table.tres" id="17_elf_ranger_loot_table"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_elf_ranger"]
 radius = 5.0
@@ -24,6 +25,7 @@ height = 26.0
 [node name="ElfRanger" type="CharacterBody2D" unique_id=1709862197]
 z_index = -1
 script = ExtResource("1_elf_ranger_script")
+LootTable = ExtResource("17_elf_ranger_loot_table")
 
 [node name="OmniSprite" type="Node2D" parent="." unique_id=1877841505]
 script = ExtResource("1_omni_sprite")

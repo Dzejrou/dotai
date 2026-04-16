@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="11_melee_action"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="12_wander_behavior"]
 [ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="14_damage"]
+[ext_resource type="Resource" path="res://resources/loot_tables/ogre_loot_table.tres" id="15_ogre_loot_table"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ogre"]
 radius = 6.0
@@ -21,6 +22,7 @@ height = 24.0
 
 [node name="Ogre" type="CharacterBody2D" unique_id=903405357]
 script = ExtResource("1_ogre")
+LootTable = ExtResource("15_ogre_loot_table")
 Speed = 60.0
 
 [node name="OmniSprite" type="Node2D" parent="." unique_id=2010721375]
