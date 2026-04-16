@@ -13,7 +13,11 @@
 [ext_resource type="Texture2D" uid="uid://b65b0optd443s" path="res://assets/graveyard.png" id="11_epgnc"]
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="12_y3ja1"]
 [ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="13_o57w4"]
-[ext_resource type="Script" path="res://scripts/world/CorpseManager.cs" id="14_corpse_manager"]
+[ext_resource type="Script" uid="uid://dp732creo58kj" path="res://scripts/world/CorpseManager.cs" id="14_corpse_manager"]
+[ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="15_kihw6"]
+[ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="16_ytduk"]
+[ext_resource type="PackedScene" uid="uid://cke5y8t7ihlt5" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="17_72h6k"]
+[ext_resource type="PackedScene" uid="uid://chmx43pfadld4" path="res://scenes/actors/enemies/elf_ranger.tscn" id="18_2n5r5"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_world_navigation"]
 
@@ -112,4 +116,15 @@ TickInterval = 20.0
 
 [node name="CorpseManager" type="Node" parent="." unique_id=624362729]
 script = ExtResource("14_corpse_manager")
-CorpseLimit = 20
+
+[node name="Ogre" parent="." unique_id=903405357 instance=ExtResource("15_kihw6")]
+position = Vector2(1220, 257)
+
+[node name="Skeleton" parent="." unique_id=1196794662 instance=ExtResource("16_ytduk")]
+position = Vector2(1383, 672)
+
+[node name="SkeletonMage" parent="." unique_id=1516039641 instance=ExtResource("17_72h6k")]
+position = Vector2(723, 1014)
+
+[node name="ElfRanger" parent="." unique_id=1709862197 instance=ExtResource("18_2n5r5")]
+position = Vector2(-226, 866)
