@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="LootTable" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="LootTable" format=3 uid="uid://b5wk7g8o25aw1"]
 
-[ext_resource type="Script" path="res://scripts/loot/LootTable.cs" id="1_loot_table_script"]
-[ext_resource type="Script" path="res://scripts/loot/LootEntry.cs" id="2_loot_entry_script"]
+[ext_resource type="Script" uid="uid://fl2k1qmofs4y" path="res://scripts/loot/LootTable.cs" id="1_loot_table_script"]
+[ext_resource type="Script" uid="uid://twmgo8ju6i4q" path="res://scripts/loot/LootEntry.cs" id="2_loot_entry_script"]
 [ext_resource type="Resource" path="res://resources/drops/gold_sack_drop_definition.tres" id="3_gold_sack_definition"]
 [ext_resource type="Resource" path="res://resources/drops/mana_potion_drop_definition.tres" id="4_mana_potion_definition"]
 [ext_resource type="Resource" path="res://resources/drops/big_mana_potion_drop_definition.tres" id="5_big_mana_potion_definition"]
@@ -9,7 +9,6 @@
 [sub_resource type="Resource" id="Resource_loot_entry_gold_sack"]
 script = ExtResource("2_loot_entry_script")
 DisplayName = "Gold Sack"
-DropChance = 1.0
 Definition = ExtResource("3_gold_sack_definition")
 
 [sub_resource type="Resource" id="Resource_loot_entry_mana_potion"]

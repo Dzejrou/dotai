@@ -22,6 +22,12 @@ public abstract partial class Actor : CombatCharacter
     [Export]
     public float HomeReturnTolerance { get; set; } = 4.0f;
 
+    [Export(PropertyHint.Range, "0,64,0.5")]
+    public float DropSpreadDistanceMin { get; set; } = 6.0f;
+
+    [Export(PropertyHint.Range, "0,64,0.5")]
+    public float DropSpreadDistanceMax { get; set; } = 12.0f;
+
     public NavigationAgent2D NavigationAgent { get; private set; }
     public Node2D Target => Combat.Target;
     public bool IsUsingNavigationPath { get; private set; }
@@ -569,7 +575,9 @@ public abstract partial class Actor : CombatCharacter
     private Vector2 ResolveDropSpawnOffset()
     {
         var angle = LootRandom.RandfRange(0.0f, Mathf.Tau);
-        var distance = LootRandom.RandfRange(6.0f, 12.0f);
+        var minDistance = Mathf.Max(0.0f, DropSpreadDistanceMin);
+        var maxDistance = Mathf.Max(minDistance, DropSpreadDistanceMax);
+        var distance = LootRandom.RandfRange(minDistance, maxDistance);
         return Vector2.Right.Rotated(angle) * distance;
     }
 

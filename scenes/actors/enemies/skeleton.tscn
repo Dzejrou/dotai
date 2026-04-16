@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cr43ylglq08m5"]
 
 [ext_resource type="Script" uid="uid://bh7q0agjpycv1" path="res://scripts/actors/enemies/Skeleton.cs" id="1_8g1m3"]
-[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://chvtla7o3is13" path="res://resources/animations/skeleton_spriteframes.tres" id="2_skeleton_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="9_acquire_hostile"]
@@ -10,11 +10,11 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="13_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="14_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="15_faction_state"]
-[ext_resource type="Resource" path="res://resources/loot_tables/skeleton_loot_table.tres" id="16_skeleton_loot_table"]
-[ext_resource type="Script" path="res://scripts/status/StatusEffectController.cs" id="18_status_effect_controller"]
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="16_melee_action"]
+[ext_resource type="Resource" uid="uid://b5wk7g8o25aw1" path="res://resources/loot_tables/skeleton_loot_table.tres" id="16_skeleton_loot_table"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="17_wander_behavior"]
-[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="19_damage"]
+[ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="18_status_effect_controller"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="19_damage"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
 radius = 5.0
@@ -24,12 +24,14 @@ height = 26.0
 z_index = -1
 position = Vector2(240, 80)
 script = ExtResource("1_8g1m3")
+DropSpreadDistanceMin = 9.0
+DropSpreadDistanceMax = 30.0
 LootTable = ExtResource("16_skeleton_loot_table")
 
 [node name="OmniSprite" type="Node2D" parent="." unique_id=2100045633]
 script = ExtResource("1_omni_sprite")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=1544264427]
 position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_skeleton_frames")
