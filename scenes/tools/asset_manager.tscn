@@ -149,6 +149,10 @@ text = "Import (Aseprite Static)"
 layout_mode = 2
 text = "Import (Aseprite Base)"
 
+[node name="ImportAsepriteItemsButton" type="Button" parent="Margin/Panel/VBox/Actions"]
+layout_mode = 2
+text = "Import (Items)"
+
 [node name="VerifyButton" type="Button" parent="Margin/Panel/VBox/Actions"]
 layout_mode = 2
 text = "Verify Selected"
@@ -173,4 +177,4 @@ text = "Inspect Selected"
 layout_mode = 2
 size_flags_horizontal = 3
 autowrap_mode = 2
-text = "Import (Aseprite) writes animated exports into assets/<character> with --replace-all. Import (Aseprite Static) exports direction layers with --export-static. Import (Aseprite Base) exports base-layer frames with --export-static-base. Aseprite exports exclude reserved dev and wip layer groups. Import (Godot) and Sync SpriteFrames remain separate steps."
+text = "Import (Aseprite) writes animated exports into assets/<character> with --replace-all. Import (Aseprite Static) exports direction layers with --export-static. Import (Aseprite Base) exports base-layer frames with --export-static-base. Import (Items) exports one PNG per top-level image layer with --items. Aseprite exports exclude reserved dev and wip layer groups. Import (Godot) and Sync SpriteFrames remain separate steps."

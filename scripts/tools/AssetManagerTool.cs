@@ -36,6 +36,7 @@ public partial class AssetManagerTool : Control
     private Button _importAsepriteButton;
     private Button _importAsepriteStaticButton;
     private Button _importAsepriteBaseButton;
+    private Button _importAsepriteItemsButton;
     private Button _syncButton;
     private TextEdit _statusOutput;
     private bool _isBusy;
@@ -89,6 +90,7 @@ public partial class AssetManagerTool : Control
         _importAsepriteButton = GetNode<Button>("Margin/Panel/VBox/Actions/ImportAsepriteButton");
         _importAsepriteStaticButton = GetNode<Button>("Margin/Panel/VBox/Actions/ImportAsepriteStaticButton");
         _importAsepriteBaseButton = GetNode<Button>("Margin/Panel/VBox/Actions/ImportAsepriteBaseButton");
+        _importAsepriteItemsButton = GetNode<Button>("Margin/Panel/VBox/Actions/ImportAsepriteItemsButton");
         _syncButton = GetNode<Button>("Margin/Panel/VBox/Actions/SyncButton");
         _statusOutput = GetNode<TextEdit>("Margin/Panel/VBox/Body/StatusPanel/StatusVBox/StatusOutput");
     }
@@ -103,6 +105,7 @@ public partial class AssetManagerTool : Control
         _importAsepriteButton.Pressed += OnImportAsepritePressed;
         _importAsepriteStaticButton.Pressed += OnImportAsepriteStaticPressed;
         _importAsepriteBaseButton.Pressed += OnImportAsepriteBasePressed;
+        _importAsepriteItemsButton.Pressed += OnImportAsepriteItemsPressed;
         _syncButton.Pressed += OnSyncPressed;
         _sourceDirectoryInput.TextSubmitted += OnSourceDirectorySubmitted;
         _sourceBrowserList.ItemSelected += OnSourceBrowserItemSelected;
@@ -118,7 +121,7 @@ public partial class AssetManagerTool : Control
         _sourceDirectoryInput.Text = ExternalSourceDirectory;
         _statusOutput.Text = string.Empty;
         RefreshAsepriteFiles();
-        AppendStatus("Ready. Import (Aseprite), Import (Aseprite Static), and Import (Aseprite Base) are separate exporter actions. Verify, Import (Godot), and Sync SpriteFrames remain separate steps.");
+        AppendStatus("Ready. Import (Aseprite), Import (Aseprite Static), Import (Aseprite Base), and Import (Items) are separate exporter actions. Verify, Import (Godot), and Sync SpriteFrames remain separate steps.");
         AppendStatus("Inspect Selected shows source details. Verify actions compare source against assets/<character> and mark the file list.");
         AppendStatus("Import (Godot) runs the project's headless import pass as its own step.");
     }
@@ -184,68 +187,41 @@ public partial class AssetManagerTool : Control
 
     private void OnImportAsepritePressed()
     {
-        if (_isBusy)
-            return;
-
-        var sourceFilePath = GetSelectedSourceFilePath();
-        if (sourceFilePath == null)
-        {
-            AppendStatus("Select a .aseprite file before running Import (Aseprite).");
-            return;
-        }
-
-        ExecuteUiAction(() =>
-        {
-            AppendStatus("Starting Import (Aseprite)...");
-            var result = ExportAsepriteFile(sourceFilePath);
-            InvalidateVerificationCache(sourceFilePath);
-            RefreshAsepriteFiles();
-            SelectAsepriteFile(sourceFilePath, false);
-            foreach (var line in FormatExportResult(result))
-                AppendStatus(line);
-        });
+        RunSelectedExport(ExportMode.Animated);
     }
 
     private void OnImportAsepriteStaticPressed()
     {
-        if (_isBusy)
-            return;
-
-        var sourceFilePath = GetSelectedSourceFilePath();
-        if (sourceFilePath == null)
-        {
-            AppendStatus("Select a .aseprite file before running Import (Aseprite Static).");
-            return;
-        }
-
-        ExecuteUiAction(() =>
-        {
-            AppendStatus("Starting Import (Aseprite Static)...");
-            var result = ExportAsepriteStaticFile(sourceFilePath);
-            InvalidateVerificationCache(sourceFilePath);
-            RefreshAsepriteFiles();
-            SelectAsepriteFile(sourceFilePath, false);
-            foreach (var line in FormatExportResult(result))
-                AppendStatus(line);
-        });
+        RunSelectedExport(ExportMode.StaticDirections);
     }
 
     private void OnImportAsepriteBasePressed()
     {
+        RunSelectedExport(ExportMode.StaticBase);
+    }
+
+    private void OnImportAsepriteItemsPressed()
+    {
+        RunSelectedExport(ExportMode.Items);
+    }
+
+    private void RunSelectedExport(ExportMode mode)
+    {
         if (_isBusy)
             return;
 
+        var actionLabel = GetExportActionLabel(mode);
         var sourceFilePath = GetSelectedSourceFilePath();
         if (sourceFilePath == null)
         {
-            AppendStatus("Select a .aseprite file before running Import (Aseprite Base).");
+            AppendStatus($"Select a .aseprite file before running {actionLabel}.");
             return;
         }
 
         ExecuteUiAction(() =>
         {
-            AppendStatus("Starting Import (Aseprite Base)...");
-            var result = ExportAsepriteBaseFile(sourceFilePath);
+            AppendStatus($"Starting {actionLabel}...");
+            var result = ExportAsepriteFile(sourceFilePath, mode);
             InvalidateVerificationCache(sourceFilePath);
             RefreshAsepriteFiles();
             SelectAsepriteFile(sourceFilePath, false);
@@ -434,6 +410,8 @@ public partial class AssetManagerTool : Control
         _importButton.Disabled = _isBusy;
         _importAsepriteButton.Disabled = _isBusy || !hasSelection;
         _importAsepriteStaticButton.Disabled = _isBusy || !hasSelection;
+        _importAsepriteBaseButton.Disabled = _isBusy || !hasSelection;
+        _importAsepriteItemsButton.Disabled = _isBusy || !hasSelection;
         _syncButton.Disabled = _isBusy || !hasSyncTarget;
     }
 
@@ -609,16 +587,6 @@ public partial class AssetManagerTool : Control
         return ExportAsepriteFile(sourceFilePath, ExportMode.Animated);
     }
 
-    private ExportResult ExportAsepriteStaticFile(string sourceFilePath)
-    {
-        return ExportAsepriteFile(sourceFilePath, ExportMode.StaticDirections);
-    }
-
-    private ExportResult ExportAsepriteBaseFile(string sourceFilePath)
-    {
-        return ExportAsepriteFile(sourceFilePath, ExportMode.StaticBase);
-    }
-
     private ExportResult ExportAsepriteFile(string sourceFilePath, ExportMode mode)
     {
         EnsureSourceFileExists(sourceFilePath);
@@ -651,6 +619,9 @@ public partial class AssetManagerTool : Control
                 break;
             case ExportMode.StaticBase:
                 arguments.Add("--export-static-base");
+                break;
+            case ExportMode.Items:
+                arguments.Add("--items");
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unknown export mode.");
@@ -968,6 +939,7 @@ public partial class AssetManagerTool : Control
             ExportMode.Animated => "Import (Aseprite)",
             ExportMode.StaticDirections => "Import (Aseprite Static)",
             ExportMode.StaticBase => "Import (Aseprite Base)",
+            ExportMode.Items => "Import (Items)",
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unknown export mode."),
         };
     }
@@ -1706,6 +1678,7 @@ public partial class AssetManagerTool : Control
         Animated,
         StaticDirections,
         StaticBase,
+        Items,
     }
 
     private enum SyncStatus
