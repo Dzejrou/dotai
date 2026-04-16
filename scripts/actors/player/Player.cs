@@ -244,6 +244,18 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return restored;
     }
 
+    public int RestoreHealthFromDrop(int amount)
+    {
+        if (_isDead || amount <= 0 || HealthStateNode == null)
+            return 0;
+
+        var currentHealthBefore = CurrentHealth;
+        var healing = new Healing();
+        healing.InitializeRuntime(this, amount);
+        ApplyHealing(healing);
+        return Math.Max(0, CurrentHealth - currentHealthBefore);
+    }
+
     private void BindStatusEffects()
     {
         var statusEffectController = GetNodeOrNull<StatusEffectController>("StatusEffectController");
