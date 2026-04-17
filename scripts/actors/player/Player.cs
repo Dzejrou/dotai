@@ -39,6 +39,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Export]
     public float InteractionRange { get; set; } = 108.0f;
 
+    [Export(PropertyHint.Range, "0,256,1")]
+    public float LootMagnetRadius { get; set; } = 80.0f;
+
     private bool _isDead;
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
     private IPlacementSpell _pendingPlacementSpell;
@@ -48,6 +51,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private Node2D _activeInteractableNode;
     private string _activeInteractableLabel = string.Empty;
     private ActorHUD _actorHud;
+    private Area2D _lootMagnetArea;
+    private CollisionShape2D _lootMagnetCollisionShape;
     private ActorHUD _activeTargetHud;
     private readonly HashSet<ActorHUD> _visibleTargetHuds = new();
     private readonly HashSet<ActorHUD> _nextVisibleTargetHuds = new();
@@ -73,6 +78,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         SetOmniSprite(GetNode<OmniSprite>("OmniSprite"));
         InitializeCombatCharacter(requireManaState: true);
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
+        _lootMagnetArea = GetNodeOrNull<Area2D>("LootMagnetArea");
+        _lootMagnetCollisionShape = GetNodeOrNull<CollisionShape2D>("LootMagnetArea/CollisionShape2D");
         if (_actorHud == null)
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
         else
@@ -80,6 +87,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             _actorHud.Bind(this);
             _actorHud.SetUnitFrameVisible(true);
         }
+        ConfigureLootMagnetArea();
 
         BindStatusEffects();
         InitializeSpellInventory();
@@ -99,6 +107,13 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             SpellLoadoutNode.IsConnected(SpellLoadout.SignalName.LoadoutChanged, new Callable(this, nameof(OnSpellLoadoutChanged))))
         {
             SpellLoadoutNode.Disconnect(SpellLoadout.SignalName.LoadoutChanged, new Callable(this, nameof(OnSpellLoadoutChanged)));
+        }
+
+        if (_lootMagnetArea != null &&
+            GodotObject.IsInstanceValid(_lootMagnetArea) &&
+            _lootMagnetArea.IsConnected(Area2D.SignalName.AreaEntered, new Callable(this, nameof(OnLootMagnetAreaEntered))))
+        {
+            _lootMagnetArea.Disconnect(Area2D.SignalName.AreaEntered, new Callable(this, nameof(OnLootMagnetAreaEntered)));
         }
 
         UnbindStatusEffects();
@@ -254,6 +269,40 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         healing.InitializeRuntime(this, amount);
         ApplyHealing(healing);
         return Math.Max(0, CurrentHealth - currentHealthBefore);
+    }
+
+    private void ConfigureLootMagnetArea()
+    {
+        if (_lootMagnetArea == null)
+        {
+            GD.PushError($"{GetPath()}: missing required LootMagnetArea child.");
+            return;
+        }
+
+        if (_lootMagnetCollisionShape == null)
+        {
+            GD.PushError($"{GetPath()}: missing required LootMagnetArea/CollisionShape2D child.");
+            return;
+        }
+
+        if (_lootMagnetCollisionShape.Shape is not CircleShape2D circleShape)
+        {
+            circleShape = new CircleShape2D();
+            _lootMagnetCollisionShape.Shape = circleShape;
+        }
+
+        circleShape.Radius = Math.Max(0.0f, LootMagnetRadius);
+        _lootMagnetArea.Monitoring = true;
+        _lootMagnetArea.Monitorable = false;
+        _lootMagnetArea.Connect(Area2D.SignalName.AreaEntered, new Callable(this, nameof(OnLootMagnetAreaEntered)));
+    }
+
+    private void OnLootMagnetAreaEntered(Area2D area)
+    {
+        if (_isDead || area is not Drop drop)
+            return;
+
+        drop.BeginAttraction(this);
     }
 
     private void BindStatusEffects()

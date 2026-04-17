@@ -1,5 +1,7 @@
 using Godot;
 
+using System;
+
 [GlobalClass]
 public partial class Drop : Area2D
 {
@@ -11,11 +13,20 @@ public partial class Drop : Area2D
     [Export]
     public Texture2D WorldSprite { get; set; }
 
+    [Export(PropertyHint.Range, "0,1000,1")]
+    public float AttractionSpeed { get; set; } = 240.0f;
+
+    [Export(PropertyHint.Range, "0,4000,1")]
+    public float AttractionAcceleration { get; set; } = 1400.0f;
+
     private Sprite2D _sprite;
     private CollisionShape2D _collisionShape;
     private Vector2 _baseSpritePosition;
+    private Vector2 _attractionVelocity;
+    private Player _attractionTarget;
     private bool _collected;
     private bool _hasSpawnMotion;
+    private bool _isSpawnMotionPlaying;
     private Vector2 _spawnTargetPosition;
 
     public void ConfigureSpawnMotion(Vector2 startPosition, Vector2 targetPosition)
@@ -23,6 +34,14 @@ public partial class Drop : Area2D
         Position = startPosition;
         _spawnTargetPosition = targetPosition;
         _hasSpawnMotion = true;
+    }
+
+    public void BeginAttraction(Player player)
+    {
+        if (_collected || player == null || !GodotObject.IsInstanceValid(player))
+            return;
+
+        _attractionTarget = player;
     }
 
     public override void _Ready()
@@ -59,6 +78,11 @@ public partial class Drop : Area2D
                 break;
             }
         }
+
+        if (_collected || _isSpawnMotionPlaying)
+            return;
+
+        UpdateAttraction((float)delta);
     }
 
     private void OnBodyEntered(Node2D body)
@@ -84,10 +108,12 @@ public partial class Drop : Area2D
 
     private void PlaySpawnMotion()
     {
+        _isSpawnMotionPlaying = true;
         var moveTween = CreateTween();
         moveTween.TweenProperty(this, "position", _spawnTargetPosition, SpawnMoveDurationSeconds)
             .SetTrans(Tween.TransitionType.Quad)
             .SetEase(Tween.EaseType.Out);
+        moveTween.Finished += OnSpawnMotionFinished;
 
         if (_sprite == null)
             return;
@@ -99,6 +125,34 @@ public partial class Drop : Area2D
         hopTween.TweenProperty(_sprite, "position", _baseSpritePosition, SpawnHopDownDurationSeconds)
             .SetTrans(Tween.TransitionType.Quad)
             .SetEase(Tween.EaseType.In);
+    }
+
+    private void UpdateAttraction(float delta)
+    {
+        if (_attractionTarget == null || !GodotObject.IsInstanceValid(_attractionTarget) || !_attractionTarget.IsInsideTree())
+        {
+            _attractionTarget = null;
+            _attractionVelocity = Vector2.Zero;
+            return;
+        }
+
+        var toTarget = _attractionTarget.GlobalPosition - GlobalPosition;
+        if (toTarget == Vector2.Zero)
+            return;
+
+        var desiredVelocity = toTarget.Normalized() * Math.Max(0.0f, AttractionSpeed);
+        _attractionVelocity = _attractionVelocity.MoveToward(desiredVelocity, Math.Max(0.0f, AttractionAcceleration) * delta);
+
+        var step = _attractionVelocity * delta;
+        if (step.LengthSquared() >= toTarget.LengthSquared())
+            GlobalPosition = _attractionTarget.GlobalPosition;
+        else
+            GlobalPosition += step;
+    }
+
+    private void OnSpawnMotionFinished()
+    {
+        _isSpawnMotionPlaying = false;
     }
 
     protected virtual void ApplyTo(Player player) { }
