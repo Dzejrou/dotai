@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="DropDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="DropDefinition" format=3 uid="uid://cg3en84jgsfgm"]
 
-[ext_resource type="Script" path="res://scripts/loot/DropDefinition.cs" id="1_drop_definition_script"]
+[ext_resource type="Script" uid="uid://d0wh81euaivmj" path="res://scripts/loot/DropDefinition.cs" id="1_drop_definition_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/drops/gold_sack_drop.tscn" id="2_gold_sack_drop_scene"]
 
 [resource]

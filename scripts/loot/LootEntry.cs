@@ -1,5 +1,7 @@
 using Godot;
 
+using System;
+
 [GlobalClass]
 public partial class LootEntry : Resource
 {
@@ -12,6 +14,9 @@ public partial class LootEntry : Resource
     [Export]
     public DropDefinition Definition { get; set; }
 
+    [Export(PropertyHint.Range, "0,9999,1")]
+    public int Amount { get; set; } = 5;
+
     public bool IsConfigured => Definition?.DropScene != null;
 
     public bool ShouldDrop(RandomNumberGenerator random)
@@ -20,5 +25,17 @@ public partial class LootEntry : Resource
             return false;
 
         return random.Randf() <= Mathf.Clamp(DropChance, 0.0f, 1.0f);
+    }
+
+    public Drop CreateDropInstance()
+    {
+        var drop = Definition?.CreateDropInstance();
+        if (drop == null)
+            return null;
+
+        if (drop is GoldSackDrop goldSackDrop)
+            goldSackDrop.GoldAmount = Math.Max(0, Amount);
+
+        return drop;
     }
 }

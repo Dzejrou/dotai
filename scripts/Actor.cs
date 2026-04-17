@@ -544,13 +544,13 @@ public abstract partial class Actor : CombatCharacter
         if (dropParent == null)
             return;
 
-        var rolledDefinitions = LootTable.Roll(LootRandom);
-        foreach (var definition in rolledDefinitions)
+        var rolledEntries = LootTable.Roll(LootRandom);
+        foreach (var entry in rolledEntries)
         {
-            if (definition == null)
+            if (entry == null)
                 continue;
 
-            var drop = definition.CreateDropInstance();
+            var drop = entry.CreateDropInstance();
             if (drop == null)
                 continue;
 

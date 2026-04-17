@@ -6,18 +6,18 @@ public partial class LootTable : Resource
     [Export]
     public Godot.Collections.Array<LootEntry> Entries { get; set; } = new();
 
-    public Godot.Collections.Array<DropDefinition> Roll(RandomNumberGenerator random)
+    public Godot.Collections.Array<LootEntry> Roll(RandomNumberGenerator random)
     {
-        var definitions = new Godot.Collections.Array<DropDefinition>();
+        var rolledEntries = new Godot.Collections.Array<LootEntry>();
 
         foreach (var entry in Entries)
         {
             if (entry == null || !entry.ShouldDrop(random))
                 continue;
 
-            definitions.Add(entry.Definition);
+            rolledEntries.Add(entry);
         }
 
-        return definitions;
+        return rolledEntries;
     }
 }
