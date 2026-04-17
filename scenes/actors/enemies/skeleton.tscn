@@ -22,7 +22,6 @@ height = 26.0
 
 [node name="Skeleton" type="CharacterBody2D" unique_id=1196794662]
 z_index = -1
-position = Vector2(240, 80)
 script = ExtResource("1_8g1m3")
 DropSpreadDistanceMin = 9.0
 DropSpreadDistanceMax = 30.0
