@@ -21,6 +21,8 @@
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="19_y1cuy"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="20_fire_ball_frames"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/ice_ball_spriteframes.tres" id="21_ice_ball_frames"]
+[ext_resource type="Script" path="res://scripts/spells/DoomSpell.cs" id="22_doom_spell"]
+[ext_resource type="PackedScene" path="res://scenes/effects/doom_area.tscn" id="23_doom_area"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -164,4 +166,12 @@ ManaCost = 10
 Cooldown = 20.0
 
 [node name="PoisonCloudArea" parent="PoisonCloud" unique_id=1438068207 instance=ExtResource("19_y1cuy")]
+visible = false
+
+[node name="Doom" type="Node" parent="." unique_id=1321180177]
+script = ExtResource("22_doom_spell")
+SpellId = "doom"
+HudLabel = "Doom"
+
+[node name="DoomArea" parent="Doom" instance=ExtResource("23_doom_area")]
 visible = false

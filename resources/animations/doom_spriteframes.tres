@@ -1,0 +1,118 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_000.png" id="1_doom_0"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_001.png" id="2_doom_1"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_002.png" id="3_doom_2"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_003.png" id="4_doom_3"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_004.png" id="5_doom_4"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_005.png" id="6_doom_5"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_006.png" id="7_doom_6"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_007.png" id="8_doom_7"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_008.png" id="9_doom_8"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_009.png" id="10_doom_9"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_010.png" id="11_doom_10"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_011.png" id="12_doom_11"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_012.png" id="13_doom_12"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_013.png" id="14_doom_13"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_014.png" id="15_doom_14"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_015.png" id="16_doom_15"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_016.png" id="17_doom_16"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_017.png" id="18_doom_17"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_018.png" id="19_doom_18"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_019.png" id="20_doom_19"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_020.png" id="21_doom_20"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_021.png" id="22_doom_21"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_022.png" id="23_doom_22"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_023.png" id="24_doom_23"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_024.png" id="25_doom_24"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_025.png" id="26_doom_25"]
+[ext_resource type="Texture2D" path="res://assets/doom/base/frame_026.png" id="27_doom_26"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_doom_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_doom_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_doom_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_doom_3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_doom_4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_doom_5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_doom_6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_doom_7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_doom_8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_doom_9")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_doom_10")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_doom_11")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_doom_12")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_doom_13")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_doom_14")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_doom_15")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_doom_16")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_doom_17")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_doom_18")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_doom_19")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_doom_20")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_doom_21")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_doom_22")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_doom_23")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_doom_24")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_doom_25")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_doom_26")
+}],
+"loop": false,
+"name": &"default",
+"speed": 18.0
+}]

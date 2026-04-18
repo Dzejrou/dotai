@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/spells/DoomArea.cs" id="1_doom_area_script"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="2_damage"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/doom_spriteframes.tres" id="3_doom_frames"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="4_omni_sprite"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_doom"]
+radius = 56.0
+
+[node name="DoomArea" type="Area2D" unique_id=694441472]
+z_index = -2
+monitorable = false
+script = ExtResource("1_doom_area_script")
+EffectLifetime = 0.0
+ApplyOnEnter = false
+ApplyOnTick = false
+FillColor = Color(1, 1, 1, 0)
+OutlineColor = Color(1, 1, 1, 0)
+PreviewFillColor = Color(1, 1, 1, 0)
+PreviewOutlineColor = Color(1, 1, 1, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_doom")
+
+[node name="OmniSprite" type="Node2D" parent="."]
+script = ExtResource("4_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
+sprite_frames = ExtResource("3_doom_frames")
+animation = &"default"
+
+[node name="Damage" type="Node" parent="."]
+script = ExtResource("2_damage")
+MinimumDamage = 999999
+MaximumDamage = 999999
