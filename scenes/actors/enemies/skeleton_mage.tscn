@@ -23,7 +23,7 @@
 [ext_resource type="Script" uid="uid://cqsn11dvrfth1" path="res://scripts/status/BurningEffect.cs" id="21_burning_effect"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="22_damage"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="23_fire_ball_frames"]
-[ext_resource type="Resource" path="res://resources/loot_tables/skeleton_mage_loot_table.tres" id="24_skeleton_mage_loot_table"]
+[ext_resource type="Resource" uid="uid://dmk5k387wovtt" path="res://resources/loot_tables/skeleton_mage_loot_table.tres" id="24_skeleton_mage_loot_table"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0

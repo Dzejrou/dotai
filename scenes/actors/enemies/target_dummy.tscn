@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bt4xu4bcnkoj8"]
 
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="Script" uid="uid://dv8pveudkxu6d" path="res://scripts/actors/enemies/TargetDummy.cs" id="1_target_dummy_script"]
-[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="Texture2D" uid="uid://clj7lg6cf7roj" path="res://assets/target_dummy/east.png" id="2_east"]
 [ext_resource type="Texture2D" uid="uid://be0qms7jiymvd" path="res://assets/target_dummy/north-east.png" id="3_north_east"]
 [ext_resource type="Texture2D" uid="uid://bekm1ujew333e" path="res://assets/target_dummy/north.png" id="4_north"]
@@ -35,7 +35,7 @@ NorthEastTexture = ExtResource("3_north_east")
 [node name="OmniSprite" type="Node2D" parent="." unique_id=855488886]
 script = ExtResource("1_omni_sprite")
 
-[node name="Sprite2D" type="Sprite2D" parent="OmniSprite"]
+[node name="Sprite2D" type="Sprite2D" parent="OmniSprite" unique_id=778559237]
 position = Vector2(0, -4)
 texture = ExtResource("7_south")
 
