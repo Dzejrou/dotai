@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cnpc2ij535kmo"]
 
-[ext_resource type="PackedScene" uid="uid://7r3kh3tx2max" path="res://scenes/actors/player/player.tscn" id="1_k6v4i"]
+[ext_resource type="PackedScene" uid="uid://ejnrj2088bpa" path="res://scenes/actors/player/player.tscn" id="1_k6v4i"]
 [ext_resource type="Texture2D" uid="uid://cdnobkte5yigl" path="res://assets/world/rock.png" id="2_qx8h3"]
 [ext_resource type="Texture2D" uid="uid://df1qqp1ilupuu" path="res://assets/world/library.png" id="3_8c1c8"]
 [ext_resource type="Script" uid="uid://dhkp7bkox0i6e" path="res://scripts/core/World.cs" id="5_qx7qz"]
@@ -101,19 +101,19 @@ scale = Vector2(0.6, 0.6)
 
 [node name="PoisonCloudArea" parent="." unique_id=1438068207 instance=ExtResource("11_1j3no")]
 position = Vector2(832, 617)
-EffectLifetime = 120.0
-TickInterval = 20.0
+EffectLifetime = 0.0
+TickInterval = 10.0
 
 [node name="RingOfFireArea" parent="." unique_id=2075497863 instance=ExtResource("12_y3ja1")]
 position = Vector2(639, 749)
-EffectLifetime = 120.0
-TickInterval = 20.0
+EffectLifetime = 0.0
+TickInterval = 5.0
 ApplyOnEnter = true
 
 [node name="BlizzardArea" parent="." unique_id=26160184 instance=ExtResource("13_o57w4")]
 position = Vector2(368, 776)
-EffectLifetime = 120.0
-TickInterval = 20.0
+EffectLifetime = 0.0
+TickInterval = 5.0
 
 [node name="CorpseManager" type="Node" parent="." unique_id=624362729]
 script = ExtResource("14_corpse_manager")
@@ -128,4 +128,4 @@ position = Vector2(1383, 672)
 position = Vector2(723, 1014)
 
 [node name="ElfRanger" parent="." unique_id=1709862197 instance=ExtResource("18_2n5r5")]
-position = Vector2(-226, 866)
+position = Vector2(-142, 760)
