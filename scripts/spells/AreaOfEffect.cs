@@ -10,6 +10,7 @@ public partial class AreaOfEffect : Area2D
     private readonly List<StatusEffect> _statusTemplates = new();
 
     private CollisionShape2D _collisionShape;
+    private OmniSprite _omniSprite;
     private Node2D _damageSource;
     private ulong _damageSourceInstanceId;
     private Faction _sourceFaction = Factions.Enemies;
@@ -55,8 +56,9 @@ public partial class AreaOfEffect : Area2D
     {
         CacheSceneReferences();
 
-        BodyEntered += OnBodyEntered;
-        BodyExited += OnBodyExited;
+        BodyEntered += HandleBodyEntered;
+        BodyExited += HandleBodyExited;
+        ConnectVisualSignals();
         Monitoring = _runtimeInitialized;
         Monitorable = false;
         CollisionLayer = 0;
@@ -83,16 +85,21 @@ public partial class AreaOfEffect : Area2D
         var deltaSeconds = Math.Max(0.0f, (float)delta);
         _elapsedTime += deltaSeconds;
 
-        var lifetime = Math.Max(0.1f, EffectLifetime);
+        var lifetime = EffectLifetime > 0.0f ? EffectLifetime : float.PositiveInfinity;
         var tickInterval = Math.Max(0.1f, TickInterval);
         while (ApplyOnTick && _elapsedTime >= _nextTickTime && _nextTickTime <= lifetime + 0.001f)
         {
-            ApplyEffectsToOccupants();
+            OnTick();
             _nextTickTime += tickInterval;
         }
 
         if (_elapsedTime >= lifetime)
             QueueFree();
+    }
+
+    public override void _ExitTree()
+    {
+        DisconnectVisualSignals();
     }
 
     public virtual void InitializePreview()
@@ -143,6 +150,20 @@ public partial class AreaOfEffect : Area2D
     }
 
     protected virtual void OnRuntimeInitialized()
+    {
+    }
+
+    protected virtual void OnBodyEntered(Node2D body)
+    {
+        ApplyEffectsToTarget(body);
+    }
+
+    protected virtual void OnTick()
+    {
+        ApplyEffectsToOccupants();
+    }
+
+    protected virtual void OnAnimationFinished()
     {
     }
 
@@ -208,6 +229,7 @@ public partial class AreaOfEffect : Area2D
     private void CacheSceneReferences()
     {
         _collisionShape ??= GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+        _omniSprite ??= GetNodeOrNull<OmniSprite>("OmniSprite");
 
         _statusTemplates.Clear();
         foreach (var child in GetChildren())
@@ -217,7 +239,23 @@ public partial class AreaOfEffect : Area2D
         }
     }
 
-    private void OnBodyEntered(Node2D body)
+    private void ConnectVisualSignals()
+    {
+        if (_omniSprite == null)
+            return;
+
+        _omniSprite.AnimationFinished += HandleAnimationFinished;
+    }
+
+    private void DisconnectVisualSignals()
+    {
+        if (_omniSprite == null || !GodotObject.IsInstanceValid(_omniSprite))
+            return;
+
+        _omniSprite.AnimationFinished -= HandleAnimationFinished;
+    }
+
+    private void HandleBodyEntered(Node2D body)
     {
         if (!_runtimeInitialized || _isPreview)
             return;
@@ -226,15 +264,23 @@ public partial class AreaOfEffect : Area2D
             return;
 
         if (ApplyOnEnter)
-            ApplyEffectsToTarget(body);
+            OnBodyEntered(body);
     }
 
-    private void OnBodyExited(Node2D body)
+    private void HandleBodyExited(Node2D body)
     {
         if (body == null)
             return;
 
         _occupants.Remove(body.GetInstanceId());
+    }
+
+    private void HandleAnimationFinished()
+    {
+        if (!_runtimeInitialized || _isPreview)
+            return;
+
+        OnAnimationFinished();
     }
 
     private bool TryTrackOccupant(Node2D body)
@@ -267,7 +313,7 @@ public partial class AreaOfEffect : Area2D
                 continue;
 
             if (applyOnNewOccupants && !wasTracked)
-                ApplyEffectsToTarget(node2D);
+                OnBodyEntered(node2D);
         }
 
         var occupantsToRemove = new List<ulong>();
