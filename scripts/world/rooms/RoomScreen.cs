@@ -36,6 +36,12 @@ public partial class RoomScreen : Node2D
     [Export]
     public NodePath UnscaledPath { get; set; } = new NodePath("Unscaled");
 
+    [Export]
+    public NodePath ScaledPath { get; set; } = new NodePath("Scaled");
+
+    [Export]
+    public Rect2 CameraBoundsRect { get; set; } = new Rect2(0.0f, 0.0f, 400.0f, 400.0f);
+
     public event Action<RoomExit> ExitTriggered;
 
     private readonly Dictionary<StringName, RoomExit> _exitsById = new();
@@ -82,6 +88,28 @@ public partial class RoomScreen : Node2D
             return null;
 
         return GetNodeOrNull<Marker2D>(CameraAnchorPath);
+    }
+
+    public Rect2 GetWorldCameraBounds()
+    {
+        var localBounds = CameraBoundsRect.Size.X > 0.0f && CameraBoundsRect.Size.Y > 0.0f
+            ? CameraBoundsRect
+            : new Rect2(0.0f, 0.0f, 400.0f, 400.0f);
+
+        var transformRoot = GetNodeOrNull<Node2D>(ScaledPath) ?? this;
+        var transform = transformRoot.GlobalTransform;
+
+        var topLeft = transform * localBounds.Position;
+        var topRight = transform * new Vector2(localBounds.End.X, localBounds.Position.Y);
+        var bottomRight = transform * localBounds.End;
+        var bottomLeft = transform * new Vector2(localBounds.Position.X, localBounds.End.Y);
+
+        var minX = Mathf.Min(Mathf.Min(topLeft.X, topRight.X), Mathf.Min(bottomRight.X, bottomLeft.X));
+        var minY = Mathf.Min(Mathf.Min(topLeft.Y, topRight.Y), Mathf.Min(bottomRight.Y, bottomLeft.Y));
+        var maxX = Mathf.Max(Mathf.Max(topLeft.X, topRight.X), Mathf.Max(bottomRight.X, bottomLeft.X));
+        var maxY = Mathf.Max(Mathf.Max(topLeft.Y, topRight.Y), Mathf.Max(bottomRight.Y, bottomLeft.Y));
+
+        return new Rect2(minX, minY, maxX - minX, maxY - minY);
     }
 
     public Node2D GetUnscaledRoot()

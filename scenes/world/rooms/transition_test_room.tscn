@@ -33,6 +33,7 @@ DisplayName = "Transition Test Hall"
 Theme = &"castle_test"
 RoomType = &"test"
 RoomSize = &"single_screen"
+CameraBoundsRect = Rect2(0, 0, 400, 400)
 
 [node name="Scaled" type="Node2D" parent="." unique_id=128983616]
 scale = Vector2(2, 2)

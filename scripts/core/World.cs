@@ -34,6 +34,7 @@ public partial class World : Node2D
     public delegate void PlayerDiedEventHandler();
 
     private Player _player;
+    private Camera2D _playerCamera;
     private Node _roomContainer;
     private CorpseManager _corpseManager;
     private RoomScreen _activeRoom;
@@ -48,6 +49,7 @@ public partial class World : Node2D
 
         _corpseManager = ResolveCorpseManager();
         _player = GetNodeOrNull<Player>(PlayerPath);
+        _playerCamera = _player?.GetNodeOrNull<Camera2D>("Camera2D");
 
         if (_player != null)
             _player.Connect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
@@ -141,6 +143,7 @@ public partial class World : Node2D
         _activeRoom.ExitTriggered += OnRoomExitTriggered;
 
         PlacePlayerAtRoomEntry(_activeRoom, entryExitId);
+        ApplyRoomCameraBounds(_activeRoom);
         return true;
     }
 
@@ -187,6 +190,20 @@ public partial class World : Node2D
 
         _player.GlobalPosition = targetPosition;
         _player.Velocity = Vector2.Zero;
+    }
+
+    private void ApplyRoomCameraBounds(RoomScreen room)
+    {
+        if (_playerCamera == null || room == null)
+            return;
+
+        var worldBounds = room.GetWorldCameraBounds();
+        _playerCamera.LimitEnabled = true;
+        _playerCamera.LimitLeft = Mathf.FloorToInt(worldBounds.Position.X);
+        _playerCamera.LimitTop = Mathf.FloorToInt(worldBounds.Position.Y);
+        _playerCamera.LimitRight = Mathf.CeilToInt(worldBounds.End.X);
+        _playerCamera.LimitBottom = Mathf.CeilToInt(worldBounds.End.Y);
+        _playerCamera.ForceUpdateScroll();
     }
 
     private static bool HasValue(StringName value)
