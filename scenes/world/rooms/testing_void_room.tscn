@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://c7q7ej5qxqqws"]
+
+[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="1_room_screen"]
+[ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="2_w4qed"]
+[ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="2_xd34g"]
+[ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="4_3evjt"]
+[ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="5_ttrfo"]
+[ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
+
+[sub_resource type="NavigationPolygon" id="1_room_navigation"]
+vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+
+[node name="RoomScreen" type="Node2D" unique_id=117793925]
+script = ExtResource("1_room_screen")
+ScreenId = &"testing_void"
+DisplayName = "Testing Void"
+Theme = &"test"
+RoomType = &"sandbox"
+RoomSize = &"single_screen"
+
+[node name="Scaled" type="Node2D" parent="." unique_id=1342489936]
+scale = Vector2(2, 2)
+
+[node name="Visual" type="Node2D" parent="Scaled" unique_id=1207844468]
+
+[node name="Navigation" type="Node2D" parent="Scaled" unique_id=1764590847]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation" unique_id=1509053010]
+navigation_polygon = SubResource("1_room_navigation")
+
+[node name="Collision" type="Node2D" parent="Scaled" unique_id=1541060653]
+
+[node name="Exits" type="Node2D" parent="Scaled" unique_id=1265552701]
+
+[node name="Markers" type="Node2D" parent="Scaled" unique_id=790925687]
+
+[node name="PlayerStart" type="Marker2D" parent="Scaled/Markers" unique_id=1555369952]
+position = Vector2(200, 220)
+
+[node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=30306381]
+position = Vector2(200, 200)
+
+[node name="Unscaled" type="Node2D" parent="." unique_id=560598129]
+
+[node name="BlizzardArea" parent="Unscaled" unique_id=26160184 instance=ExtResource("2_xd34g")]
+position = Vector2(618, 122)
+EffectLifetime = 0.0
+
+[node name="PoisonCloudArea" parent="Unscaled" unique_id=1438068207 instance=ExtResource("2_w4qed")]
+position = Vector2(166, 128)
+EffectLifetime = 0.0
+
+[node name="RingOfFireArea" parent="Unscaled" unique_id=2075497863 instance=ExtResource("4_3evjt")]
+position = Vector2(386, 122)
+EffectLifetime = 0.0
+TickInterval = 1.0
+ApplyOnEnter = true
+
+[node name="Dryad" parent="Unscaled" unique_id=1856568282 instance=ExtResource("5_ttrfo")]
+position = Vector2(397, 529)
+
+[node name="Altar" parent="Unscaled" unique_id=487314875 instance=ExtResource("6_67bni")]
+position = Vector2(145, 392)
+scale = Vector2(0.6, 0.6)

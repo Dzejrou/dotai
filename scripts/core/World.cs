@@ -11,6 +11,7 @@ public partial class World : Node2D
     private static readonly Dictionary<StringName, string> RoomScenePathsByScreenId = new()
     {
         ["entrance_hall"] = "res://scenes/world/rooms/entrance_hall_room.tscn",
+        ["testing_void"] = "res://scenes/world/rooms/testing_void_room.tscn",
         ["transition_test"] = "res://scenes/world/rooms/transition_test_room.tscn",
     };
 
