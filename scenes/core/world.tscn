@@ -5,9 +5,11 @@
 [ext_resource type="Script" path="res://scripts/core/DebugSpawner.cs" id="3_debug_spawner"]
 [ext_resource type="Resource" path="res://resources/debug/spawn_catalog.tres" id="4_spawn_catalog"]
 [ext_resource type="Script" path="res://scripts/world/CorpseManager.cs" id="5_corpse_manager"]
+[ext_resource type="Resource" path="res://resources/world/room_registry.tres" id="6_room_registry"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
+RoomRegistry = ExtResource("6_room_registry")
 
 [node name="RoomContainer" type="Node2D" parent="."]
 

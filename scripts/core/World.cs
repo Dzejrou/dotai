@@ -1,19 +1,11 @@
 using Godot;
 
 using System;
-using System.Collections.Generic;
 
 [GlobalClass]
 public partial class World : Node2D
 {
     private const float TransitionCooldownSeconds = 0.2f;
-
-    private static readonly Dictionary<StringName, string> RoomScenePathsByScreenId = new()
-    {
-        ["entrance_hall"] = "res://scenes/world/rooms/entrance_hall_room.tscn",
-        ["testing_void"] = "res://scenes/world/rooms/testing_void_room.tscn",
-        ["transition_test"] = "res://scenes/world/rooms/transition_test_room.tscn",
-    };
 
     [Export]
     public NodePath PlayerPath { get; set; } = new NodePath("Player");
@@ -23,6 +15,9 @@ public partial class World : Node2D
 
     [Export]
     public NodePath CorpseManagerPath { get; set; } = new NodePath("CorpseManager");
+
+    [Export]
+    public RoomRegistry RoomRegistry { get; set; }
 
     [Export]
     public StringName InitialScreenId { get; set; } = "entrance_hall";
@@ -46,6 +41,8 @@ public partial class World : Node2D
         _roomContainer = GetNodeOrNull<Node>(RoomContainerPath);
         if (_roomContainer == null)
             GD.PushError($"{nameof(World)} could not resolve room container at '{RoomContainerPath}'.");
+        if (RoomRegistry == null)
+            GD.PushError($"{nameof(World)} is missing a room registry resource.");
 
         _corpseManager = ResolveCorpseManager();
         _player = GetNodeOrNull<Player>(PlayerPath);
@@ -149,22 +146,27 @@ public partial class World : Node2D
 
     private RoomScreen InstantiateRoom(StringName screenId)
     {
-        if (!RoomScenePathsByScreenId.TryGetValue(screenId, out var scenePath))
+        if (RoomRegistry == null)
+        {
+            GD.PushError($"{nameof(World)} cannot resolve room '{screenId}' without a room registry.");
+            return null;
+        }
+
+        if (!RoomRegistry.TryGetRoomScene(screenId, out var roomScene))
         {
             GD.PushError($"No room scene registered for screen id '{screenId}'.");
             return null;
         }
 
-        var roomScene = ResourceLoader.Load<PackedScene>(scenePath);
         if (roomScene == null)
         {
-            GD.PushError($"Failed to load room scene at '{scenePath}'.");
+            GD.PushError($"Room registry entry for '{screenId}' does not define a room scene.");
             return null;
         }
 
         if (roomScene.Instantiate() is not RoomScreen room)
         {
-            GD.PushError($"Scene '{scenePath}' does not instantiate a {nameof(RoomScreen)} root.");
+            GD.PushError($"Registered room scene for '{screenId}' does not instantiate a {nameof(RoomScreen)} root.");
             return null;
         }
 

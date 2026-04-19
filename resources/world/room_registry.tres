@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RoomRegistry" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomRegistry.cs" id="1_room_registry_script"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomRegistryEntry.cs" id="2_room_registry_entry_script"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/entrance_hall_room.tscn" id="3_entrance_hall_room"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/transition_test_room.tscn" id="4_transition_test_room"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/testing_void_room.tscn" id="5_testing_void_room"]
+
+[sub_resource type="Resource" id="Resource_room_registry_entry_entrance_hall"]
+script = ExtResource("2_room_registry_entry_script")
+ScreenId = &"entrance_hall"
+RoomScene = ExtResource("3_entrance_hall_room")
+
+[sub_resource type="Resource" id="Resource_room_registry_entry_transition_test"]
+script = ExtResource("2_room_registry_entry_script")
+ScreenId = &"transition_test"
+RoomScene = ExtResource("4_transition_test_room")
+
+[sub_resource type="Resource" id="Resource_room_registry_entry_testing_void"]
+script = ExtResource("2_room_registry_entry_script")
+ScreenId = &"testing_void"
+RoomScene = ExtResource("5_testing_void_room")
+
+[resource]
+script = ExtResource("1_room_registry_script")
+Entries = Array[ExtResource("2_room_registry_entry_script")]([SubResource("Resource_room_registry_entry_entrance_hall"), SubResource("Resource_room_registry_entry_transition_test"), SubResource("Resource_room_registry_entry_testing_void")])
