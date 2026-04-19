@@ -22,16 +22,19 @@ public partial class RoomScreen : Node2D
     public StringName RoomSize { get; set; } = default;
 
     [Export]
-    public NodePath ExitsPath { get; set; } = new NodePath("Exits");
+    public NodePath ExitsPath { get; set; } = new NodePath("Scaled/Exits");
 
     [Export]
-    public NodePath MarkersPath { get; set; } = new NodePath("Markers");
+    public NodePath MarkersPath { get; set; } = new NodePath("Scaled/Markers");
 
     [Export]
-    public NodePath PlayerStartPath { get; set; } = new NodePath("Markers/PlayerStart");
+    public NodePath PlayerStartPath { get; set; } = new NodePath("Scaled/Markers/PlayerStart");
 
     [Export]
-    public NodePath CameraAnchorPath { get; set; } = new NodePath("Markers/CameraAnchor");
+    public NodePath CameraAnchorPath { get; set; } = new NodePath("Scaled/Markers/CameraAnchor");
+
+    [Export]
+    public NodePath UnscaledPath { get; set; } = new NodePath("Unscaled");
 
     public event Action<RoomExit> ExitTriggered;
 
@@ -79,6 +82,14 @@ public partial class RoomScreen : Node2D
             return null;
 
         return GetNodeOrNull<Marker2D>(CameraAnchorPath);
+    }
+
+    public Node2D GetUnscaledRoot()
+    {
+        if (UnscaledPath.IsEmpty)
+            return null;
+
+        return GetNodeOrNull<Node2D>(UnscaledPath);
     }
 
     private void CacheExits()

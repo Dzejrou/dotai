@@ -1,18 +1,12 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://kcce6l2qkbhp"]
 
-[ext_resource type="Texture2D" path="res://assets/world/castle/entrance_hall.png" id="1_room_texture"]
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomExit.cs" id="3_room_exit"]
+[ext_resource type="Texture2D" uid="uid://djv557mac6kfa" path="res://assets/world/castle/entrance_hall.png" id="1_room_texture"]
+[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
+[ext_resource type="Script" uid="uid://jmy023o74cgg" path="res://scripts/world/rooms/RoomExit.cs" id="3_room_exit"]
 
 [sub_resource type="NavigationPolygon" id="7_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
-
-[sub_resource type="RectangleShape2D" id="1_exit_north_center"]
-size = Vector2(32, 24)
-
-[sub_resource type="RectangleShape2D" id="2_exit_south_center"]
-size = Vector2(40, 20)
 
 [sub_resource type="RectangleShape2D" id="3_wall_north"]
 size = Vector2(336, 18)
@@ -26,7 +20,13 @@ size = Vector2(18, 268)
 [sub_resource type="RectangleShape2D" id="6_plinth"]
 size = Vector2(28, 86)
 
-[node name="RoomScreen" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="1_exit_north_center"]
+size = Vector2(32, 24)
+
+[sub_resource type="RectangleShape2D" id="2_exit_south_center"]
+size = Vector2(40, 20)
+
+[node name="RoomScreen" type="Node2D" unique_id=1328274203]
 script = ExtResource("2_room_screen")
 ScreenId = &"transition_test"
 DisplayName = "Transition Test Hall"
@@ -34,60 +34,63 @@ Theme = &"castle_test"
 RoomType = &"test"
 RoomSize = &"single_screen"
 
-[node name="Visual" type="Node2D" parent="."]
+[node name="Scaled" type="Node2D" parent="." unique_id=128983616]
+scale = Vector2(2, 2)
 
-[node name="RoomSprite" type="Sprite2D" parent="Visual"]
-z_index = -10
+[node name="Visual" type="Node2D" parent="Scaled" unique_id=1173141074]
+
+[node name="RoomSprite" type="Sprite2D" parent="Scaled/Visual" unique_id=2049244118]
 modulate = Color(0.82, 0.9, 1, 1)
+z_index = -10
 texture = ExtResource("1_room_texture")
 centered = false
 
-[node name="Navigation" type="Node2D" parent="."]
+[node name="Navigation" type="Node2D" parent="Scaled" unique_id=1316035089]
 
-[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Navigation"]
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation" unique_id=1843298840]
 navigation_polygon = SubResource("7_room_navigation")
 
-[node name="Collision" type="Node2D" parent="."]
+[node name="Collision" type="Node2D" parent="Scaled" unique_id=360267991]
 
-[node name="NorthWall" type="StaticBody2D" parent="Collision"]
+[node name="NorthWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1445565105]
 position = Vector2(200, 53)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/NorthWall"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/NorthWall" unique_id=1304130912]
 shape = SubResource("3_wall_north")
 
-[node name="SouthWall" type="StaticBody2D" parent="Collision"]
+[node name="SouthWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=650073923]
 position = Vector2(200, 347)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/SouthWall"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/SouthWall" unique_id=1457581959]
 shape = SubResource("4_wall_south")
 
-[node name="WestWall" type="StaticBody2D" parent="Collision"]
+[node name="WestWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1267151863]
 position = Vector2(25, 200)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/WestWall"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/WestWall" unique_id=1729466241]
 shape = SubResource("5_wall_vertical")
 
-[node name="EastWall" type="StaticBody2D" parent="Collision"]
+[node name="EastWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1618193535]
 position = Vector2(375, 200)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/EastWall"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/EastWall" unique_id=416415325]
 shape = SubResource("5_wall_vertical")
 
-[node name="UpperLeftPlinth" type="StaticBody2D" parent="Collision"]
+[node name="UpperLeftPlinth" type="StaticBody2D" parent="Scaled/Collision" unique_id=156836813]
 position = Vector2(150, 119)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/UpperLeftPlinth"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/UpperLeftPlinth" unique_id=332796876]
 shape = SubResource("6_plinth")
 
-[node name="UpperRightPlinth" type="StaticBody2D" parent="Collision"]
+[node name="UpperRightPlinth" type="StaticBody2D" parent="Scaled/Collision" unique_id=668812059]
 position = Vector2(250, 119)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/UpperRightPlinth"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/UpperRightPlinth" unique_id=671216002]
 shape = SubResource("6_plinth")
 
-[node name="Exits" type="Node2D" parent="."]
+[node name="Exits" type="Node2D" parent="Scaled" unique_id=1240813683]
 
-[node name="NorthCenterExit" type="Area2D" parent="Exits"]
+[node name="NorthCenterExit" type="Area2D" parent="Scaled/Exits" unique_id=1106385160]
 position = Vector2(200, 91)
 script = ExtResource("3_room_exit")
 ExitId = &"north_center"
@@ -96,13 +99,13 @@ TargetExitId = &"south_center"
 Direction = &"north"
 TransitionType = &"door"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/NorthCenterExit"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/NorthCenterExit" unique_id=80430205]
 shape = SubResource("1_exit_north_center")
 
-[node name="SpawnPoint" type="Marker2D" parent="Exits/NorthCenterExit"]
+[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/NorthCenterExit" unique_id=578349448]
 position = Vector2(0, 34)
 
-[node name="SouthCenterExit" type="Area2D" parent="Exits"]
+[node name="SouthCenterExit" type="Area2D" parent="Scaled/Exits" unique_id=731801008]
 position = Vector2(200, 321)
 script = ExtResource("3_room_exit")
 ExitId = &"south_center"
@@ -111,18 +114,18 @@ TargetExitId = &"north_center"
 Direction = &"south"
 TransitionType = &"door"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/SouthCenterExit"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/SouthCenterExit" unique_id=545933399]
 shape = SubResource("2_exit_south_center")
 
-[node name="SpawnPoint" type="Marker2D" parent="Exits/SouthCenterExit"]
+[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/SouthCenterExit" unique_id=827877885]
 position = Vector2(0, -36)
 
-[node name="Markers" type="Node2D" parent="."]
+[node name="Markers" type="Node2D" parent="Scaled" unique_id=377095549]
 
-[node name="PlayerStart" type="Marker2D" parent="Markers"]
+[node name="PlayerStart" type="Marker2D" parent="Scaled/Markers" unique_id=1544110617]
 position = Vector2(200, 286)
 
-[node name="CameraAnchor" type="Marker2D" parent="Markers"]
+[node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=894847533]
 position = Vector2(200, 200)
 
-[node name="Content" type="Node2D" parent="."]
+[node name="Unscaled" type="Node2D" parent="." unique_id=433102789]
