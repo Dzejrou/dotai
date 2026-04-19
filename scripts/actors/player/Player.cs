@@ -10,7 +10,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public delegate void PlayerDiedEventHandler();
 
     [Signal]
-    public delegate void InteractionAvailabilityChangedEventHandler(bool available, string label);
+    public delegate void InteractionAvailabilityChangedEventHandler(bool available);
 
     [Signal]
     public delegate void SpellLoadoutChangedEventHandler();
@@ -49,7 +49,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private float _healthRegenDelayTimer;
     private IInteractable _activeInteractable;
     private Node2D _activeInteractableNode;
-    private string _activeInteractableLabel = string.Empty;
     private ActorHUD _actorHud;
     private Area2D _lootMagnetArea;
     private CollisionShape2D _lootMagnetCollisionShape;
@@ -65,7 +64,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public SpellLoadout SpellLoadoutNode { get; private set; }
     public bool CanCastSpells => !_isDead;
     public bool HasInteractionTarget => _activeInteractable != null;
-    public string CurrentInteractionLabel => _activeInteractableLabel;
+    public Node2D CurrentInteractionTarget => _activeInteractableNode;
     public int Gold { get; private set; }
 
     public void ShowFloatingText(string text, Color color)
@@ -366,19 +365,16 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         var currentIsValid = IsValidInteractionTarget(_activeInteractableNode, _activeInteractable);
         var nextInteractable = currentIsValid ? _activeInteractable : FindClosestInteractable();
         var nextInteractableNode = nextInteractable as Node2D;
-        var nextLabel = ResolveInteractionLabel(nextInteractable);
 
         if (ReferenceEquals(nextInteractable, _activeInteractable) &&
-            ReferenceEquals(nextInteractableNode, _activeInteractableNode) &&
-            nextLabel == _activeInteractableLabel)
+            ReferenceEquals(nextInteractableNode, _activeInteractableNode))
         {
             return;
         }
 
         _activeInteractable = nextInteractable;
         _activeInteractableNode = nextInteractableNode;
-        _activeInteractableLabel = nextLabel;
-        EmitSignal(SignalName.InteractionAvailabilityChanged, nextInteractable != null, nextLabel);
+        EmitSignal(SignalName.InteractionAvailabilityChanged, nextInteractable != null);
     }
 
     private IInteractable FindClosestInteractable()
@@ -436,13 +432,19 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return GlobalPosition.DistanceTo(targetNode.GlobalPosition) <= Math.Max(0.0f, InteractionRange);
     }
 
-    private string ResolveInteractionLabel(IInteractable interactable)
+    public bool TryGetInteractionPromptPosition(out Vector2 promptPosition)
     {
-        if (interactable == null)
-            return string.Empty;
+        if (!IsValidInteractionTarget(_activeInteractableNode, _activeInteractable))
+        {
+            promptPosition = Vector2.Zero;
+            return false;
+        }
 
-        var label = interactable.GetInteractionLabel(this);
-        return string.IsNullOrWhiteSpace(label) ? "Interact" : label.Trim();
+        var promptOffset = _activeInteractableNode is IInteractionPromptAnchor promptAnchor
+            ? promptAnchor.InteractionPromptOffset
+            : new Vector2(0.0f, -56.0f);
+        promptPosition = _activeInteractableNode.GlobalPosition + promptOffset;
+        return true;
     }
 
     public bool TryInteract()

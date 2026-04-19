@@ -1,8 +1,11 @@
 using Godot;
 
 [GlobalClass]
-public abstract partial class WorldObject : StaticBody2D
+public abstract partial class WorldObject : StaticBody2D, IInteractionPromptAnchor
 {
+    [Export]
+    public Vector2 InteractionPromptOffset { get; set; } = new(0.0f, -56.0f);
+
     protected Sprite2D VisualSprite { get; private set; }
     protected CollisionShape2D CollisionShape { get; private set; }
 

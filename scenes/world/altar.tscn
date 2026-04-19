@@ -15,6 +15,7 @@ size = Vector2(70, 72)
 
 [node name="Altar" type="StaticBody2D" unique_id=487314875]
 script = ExtResource("1_altar_script")
+InteractionPromptOffset = Vector2(0, -58)
 EastTexture = ExtResource("2_east")
 SouthEastTexture = ExtResource("6_south_east")
 SouthTexture = ExtResource("7_south")

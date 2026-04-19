@@ -36,11 +36,10 @@ public partial class Main : Node2D
     private bool _pauseMenuOpen;
     private PlayerSpellBar _spellBar;
     private PlayerSpellBindingWindow _spellBindingWindow;
-    private Label _interactionPrompt;
-    private static readonly Color InteractionPromptColor = new Color(0.98f, 0.86f, 0.42f, 1.0f);
+    private Sprite2D _interactionPrompt;
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
-    private const string InteractionActionName = "interact_action";
+    private const string InteractionPromptGlyphPath = "res://assets/glyphs/letter_g.png";
     private const string SpellBookActionName = "spell_book";
     private int _windowPresetIndex;
 
@@ -84,13 +83,13 @@ public partial class Main : Node2D
             player.Connect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
             _spellBar?.Bind(player);
             _spellBindingWindow?.Bind(player);
-            UpdateInteractionPrompt(player.HasInteractionTarget, player.CurrentInteractionLabel);
+            UpdateInteractionPrompt(player.HasInteractionTarget);
         }
         else
         {
             _spellBar?.Bind(null);
             _spellBindingWindow?.Bind(null);
-            UpdateInteractionPrompt(false, string.Empty);
+            UpdateInteractionPrompt(false);
         }
 
         InitializeWindowPreset();
@@ -140,6 +139,11 @@ public partial class Main : Node2D
         TryHandlePauseMenuInput(@event);
     }
 
+    public override void _Process(double delta)
+    {
+        UpdateInteractionPromptPosition();
+    }
+
     private void OnPlayerDied()
     {
         if (_gameOverActive)
@@ -147,7 +151,7 @@ public partial class Main : Node2D
 
         ClosePauseMenu();
         CloseDebugTray(false);
-        UpdateInteractionPrompt(false, string.Empty);
+        UpdateInteractionPrompt(false);
         _gameOverActive = true;
         _spellBindingWindow?.CloseWindow();
         GetTree().Paused = true;
@@ -158,9 +162,9 @@ public partial class Main : Node2D
         _gameOverRoot.Visible = true;
     }
 
-    private void OnPlayerInteractionAvailabilityChanged(bool available, string label)
+    private void OnPlayerInteractionAvailabilityChanged(bool available)
     {
-        UpdateInteractionPrompt(available, label);
+        UpdateInteractionPrompt(available);
     }
 
     private void RestartFromGameOver()
@@ -181,17 +185,13 @@ public partial class Main : Node2D
         OpenDebugTray();
     }
 
-    private void UpdateInteractionPrompt(bool available, string label)
+    private void UpdateInteractionPrompt(bool available)
     {
         if (_interactionPrompt == null)
             return;
 
-        _interactionPrompt.Visible = available && !string.IsNullOrWhiteSpace(label);
-        if (!_interactionPrompt.Visible)
-            return;
-
-        var actionLabel = ResolveActionLabel(InteractionActionName);
-        _interactionPrompt.Text = $"{actionLabel}: {label}";
+        _interactionPrompt.Visible = available && _player != null && _player.CurrentInteractionTarget != null;
+        UpdateInteractionPromptPosition();
     }
 
     private void CreateHud()
@@ -217,42 +217,40 @@ public partial class Main : Node2D
             hudCanvas.AddChild(_spellBindingWindow);
         }
 
-        _interactionPrompt = new Label
+        var interactionPromptTexture = ResourceLoader.Load<Texture2D>(InteractionPromptGlyphPath);
+        if (interactionPromptTexture == null)
+        {
+            GD.PushError($"Failed to load interaction prompt glyph at {InteractionPromptGlyphPath}.");
+            return;
+        }
+
+        _interactionPrompt = new Sprite2D
         {
             Name = "InteractionPrompt",
             Visible = false,
-            Text = string.Empty,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Modulate = InteractionPromptColor,
-            CustomMinimumSize = new Vector2(240.0f, 24.0f),
+            Centered = true,
+            Texture = interactionPromptTexture,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            ZIndex = 1000,
         };
-        _interactionPrompt.AnchorLeft = 0.5f;
-        _interactionPrompt.AnchorRight = 0.5f;
-        _interactionPrompt.AnchorTop = 1.0f;
-        _interactionPrompt.AnchorBottom = 1.0f;
-        _interactionPrompt.OffsetLeft = -120.0f;
-        _interactionPrompt.OffsetRight = 120.0f;
-        _interactionPrompt.OffsetTop = -92.0f;
-        _interactionPrompt.OffsetBottom = -68.0f;
-        _interactionPrompt.AddThemeFontSizeOverride("font_size", 18);
-        hudCanvas.AddChild(_interactionPrompt);
+        AddChild(_interactionPrompt);
     }
 
-    private string ResolveActionLabel(StringName action)
+    private void UpdateInteractionPromptPosition()
     {
-        foreach (var inputEvent in InputMap.ActionGetEvents(action))
-        {
-            if (inputEvent is not InputEventKey keyEvent)
-                continue;
+        if (_interactionPrompt == null || !_interactionPrompt.Visible)
+            return;
 
-            var keycode = keyEvent.PhysicalKeycode != Key.None
-                ? keyEvent.PhysicalKeycode
-                : keyEvent.Keycode;
-            if (keycode != Key.None)
-                return OS.GetKeycodeString(keycode).ToUpperInvariant();
+        if (_player == null ||
+            !_player.HasInteractionTarget ||
+            _player.CurrentInteractionTarget == null ||
+            !_player.TryGetInteractionPromptPosition(out var promptPosition))
+        {
+            _interactionPrompt.Visible = false;
+            return;
         }
 
-        return action.ToString();
+        _interactionPrompt.GlobalPosition = promptPosition;
     }
 
     private void InitializeWindowPreset()

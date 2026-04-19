@@ -4,7 +4,6 @@ using Godot;
 public partial class Altar : WorldObject, IInteractable
 {
     private const string DefaultVisualDirection = "south";
-    private const string DefaultInteractionLabel = "Cleanse Poison";
 
     [Export(PropertyHint.Enum, "east,south-east,south,south-west,west,north-west,north,north-east")]
     public string VisualDirection { get; set; } = DefaultVisualDirection;
@@ -28,11 +27,6 @@ public partial class Altar : WorldObject, IInteractable
     public bool CanInteract(Node interactor)
     {
         return interactor != null && interactor.IsInsideTree();
-    }
-
-    public string GetInteractionLabel(Node interactor)
-    {
-        return DefaultInteractionLabel;
     }
 
     public void Interact(Node interactor)
