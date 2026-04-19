@@ -1,0 +1,128 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/world/castle/entrance_hall.png" id="1_room_texture"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomExit.cs" id="3_room_exit"]
+
+[sub_resource type="NavigationPolygon" id="7_room_navigation"]
+vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+
+[sub_resource type="RectangleShape2D" id="1_exit_north_center"]
+size = Vector2(32, 24)
+
+[sub_resource type="RectangleShape2D" id="2_exit_south_center"]
+size = Vector2(40, 20)
+
+[sub_resource type="RectangleShape2D" id="3_wall_north"]
+size = Vector2(336, 18)
+
+[sub_resource type="RectangleShape2D" id="4_wall_south"]
+size = Vector2(336, 24)
+
+[sub_resource type="RectangleShape2D" id="5_wall_vertical"]
+size = Vector2(18, 268)
+
+[sub_resource type="RectangleShape2D" id="6_plinth"]
+size = Vector2(28, 86)
+
+[node name="RoomScreen" type="Node2D"]
+script = ExtResource("2_room_screen")
+ScreenId = &"transition_test"
+DisplayName = "Transition Test Hall"
+Theme = &"castle_test"
+RoomType = &"test"
+RoomSize = &"single_screen"
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="RoomSprite" type="Sprite2D" parent="Visual"]
+z_index = -10
+modulate = Color(0.82, 0.9, 1, 1)
+texture = ExtResource("1_room_texture")
+centered = false
+
+[node name="Navigation" type="Node2D" parent="."]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Navigation"]
+navigation_polygon = SubResource("7_room_navigation")
+
+[node name="Collision" type="Node2D" parent="."]
+
+[node name="NorthWall" type="StaticBody2D" parent="Collision"]
+position = Vector2(200, 53)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/NorthWall"]
+shape = SubResource("3_wall_north")
+
+[node name="SouthWall" type="StaticBody2D" parent="Collision"]
+position = Vector2(200, 347)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/SouthWall"]
+shape = SubResource("4_wall_south")
+
+[node name="WestWall" type="StaticBody2D" parent="Collision"]
+position = Vector2(25, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/WestWall"]
+shape = SubResource("5_wall_vertical")
+
+[node name="EastWall" type="StaticBody2D" parent="Collision"]
+position = Vector2(375, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/EastWall"]
+shape = SubResource("5_wall_vertical")
+
+[node name="UpperLeftPlinth" type="StaticBody2D" parent="Collision"]
+position = Vector2(150, 119)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/UpperLeftPlinth"]
+shape = SubResource("6_plinth")
+
+[node name="UpperRightPlinth" type="StaticBody2D" parent="Collision"]
+position = Vector2(250, 119)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/UpperRightPlinth"]
+shape = SubResource("6_plinth")
+
+[node name="Exits" type="Node2D" parent="."]
+
+[node name="NorthCenterExit" type="Area2D" parent="Exits"]
+position = Vector2(200, 91)
+script = ExtResource("3_room_exit")
+ExitId = &"north_center"
+TargetScreenId = &"entrance_hall"
+TargetExitId = &"south_center"
+Direction = &"north"
+TransitionType = &"door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/NorthCenterExit"]
+shape = SubResource("1_exit_north_center")
+
+[node name="SpawnPoint" type="Marker2D" parent="Exits/NorthCenterExit"]
+position = Vector2(0, 34)
+
+[node name="SouthCenterExit" type="Area2D" parent="Exits"]
+position = Vector2(200, 321)
+script = ExtResource("3_room_exit")
+ExitId = &"south_center"
+TargetScreenId = &"entrance_hall"
+TargetExitId = &"north_center"
+Direction = &"south"
+TransitionType = &"door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/SouthCenterExit"]
+shape = SubResource("2_exit_south_center")
+
+[node name="SpawnPoint" type="Marker2D" parent="Exits/SouthCenterExit"]
+position = Vector2(0, -36)
+
+[node name="Markers" type="Node2D" parent="."]
+
+[node name="PlayerStart" type="Marker2D" parent="Markers"]
+position = Vector2(200, 286)
+
+[node name="CameraAnchor" type="Marker2D" parent="Markers"]
+position = Vector2(200, 200)
+
+[node name="Content" type="Node2D" parent="."]

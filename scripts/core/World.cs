@@ -1,55 +1,71 @@
 using Godot;
 
 using System;
+using System.Collections.Generic;
 
 [GlobalClass]
 public partial class World : Node2D
 {
-    private const float DefaultNavigationBlockerPadding = 2.0f;
-    private const float DefaultNavigationAgentRadius = 5.0f;
+    private const float TransitionCooldownSeconds = 0.2f;
+
+    private static readonly Dictionary<StringName, string> RoomScenePathsByScreenId = new()
+    {
+        ["entrance_hall"] = "res://scenes/world/rooms/entrance_hall_room.tscn",
+        ["transition_test"] = "res://scenes/world/rooms/transition_test_room.tscn",
+    };
 
     [Export]
     public NodePath PlayerPath { get; set; } = new NodePath("Player");
 
     [Export]
-    public NodePath WorldNavigationPath { get; set; } = new NodePath("WorldNavigation");
+    public NodePath RoomContainerPath { get; set; } = new NodePath("RoomContainer");
 
     [Export]
     public NodePath CorpseManagerPath { get; set; } = new NodePath("CorpseManager");
 
     [Export]
-    public Rect2 NavigationBounds { get; set; } = new Rect2(0.0f, 0.0f, 1640.0f, 1360.0f);
+    public StringName InitialScreenId { get; set; } = "entrance_hall";
 
     [Export]
-    public float NavigationBlockerPadding { get; set; } = DefaultNavigationBlockerPadding;
-
-    [Export]
-    public float NavigationAgentRadius { get; set; } = DefaultNavigationAgentRadius;
-
-    [Export]
-    public Godot.Collections.Array<NodePath> NavigationBlockerPaths { get; set; } = new();
+    public StringName InitialExitId { get; set; } = default;
 
     [Signal]
     public delegate void PlayerDiedEventHandler();
 
     private Player _player;
-    private NavigationRegion2D _worldNavigation;
+    private Node _roomContainer;
     private CorpseManager _corpseManager;
+    private RoomScreen _activeRoom;
     private bool _isGameOver;
+    private float _transitionCooldownRemaining;
 
     public override void _Ready()
     {
-        _worldNavigation = GetNodeOrNull<NavigationRegion2D>(WorldNavigationPath);
-        BuildWorldNavigation();
+        _roomContainer = GetNodeOrNull<Node>(RoomContainerPath);
+        if (_roomContainer == null)
+            GD.PushError($"{nameof(World)} could not resolve room container at '{RoomContainerPath}'.");
 
         _corpseManager = ResolveCorpseManager();
         _player = GetNodeOrNull<Player>(PlayerPath);
+
         if (_player != null)
             _player.Connect(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
+
+        LoadInitialRoom();
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_transitionCooldownRemaining <= 0.0f)
+            return;
+
+        _transitionCooldownRemaining = Math.Max(0.0f, _transitionCooldownRemaining - (float)delta);
     }
 
     public override void _ExitTree()
     {
+        DisconnectActiveRoom();
+
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
         {
@@ -60,6 +76,17 @@ public partial class World : Node2D
     public void RegisterCorpse(Corpse corpse)
     {
         ResolveCorpseManager()?.Register(corpse);
+    }
+
+    private void LoadInitialRoom()
+    {
+        if (!HasValue(InitialScreenId))
+        {
+            GD.PushError($"{nameof(World)} is missing an initial room id.");
+            return;
+        }
+
+        TransitionToRoom(InitialScreenId, InitialExitId);
     }
 
     private void OnPlayerDied()
@@ -80,81 +107,89 @@ public partial class World : Node2D
         return _corpseManager;
     }
 
-    private void BuildWorldNavigation()
+    private void OnRoomExitTriggered(RoomExit roomExit)
     {
-        if (_worldNavigation == null)
+        if (_transitionCooldownRemaining > 0.0f || roomExit == null || roomExit.IsLocked)
             return;
 
-        var navigationPolygon = new NavigationPolygon();
-        navigationPolygon.AgentRadius = Math.Max(0.0f, NavigationAgentRadius);
-        var sourceGeometryData = new NavigationMeshSourceGeometryData2D();
-        sourceGeometryData.AddTraversableOutline(CreateOuterOutline());
-
-        foreach (var blockerPath in NavigationBlockerPaths)
+        if (!HasValue(roomExit.TargetScreenId))
         {
-            var blocker = GetNodeOrNull<Node2D>(blockerPath);
-            if (blocker == null)
-                continue;
-
-            foreach (var collisionShape in FindCollisionShapes(blocker))
-            {
-                var blockerOutline = CreateBlockerOutline(collisionShape);
-                if (blockerOutline.Length < 3)
-                    continue;
-
-                sourceGeometryData.AddObstructionOutline(blockerOutline);
-            }
+            GD.PushWarning($"{roomExit.Name} does not define a target screen id.");
+            return;
         }
 
-        NavigationServer2D.BakeFromSourceGeometryData(navigationPolygon, sourceGeometryData);
-        _worldNavigation.NavigationPolygon = navigationPolygon;
+        if (!TransitionToRoom(roomExit.TargetScreenId, roomExit.TargetExitId))
+            return;
+
+        _transitionCooldownRemaining = TransitionCooldownSeconds;
     }
 
-    private Vector2[] CreateOuterOutline()
+    private bool TransitionToRoom(StringName screenId, StringName entryExitId)
     {
-        var bounds = NavigationBounds;
-        return
-        [
-            new Vector2(bounds.Position.X, bounds.Position.Y),
-            new Vector2(bounds.End.X, bounds.Position.Y),
-            new Vector2(bounds.End.X, bounds.End.Y),
-            new Vector2(bounds.Position.X, bounds.End.Y),
-        ];
+        var nextRoom = InstantiateRoom(screenId);
+        if (nextRoom == null)
+            return false;
+
+        DisconnectActiveRoom();
+
+        if (_activeRoom != null && GodotObject.IsInstanceValid(_activeRoom))
+            _activeRoom.QueueFree();
+
+        _activeRoom = nextRoom;
+        (_roomContainer ?? this).AddChild(_activeRoom);
+        _activeRoom.ExitTriggered += OnRoomExitTriggered;
+
+        PlacePlayerAtRoomEntry(_activeRoom, entryExitId);
+        return true;
     }
 
-    private Vector2[] CreateBlockerOutline(CollisionShape2D collisionShape)
+    private RoomScreen InstantiateRoom(StringName screenId)
     {
-        if (collisionShape?.Shape is not RectangleShape2D rectangleShape)
-            return [];
-
-        var padding = Math.Max(0.0f, NavigationBlockerPadding);
-        var halfExtents = (rectangleShape.Size * 0.5f) + new Vector2(padding, padding);
-        var transform = collisionShape.GlobalTransform;
-
-        var topLeft = _worldNavigation.ToLocal(transform * new Vector2(-halfExtents.X, -halfExtents.Y));
-        var topRight = _worldNavigation.ToLocal(transform * new Vector2(halfExtents.X, -halfExtents.Y));
-        var bottomRight = _worldNavigation.ToLocal(transform * new Vector2(halfExtents.X, halfExtents.Y));
-        var bottomLeft = _worldNavigation.ToLocal(transform * new Vector2(-halfExtents.X, halfExtents.Y));
-
-        return [topLeft, bottomLeft, bottomRight, topRight];
-    }
-
-    private static Godot.Collections.Array<CollisionShape2D> FindCollisionShapes(Node root)
-    {
-        var collisionShapes = new Godot.Collections.Array<CollisionShape2D>();
-        CollectCollisionShapes(root, collisionShapes);
-        return collisionShapes;
-    }
-
-    private static void CollectCollisionShapes(Node node, Godot.Collections.Array<CollisionShape2D> collisionShapes)
-    {
-        foreach (Node child in node.GetChildren())
+        if (!RoomScenePathsByScreenId.TryGetValue(screenId, out var scenePath))
         {
-            if (child is CollisionShape2D collisionShape)
-                collisionShapes.Add(collisionShape);
-
-            CollectCollisionShapes(child, collisionShapes);
+            GD.PushError($"No room scene registered for screen id '{screenId}'.");
+            return null;
         }
+
+        var roomScene = ResourceLoader.Load<PackedScene>(scenePath);
+        if (roomScene == null)
+        {
+            GD.PushError($"Failed to load room scene at '{scenePath}'.");
+            return null;
+        }
+
+        if (roomScene.Instantiate() is not RoomScreen room)
+        {
+            GD.PushError($"Scene '{scenePath}' does not instantiate a {nameof(RoomScreen)} root.");
+            return null;
+        }
+
+        return room;
     }
 
+    private void DisconnectActiveRoom()
+    {
+        if (_activeRoom != null)
+            _activeRoom.ExitTriggered -= OnRoomExitTriggered;
+    }
+
+    private void PlacePlayerAtRoomEntry(RoomScreen room, StringName entryExitId)
+    {
+        if (_player == null || room == null)
+            return;
+
+        Vector2 targetPosition;
+        if (room.TryGetSpawnMarker(entryExitId, out var spawnMarker))
+            targetPosition = spawnMarker.GlobalPosition;
+        else
+            targetPosition = room.GlobalPosition;
+
+        _player.GlobalPosition = targetPosition;
+        _player.Velocity = Vector2.Zero;
+    }
+
+    private static bool HasValue(StringName value)
+    {
+        return value != null && !value.IsEmpty;
+    }
 }
