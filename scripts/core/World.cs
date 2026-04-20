@@ -17,6 +17,9 @@ public partial class World : Node2D
     public NodePath CorpseManagerPath { get; set; } = new NodePath("CorpseManager");
 
     [Export]
+    public NodePath DungeonPath { get; set; } = new NodePath("Dungeon");
+
+    [Export]
     public RoomRegistry RoomRegistry { get; set; }
 
     [Export]
@@ -32,6 +35,7 @@ public partial class World : Node2D
     private Camera2D _playerCamera;
     private Node _roomContainer;
     private CorpseManager _corpseManager;
+    private Dungeon _dungeon;
     private RoomScreen _activeRoom;
     private bool _isGameOver;
     private float _transitionCooldownRemaining;
@@ -44,6 +48,7 @@ public partial class World : Node2D
         if (RoomRegistry == null)
             GD.PushError($"{nameof(World)} is missing a room registry resource.");
 
+        _dungeon = GetNodeOrNull<Dungeon>(DungeonPath);
         _corpseManager = ResolveCorpseManager();
         _player = GetNodeOrNull<Player>(PlayerPath);
         _playerCamera = _player?.GetNodeOrNull<Camera2D>("Camera2D");
@@ -118,15 +123,17 @@ public partial class World : Node2D
             return;
         }
 
-        if (!TransitionToRoom(roomExit.TargetScreenId, roomExit.TargetExitId))
+        var previousRoom = _activeRoom;
+        if (!TransitionToRoom(roomExit.TargetScreenId, roomExit.TargetExitId, roomExit))
             return;
 
+        _dungeon?.OnTransitionCompleted(previousRoom, roomExit, _activeRoom);
         _transitionCooldownRemaining = TransitionCooldownSeconds;
     }
 
-    private bool TransitionToRoom(StringName screenId, StringName entryExitId)
+    private bool TransitionToRoom(StringName screenId, StringName entryExitId, RoomExit sourceExit = null)
     {
-        var nextRoom = InstantiateRoom(screenId);
+        var nextRoom = InstantiateRoom(screenId, entryExitId, sourceExit);
         if (nextRoom == null)
             return false;
 
@@ -144,8 +151,15 @@ public partial class World : Node2D
         return true;
     }
 
-    private RoomScreen InstantiateRoom(StringName screenId)
+    private RoomScreen InstantiateRoom(StringName screenId, StringName entryExitId, RoomExit sourceExit)
     {
+        if (_dungeon != null &&
+            _dungeon.TryCreateRoom(screenId, _activeRoom, sourceExit, entryExitId, out var dungeonRoom) &&
+            dungeonRoom != null)
+        {
+            return dungeonRoom;
+        }
+
         if (RoomRegistry == null)
         {
             GD.PushError($"{nameof(World)} cannot resolve room '{screenId}' without a room registry.");

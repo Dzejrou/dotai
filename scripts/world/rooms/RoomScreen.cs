@@ -48,7 +48,7 @@ public partial class RoomScreen : Node2D
 
     public override void _Ready()
     {
-        CacheExits();
+        EnsureExitsCached();
     }
 
     public override void _ExitTree()
@@ -61,6 +61,7 @@ public partial class RoomScreen : Node2D
 
     public RoomExit GetExit(StringName exitId)
     {
+        EnsureExitsCached();
         return HasValue(exitId) && _exitsById.TryGetValue(exitId, out var roomExit)
             ? roomExit
             : null;
@@ -68,6 +69,7 @@ public partial class RoomScreen : Node2D
 
     public bool TryGetSpawnMarker(StringName exitId, out Marker2D marker)
     {
+        EnsureExitsCached();
         marker = null;
 
         if (HasValue(exitId))
@@ -136,6 +138,14 @@ public partial class RoomScreen : Node2D
             _exitsById[roomExit.ExitId] = roomExit;
             roomExit.TransitionRequested += OnExitTransitionRequested;
         }
+    }
+
+    private void EnsureExitsCached()
+    {
+        if (_exitsById.Count > 0)
+            return;
+
+        CacheExits();
     }
 
     private void OnExitTransitionRequested(RoomExit roomExit)

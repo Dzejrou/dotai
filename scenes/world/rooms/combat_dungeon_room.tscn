@@ -1,0 +1,159 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Texture2D" uid="uid://bi1lqm84duw44" path="res://assets/world/dungeon/fork.png" id="1_room_texture"]
+[ext_resource type="Script" path="res://scripts/world/rooms/CombatDungeonRoom.cs" id="2_combat_dungeon_room"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomExit.cs" id="3_room_exit"]
+
+[sub_resource type="NavigationPolygon" id="1_navigation"]
+vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+
+[sub_resource type="RectangleShape2D" id="2_wall_north"]
+size = Vector2(336, 18)
+
+[sub_resource type="RectangleShape2D" id="3_wall_south"]
+size = Vector2(336, 24)
+
+[sub_resource type="RectangleShape2D" id="4_wall_vertical"]
+size = Vector2(18, 268)
+
+[sub_resource type="RectangleShape2D" id="5_exit_top"]
+size = Vector2(28, 24)
+
+[sub_resource type="RectangleShape2D" id="6_exit_bottom"]
+size = Vector2(40, 20)
+
+[node name="RoomScreen" type="Node2D"]
+script = ExtResource("2_combat_dungeon_room")
+ScreenId = &"dungeon_combat"
+DisplayName = "Combat Dungeon Room"
+Theme = &"dungeon"
+RoomType = &"combat"
+RoomSize = &"single_screen"
+CameraBoundsRect = Rect2(0, 0, 400, 400)
+
+[node name="Scaled" type="Node2D" parent="."]
+scale = Vector2(2, 2)
+
+[node name="Visual" type="Node2D" parent="Scaled"]
+
+[node name="RoomSprite" type="Sprite2D" parent="Scaled/Visual"]
+z_index = -10
+texture = ExtResource("1_room_texture")
+centered = false
+
+[node name="LockIndicators" type="Node2D" parent="Scaled/Visual"]
+
+[node name="NorthWestIndicator" type="Polygon2D" parent="Scaled/Visual/LockIndicators"]
+position = Vector2(83, 62)
+polygon = PackedVector2Array(-7, -7, 7, -7, 7, 7, -7, 7)
+color = Color(0.88, 0.24, 0.24, 1)
+
+[node name="NorthEastIndicator" type="Polygon2D" parent="Scaled/Visual/LockIndicators"]
+position = Vector2(317, 62)
+polygon = PackedVector2Array(-7, -7, 7, -7, 7, 7, -7, 7)
+color = Color(0.88, 0.24, 0.24, 1)
+
+[node name="Navigation" type="Node2D" parent="Scaled"]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation"]
+navigation_polygon = SubResource("1_navigation")
+
+[node name="Collision" type="Node2D" parent="Scaled"]
+
+[node name="NorthWall" type="StaticBody2D" parent="Scaled/Collision"]
+position = Vector2(200, 53)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/NorthWall"]
+shape = SubResource("2_wall_north")
+
+[node name="SouthWall" type="StaticBody2D" parent="Scaled/Collision"]
+position = Vector2(200, 347)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/SouthWall"]
+shape = SubResource("3_wall_south")
+
+[node name="WestWall" type="StaticBody2D" parent="Scaled/Collision"]
+position = Vector2(25, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/WestWall"]
+shape = SubResource("4_wall_vertical")
+
+[node name="EastWall" type="StaticBody2D" parent="Scaled/Collision"]
+position = Vector2(375, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/EastWall"]
+shape = SubResource("4_wall_vertical")
+
+[node name="Exits" type="Node2D" parent="Scaled"]
+
+[node name="NorthWestExit" type="Area2D" parent="Scaled/Exits"]
+position = Vector2(83, 92)
+script = ExtResource("3_room_exit")
+ExitId = &"north_west"
+Direction = &"north"
+TransitionType = &"door"
+IsLocked = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/NorthWestExit"]
+shape = SubResource("5_exit_top")
+
+[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/NorthWestExit"]
+position = Vector2(0, 30)
+
+[node name="NorthEastExit" type="Area2D" parent="Scaled/Exits"]
+position = Vector2(317, 92)
+script = ExtResource("3_room_exit")
+ExitId = &"north_east"
+Direction = &"north"
+TransitionType = &"door"
+IsLocked = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/NorthEastExit"]
+shape = SubResource("5_exit_top")
+
+[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/NorthEastExit"]
+position = Vector2(0, 30)
+
+[node name="SouthReturnExit" type="Area2D" parent="Scaled/Exits"]
+position = Vector2(200, 321)
+script = ExtResource("3_room_exit")
+ExitId = &"south_return"
+Direction = &"south"
+TransitionType = &"door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/SouthReturnExit"]
+shape = SubResource("6_exit_bottom")
+
+[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/SouthReturnExit"]
+position = Vector2(0, -36)
+
+[node name="Markers" type="Node2D" parent="Scaled"]
+
+[node name="PlayerStart" type="Marker2D" parent="Scaled/Markers"]
+position = Vector2(200, 286)
+
+[node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers"]
+position = Vector2(200, 200)
+
+[node name="Unscaled" type="Node2D" parent="."]
+
+[node name="EncounterMarkers" type="Node2D" parent="Unscaled"]
+
+[node name="north_west" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(226, 280)
+
+[node name="north_center" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(400, 252)
+
+[node name="north_east" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(576, 280)
+
+[node name="south_west" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(272, 468)
+
+[node name="south_center" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(400, 520)
+
+[node name="south_east" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(528, 468)

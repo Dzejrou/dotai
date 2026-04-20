@@ -105,8 +105,8 @@ shape = SubResource("8_plinth")
 position = Vector2(200, 91)
 script = ExtResource("3_room_exit")
 ExitId = &"north_center"
-TargetScreenId = &"transition_test"
-TargetExitId = &"south_center"
+TargetScreenId = &"dungeon_combat"
+TargetExitId = &"south_return"
 Direction = &"north"
 TransitionType = &"door"
 

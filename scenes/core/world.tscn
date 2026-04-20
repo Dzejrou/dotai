@@ -6,6 +6,7 @@
 [ext_resource type="Resource" path="res://resources/debug/spawn_catalog.tres" id="4_spawn_catalog"]
 [ext_resource type="Script" path="res://scripts/world/CorpseManager.cs" id="5_corpse_manager"]
 [ext_resource type="Resource" path="res://resources/world/room_registry.tres" id="6_room_registry"]
+[ext_resource type="Script" path="res://scripts/world/dungeon/Dungeon.cs" id="7_dungeon"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
@@ -21,3 +22,6 @@ SpawnCatalog = ExtResource("4_spawn_catalog")
 
 [node name="CorpseManager" type="Node" parent="." unique_id=624362729]
 script = ExtResource("5_corpse_manager")
+
+[node name="Dungeon" type="Node" parent="." unique_id=894211917]
+script = ExtResource("7_dungeon")
