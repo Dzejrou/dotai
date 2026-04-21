@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://djv557mac6kfa" path="res://assets/world/castle/entrance_hall.png" id="1_room_texture"]
 [ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
-[ext_resource type="Script" uid="uid://jmy023o74cgg" path="res://scripts/world/rooms/RoomExit.cs" id="3_room_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/doors/door.tscn" id="3_door"]
 
 [sub_resource type="NavigationPolygon" id="7_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -91,34 +91,24 @@ shape = SubResource("6_plinth")
 
 [node name="Exits" type="Node2D" parent="Scaled" unique_id=1240813683]
 
-[node name="NorthCenterExit" type="Area2D" parent="Scaled/Exits" unique_id=1106385160]
+[node name="NorthCenterDoor" parent="Scaled/Exits" unique_id=1106385160 instance=ExtResource("3_door")]
 position = Vector2(200, 91)
-script = ExtResource("3_room_exit")
 ExitId = &"north_center"
 TargetScreenId = &"entrance_hall"
 TargetExitId = &"south_center"
 Direction = &"north"
-TransitionType = &"door"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/NorthCenterExit" unique_id=80430205]
-shape = SubResource("1_exit_north_center")
-
-[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/NorthCenterExit" unique_id=578349448]
+[node name="SpawnPoint" parent="Scaled/Exits/NorthCenterDoor" unique_id=578349448]
 position = Vector2(0, 34)
 
-[node name="SouthCenterExit" type="Area2D" parent="Scaled/Exits" unique_id=731801008]
+[node name="SouthCenterDoor" parent="Scaled/Exits" unique_id=731801008 instance=ExtResource("3_door")]
 position = Vector2(200, 321)
-script = ExtResource("3_room_exit")
 ExitId = &"south_center"
 TargetScreenId = &"entrance_hall"
 TargetExitId = &"north_center"
 Direction = &"south"
-TransitionType = &"door"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/SouthCenterExit" unique_id=545933399]
-shape = SubResource("2_exit_south_center")
-
-[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/SouthCenterExit" unique_id=827877885]
+[node name="SpawnPoint" parent="Scaled/Exits/SouthCenterDoor" unique_id=827877885]
 position = Vector2(0, -36)
 
 [node name="Markers" type="Node2D" parent="Scaled" unique_id=377095549]

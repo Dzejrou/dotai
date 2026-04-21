@@ -112,28 +112,28 @@ public partial class World : Node2D
         return _corpseManager;
     }
 
-    private void OnRoomExitTriggered(RoomExit roomExit)
+    private void OnDoorTriggered(Door door)
     {
-        if (_transitionCooldownRemaining > 0.0f || roomExit == null || roomExit.IsLocked)
+        if (_transitionCooldownRemaining > 0.0f || door == null || door.IsLocked)
             return;
 
-        if (!HasValue(roomExit.TargetScreenId))
+        if (!HasValue(door.TargetScreenId))
         {
-            GD.PushWarning($"{roomExit.Name} does not define a target screen id.");
+            GD.PushWarning($"{door.Name} does not define a target screen id.");
             return;
         }
 
         var previousRoom = _activeRoom;
-        if (!TransitionToRoom(roomExit.TargetScreenId, roomExit.TargetExitId, roomExit))
+        if (!TransitionToRoom(door.TargetScreenId, door.TargetExitId, door))
             return;
 
-        _dungeon?.OnTransitionCompleted(previousRoom, roomExit, _activeRoom);
+        _dungeon?.OnTransitionCompleted(previousRoom, door, _activeRoom);
         _transitionCooldownRemaining = TransitionCooldownSeconds;
     }
 
-    private bool TransitionToRoom(StringName screenId, StringName entryExitId, RoomExit sourceExit = null)
+    private bool TransitionToRoom(StringName screenId, StringName entryExitId, Door sourceDoor = null)
     {
-        var nextRoom = InstantiateRoom(screenId, entryExitId, sourceExit);
+        var nextRoom = InstantiateRoom(screenId, entryExitId, sourceDoor);
         if (nextRoom == null)
             return false;
 
@@ -144,17 +144,17 @@ public partial class World : Node2D
 
         _activeRoom = nextRoom;
         (_roomContainer ?? this).AddChild(_activeRoom);
-        _activeRoom.ExitTriggered += OnRoomExitTriggered;
+        _activeRoom.DoorTriggered += OnDoorTriggered;
 
         PlacePlayerAtRoomEntry(_activeRoom, entryExitId);
         ApplyRoomCameraBounds(_activeRoom);
         return true;
     }
 
-    private RoomScreen InstantiateRoom(StringName screenId, StringName entryExitId, RoomExit sourceExit)
+    private RoomScreen InstantiateRoom(StringName screenId, StringName entryExitId, Door sourceDoor)
     {
         if (_dungeon != null &&
-            _dungeon.TryCreateRoom(screenId, _activeRoom, sourceExit, entryExitId, out var dungeonRoom) &&
+            _dungeon.TryCreateRoom(screenId, _activeRoom, sourceDoor, entryExitId, out var dungeonRoom) &&
             dungeonRoom != null)
         {
             return dungeonRoom;
@@ -190,7 +190,7 @@ public partial class World : Node2D
     private void DisconnectActiveRoom()
     {
         if (_activeRoom != null)
-            _activeRoom.ExitTriggered -= OnRoomExitTriggered;
+            _activeRoom.DoorTriggered -= OnDoorTriggered;
     }
 
     private void PlacePlayerAtRoomEntry(RoomScreen room, StringName entryExitId)

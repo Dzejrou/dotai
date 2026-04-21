@@ -8,20 +8,12 @@ public partial class CombatDungeonRoom : RoomScreen
     private static readonly StringName TopLeftExitId = "north_west";
     private static readonly StringName TopRightExitId = "north_east";
     private static readonly StringName BottomReturnExitId = "south_return";
-    private static readonly Color LockedIndicatorColor = new(0.88f, 0.24f, 0.24f, 1.0f);
-    private static readonly Color UnlockedIndicatorColor = new(0.30f, 0.86f, 0.34f, 1.0f);
 
     [Signal]
     public delegate void RoomClearedEventHandler();
 
     [Export]
     public NodePath EncounterMarkersPath { get; set; } = new NodePath("Unscaled/EncounterMarkers");
-
-    [Export]
-    public NodePath TopLeftIndicatorPath { get; set; } = new NodePath("Scaled/Visual/LockIndicators/NorthWestIndicator");
-
-    [Export]
-    public NodePath TopRightIndicatorPath { get; set; } = new NodePath("Scaled/Visual/LockIndicators/NorthEastIndicator");
 
     private readonly Dictionary<StringName, Marker2D> _encounterMarkersById = new();
     private readonly Dictionary<Node, Callable> _enemyExitCallables = new();
@@ -62,13 +54,13 @@ public partial class CombatDungeonRoom : RoomScreen
 
     public void ConfigureProgressionDoors(StringName targetScreenId, StringName targetExitId)
     {
-        ConfigureExit(TopLeftExitId, targetScreenId, targetExitId);
-        ConfigureExit(TopRightExitId, targetScreenId, targetExitId);
+        ConfigureDoor(TopLeftExitId, targetScreenId, targetExitId);
+        ConfigureDoor(TopRightExitId, targetScreenId, targetExitId);
     }
 
     public void ConfigureReturnDoor(StringName targetScreenId, StringName targetExitId)
     {
-        ConfigureExit(BottomReturnExitId, targetScreenId, targetExitId);
+        ConfigureDoor(BottomReturnExitId, targetScreenId, targetExitId);
     }
 
     public void PrepareEncounter()
@@ -93,14 +85,14 @@ public partial class CombatDungeonRoom : RoomScreen
         EvaluateEncounterState();
     }
 
-    private void ConfigureExit(StringName exitId, StringName targetScreenId, StringName targetExitId)
+    private void ConfigureDoor(StringName exitId, StringName targetScreenId, StringName targetExitId)
     {
-        var exit = GetExit(exitId);
-        if (exit == null)
+        var door = GetDoor(exitId);
+        if (door == null)
             return;
 
-        exit.TargetScreenId = targetScreenId;
-        exit.TargetExitId = targetExitId;
+        door.TargetScreenId = targetScreenId;
+        door.TargetExitId = targetExitId;
     }
 
     private void CacheEncounterMarkers()
@@ -150,22 +142,14 @@ public partial class CombatDungeonRoom : RoomScreen
 
     private void SetTopDoorsLocked(bool isLocked)
     {
-        SetExitLockState(TopLeftExitId, isLocked);
-        SetExitLockState(TopRightExitId, isLocked);
-        SetIndicatorColor(GetNodeOrNull<Polygon2D>(TopLeftIndicatorPath), isLocked ? LockedIndicatorColor : UnlockedIndicatorColor);
-        SetIndicatorColor(GetNodeOrNull<Polygon2D>(TopRightIndicatorPath), isLocked ? LockedIndicatorColor : UnlockedIndicatorColor);
+        SetDoorLockState(TopLeftExitId, isLocked);
+        SetDoorLockState(TopRightExitId, isLocked);
     }
 
-    private void SetExitLockState(StringName exitId, bool isLocked)
+    private void SetDoorLockState(StringName exitId, bool isLocked)
     {
-        var exit = GetExit(exitId);
-        if (exit != null)
-            exit.IsLocked = isLocked;
-    }
-
-    private static void SetIndicatorColor(Polygon2D indicator, Color color)
-    {
-        if (indicator != null)
-            indicator.Color = color;
+        var door = GetDoor(exitId);
+        if (door != null)
+            door.IsLocked = isLocked;
     }
 }

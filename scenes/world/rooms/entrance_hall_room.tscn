@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://djv557mac6kfa" path="res://assets/world/castle/entrance_hall.png" id="1_room_texture"]
 [ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
-[ext_resource type="Script" uid="uid://jmy023o74cgg" path="res://scripts/world/rooms/RoomExit.cs" id="3_room_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="4_dryad"]
 
 [sub_resource type="NavigationPolygon" id="9_room_navigation"]
@@ -101,95 +101,63 @@ shape = SubResource("8_plinth")
 
 [node name="Exits" type="Node2D" parent="Scaled" unique_id=66040200]
 
-[node name="NorthCenterExit" type="Area2D" parent="Scaled/Exits" unique_id=1157858098]
+[node name="NorthCenterDoor" parent="Scaled/Exits" unique_id=1157858098 instance=ExtResource("3_door")]
 position = Vector2(200, 91)
-script = ExtResource("3_room_exit")
 ExitId = &"north_center"
 TargetScreenId = &"dungeon_combat"
 TargetExitId = &"south_return"
 Direction = &"north"
-TransitionType = &"door"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/NorthCenterExit" unique_id=846746424]
-position = Vector2(0, 0.5)
-shape = SubResource("1_exit_north_center")
-
-[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/NorthCenterExit" unique_id=634121480]
+[node name="SpawnPoint" parent="Scaled/Exits/NorthCenterDoor" unique_id=634121480]
 position = Vector2(0, 34)
 
-[node name="SouthCenterExit" type="Area2D" parent="Scaled/Exits" unique_id=1881665610]
+[node name="SouthCenterDoor" parent="Scaled/Exits" unique_id=1881665610 instance=ExtResource("3_door")]
 position = Vector2(200, 321)
-script = ExtResource("3_room_exit")
 ExitId = &"south_center"
 TargetScreenId = &"transition_test"
 TargetExitId = &"north_center"
 Direction = &"south"
-TransitionType = &"door"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/SouthCenterExit" unique_id=497528451]
-shape = SubResource("2_exit_south_center")
-
-[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/SouthCenterExit" unique_id=493874949]
+[node name="SpawnPoint" parent="Scaled/Exits/SouthCenterDoor" unique_id=493874949]
 position = Vector2(0, -36)
 
-[node name="NorthWestExit" type="Area2D" parent="Scaled/Exits" unique_id=1314545739]
+[node name="NorthWestDoor" parent="Scaled/Exits" unique_id=1314545739 instance=ExtResource("3_door")]
 position = Vector2(83, 92)
-script = ExtResource("3_room_exit")
 ExitId = &"north_west"
 Direction = &"north"
-TransitionType = &"door"
 IsLocked = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/NorthWestExit" unique_id=298324467]
-shape = SubResource("3_exit_north_side")
-
-[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/NorthWestExit" unique_id=868760688]
+[node name="SpawnPoint" parent="Scaled/Exits/NorthWestDoor" unique_id=868760688]
 position = Vector2(0, 30)
 
-[node name="NorthEastExit" type="Area2D" parent="Scaled/Exits" unique_id=1836981997]
+[node name="NorthEastDoor" parent="Scaled/Exits" unique_id=1836981997 instance=ExtResource("3_door")]
 position = Vector2(317, 92)
-script = ExtResource("3_room_exit")
 ExitId = &"north_east"
 Direction = &"north"
-TransitionType = &"door"
 IsLocked = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/NorthEastExit" unique_id=1526524522]
-shape = SubResource("3_exit_north_side")
-
-[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/NorthEastExit" unique_id=1897713086]
+[node name="SpawnPoint" parent="Scaled/Exits/NorthEastDoor" unique_id=1897713086]
 position = Vector2(0, 30)
 
-[node name="WestMidExit" type="Area2D" parent="Scaled/Exits" unique_id=1511204497]
-position = Vector2(82, 205)
-script = ExtResource("3_room_exit")
+[node name="WestMidDoor" parent="Scaled/Exits" unique_id=1511204497 instance=ExtResource("3_door")]
+position = Vector2(76.5, 203)
 ExitId = &"west_mid"
 Direction = &"west"
-TransitionType = &"door"
 IsLocked = true
+IndicatorOffset = Vector2(18, 0)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/WestMidExit" unique_id=1686778868]
-position = Vector2(-5.5, -2)
-shape = SubResource("4_exit_side")
+[node name="SpawnPoint" parent="Scaled/Exits/WestMidDoor" unique_id=15014988]
+position = Vector2(29.5, 2)
 
-[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/WestMidExit" unique_id=15014988]
-position = Vector2(24, 0)
-
-[node name="EastMidExit" type="Area2D" parent="Scaled/Exits" unique_id=1398337522]
-position = Vector2(318, 205)
-script = ExtResource("3_room_exit")
+[node name="EastMidDoor" parent="Scaled/Exits" unique_id=1398337522 instance=ExtResource("3_door")]
+position = Vector2(324, 201)
 ExitId = &"east_mid"
 TargetScreenId = &"testing_void"
 TargetExitId = &"PlayerStart"
 Direction = &"east"
-TransitionType = &"door"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Exits/EastMidExit" unique_id=1935548134]
-position = Vector2(6, -4)
-shape = SubResource("4_exit_side")
-
-[node name="SpawnPoint" type="Marker2D" parent="Scaled/Exits/EastMidExit" unique_id=1698083979]
-position = Vector2(-24, 0)
+[node name="SpawnPoint" parent="Scaled/Exits/EastMidDoor" unique_id=1698083979]
+position = Vector2(-30, 4)
 
 [node name="Markers" type="Node2D" parent="Scaled" unique_id=1254473867]
 

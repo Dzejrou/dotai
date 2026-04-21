@@ -42,40 +42,40 @@ public partial class RoomScreen : Node2D
     [Export]
     public Rect2 CameraBoundsRect { get; set; } = new Rect2(0.0f, 0.0f, 400.0f, 400.0f);
 
-    public event Action<RoomExit> ExitTriggered;
+    public event Action<Door> DoorTriggered;
 
-    private readonly Dictionary<StringName, RoomExit> _exitsById = new();
+    private readonly Dictionary<StringName, Door> _doorsById = new();
 
     public override void _Ready()
     {
-        EnsureExitsCached();
+        EnsureDoorsCached();
     }
 
     public override void _ExitTree()
     {
-        foreach (var roomExit in _exitsById.Values)
-            roomExit.TransitionRequested -= OnExitTransitionRequested;
+        foreach (var door in _doorsById.Values)
+            door.TransitionRequested -= OnDoorTransitionRequested;
 
-        _exitsById.Clear();
+        _doorsById.Clear();
     }
 
-    public RoomExit GetExit(StringName exitId)
+    public Door GetDoor(StringName exitId)
     {
-        EnsureExitsCached();
-        return HasValue(exitId) && _exitsById.TryGetValue(exitId, out var roomExit)
-            ? roomExit
+        EnsureDoorsCached();
+        return HasValue(exitId) && _doorsById.TryGetValue(exitId, out var door)
+            ? door
             : null;
     }
 
     public bool TryGetSpawnMarker(StringName exitId, out Marker2D marker)
     {
-        EnsureExitsCached();
+        EnsureDoorsCached();
         marker = null;
 
         if (HasValue(exitId))
         {
-            var entryExit = GetExit(exitId);
-            marker = entryExit?.GetSpawnPoint();
+            var entryDoor = GetDoor(exitId);
+            marker = entryDoor?.GetSpawnPoint();
             if (marker != null)
                 return true;
         }
@@ -122,9 +122,9 @@ public partial class RoomScreen : Node2D
         return GetNodeOrNull<Node2D>(UnscaledPath);
     }
 
-    private void CacheExits()
+    private void CacheDoors()
     {
-        _exitsById.Clear();
+        _doorsById.Clear();
 
         var exitsRoot = GetNodeOrNull<Node>(ExitsPath);
         if (exitsRoot == null)
@@ -132,26 +132,27 @@ public partial class RoomScreen : Node2D
 
         foreach (Node child in exitsRoot.GetChildren())
         {
-            if (child is not RoomExit roomExit || !HasValue(roomExit.ExitId))
+            if (child is not Door door || !HasValue(door.ExitId))
                 continue;
 
-            _exitsById[roomExit.ExitId] = roomExit;
-            roomExit.TransitionRequested += OnExitTransitionRequested;
+            _doorsById[door.ExitId] = door;
+            door.TransitionRequested += OnDoorTransitionRequested;
         }
     }
 
-    private void EnsureExitsCached()
+    private void EnsureDoorsCached()
     {
-        if (_exitsById.Count > 0)
+        if (_doorsById.Count > 0)
             return;
 
-        CacheExits();
+        CacheDoors();
     }
 
-    private void OnExitTransitionRequested(RoomExit roomExit)
+    private void OnDoorTransitionRequested(Door door)
     {
-        ExitTriggered?.Invoke(roomExit);
+        DoorTriggered?.Invoke(door);
     }
+
     private static bool HasValue(StringName value)
     {
         return value != null && !value.IsEmpty;

@@ -36,7 +36,7 @@ public partial class Dungeon : Node
         BuildEncounterTemplates();
     }
 
-    public bool TryCreateRoom(StringName screenId, RoomScreen currentRoom, RoomExit sourceExit, StringName entryExitId, out RoomScreen room)
+    public bool TryCreateRoom(StringName screenId, RoomScreen currentRoom, Door sourceDoor, StringName entryExitId, out RoomScreen room)
     {
         room = null;
         if (screenId != DungeonCombatScreenId)
@@ -48,7 +48,7 @@ public partial class Dungeon : Node
             return false;
         }
 
-        if (currentRoom is CombatDungeonRoom && sourceExit != null)
+        if (currentRoom is CombatDungeonRoom && sourceDoor != null)
             _roomIndex += 1;
         else
             StartNewRun();
@@ -59,7 +59,7 @@ public partial class Dungeon : Node
         return true;
     }
 
-    public void OnTransitionCompleted(RoomScreen previousRoom, RoomExit usedExit, RoomScreen nextRoom)
+    public void OnTransitionCompleted(RoomScreen previousRoom, Door usedDoor, RoomScreen nextRoom)
     {
         if (previousRoom is CombatDungeonRoom && nextRoom is not CombatDungeonRoom)
             EndRun();

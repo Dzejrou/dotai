@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://cwll3jdh81fn4"]
+
+[ext_resource type="Script" uid="uid://b0vdkpl3tys5p" path="res://scripts/world/doors/Door.cs" id="1_door"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(28, 28)
+
+[node name="Door" type="Area2D" unique_id=864250253]
+script = ExtResource("1_door")
+TransitionType = &"door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2044970755]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="SpawnPoint" type="Marker2D" parent="." unique_id=1190693215]
+
+[node name="LockIndicator" type="Polygon2D" parent="." unique_id=2034073036]
+position = Vector2(10, -20)
+scale = Vector2(0.5, 0.5)
+color = Color(0.88, 0.24, 0.24, 1)
+polygon = PackedVector2Array(-7, -7, 7, -7, 7, 7, -7, 7)
