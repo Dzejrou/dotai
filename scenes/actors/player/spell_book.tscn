@@ -83,6 +83,7 @@ FloatingTextLabel = "SLOWED"
 
 [node name="Blink" type="Node" parent="." unique_id=211336057]
 script = ExtResource("8_blink_spell")
+BlinkDistance = 256.0
 SpellId = "blink"
 CastAction = &"cast_spell3"
 HudLabel = "Blink"
@@ -163,7 +164,7 @@ script = ExtResource("18_y1cuy")
 SpellId = "poison_cloud"
 HudLabel = "Poison Cloud"
 ManaCost = 10
-Cooldown = 20.0
+Cooldown = 8.0
 
 [node name="PoisonCloudArea" parent="PoisonCloud" unique_id=1438068207 instance=ExtResource("19_y1cuy")]
 visible = false
