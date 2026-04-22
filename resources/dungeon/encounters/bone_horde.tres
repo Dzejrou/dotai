@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DungeonEncounterDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/dungeon/DungeonEncounterDefinition.cs" id="1_definition_script"]
+[ext_resource type="Script" path="res://scripts/world/dungeon/DungeonEnemyOption.cs" id="2_option_script"]
+[ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="3_skeleton_scene"]
+[ext_resource type="PackedScene" uid="uid://cke5y8t7ihlt5" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="4_skeleton_mage_scene"]
+[ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="5_ogre_scene"]
+
+[sub_resource type="Resource" id="1_skeleton_option"]
+script = ExtResource("2_option_script")
+EnemyScene = ExtResource("3_skeleton_scene")
+Weight = 16
+
+[sub_resource type="Resource" id="2_skeleton_mage_option"]
+script = ExtResource("2_option_script")
+EnemyScene = ExtResource("4_skeleton_mage_scene")
+Weight = 2
+
+[sub_resource type="Resource" id="3_ogre_option"]
+script = ExtResource("2_option_script")
+EnemyScene = ExtResource("5_ogre_scene")
+Weight = 2
+
+[resource]
+script = ExtResource("1_definition_script")
+EncounterId = "bone_horde"
+MinSpawnCount = 12
+MaxSpawnCount = 20
+EnemyOptions = Array[ExtResource("2_option_script")]([SubResource("1_skeleton_option"), SubResource("2_skeleton_mage_option"), SubResource("3_ogre_option")])

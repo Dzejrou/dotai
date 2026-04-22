@@ -1,30 +1,23 @@
 using Godot;
 
-using System;
 using System.Collections.Generic;
 
 [GlobalClass]
 public partial class Dungeon : Node
 {
-    private sealed class EncounterTemplate
-    {
-        public PackedScene[] EnemyScenes { get; init; } = Array.Empty<PackedScene>();
-        public int MinCount { get; init; }
-        public int MaxCount { get; init; }
-    }
-
     private const string CombatDungeonRoomScenePath = "res://scenes/world/rooms/combat_dungeon_room.tscn";
     private static readonly StringName DungeonCombatScreenId = "dungeon_combat";
     private static readonly StringName DungeonEntryExitId = "south_return";
     private static readonly StringName EntranceHallScreenId = "entrance_hall";
     private static readonly StringName EntranceHallReturnExitId = "north_center";
 
+    [Export]
+    public Godot.Collections.Array<DungeonEncounterDefinition> EncounterPool { get; set; } = new();
+
     private readonly RandomNumberGenerator _random = new();
-    private readonly List<EncounterTemplate> _encounterTemplates = new();
 
     private PackedScene _combatDungeonRoomScene;
     private CombatDungeonRoom _activeDungeonRoom;
-    private int _roomIndex;
 
     public override void _Ready()
     {
@@ -32,8 +25,6 @@ public partial class Dungeon : Node
         _combatDungeonRoomScene = ResourceLoader.Load<PackedScene>(CombatDungeonRoomScenePath);
         if (_combatDungeonRoomScene == null)
             GD.PushError($"{nameof(Dungeon)} could not load combat room scene at '{CombatDungeonRoomScenePath}'.");
-
-        BuildEncounterTemplates();
     }
 
     public bool TryCreateRoom(StringName screenId, RoomScreen currentRoom, Door sourceDoor, StringName entryExitId, out RoomScreen room)
@@ -48,9 +39,7 @@ public partial class Dungeon : Node
             return false;
         }
 
-        if (currentRoom is CombatDungeonRoom && sourceDoor != null)
-            _roomIndex += 1;
-        else
+        if (currentRoom is not CombatDungeonRoom)
             StartNewRun();
 
         ConfigureCombatRoom(combatRoom);
@@ -83,19 +72,26 @@ public partial class Dungeon : Node
             return;
         }
 
-        if (_encounterTemplates.Count == 0)
+        var encounterDefinition = ChooseEncounterDefinition();
+        if (encounterDefinition == null)
         {
-            GD.PushError($"{nameof(Dungeon)} has no encounter templates configured.");
+            GD.PushError($"{nameof(Dungeon)} has no valid encounter definitions configured.");
             room.FinalizeEncounterSetup();
             return;
         }
 
-        var encounterTemplate = _encounterTemplates[_random.RandiRange(0, _encounterTemplates.Count - 1)];
         var markerIds = new List<StringName>(room.GetEncounterMarkerIds());
+        if (markerIds.Count == 0)
+        {
+            GD.PushError($"{nameof(CombatDungeonRoom)} does not define any encounter spawn markers.");
+            room.FinalizeEncounterSetup();
+            return;
+        }
+
         Shuffle(markerIds);
 
         var encounterCount = Mathf.Clamp(
-            _random.RandiRange(encounterTemplate.MinCount, encounterTemplate.MaxCount) + Math.Min(_roomIndex, 2),
+            _random.RandiRange(encounterDefinition.GetResolvedMinSpawnCount(), encounterDefinition.GetResolvedMaxSpawnCount()),
             1,
             markerIds.Count);
 
@@ -104,7 +100,7 @@ public partial class Dungeon : Node
             if (!room.TryGetEncounterMarkerGlobalPosition(markerIds[i], out var spawnPosition))
                 continue;
 
-            var enemyScene = encounterTemplate.EnemyScenes[_random.RandiRange(0, encounterTemplate.EnemyScenes.Length - 1)];
+            var enemyScene = encounterDefinition.RollEnemyScene(_random);
             if (enemyScene?.Instantiate<Node2D>() is not Node2D enemy)
                 continue;
 
@@ -116,6 +112,24 @@ public partial class Dungeon : Node
         room.FinalizeEncounterSetup();
     }
 
+    private DungeonEncounterDefinition ChooseEncounterDefinition()
+    {
+        var validDefinitions = new List<DungeonEncounterDefinition>();
+        if (EncounterPool != null)
+        {
+            foreach (var encounterDefinition in EncounterPool)
+            {
+                if (encounterDefinition?.IsConfigured == true)
+                    validDefinitions.Add(encounterDefinition);
+            }
+        }
+
+        if (validDefinitions.Count == 0)
+            return null;
+
+        return validDefinitions[_random.RandiRange(0, validDefinitions.Count - 1)];
+    }
+
     private void OnActiveRoomCleared()
     {
     }
@@ -123,13 +137,11 @@ public partial class Dungeon : Node
     private void StartNewRun()
     {
         EndRun();
-        _roomIndex = 0;
     }
 
     private void EndRun()
     {
         SetActiveDungeonRoom(null);
-        _roomIndex = 0;
     }
 
     private void SetActiveDungeonRoom(CombatDungeonRoom room)
@@ -141,45 +153,6 @@ public partial class Dungeon : Node
 
         if (_activeDungeonRoom != null)
             _activeDungeonRoom.RoomCleared += OnActiveRoomCleared;
-    }
-
-    private void BuildEncounterTemplates()
-    {
-        _encounterTemplates.Clear();
-
-        var skeleton = LoadEnemyScene("res://scenes/actors/enemies/skeleton.tscn");
-        var wolf = LoadEnemyScene("res://scenes/actors/enemies/wolf.tscn");
-        var skeletonMage = LoadEnemyScene("res://scenes/actors/enemies/skeleton_mage.tscn");
-        var elfRanger = LoadEnemyScene("res://scenes/actors/enemies/elf_ranger.tscn");
-
-        AddEncounterTemplate(2, 3, skeleton, wolf);
-        AddEncounterTemplate(3, 4, skeleton, wolf, skeletonMage);
-        AddEncounterTemplate(3, 4, skeleton, wolf, elfRanger);
-    }
-
-    private void AddEncounterTemplate(int minCount, int maxCount, params PackedScene[] enemyScenes)
-    {
-        var validScenes = new List<PackedScene>();
-        foreach (var enemyScene in enemyScenes)
-        {
-            if (enemyScene != null)
-                validScenes.Add(enemyScene);
-        }
-
-        if (validScenes.Count == 0)
-            return;
-
-        _encounterTemplates.Add(new EncounterTemplate
-        {
-            EnemyScenes = validScenes.ToArray(),
-            MinCount = minCount,
-            MaxCount = maxCount,
-        });
-    }
-
-    private static PackedScene LoadEnemyScene(string resourcePath)
-    {
-        return ResourceLoader.Load<PackedScene>(resourcePath);
     }
 
     private void Shuffle<T>(IList<T> items)

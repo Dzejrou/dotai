@@ -103,20 +103,62 @@ position = Vector2(200, 200)
 
 [node name="EncounterMarkers" type="Node2D" parent="Unscaled" unique_id=1436865109]
 
-[node name="north_west" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1882167542]
-position = Vector2(226, 280)
+[node name="spawn_01" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1882167542]
+position = Vector2(160, 220)
 
-[node name="north_center" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=618310048]
-position = Vector2(400, 252)
+[node name="spawn_02" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=618310048]
+position = Vector2(260, 220)
 
-[node name="north_east" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1706437583]
-position = Vector2(576, 280)
+[node name="spawn_03" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1706437583]
+position = Vector2(360, 220)
 
-[node name="south_west" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1001358161]
-position = Vector2(272, 468)
+[node name="spawn_04" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1001358161]
+position = Vector2(460, 220)
 
-[node name="south_center" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=201181799]
-position = Vector2(400, 520)
+[node name="spawn_05" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=201181799]
+position = Vector2(560, 220)
 
-[node name="south_east" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=730792423]
-position = Vector2(528, 468)
+[node name="spawn_06" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=730792423]
+position = Vector2(660, 220)
+
+[node name="spawn_07" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(140, 320)
+
+[node name="spawn_08" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(260, 320)
+
+[node name="spawn_09" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(400, 320)
+
+[node name="spawn_10" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(540, 320)
+
+[node name="spawn_11" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(660, 320)
+
+[node name="spawn_12" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(160, 420)
+
+[node name="spawn_13" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(280, 420)
+
+[node name="spawn_14" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(400, 420)
+
+[node name="spawn_15" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(520, 420)
+
+[node name="spawn_16" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(640, 420)
+
+[node name="spawn_17" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(220, 520)
+
+[node name="spawn_18" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(340, 520)
+
+[node name="spawn_19" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(460, 520)
+
+[node name="spawn_20" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+position = Vector2(580, 520)
