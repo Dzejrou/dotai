@@ -5,61 +5,106 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class Dungeon : Node
 {
-    private const string CombatDungeonRoomScenePath = "res://scenes/world/rooms/combat_dungeon_room.tscn";
-    private static readonly StringName DungeonCombatScreenId = "dungeon_combat";
+    private enum DungeonRoomKind
+    {
+        Combat,
+        Special,
+    }
+
+    private sealed class DungeonRoomDescriptor
+    {
+        public DungeonRoomDescriptor(DungeonRoomKind kind)
+        {
+            Kind = kind;
+        }
+
+        public DungeonRoomKind Kind { get; }
+    }
+
+    private static readonly StringName DungeonRuntimeScreenId = "dungeon_runtime";
     private static readonly StringName DungeonEntryExitId = "south_return";
     private static readonly StringName EntranceHallScreenId = "entrance_hall";
     private static readonly StringName EntranceHallReturnExitId = "north_center";
+    private static readonly StringName CombatTopLeftExitId = "north_west";
+    private static readonly StringName CombatTopRightExitId = "north_east";
+    private static readonly StringName SpecialTopExitId = "north_center";
 
     [Export]
     public Godot.Collections.Array<DungeonEncounterDefinition> EncounterPool { get; set; } = new();
 
-    private readonly RandomNumberGenerator _random = new();
+    [Export]
+    public Godot.Collections.Array<PackedScene> CombatRoomTemplates { get; set; } = new();
 
-    private PackedScene _combatDungeonRoomScene;
-    private CombatDungeonRoom _activeDungeonRoom;
+    [Export]
+    public Godot.Collections.Array<PackedScene> SpecialRoomTemplates { get; set; } = new();
+
+    [Export(PropertyHint.Range, "0,1,0.01")]
+    public float SpecialRoomChance { get; set; } = 0.2f;
+
+    private readonly RandomNumberGenerator _random = new();
+    private readonly Dictionary<StringName, DungeonRoomDescriptor> _activeProgressionDoors = new();
+
+    private RoomScreen _activeDungeonRoom;
 
     public override void _Ready()
     {
         _random.Randomize();
-        _combatDungeonRoomScene = ResourceLoader.Load<PackedScene>(CombatDungeonRoomScenePath);
-        if (_combatDungeonRoomScene == null)
-            GD.PushError($"{nameof(Dungeon)} could not load combat room scene at '{CombatDungeonRoomScenePath}'.");
     }
 
     public bool TryCreateRoom(StringName screenId, RoomScreen currentRoom, Door sourceDoor, StringName entryExitId, out RoomScreen room)
     {
         room = null;
-        if (screenId != DungeonCombatScreenId)
+        if (screenId != DungeonRuntimeScreenId)
             return false;
 
-        if (_combatDungeonRoomScene?.Instantiate<CombatDungeonRoom>() is not CombatDungeonRoom combatRoom)
+        var roomKind = ResolveRequestedRoomKind(currentRoom, sourceDoor);
+        if (!TryInstantiateDungeonRoom(roomKind, out room))
         {
-            GD.PushError($"{nameof(Dungeon)} could not instantiate a {nameof(CombatDungeonRoom)} for '{screenId}'.");
             return false;
         }
 
-        if (currentRoom is not CombatDungeonRoom)
+        if (!IsDungeonRoom(currentRoom))
             StartNewRun();
 
-        ConfigureCombatRoom(combatRoom);
-        SetActiveDungeonRoom(combatRoom);
-        room = combatRoom;
+        SetActiveDungeonRoom(room);
+        ConfigureDungeonRoom(room, roomKind);
         return true;
     }
 
     public void OnTransitionCompleted(RoomScreen previousRoom, Door usedDoor, RoomScreen nextRoom)
     {
-        if (previousRoom is CombatDungeonRoom && nextRoom is not CombatDungeonRoom)
+        if (IsDungeonRoom(previousRoom) && !IsDungeonRoom(nextRoom))
             EndRun();
+    }
+
+    private void ConfigureDungeonRoom(RoomScreen room, DungeonRoomKind roomKind)
+    {
+        _activeProgressionDoors.Clear();
+
+        switch (roomKind)
+        {
+            case DungeonRoomKind.Combat:
+                ConfigureCombatRoom((CombatDungeonRoom)room);
+                break;
+            case DungeonRoomKind.Special:
+                ConfigureSpecialRoom((SpecialDungeonRoom)room);
+                break;
+        }
     }
 
     private void ConfigureCombatRoom(CombatDungeonRoom room)
     {
-        room.ConfigureProgressionDoors(DungeonCombatScreenId, DungeonEntryExitId);
+        room.ConfigureProgressionDoors(DungeonRuntimeScreenId, DungeonEntryExitId);
         room.ConfigureReturnDoor(EntranceHallScreenId, EntranceHallReturnExitId);
         room.PrepareEncounter();
         SpawnEncounter(room);
+    }
+
+    private void ConfigureSpecialRoom(SpecialDungeonRoom room)
+    {
+        room.ConfigureProgressionDoor(DungeonRuntimeScreenId, DungeonEntryExitId);
+        room.ConfigureReturnDoor(EntranceHallScreenId, EntranceHallReturnExitId);
+        SetProgressionDoor(SpecialTopExitId, DungeonRoomKind.Combat);
     }
 
     private void SpawnEncounter(CombatDungeonRoom room)
@@ -132,6 +177,11 @@ public partial class Dungeon : Node
 
     private void OnActiveRoomCleared()
     {
+        if (_activeDungeonRoom is not CombatDungeonRoom)
+            return;
+
+        SetProgressionDoor(CombatTopLeftExitId, RollCombatProgressionRoomKind());
+        SetProgressionDoor(CombatTopRightExitId, RollCombatProgressionRoomKind());
     }
 
     private void StartNewRun()
@@ -141,18 +191,108 @@ public partial class Dungeon : Node
 
     private void EndRun()
     {
+        _activeProgressionDoors.Clear();
         SetActiveDungeonRoom(null);
     }
 
-    private void SetActiveDungeonRoom(CombatDungeonRoom room)
+    private void SetActiveDungeonRoom(RoomScreen room)
     {
-        if (_activeDungeonRoom != null && GodotObject.IsInstanceValid(_activeDungeonRoom))
-            _activeDungeonRoom.RoomCleared -= OnActiveRoomCleared;
+        if (_activeDungeonRoom is CombatDungeonRoom previousCombatRoom &&
+            GodotObject.IsInstanceValid(previousCombatRoom))
+        {
+            previousCombatRoom.RoomCleared -= OnActiveRoomCleared;
+        }
 
         _activeDungeonRoom = room;
 
-        if (_activeDungeonRoom != null)
-            _activeDungeonRoom.RoomCleared += OnActiveRoomCleared;
+        if (_activeDungeonRoom is CombatDungeonRoom activeCombatRoom)
+            activeCombatRoom.RoomCleared += OnActiveRoomCleared;
+    }
+
+    private DungeonRoomKind ResolveRequestedRoomKind(RoomScreen currentRoom, Door sourceDoor)
+    {
+        if (!IsDungeonRoom(currentRoom))
+            return DungeonRoomKind.Combat;
+
+        if (sourceDoor != null &&
+            HasValue(sourceDoor.ExitId) &&
+            _activeProgressionDoors.TryGetValue(sourceDoor.ExitId, out var descriptor))
+        {
+            return descriptor.Kind;
+        }
+
+        return currentRoom is SpecialDungeonRoom
+            ? DungeonRoomKind.Combat
+            : RollCombatProgressionRoomKind();
+    }
+
+    private bool TryInstantiateDungeonRoom(DungeonRoomKind roomKind, out RoomScreen room)
+    {
+        room = null;
+
+        var template = ChooseRoomTemplate(roomKind);
+        if (template == null)
+        {
+            GD.PushError($"{nameof(Dungeon)} has no configured {roomKind} room templates.");
+            return false;
+        }
+
+        room = template.Instantiate<RoomScreen>();
+        if (room == null)
+        {
+            GD.PushError($"{nameof(Dungeon)} could not instantiate a dungeon room for {roomKind}.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private PackedScene ChooseRoomTemplate(DungeonRoomKind roomKind)
+    {
+        var templates = roomKind switch
+        {
+            DungeonRoomKind.Combat => CombatRoomTemplates,
+            DungeonRoomKind.Special => SpecialRoomTemplates,
+            _ => null,
+        };
+
+        var validTemplates = new List<PackedScene>();
+        if (templates != null)
+        {
+            foreach (var template in templates)
+            {
+                if (template != null)
+                    validTemplates.Add(template);
+            }
+        }
+
+        if (validTemplates.Count == 0)
+            return null;
+
+        return validTemplates[_random.RandiRange(0, validTemplates.Count - 1)];
+    }
+
+    private DungeonRoomKind RollCombatProgressionRoomKind()
+    {
+        var specialChance = Mathf.Clamp(SpecialRoomChance, 0.0f, 1.0f);
+        return _random.Randf() < specialChance
+            ? DungeonRoomKind.Special
+            : DungeonRoomKind.Combat;
+    }
+
+    private void SetProgressionDoor(StringName exitId, DungeonRoomKind roomKind)
+    {
+        _activeProgressionDoors[exitId] = new DungeonRoomDescriptor(roomKind);
+    }
+
+    private static bool IsDungeonRoom(RoomScreen room)
+    {
+        return room is CombatDungeonRoom || room is SpecialDungeonRoom;
+    }
+
+    private static bool HasValue(StringName value)
+    {
+        return value != null && !value.IsEmpty;
     }
 
     private void Shuffle<T>(IList<T> items)

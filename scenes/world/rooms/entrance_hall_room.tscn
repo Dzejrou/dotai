@@ -104,7 +104,7 @@ shape = SubResource("8_plinth")
 [node name="NorthCenterDoor" parent="Scaled/Exits" unique_id=1157858098 instance=ExtResource("3_door")]
 position = Vector2(200, 91)
 ExitId = &"north_center"
-TargetScreenId = &"dungeon_combat"
+TargetScreenId = &"dungeon_runtime"
 TargetExitId = &"south_return"
 Direction = &"north"
 

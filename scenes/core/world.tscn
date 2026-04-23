@@ -11,6 +11,8 @@
 [ext_resource type="Resource" path="res://resources/dungeon/encounters/bone_wall.tres" id="9_bone_wall_encounter"]
 [ext_resource type="Resource" path="res://resources/dungeon/encounters/ogre_guard.tres" id="10_ogre_guard_encounter"]
 [ext_resource type="Resource" path="res://resources/dungeon/encounters/bone_horde.tres" id="11_bone_horde_encounter"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/combat_dungeon_room.tscn" id="12_combat_dungeon_room"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/special_dungeon_room.tscn" id="13_special_dungeon_room"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
@@ -30,3 +32,6 @@ script = ExtResource("5_corpse_manager")
 [node name="Dungeon" type="Node" parent="." unique_id=894211917]
 script = ExtResource("7_dungeon")
 EncounterPool = Array[ExtResource("8_skeleton_patrol_encounter")]([ExtResource("8_skeleton_patrol_encounter"), ExtResource("9_bone_wall_encounter"), ExtResource("10_ogre_guard_encounter"), ExtResource("11_bone_horde_encounter")])
+CombatRoomTemplates = Array[PackedScene]([ExtResource("12_combat_dungeon_room")])
+SpecialRoomTemplates = Array[PackedScene]([ExtResource("13_special_dungeon_room")])
+SpecialRoomChance = 0.2
