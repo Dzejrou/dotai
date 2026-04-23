@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c8qcan8jddo8k"]
 
-[ext_resource type="Texture2D" uid="uid://bi1lqm84duw44" path="res://assets/world/dungeon/fork.png" id="1_room_texture"]
-[ext_resource type="Script" path="res://scripts/world/rooms/SpecialDungeonRoom.cs" id="2_special_dungeon_room"]
+[ext_resource type="Texture2D" uid="uid://bbhxv2xptxlik" path="res://assets/world/dungeon/rest_stop.png" id="2_p0bqp"]
+[ext_resource type="Script" uid="uid://c6yen6g77fali" path="res://scripts/world/rooms/SpecialDungeonRoom.cs" id="2_special_dungeon_room"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="4_dryad"]
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="5_altar"]
@@ -14,12 +14,12 @@ polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
 size = Vector2(336, 18)
 
 [sub_resource type="RectangleShape2D" id="3_wall_south"]
-size = Vector2(336, 24)
+size = Vector2(342, 24)
 
 [sub_resource type="RectangleShape2D" id="4_wall_vertical"]
-size = Vector2(18, 283.5)
+size = Vector2(18, 301.375)
 
-[node name="RoomScreen" type="Node2D"]
+[node name="RoomScreen" type="Node2D" unique_id=146337272]
 script = ExtResource("2_special_dungeon_room")
 ScreenId = &"dungeon_special"
 DisplayName = "Special Dungeon Room"
@@ -27,83 +27,77 @@ Theme = &"dungeon"
 RoomType = &"special"
 RoomSize = &"single_screen"
 
-[node name="Scaled" type="Node2D" parent="."]
+[node name="Scaled" type="Node2D" parent="." unique_id=963252539]
 scale = Vector2(2, 2)
 
-[node name="Visual" type="Node2D" parent="Scaled"]
+[node name="Visual" type="Node2D" parent="Scaled" unique_id=940310609]
 
-[node name="RoomSprite" type="Sprite2D" parent="Scaled/Visual"]
+[node name="RoomSprite" type="Sprite2D" parent="Scaled/Visual" unique_id=996673901]
 z_index = -10
-texture = ExtResource("1_room_texture")
+texture = ExtResource("2_p0bqp")
 centered = false
 
-[node name="Navigation" type="Node2D" parent="Scaled"]
+[node name="Navigation" type="Node2D" parent="Scaled" unique_id=245190893]
 
-[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation"]
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation" unique_id=652086676]
 visible = false
 navigation_polygon = SubResource("1_navigation")
 
-[node name="Collision" type="Node2D" parent="Scaled"]
+[node name="Collision" type="Node2D" parent="Scaled" unique_id=1180615944]
 
-[node name="NorthWall" type="StaticBody2D" parent="Scaled/Collision"]
+[node name="NorthWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1964718142]
 position = Vector2(200, 53)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/NorthWall"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/NorthWall" unique_id=1885516984]
+position = Vector2(-2, -13)
 shape = SubResource("2_wall_north")
 
-[node name="SouthWall" type="StaticBody2D" parent="Scaled/Collision"]
+[node name="SouthWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=829621030]
 position = Vector2(200, 347)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/SouthWall"]
-position = Vector2(1, 12)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/SouthWall" unique_id=510952482]
+position = Vector2(2, 22)
 shape = SubResource("3_wall_south")
 
-[node name="WestWall" type="StaticBody2D" parent="Scaled/Collision"]
+[node name="WestWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1279034989]
 position = Vector2(25, 200)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/WestWall"]
-position = Vector2(13, 1.75)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/WestWall" unique_id=232118372]
+position = Vector2(-3, 4.625)
 shape = SubResource("4_wall_vertical")
 
-[node name="EastWall" type="StaticBody2D" parent="Scaled/Collision"]
+[node name="EastWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=983895121]
 position = Vector2(375, 200)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/EastWall"]
-position = Vector2(-12.5, 4)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/EastWall" unique_id=1387333478]
+position = Vector2(2, 2.3125)
 shape = SubResource("4_wall_vertical")
 
-[node name="Exits" type="Node2D" parent="Scaled"]
+[node name="Exits" type="Node2D" parent="Scaled" unique_id=819260982]
 
-[node name="NorthCenterDoor" parent="Scaled/Exits" instance=ExtResource("3_door")]
-position = Vector2(200, 56)
+[node name="NorthCenterDoor" parent="Scaled/Exits" unique_id=742678782 instance=ExtResource("3_door")]
+position = Vector2(197, 53)
 ExitId = &"north_center"
 Direction = &"north"
 
-[node name="SpawnPoint" parent="Scaled/Exits/NorthCenterDoor"]
-position = Vector2(0, 34)
-
-[node name="SouthReturnDoor" parent="Scaled/Exits" instance=ExtResource("3_door")]
-position = Vector2(200.5, 350.5)
+[node name="SouthReturnDoor" parent="Scaled/Exits" unique_id=864013063 instance=ExtResource("3_door")]
+position = Vector2(197, 359)
 ExitId = &"south_return"
 Direction = &"south"
 
-[node name="SpawnPoint" parent="Scaled/Exits/SouthReturnDoor"]
-position = Vector2(0, -34)
+[node name="Markers" type="Node2D" parent="Scaled" unique_id=553689295]
 
-[node name="Markers" type="Node2D" parent="Scaled"]
-
-[node name="PlayerStart" type="Marker2D" parent="Scaled/Markers"]
+[node name="PlayerStart" type="Marker2D" parent="Scaled/Markers" unique_id=1346170670]
 position = Vector2(200, 286)
 
-[node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers"]
+[node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=904984013]
 position = Vector2(200, 200)
 
-[node name="Unscaled" type="Node2D" parent="."]
+[node name="Unscaled" type="Node2D" parent="." unique_id=2023304438]
 
-[node name="Dryad" parent="Unscaled" instance=ExtResource("4_dryad")]
-position = Vector2(265, 474)
+[node name="Dryad" parent="Unscaled" unique_id=1021416576 instance=ExtResource("4_dryad")]
+position = Vector2(332, 436)
 
-[node name="PoisonCleansingAltar" parent="Unscaled" instance=ExtResource("5_altar")]
-position = Vector2(520, 426)
+[node name="PoisonCleansingAltar" parent="Unscaled" unique_id=1749872232 instance=ExtResource("5_altar")]
+position = Vector2(664, 650)
 scale = Vector2(0.6, 0.6)
-VisualDirection = "south"
