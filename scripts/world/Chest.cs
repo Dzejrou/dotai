@@ -3,12 +3,22 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Chest : WorldObject
+public partial class Chest : WorldObject, ILockable
 {
     private const string DefaultAnimationName = "default";
 
     [Export]
+    public bool IsLocked
+    {
+        get => _isLocked;
+        set => SetLocked(value);
+    }
+
+    [Export]
     public SpriteFrames OpenAnimationFrames { get; set; }
+
+    [Export]
+    public SpriteFrames UnlockOpenAnimationFrames { get; set; }
 
     [Export]
     public LootTable LootTable { get; set; }
@@ -22,12 +32,13 @@ public partial class Chest : WorldObject
     [Export]
     public NodePath AnimatedSpritePath { get; set; } = new("AnimatedSprite2D");
 
-    public bool IsUnlocked { get; private set; }
     public bool HasDroppedLoot { get; private set; }
-    public bool IsOpening { get; private set; }
+    public bool IsOpen { get; private set; }
+    public bool IsAnimatingOpen { get; private set; }
 
     private readonly RandomNumberGenerator _lootRandom = CreateLootRandom();
     private AnimatedSprite2D _animatedSprite;
+    private bool _isLocked = true;
 
     public override void _Ready()
     {
@@ -47,19 +58,33 @@ public partial class Chest : WorldObject
 
     public override bool CanInteract(Node interactor)
     {
-        return base.CanInteract(interactor) && (!IsUnlocked || !HasDroppedLoot);
+        return base.CanInteract(interactor) && (!IsOpen || !HasDroppedLoot);
     }
 
     public bool TryUnlock(Node interactor)
     {
-        if (IsUnlocked)
+        if (!IsLocked)
             return true;
 
         if (!CanUnlock(interactor))
             return false;
 
-        IsUnlocked = true;
-        StartOpeningAnimation();
+        SetLocked(false);
+        StartOpenAnimation(UnlockOpenAnimationFrames);
+        IsOpen = true;
+        return true;
+    }
+
+    public bool TryOpen()
+    {
+        if (IsLocked)
+            return false;
+
+        if (IsOpen)
+            return true;
+
+        StartOpenAnimation(OpenAnimationFrames);
+        IsOpen = true;
         return true;
     }
 
@@ -68,7 +93,7 @@ public partial class Chest : WorldObject
         if (HasDroppedLoot)
             return true;
 
-        if (!IsUnlocked)
+        if (IsLocked || !IsOpen)
             return false;
 
         SpawnLootDrops();
@@ -79,7 +104,7 @@ public partial class Chest : WorldObject
     private bool CanUnlock(Node interactor)
     {
         // TODO: Add key or other unlock requirements here.
-        return interactor is Player;
+        return true;
     }
 
     private void ApplyVisualState()
@@ -87,37 +112,38 @@ public partial class Chest : WorldObject
         if (_animatedSprite == null)
             return;
 
-        _animatedSprite.SpriteFrames = OpenAnimationFrames;
+        var frames = ResolveIdleFrames();
+        _animatedSprite.SpriteFrames = frames;
 
-        var animationName = ResolveAnimationName();
+        var animationName = ResolveAnimationName(frames);
         if (animationName == default)
             return;
 
         _animatedSprite.Animation = animationName;
         _animatedSprite.Stop();
 
-        if (IsUnlocked && !IsOpening)
+        if (IsOpen)
         {
-            _animatedSprite.Frame = GetFinalFrame(animationName);
+            _animatedSprite.Frame = GetFinalFrame(frames, animationName);
             return;
         }
 
         _animatedSprite.Frame = 0;
     }
 
-    private void StartOpeningAnimation()
+    private void StartOpenAnimation(SpriteFrames frames)
     {
         if (_animatedSprite == null)
             return;
 
-        var animationName = ResolveAnimationName();
+        var animationName = ResolveAnimationName(frames);
         if (animationName == default)
             return;
 
-        if (_animatedSprite.SpriteFrames != OpenAnimationFrames)
-            _animatedSprite.SpriteFrames = OpenAnimationFrames;
+        _animatedSprite.SpriteFrames = frames;
+        _animatedSprite.Animation = animationName;
 
-        IsOpening = true;
+        IsAnimatingOpen = true;
         _animatedSprite.Play(animationName);
     }
 
@@ -162,42 +188,56 @@ public partial class Chest : WorldObject
 
     private void OnAnimatedSpriteAnimationFinished()
     {
-        var animationName = ResolveAnimationName();
+        var frames = _animatedSprite?.SpriteFrames;
+        var animationName = ResolveAnimationName(frames);
         if (_animatedSprite == null || animationName == default)
             return;
 
-        IsOpening = false;
+        IsAnimatingOpen = false;
         _animatedSprite.Stop();
-        _animatedSprite.Frame = GetFinalFrame(animationName);
+        _animatedSprite.Frame = GetFinalFrame(frames, animationName);
     }
 
-    private StringName ResolveAnimationName()
+    private void SetLocked(bool isLocked)
     {
-        if (OpenAnimationFrames == null)
+        _isLocked = isLocked;
+
+        if (!IsOpen && !IsAnimatingOpen)
+            ApplyVisualState();
+    }
+
+    private SpriteFrames ResolveIdleFrames()
+    {
+        return IsLocked ? UnlockOpenAnimationFrames : OpenAnimationFrames;
+    }
+
+    private StringName ResolveAnimationName(SpriteFrames frames)
+    {
+        if (frames == null)
             return default;
 
         var defaultAnimation = new StringName(DefaultAnimationName);
-        if (OpenAnimationFrames.HasAnimation(defaultAnimation) &&
-            OpenAnimationFrames.GetFrameCount(defaultAnimation) > 0)
+        if (frames.HasAnimation(defaultAnimation) &&
+            frames.GetFrameCount(defaultAnimation) > 0)
         {
             return defaultAnimation;
         }
 
-        foreach (StringName animationName in OpenAnimationFrames.GetAnimationNames())
+        foreach (StringName animationName in frames.GetAnimationNames())
         {
-            if (OpenAnimationFrames.GetFrameCount(animationName) > 0)
+            if (frames.GetFrameCount(animationName) > 0)
                 return animationName;
         }
 
         return default;
     }
 
-    private int GetFinalFrame(StringName animationName)
+    private int GetFinalFrame(SpriteFrames frames, StringName animationName)
     {
-        if (OpenAnimationFrames == null || animationName == default)
+        if (frames == null || animationName == default)
             return 0;
 
-        return Math.Max(0, OpenAnimationFrames.GetFrameCount(animationName) - 1);
+        return Math.Max(0, frames.GetFrameCount(animationName) - 1);
     }
 
     private static RandomNumberGenerator CreateLootRandom()

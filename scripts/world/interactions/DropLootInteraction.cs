@@ -11,6 +11,9 @@ public partial class DropLootInteraction : Interaction
         if (chest.HasDroppedLoot)
             return InteractionResult.Continue;
 
+        if (!chest.TryOpen())
+            return InteractionResult.Stop;
+
         return chest.TryDropLoot()
             ? InteractionResult.Continue
             : InteractionResult.Stop;

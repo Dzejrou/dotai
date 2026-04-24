@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Door : Area2D, IInteractable, IInteractionPromptAnchor
+public partial class Door : Area2D, IInteractable, IInteractionPromptAnchor, ILockable
 {
     private static readonly Color LockedIndicatorColor = new(0.88f, 0.24f, 0.24f, 1.0f);
     private static readonly Color UnlockedIndicatorColor = new(0.30f, 0.86f, 0.34f, 1.0f);
@@ -90,9 +90,20 @@ public partial class Door : Area2D, IInteractable, IInteractionPromptAnchor
         if (!UnlockOnInteractWhenLocked)
             return;
 
-        SetLocked(false);
+        if (!TryUnlock(interactor))
+            return;
+
         if (_playerInside)
             QueueTransition();
+    }
+
+    public bool TryUnlock(Node interactor)
+    {
+        if (!IsLocked)
+            return true;
+
+        SetLocked(false);
+        return true;
     }
 
     public Marker2D GetSpawnPoint()

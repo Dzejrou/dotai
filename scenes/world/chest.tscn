@@ -1,32 +1,32 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/world/Chest.cs" id="1_chest_script"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/locked_chest_open_spriteframes.tres" id="2_locked_chest_frames"]
-[ext_resource type="Script" path="res://scripts/world/interactions/UnlockChestInteraction.cs" id="3_unlock_chest_interaction"]
-[ext_resource type="Script" path="res://scripts/world/interactions/DropLootInteraction.cs" id="4_drop_loot_interaction"]
-[ext_resource type="Resource" path="res://resources/loot_tables/locked_chest_loot_table.tres" id="5_locked_chest_loot_table"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/chest_open_spriteframes.tres" id="2_chest_open_frames"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/chest_unlock_open_spriteframes.tres" id="3_chest_unlock_open_frames"]
+[ext_resource type="Script" path="res://scripts/world/interactions/UnlockChestInteraction.cs" id="4_unlock_chest_interaction"]
+[ext_resource type="Script" path="res://scripts/world/interactions/DropLootInteraction.cs" id="5_drop_loot_interaction"]
+[ext_resource type="Resource" path="res://resources/loot_tables/chest_loot_table.tres" id="6_chest_loot_table"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_locked_chest"]
 size = Vector2(46, 28)
 
 [node name="Chest" type="StaticBody2D" unique_id=1263117603]
 script = ExtResource("1_chest_script")
-OpenAnimationFrames = ExtResource("2_locked_chest_frames")
-LootTable = ExtResource("5_locked_chest_loot_table")
+OpenAnimationFrames = ExtResource("2_chest_open_frames")
+UnlockOpenAnimationFrames = ExtResource("3_chest_unlock_open_frames")
+LootTable = ExtResource("6_chest_loot_table")
 InteractionPromptOffset = Vector2(0, -42)
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=286727874]
 position = Vector2(0, -8)
-sprite_frames = ExtResource("2_locked_chest_frames")
-animation = &"default"
-frame = 0
+sprite_frames = ExtResource("3_chest_unlock_open_frames")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1584257650]
 position = Vector2(0, 10)
 shape = SubResource("RectangleShape2D_locked_chest")
 
-[node name="UnlockChestInteraction" type="Node" parent="."]
-script = ExtResource("3_unlock_chest_interaction")
+[node name="UnlockChestInteraction" type="Node" parent="." unique_id=2060361463]
+script = ExtResource("4_unlock_chest_interaction")
 
-[node name="DropLootInteraction" type="Node" parent="."]
-script = ExtResource("4_drop_loot_interaction")
+[node name="DropLootInteraction" type="Node" parent="." unique_id=702824193]
+script = ExtResource("5_drop_loot_interaction")
