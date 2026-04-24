@@ -1,26 +1,27 @@
 [gd_scene format=3 uid="uid://cnpc2ij535kmo"]
 
-[ext_resource type="PackedScene" path="res://scenes/actors/player/player.tscn" id="1_player"]
-[ext_resource type="Script" path="res://scripts/core/World.cs" id="2_world"]
-[ext_resource type="Script" path="res://scripts/core/DebugSpawner.cs" id="3_debug_spawner"]
-[ext_resource type="Resource" path="res://resources/debug/spawn_catalog.tres" id="4_spawn_catalog"]
-[ext_resource type="Script" path="res://scripts/world/CorpseManager.cs" id="5_corpse_manager"]
-[ext_resource type="Resource" path="res://resources/world/room_registry.tres" id="6_room_registry"]
-[ext_resource type="Script" path="res://scripts/world/dungeon/Dungeon.cs" id="7_dungeon"]
-[ext_resource type="Resource" path="res://resources/dungeon/encounters/skeleton_patrol.tres" id="8_skeleton_patrol_encounter"]
-[ext_resource type="Resource" path="res://resources/dungeon/encounters/bone_wall.tres" id="9_bone_wall_encounter"]
-[ext_resource type="Resource" path="res://resources/dungeon/encounters/ogre_guard.tres" id="10_ogre_guard_encounter"]
-[ext_resource type="Resource" path="res://resources/dungeon/encounters/bone_horde.tres" id="11_bone_horde_encounter"]
-[ext_resource type="PackedScene" path="res://scenes/world/rooms/combat_dungeon_room.tscn" id="12_combat_dungeon_room"]
-[ext_resource type="PackedScene" path="res://scenes/world/rooms/special_dungeon_room.tscn" id="13_special_dungeon_room"]
+[ext_resource type="PackedScene" uid="uid://ejnrj2088bpa" path="res://scenes/actors/player/player.tscn" id="1_player"]
+[ext_resource type="Script" uid="uid://dhkp7bkox0i6e" path="res://scripts/core/World.cs" id="2_world"]
+[ext_resource type="Script" uid="uid://47bka353y2ms" path="res://scripts/core/DebugSpawner.cs" id="3_debug_spawner"]
+[ext_resource type="Resource" uid="uid://dywxbx4vl0ax3" path="res://resources/debug/spawn_catalog.tres" id="4_spawn_catalog"]
+[ext_resource type="Script" uid="uid://dp732creo58kj" path="res://scripts/world/CorpseManager.cs" id="5_corpse_manager"]
+[ext_resource type="Resource" uid="uid://o81pu7wl78f6" path="res://resources/world/room_registry.tres" id="6_room_registry"]
+[ext_resource type="Script" uid="uid://ccjyylvlhcft2" path="res://scripts/world/dungeon/Dungeon.cs" id="7_dungeon"]
+[ext_resource type="Script" uid="uid://tvlutr1p7gr3" path="res://scripts/world/dungeon/DungeonEncounterDefinition.cs" id="8_o57w4"]
+[ext_resource type="Resource" uid="uid://b1ssa7f4ugskt" path="res://resources/dungeon/encounters/skeleton_patrol.tres" id="8_skeleton_patrol_encounter"]
+[ext_resource type="Resource" uid="uid://bkvxg1yv8nieb" path="res://resources/dungeon/encounters/bone_wall.tres" id="9_bone_wall_encounter"]
+[ext_resource type="Resource" uid="uid://bv4qwryoqlkei" path="res://resources/dungeon/encounters/ogre_guard.tres" id="10_ogre_guard_encounter"]
+[ext_resource type="Resource" uid="uid://cg45ru2xpdwtd" path="res://resources/dungeon/encounters/bone_horde.tres" id="11_bone_horde_encounter"]
+[ext_resource type="PackedScene" uid="uid://cd8ph5fhvyjvb" path="res://scenes/world/rooms/combat_dungeon_room.tscn" id="12_combat_dungeon_room"]
+[ext_resource type="PackedScene" uid="uid://c8qcan8jddo8k" path="res://scenes/world/rooms/special_dungeon_room.tscn" id="13_special_dungeon_room"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
 RoomRegistry = ExtResource("6_room_registry")
 
-[node name="RoomContainer" type="Node2D" parent="."]
+[node name="RoomContainer" type="Node2D" parent="." unique_id=1250668101]
 
-[node name="Player" parent="." instance=ExtResource("1_player")]
+[node name="Player" parent="." unique_id=1586000864 instance=ExtResource("1_player")]
 
 [node name="DebugSpawner" type="Node2D" parent="." unique_id=59067455]
 script = ExtResource("3_debug_spawner")
@@ -31,7 +32,6 @@ script = ExtResource("5_corpse_manager")
 
 [node name="Dungeon" type="Node" parent="." unique_id=894211917]
 script = ExtResource("7_dungeon")
-EncounterPool = Array[ExtResource("8_skeleton_patrol_encounter")]([ExtResource("8_skeleton_patrol_encounter"), ExtResource("9_bone_wall_encounter"), ExtResource("10_ogre_guard_encounter"), ExtResource("11_bone_horde_encounter")])
+EncounterPool = Array[ExtResource("8_o57w4")]([ExtResource("8_skeleton_patrol_encounter"), ExtResource("9_bone_wall_encounter"), ExtResource("10_ogre_guard_encounter"), ExtResource("11_bone_horde_encounter")])
 CombatRoomTemplates = Array[PackedScene]([ExtResource("12_combat_dungeon_room")])
 SpecialRoomTemplates = Array[PackedScene]([ExtResource("13_special_dungeon_room")])
-SpecialRoomChance = 0.2

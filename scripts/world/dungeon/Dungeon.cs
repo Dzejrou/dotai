@@ -41,10 +41,14 @@ public partial class Dungeon : Node
     [Export(PropertyHint.Range, "0,1,0.01")]
     public float SpecialRoomChance { get; set; } = 0.2f;
 
+    [Export(PropertyHint.Range, "0,20,1")]
+    public int SpecialRoomPity { get; set; } = 3;
+
     private readonly RandomNumberGenerator _random = new();
     private readonly Dictionary<StringName, DungeonRoomDescriptor> _activeProgressionDoors = new();
 
     private RoomScreen _activeDungeonRoom;
+    private int _consecutiveNonSpecialRooms;
 
     public override void _Ready()
     {
@@ -66,6 +70,7 @@ public partial class Dungeon : Node
         if (!IsDungeonRoom(currentRoom))
             StartNewRun();
 
+        RegisterEnteredDungeonRoom(roomKind);
         SetActiveDungeonRoom(room);
         ConfigureDungeonRoom(room, roomKind);
         return true;
@@ -180,6 +185,13 @@ public partial class Dungeon : Node
         if (_activeDungeonRoom is not CombatDungeonRoom)
             return;
 
+        if (TryResolveForcedCombatProgressionKind(out var forcedRoomKind))
+        {
+            SetProgressionDoor(CombatTopLeftExitId, forcedRoomKind);
+            SetProgressionDoor(CombatTopRightExitId, forcedRoomKind);
+            return;
+        }
+
         SetProgressionDoor(CombatTopLeftExitId, RollCombatProgressionRoomKind());
         SetProgressionDoor(CombatTopRightExitId, RollCombatProgressionRoomKind());
     }
@@ -192,6 +204,7 @@ public partial class Dungeon : Node
     private void EndRun()
     {
         _activeProgressionDoors.Clear();
+        _consecutiveNonSpecialRooms = 0;
         SetActiveDungeonRoom(null);
     }
 
@@ -278,6 +291,28 @@ public partial class Dungeon : Node
         return _random.Randf() < specialChance
             ? DungeonRoomKind.Special
             : DungeonRoomKind.Combat;
+    }
+
+    private void RegisterEnteredDungeonRoom(DungeonRoomKind roomKind)
+    {
+        _consecutiveNonSpecialRooms = roomKind == DungeonRoomKind.Special
+            ? 0
+            : _consecutiveNonSpecialRooms + 1;
+    }
+
+    private bool TryResolveForcedCombatProgressionKind(out DungeonRoomKind forcedRoomKind)
+    {
+        forcedRoomKind = default;
+
+        if (SpecialRoomPity <= 0)
+            return false;
+
+        var pityThreshold = Mathf.Max(1, SpecialRoomPity);
+        if (_consecutiveNonSpecialRooms < pityThreshold)
+            return false;
+
+        forcedRoomKind = DungeonRoomKind.Special;
+        return true;
     }
 
     private void SetProgressionDoor(StringName exitId, DungeonRoomKind roomKind)
