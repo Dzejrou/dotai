@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class Altar : WorldObject, IInteractable
+public partial class Altar : WorldObject
 {
     private const string DefaultVisualDirection = "south";
 
@@ -20,25 +20,7 @@ public partial class Altar : WorldObject, IInteractable
     public override void _Ready()
     {
         InitializeWorldObject();
-        AddToGroup(InteractionGroups.Interactables);
         ApplyVisualState();
-    }
-
-    public bool CanInteract(Node interactor)
-    {
-        return interactor != null && interactor.IsInsideTree();
-    }
-
-    public void Interact(Node interactor)
-    {
-        if (interactor == null || !interactor.IsInsideTree())
-            return;
-
-        var statusEffectController = interactor.GetNodeOrNull<StatusEffectController>("StatusEffectController");
-        if (statusEffectController == null || !statusEffectController.HasStatus(PoisonedEffect.StatusKeyName))
-            return;
-
-        statusEffectController.RemoveStatus(PoisonedEffect.StatusKeyName);
     }
 
     private void ApplyVisualState()

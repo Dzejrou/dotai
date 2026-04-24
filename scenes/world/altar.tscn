@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://sbprq8ior63f" path="res://assets/altar/south.png" id="7_south"]
 [ext_resource type="Texture2D" uid="uid://ciopiuqxhhasj" path="res://assets/altar/south-west.png" id="8_south_west"]
 [ext_resource type="Texture2D" uid="uid://crbf26y4jvox3" path="res://assets/altar/west.png" id="9_west"]
+[ext_resource type="Script" path="res://scripts/world/interactions/CleansePoisonInteraction.cs" id="10_cleanse_poison_interaction"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_altar"]
 size = Vector2(70, 72)
@@ -31,3 +32,6 @@ texture = ExtResource("7_south")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1977437158]
 position = Vector2(0, 8)
 shape = SubResource("RectangleShape2D_altar")
+
+[node name="CleansePoisonInteraction" type="Node" parent="."]
+script = ExtResource("10_cleanse_poison_interaction")
