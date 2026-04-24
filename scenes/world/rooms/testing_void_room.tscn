@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="4_3evjt"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="5_ttrfo"]
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="7_chest"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -64,3 +65,6 @@ position = Vector2(397, 529)
 [node name="Altar" parent="Unscaled" unique_id=487314875 instance=ExtResource("6_67bni")]
 position = Vector2(145, 392)
 scale = Vector2(0.6, 0.6)
+
+[node name="Chest" parent="Unscaled" instance=ExtResource("7_chest")]
+position = Vector2(258, 390)

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="LootTable" format=3]
+
+[ext_resource type="Script" path="res://scripts/loot/LootTable.cs" id="1_loot_table_script"]
+[ext_resource type="Script" path="res://scripts/loot/LootEntry.cs" id="2_loot_entry_script"]
+[ext_resource type="Resource" path="res://resources/drops/gold_sack_drop_definition.tres" id="3_gold_sack_definition"]
+[ext_resource type="Resource" path="res://resources/drops/health_potion_drop_definition.tres" id="4_health_potion_definition"]
+[ext_resource type="Resource" path="res://resources/drops/mana_potion_drop_definition.tres" id="5_mana_potion_definition"]
+
+[sub_resource type="Resource" id="Resource_loot_entry_gold"]
+script = ExtResource("2_loot_entry_script")
+DisplayName = "Gold Sack"
+DropChance = 1.0
+Definition = ExtResource("3_gold_sack_definition")
+Amount = 18
+
+[sub_resource type="Resource" id="Resource_loot_entry_health"]
+script = ExtResource("2_loot_entry_script")
+DisplayName = "Health Potion"
+DropChance = 0.6
+Definition = ExtResource("4_health_potion_definition")
+Amount = 1
+
+[sub_resource type="Resource" id="Resource_loot_entry_mana"]
+script = ExtResource("2_loot_entry_script")
+DisplayName = "Mana Potion"
+DropChance = 0.6
+Definition = ExtResource("5_mana_potion_definition")
+Amount = 1
+
+[resource]
+script = ExtResource("1_loot_table_script")
+Entries = Array[ExtResource("2_loot_entry_script")]([SubResource("Resource_loot_entry_gold"), SubResource("Resource_loot_entry_health"), SubResource("Resource_loot_entry_mana")])
