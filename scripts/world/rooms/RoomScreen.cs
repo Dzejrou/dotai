@@ -45,6 +45,7 @@ public partial class RoomScreen : Node2D
     public event Action<Door> DoorTriggered;
 
     private readonly Dictionary<StringName, Door> _doorsById = new();
+    private Node _attachedContentInstance;
 
     public override void _Ready()
     {
@@ -57,6 +58,7 @@ public partial class RoomScreen : Node2D
             door.TransitionRequested -= OnDoorTransitionRequested;
 
         _doorsById.Clear();
+        _attachedContentInstance = null;
     }
 
     public Door GetDoor(StringName exitId)
@@ -120,6 +122,60 @@ public partial class RoomScreen : Node2D
             return null;
 
         return GetNodeOrNull<Node2D>(UnscaledPath);
+    }
+
+    public bool TryAttachContent(PackedScene contentScene, bool replaceExisting = false)
+    {
+        if (contentScene == null)
+        {
+            GD.PushError($"{nameof(RoomScreen)} '{Name}' cannot attach a null content scene.");
+            return false;
+        }
+
+        var unscaledRoot = GetUnscaledRoot();
+        if (unscaledRoot == null)
+        {
+            GD.PushError($"{nameof(RoomScreen)} '{Name}' could not resolve unscaled root '{UnscaledPath}' for content attachment.");
+            return false;
+        }
+
+        if (GodotObject.IsInstanceValid(_attachedContentInstance))
+        {
+            if (!replaceExisting)
+            {
+                GD.PushError($"{nameof(RoomScreen)} '{Name}' already has attached runtime content.");
+                return false;
+            }
+
+            ClearAttachedContent();
+        }
+
+        var contentInstance = contentScene.Instantiate();
+        if (contentInstance == null)
+        {
+            GD.PushError($"{nameof(RoomScreen)} '{Name}' failed to instantiate content scene '{contentScene.ResourcePath}'.");
+            return false;
+        }
+
+        unscaledRoot.AddChild(contentInstance);
+        _attachedContentInstance = contentInstance;
+        return true;
+    }
+
+    public void ClearAttachedContent()
+    {
+        if (!GodotObject.IsInstanceValid(_attachedContentInstance))
+        {
+            _attachedContentInstance = null;
+            return;
+        }
+
+        var parent = _attachedContentInstance.GetParent();
+        if (parent != null)
+            parent.RemoveChild(_attachedContentInstance);
+
+        _attachedContentInstance.QueueFree();
+        _attachedContentInstance = null;
     }
 
     private void CacheDoors()

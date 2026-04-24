@@ -6,8 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="4_3evjt"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="5_ttrfo"]
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
-[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="7_chest"]
-[ext_resource type="SpriteFrames" path="res://resources/animations/chest_open_spriteframes.tres" id="22_yhf77"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="7_content"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -65,11 +64,6 @@ position = Vector2(397, 529)
 position = Vector2(145, 392)
 scale = Vector2(0.6, 0.6)
 
-[node name="LockedChest" parent="Unscaled" unique_id=286155892 instance=ExtResource("7_chest")]
-position = Vector2(258, 390)
-OpenAnimationFrames = ExtResource("22_yhf77")
+[node name="ChestContent" parent="Unscaled" unique_id=288433992 instance=ExtResource("7_content")]
 
-[node name="UnlockedChest" parent="Unscaled" unique_id=1263117603 instance=ExtResource("7_chest")]
-position = Vector2(127, 512)
-IsLocked = false
-OpenAnimationFrames = ExtResource("22_yhf77")
+[editable path="Unscaled/ChestContent"]

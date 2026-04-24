@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://rxvhdn5vg7k3" path="res://scripts/world/rooms/RoomRegistryEntry.cs" id="2_room_registry_entry_script"]
 [ext_resource type="PackedScene" uid="uid://belxu0qkq53ti" path="res://scenes/world/rooms/entrance_hall_room.tscn" id="3_entrance_hall_room"]
 [ext_resource type="PackedScene" uid="uid://kcce6l2qkbhp" path="res://scenes/world/rooms/transition_test_room.tscn" id="4_transition_test_room"]
-[ext_resource type="PackedScene" uid="uid://c7q7ej5qxqqws" path="res://scenes/world/rooms/testing_void_room.tscn" id="5_testing_void_room"]
+[ext_resource type="PackedScene" uid="uid://ccyfthojw57t7" path="res://scenes/world/rooms/testing_void_room.tscn" id="5_testing_void_room"]
 
 [sub_resource type="Resource" id="Resource_room_registry_entry_entrance_hall"]
 script = ExtResource("2_room_registry_entry_script")
