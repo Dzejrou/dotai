@@ -1,0 +1,102 @@
+[gd_scene format=3 uid="uid://cqwa3wd6p5g6t"]
+
+[ext_resource type="Texture2D" uid="uid://cc2h84iv7ona2" path="res://assets/world/castle/courtyard.png" id="1_room_texture"]
+[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
+[ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_vqtlv"]
+vertices = PackedVector2Array(362.9375, 317.97656, 46.578125, 317.5078, 47.90625, 157.71094, 174.59375, 160.42969, 201.36719, 180.36719, 362.04688, 160.42969, 230.65625, 159.52344)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3, 4), PackedInt32Array(5, 0, 4, 6)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(38, 147.5, 36.5, 327.5, 373, 328, 372, 150.5, 227.5, 149.5, 201.5, 168, 178, 150.5)])
+
+[sub_resource type="RectangleShape2D" id="2_north_wall_left"]
+size = Vector2(176, 134.5)
+
+[sub_resource type="RectangleShape2D" id="3_north_wall_right"]
+size = Vector2(176, 139)
+
+[sub_resource type="RectangleShape2D" id="4_side_wall"]
+size = Vector2(17, 228)
+
+[sub_resource type="RectangleShape2D" id="5_south_wall"]
+size = Vector2(356.5, 31.5)
+
+[node name="RoomScreen" type="Node2D" unique_id=1964627908]
+script = ExtResource("2_room_screen")
+ScreenId = &"courtyard"
+DisplayName = "Courtyard"
+Theme = &"castle"
+RoomType = &"courtyard"
+RoomSize = &"single_screen"
+CameraBoundsRect = Rect2(0, 0, 400, 400)
+
+[node name="Scaled" type="Node2D" parent="." unique_id=313994288]
+scale = Vector2(2, 2)
+
+[node name="Visual" type="Node2D" parent="Scaled" unique_id=340352637]
+
+[node name="RoomSprite" type="Sprite2D" parent="Scaled/Visual" unique_id=155544416]
+z_index = -10
+texture = ExtResource("1_room_texture")
+centered = false
+
+[node name="Navigation" type="Node2D" parent="Scaled" unique_id=1552389543]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation" unique_id=1593222067]
+navigation_polygon = SubResource("NavigationPolygon_vqtlv")
+
+[node name="Collision" type="Node2D" parent="Scaled" unique_id=683179312]
+
+[node name="NorthWallLeft" type="StaticBody2D" parent="Scaled/Collision" unique_id=1204133943]
+position = Vector2(88, 52)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/NorthWallLeft" unique_id=89244755]
+position = Vector2(0, 15.25)
+shape = SubResource("2_north_wall_left")
+
+[node name="NorthWallRight" type="StaticBody2D" parent="Scaled/Collision" unique_id=1416767510]
+position = Vector2(312, 52)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/NorthWallRight" unique_id=86664902]
+position = Vector2(0, 17.5)
+shape = SubResource("3_north_wall_right")
+
+[node name="WestWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1688735411]
+position = Vector2(27, 223)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/WestWall" unique_id=1657822796]
+position = Vector2(-10.5, 0)
+shape = SubResource("4_side_wall")
+
+[node name="EastWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1476013675]
+position = Vector2(373, 223)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/EastWall" unique_id=495059561]
+position = Vector2(15, -2)
+shape = SubResource("4_side_wall")
+
+[node name="SouthWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=334135306]
+position = Vector2(200, 338)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/SouthWall" unique_id=1932309684]
+position = Vector2(6.75, 13.75)
+shape = SubResource("5_south_wall")
+
+[node name="Exits" type="Node2D" parent="Scaled" unique_id=1073836303]
+
+[node name="NorthCenterDoor" parent="Scaled/Exits" unique_id=547073888 instance=ExtResource("3_door")]
+position = Vector2(200, 104)
+ExitId = &"north_center"
+TargetScreenId = &"entrance_hall"
+TargetExitId = &"south_center"
+Direction = &"north"
+
+[node name="Markers" type="Node2D" parent="Scaled" unique_id=603631134]
+
+[node name="PlayerStart" type="Marker2D" parent="Scaled/Markers" unique_id=699726005]
+position = Vector2(200, 240)
+
+[node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=969265028]
+position = Vector2(200, 200)
+
+[node name="Unscaled" type="Node2D" parent="." unique_id=273158456]

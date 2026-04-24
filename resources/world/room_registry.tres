@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://qt83qteermx" path="res://scripts/world/rooms/RoomRegistry.cs" id="1_room_registry_script"]
 [ext_resource type="Script" uid="uid://rxvhdn5vg7k3" path="res://scripts/world/rooms/RoomRegistryEntry.cs" id="2_room_registry_entry_script"]
 [ext_resource type="PackedScene" uid="uid://belxu0qkq53ti" path="res://scenes/world/rooms/entrance_hall_room.tscn" id="3_entrance_hall_room"]
-[ext_resource type="PackedScene" uid="uid://kcce6l2qkbhp" path="res://scenes/world/rooms/transition_test_room.tscn" id="4_transition_test_room"]
+[ext_resource type="PackedScene" uid="uid://cqwa3wd6p5g6t" path="res://scenes/world/rooms/courtyard_room.tscn" id="4_courtyard_room"]
 [ext_resource type="PackedScene" uid="uid://ccyfthojw57t7" path="res://scenes/world/rooms/testing_void_room.tscn" id="5_testing_void_room"]
 
 [sub_resource type="Resource" id="Resource_room_registry_entry_entrance_hall"]
@@ -11,10 +11,10 @@ script = ExtResource("2_room_registry_entry_script")
 ScreenId = &"entrance_hall"
 RoomScene = ExtResource("3_entrance_hall_room")
 
-[sub_resource type="Resource" id="Resource_room_registry_entry_transition_test"]
+[sub_resource type="Resource" id="Resource_room_registry_entry_courtyard"]
 script = ExtResource("2_room_registry_entry_script")
-ScreenId = &"transition_test"
-RoomScene = ExtResource("4_transition_test_room")
+ScreenId = &"courtyard"
+RoomScene = ExtResource("4_courtyard_room")
 
 [sub_resource type="Resource" id="Resource_room_registry_entry_testing_void"]
 script = ExtResource("2_room_registry_entry_script")
@@ -23,4 +23,4 @@ RoomScene = ExtResource("5_testing_void_room")
 
 [resource]
 script = ExtResource("1_room_registry_script")
-Entries = Array[ExtResource("2_room_registry_entry_script")]([SubResource("Resource_room_registry_entry_entrance_hall"), SubResource("Resource_room_registry_entry_transition_test"), SubResource("Resource_room_registry_entry_testing_void")])
+Entries = Array[ExtResource("2_room_registry_entry_script")]([SubResource("Resource_room_registry_entry_entrance_hall"), SubResource("Resource_room_registry_entry_courtyard"), SubResource("Resource_room_registry_entry_testing_void")])

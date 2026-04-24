@@ -114,7 +114,7 @@ position = Vector2(0, 34)
 [node name="SouthCenterDoor" parent="Scaled/Exits" unique_id=1881665610 instance=ExtResource("3_door")]
 position = Vector2(200, 321)
 ExitId = &"south_center"
-TargetScreenId = &"transition_test"
+TargetScreenId = &"courtyard"
 TargetExitId = &"north_center"
 Direction = &"south"
 
