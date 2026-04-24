@@ -6,7 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="4_3evjt"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="5_ttrfo"]
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
-[ext_resource type="PackedScene" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="7_content"]
+[ext_resource type="PackedScene" uid="uid://dwochr8ocdyfl" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="7_content"]
+[ext_resource type="PackedScene" path="res://scenes/world/doors/portal.tscn" id="8_portal"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -34,6 +35,13 @@ navigation_polygon = SubResource("1_room_navigation")
 [node name="Collision" type="Node2D" parent="Scaled" unique_id=1541060653]
 
 [node name="Exits" type="Node2D" parent="Scaled" unique_id=1265552701]
+
+[node name="CourtyardPortal" parent="Scaled/Exits" unique_id=128912651 instance=ExtResource("8_portal")]
+position = Vector2(317.5, 272.5)
+ExitId = &"courtyard_portal"
+TargetScreenId = &"courtyard"
+TargetExitId = &"testing_void_portal"
+Direction = &"west"
 
 [node name="Markers" type="Node2D" parent="Scaled" unique_id=790925687]
 

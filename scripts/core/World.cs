@@ -112,28 +112,31 @@ public partial class World : Node2D
         return _corpseManager;
     }
 
-    private void OnDoorTriggered(Door door)
+    private void OnTransitionTriggered(RoomTransition transition)
     {
-        if (_transitionCooldownRemaining > 0.0f || door == null || door.IsLocked)
+        if (_transitionCooldownRemaining > 0.0f || transition == null)
             return;
 
-        if (!HasValue(door.TargetScreenId))
+        if (transition is Door door && door.IsLocked)
+            return;
+
+        if (!HasValue(transition.TargetScreenId))
         {
-            GD.PushWarning($"{door.Name} does not define a target screen id.");
+            GD.PushWarning($"{transition.Name} does not define a target screen id.");
             return;
         }
 
         var previousRoom = _activeRoom;
-        if (!TransitionToRoom(door.TargetScreenId, door.TargetExitId, door))
+        if (!TransitionToRoom(transition.TargetScreenId, transition.TargetExitId, transition))
             return;
 
-        _dungeon?.OnTransitionCompleted(previousRoom, door, _activeRoom);
+        _dungeon?.OnTransitionCompleted(previousRoom, transition, _activeRoom);
         _transitionCooldownRemaining = TransitionCooldownSeconds;
     }
 
-    private bool TransitionToRoom(StringName screenId, StringName entryExitId, Door sourceDoor = null)
+    private bool TransitionToRoom(StringName screenId, StringName entryExitId, RoomTransition sourceTransition = null)
     {
-        var nextRoom = InstantiateRoom(screenId, entryExitId, sourceDoor);
+        var nextRoom = InstantiateRoom(screenId, entryExitId, sourceTransition);
         if (nextRoom == null)
             return false;
 
@@ -144,17 +147,17 @@ public partial class World : Node2D
 
         _activeRoom = nextRoom;
         (_roomContainer ?? this).AddChild(_activeRoom);
-        _activeRoom.DoorTriggered += OnDoorTriggered;
+        _activeRoom.TransitionTriggered += OnTransitionTriggered;
 
         PlacePlayerAtRoomEntry(_activeRoom, entryExitId);
         ApplyRoomCameraBounds(_activeRoom);
         return true;
     }
 
-    private RoomScreen InstantiateRoom(StringName screenId, StringName entryExitId, Door sourceDoor)
+    private RoomScreen InstantiateRoom(StringName screenId, StringName entryExitId, RoomTransition sourceTransition)
     {
         if (_dungeon != null &&
-            _dungeon.TryCreateRoom(screenId, _activeRoom, sourceDoor, entryExitId, out var dungeonRoom) &&
+            _dungeon.TryCreateRoom(screenId, _activeRoom, sourceTransition, entryExitId, out var dungeonRoom) &&
             dungeonRoom != null)
         {
             return dungeonRoom;
@@ -190,7 +193,7 @@ public partial class World : Node2D
     private void DisconnectActiveRoom()
     {
         if (_activeRoom != null)
-            _activeRoom.DoorTriggered -= OnDoorTriggered;
+            _activeRoom.TransitionTriggered -= OnTransitionTriggered;
     }
 
     private void PlacePlayerAtRoomEntry(RoomScreen room, StringName entryExitId)

@@ -55,13 +55,13 @@ public partial class Dungeon : Node
         _random.Randomize();
     }
 
-    public bool TryCreateRoom(StringName screenId, RoomScreen currentRoom, Door sourceDoor, StringName entryExitId, out RoomScreen room)
+    public bool TryCreateRoom(StringName screenId, RoomScreen currentRoom, RoomTransition sourceTransition, StringName entryExitId, out RoomScreen room)
     {
         room = null;
         if (screenId != DungeonRuntimeScreenId)
             return false;
 
-        var roomKind = ResolveRequestedRoomKind(currentRoom, sourceDoor);
+        var roomKind = ResolveRequestedRoomKind(currentRoom, sourceTransition);
         if (!TryInstantiateDungeonRoom(roomKind, out room))
         {
             return false;
@@ -76,7 +76,7 @@ public partial class Dungeon : Node
         return true;
     }
 
-    public void OnTransitionCompleted(RoomScreen previousRoom, Door usedDoor, RoomScreen nextRoom)
+    public void OnTransitionCompleted(RoomScreen previousRoom, RoomTransition usedTransition, RoomScreen nextRoom)
     {
         if (IsDungeonRoom(previousRoom) && !IsDungeonRoom(nextRoom))
             EndRun();
@@ -222,14 +222,14 @@ public partial class Dungeon : Node
             activeCombatRoom.RoomCleared += OnActiveRoomCleared;
     }
 
-    private DungeonRoomKind ResolveRequestedRoomKind(RoomScreen currentRoom, Door sourceDoor)
+    private DungeonRoomKind ResolveRequestedRoomKind(RoomScreen currentRoom, RoomTransition sourceTransition)
     {
         if (!IsDungeonRoom(currentRoom))
             return DungeonRoomKind.Combat;
 
-        if (sourceDoor != null &&
-            HasValue(sourceDoor.ExitId) &&
-            _activeProgressionDoors.TryGetValue(sourceDoor.ExitId, out var descriptor))
+        if (sourceTransition != null &&
+            HasValue(sourceTransition.ExitId) &&
+            _activeProgressionDoors.TryGetValue(sourceTransition.ExitId, out var descriptor))
         {
             return descriptor.Kind;
         }

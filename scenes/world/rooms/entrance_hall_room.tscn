@@ -155,6 +155,7 @@ ExitId = &"east_mid"
 TargetScreenId = &"testing_void"
 TargetExitId = &"PlayerStart"
 Direction = &"east"
+IsLocked = true
 
 [node name="SpawnPoint" parent="Scaled/Exits/EastMidDoor" unique_id=1698083979]
 position = Vector2(-30, 4)

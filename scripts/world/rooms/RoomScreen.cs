@@ -42,42 +42,47 @@ public partial class RoomScreen : Node2D
     [Export]
     public Rect2 CameraBoundsRect { get; set; } = new Rect2(0.0f, 0.0f, 400.0f, 400.0f);
 
-    public event Action<Door> DoorTriggered;
+    public event Action<RoomTransition> TransitionTriggered;
 
-    private readonly Dictionary<StringName, Door> _doorsById = new();
+    private readonly Dictionary<StringName, RoomTransition> _transitionsById = new();
     private Node _attachedContentInstance;
 
     public override void _Ready()
     {
-        EnsureDoorsCached();
+        EnsureTransitionsCached();
     }
 
     public override void _ExitTree()
     {
-        foreach (var door in _doorsById.Values)
-            door.TransitionRequested -= OnDoorTransitionRequested;
+        foreach (var transition in _transitionsById.Values)
+            transition.TransitionRequested -= OnTransitionRequested;
 
-        _doorsById.Clear();
+        _transitionsById.Clear();
         _attachedContentInstance = null;
+    }
+
+    public RoomTransition GetTransition(StringName exitId)
+    {
+        EnsureTransitionsCached();
+        return HasValue(exitId) && _transitionsById.TryGetValue(exitId, out var transition)
+            ? transition
+            : null;
     }
 
     public Door GetDoor(StringName exitId)
     {
-        EnsureDoorsCached();
-        return HasValue(exitId) && _doorsById.TryGetValue(exitId, out var door)
-            ? door
-            : null;
+        return GetTransition(exitId) as Door;
     }
 
     public bool TryGetSpawnMarker(StringName exitId, out Marker2D marker)
     {
-        EnsureDoorsCached();
+        EnsureTransitionsCached();
         marker = null;
 
         if (HasValue(exitId))
         {
-            var entryDoor = GetDoor(exitId);
-            marker = entryDoor?.GetSpawnPoint();
+            var entryTransition = GetTransition(exitId);
+            marker = entryTransition?.GetSpawnPoint();
             if (marker != null)
                 return true;
         }
@@ -178,9 +183,9 @@ public partial class RoomScreen : Node2D
         _attachedContentInstance = null;
     }
 
-    private void CacheDoors()
+    private void CacheTransitions()
     {
-        _doorsById.Clear();
+        _transitionsById.Clear();
 
         var exitsRoot = GetNodeOrNull<Node>(ExitsPath);
         if (exitsRoot == null)
@@ -188,25 +193,25 @@ public partial class RoomScreen : Node2D
 
         foreach (Node child in exitsRoot.GetChildren())
         {
-            if (child is not Door door || !HasValue(door.ExitId))
+            if (child is not RoomTransition transition || !HasValue(transition.ExitId))
                 continue;
 
-            _doorsById[door.ExitId] = door;
-            door.TransitionRequested += OnDoorTransitionRequested;
+            _transitionsById[transition.ExitId] = transition;
+            transition.TransitionRequested += OnTransitionRequested;
         }
     }
 
-    private void EnsureDoorsCached()
+    private void EnsureTransitionsCached()
     {
-        if (_doorsById.Count > 0)
+        if (_transitionsById.Count > 0)
             return;
 
-        CacheDoors();
+        CacheTransitions();
     }
 
-    private void OnDoorTransitionRequested(Door door)
+    private void OnTransitionRequested(RoomTransition transition)
     {
-        DoorTriggered?.Invoke(door);
+        TransitionTriggered?.Invoke(transition);
     }
 
     private static bool HasValue(StringName value)
