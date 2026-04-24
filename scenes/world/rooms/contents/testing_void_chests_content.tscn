@@ -5,8 +5,8 @@
 [node name="TestingVoidChestsContent" type="Node2D" unique_id=2093513246]
 
 [node name="LockedChest" parent="." unique_id=1675497592 instance=ExtResource("1_chest")]
-position = Vector2(258, 390)
+position = Vector2(99, 580)
 
 [node name="UnlockedChest" parent="." unique_id=272966836 instance=ExtResource("1_chest")]
-position = Vector2(216, 728)
+position = Vector2(169, 742)
 IsLocked = false
