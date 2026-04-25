@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://sb7v40671cuv" path="res://scripts/world/rooms/CombatDungeonRoom.cs" id="2_combat_dungeon_room"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="4_2ubne"]
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomClearUnlocker.cs" id="4_room_clear_unlocker"]
+[ext_resource type="Script" uid="uid://bnwnfcww81y3p" path="res://scripts/world/rooms/RoomClearUnlocker.cs" id="4_room_clear_unlocker"]
 
 [sub_resource type="NavigationPolygon" id="1_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
