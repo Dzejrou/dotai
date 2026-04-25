@@ -69,10 +69,18 @@ public partial class Chest : WorldObject, ILockable
         if (!CanUnlock(interactor))
             return false;
 
-        SetLocked(false);
+        UnlockExternal();
         StartOpenAnimation(UnlockOpenAnimationFrames);
         IsOpen = true;
         return true;
+    }
+
+    public void UnlockExternal()
+    {
+        if (!IsLocked)
+            return;
+
+        SetLocked(false);
     }
 
     public bool TryOpen()

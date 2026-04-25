@@ -15,21 +15,29 @@ public partial class CombatDungeonRoom : RoomScreen
     [Export]
     public NodePath EncounterMarkersPath { get; set; } = new NodePath("Unscaled/EncounterMarkers");
 
+    [Export]
+    public NodePath RoomClearUnlockerPath { get; set; } = new NodePath("RoomClearUnlocker");
+
     private readonly Dictionary<StringName, Marker2D> _encounterMarkersById = new();
     private readonly Dictionary<Node, Callable> _enemyExitCallables = new();
     private bool _isCleared;
+    private RoomClearUnlocker _roomClearUnlocker;
 
     public override void _Ready()
     {
         base._Ready();
+        RoomCleared += OnRoomCleared;
         CacheEncounterMarkers();
+        _roomClearUnlocker = ResolveRoomClearUnlocker();
         SetTopDoorsLocked(true);
     }
 
     public override void _ExitTree()
     {
+        RoomCleared -= OnRoomCleared;
         DisconnectTrackedEnemies();
         _encounterMarkersById.Clear();
+        _roomClearUnlocker = null;
         base._ExitTree();
     }
 
@@ -136,8 +144,19 @@ public partial class CombatDungeonRoom : RoomScreen
             return;
 
         _isCleared = true;
-        SetTopDoorsLocked(false);
         EmitSignal(SignalName.RoomCleared);
+    }
+
+    private void OnRoomCleared()
+    {
+        var roomClearUnlocker = ResolveRoomClearUnlocker();
+        if (roomClearUnlocker != null)
+        {
+            roomClearUnlocker.UnlockTargets();
+            return;
+        }
+
+        SetTopDoorsLocked(false);
     }
 
     private void SetTopDoorsLocked(bool isLocked)
@@ -151,5 +170,17 @@ public partial class CombatDungeonRoom : RoomScreen
         var door = GetDoor(exitId);
         if (door != null)
             door.IsLocked = isLocked;
+    }
+
+    private RoomClearUnlocker ResolveRoomClearUnlocker()
+    {
+        if (_roomClearUnlocker != null)
+            return _roomClearUnlocker;
+
+        if (RoomClearUnlockerPath.IsEmpty)
+            return null;
+
+        _roomClearUnlocker = GetNodeOrNull<RoomClearUnlocker>(RoomClearUnlockerPath);
+        return _roomClearUnlocker;
     }
 }

@@ -68,8 +68,16 @@ public partial class Door : RoomTransition, IInteractable, IInteractionPromptAnc
         if (!IsLocked)
             return true;
 
-        SetLocked(false);
+        UnlockExternal();
         return true;
+    }
+
+    public void UnlockExternal()
+    {
+        if (!IsLocked)
+            return;
+
+        SetLocked(false);
     }
 
     private void SetLocked(bool isLocked)

@@ -3,6 +3,8 @@
 [ext_resource type="Texture2D" uid="uid://bi1lqm84duw44" path="res://assets/world/dungeon/fork.png" id="1_room_texture"]
 [ext_resource type="Script" uid="uid://sb7v40671cuv" path="res://scripts/world/rooms/CombatDungeonRoom.cs" id="2_combat_dungeon_room"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="4_2ubne"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomClearUnlocker.cs" id="4_room_clear_unlocker"]
 
 [sub_resource type="NavigationPolygon" id="1_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -74,17 +76,17 @@ shape = SubResource("4_wall_vertical")
 
 [node name="NorthWestDoor" parent="Scaled/Exits" unique_id=1095838800 instance=ExtResource("3_door")]
 position = Vector2(89.5, 57)
-ExitId = &"north_west"
-Direction = &"north"
 ShowUnlockedIndicator = true
 IsLocked = true
+ExitId = &"north_west"
+Direction = &"north"
 
 [node name="NorthEastDoor" parent="Scaled/Exits" unique_id=942760815 instance=ExtResource("3_door")]
 position = Vector2(311.5, 55.5)
-ExitId = &"north_east"
-Direction = &"north"
 ShowUnlockedIndicator = true
 IsLocked = true
+ExitId = &"north_east"
+Direction = &"north"
 
 [node name="SouthReturnDoor" parent="Scaled/Exits" unique_id=2013600532 instance=ExtResource("3_door")]
 position = Vector2(200.5, 350.5)
@@ -121,44 +123,51 @@ position = Vector2(560, 220)
 [node name="spawn_06" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=730792423]
 position = Vector2(660, 220)
 
-[node name="spawn_07" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_07" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=2071026717]
 position = Vector2(140, 320)
 
-[node name="spawn_08" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_08" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=350457704]
 position = Vector2(260, 320)
 
-[node name="spawn_09" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_09" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=221235897]
 position = Vector2(400, 320)
 
-[node name="spawn_10" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_10" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=17198148]
 position = Vector2(540, 320)
 
-[node name="spawn_11" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_11" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1292467257]
 position = Vector2(660, 320)
 
-[node name="spawn_12" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_12" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=2127971346]
 position = Vector2(160, 420)
 
-[node name="spawn_13" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_13" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=751835036]
 position = Vector2(280, 420)
 
-[node name="spawn_14" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_14" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1549240660]
 position = Vector2(400, 420)
 
-[node name="spawn_15" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_15" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=2030973508]
 position = Vector2(520, 420)
 
-[node name="spawn_16" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_16" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=428114716]
 position = Vector2(640, 420)
 
-[node name="spawn_17" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_17" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1080641263]
 position = Vector2(220, 520)
 
-[node name="spawn_18" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_18" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1798156058]
 position = Vector2(340, 520)
 
-[node name="spawn_19" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_19" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=714228667]
 position = Vector2(460, 520)
 
-[node name="spawn_20" type="Marker2D" parent="Unscaled/EncounterMarkers"]
+[node name="spawn_20" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1782920358]
 position = Vector2(580, 520)
+
+[node name="Chest" parent="Unscaled" unique_id=1263117603 instance=ExtResource("4_2ubne")]
+position = Vector2(402, 163)
+
+[node name="RoomClearUnlocker" type="Node" parent="." unique_id=354503730]
+script = ExtResource("4_room_clear_unlocker")
+TargetNodePaths = [NodePath("Scaled/Exits/NorthWestDoor"), NodePath("Scaled/Exits/NorthEastDoor"), NodePath("../Unscaled/Chest")]
