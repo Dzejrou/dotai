@@ -17,6 +17,9 @@ public partial class World : Node2D
     public NodePath CorpseManagerPath { get; set; } = new NodePath("CorpseManager");
 
     [Export]
+    public NodePath InventoryPath { get; set; } = new NodePath("Inventory");
+
+    [Export]
     public NodePath DungeonPath { get; set; } = new NodePath("Dungeon");
 
     [Export]

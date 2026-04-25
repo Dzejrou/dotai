@@ -14,6 +14,7 @@
 [ext_resource type="Resource" uid="uid://cg45ru2xpdwtd" path="res://resources/dungeon/encounters/bone_horde.tres" id="11_bone_horde_encounter"]
 [ext_resource type="PackedScene" uid="uid://cd8ph5fhvyjvb" path="res://scenes/world/rooms/combat_dungeon_room.tscn" id="12_combat_dungeon_room"]
 [ext_resource type="PackedScene" uid="uid://c8qcan8jddo8k" path="res://scenes/world/rooms/special_dungeon_room.tscn" id="13_special_dungeon_room"]
+[ext_resource type="Script" path="res://scripts/inventory/InventoryController.cs" id="14_inventory"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
@@ -29,6 +30,9 @@ SpawnCatalog = ExtResource("4_spawn_catalog")
 
 [node name="CorpseManager" type="Node" parent="." unique_id=624362729]
 script = ExtResource("5_corpse_manager")
+
+[node name="Inventory" type="Node" parent="." unique_id=1473164684]
+script = ExtResource("14_inventory")
 
 [node name="Dungeon" type="Node" parent="." unique_id=894211917]
 script = ExtResource("7_dungeon")
