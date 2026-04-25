@@ -185,17 +185,55 @@ public partial class DebugSpawner : Node2D
             factionState?.SetFaction(_selectedFaction);
         }
 
-        var parent = GetParent();
-        if (parent != null)
+        var parent = ResolveSpawnParent();
+        if (parent == null)
         {
-            spawnedNode.GlobalPosition = spawnPosition;
-            if (entry.EntryKind == SpawnCatalogEntryKind.Character)
-                spawnedNode.ZIndex = -1;
-
-            parent.AddChild(spawnedNode);
+            GD.PushWarning($"{nameof(DebugSpawner)} could not resolve a spawn parent for '{spawnId}'.");
+            spawnedNode.QueueFree();
+            return null;
         }
 
+        if (entry.EntryKind == SpawnCatalogEntryKind.Character)
+            spawnedNode.ZIndex = -1;
+
+        parent.AddChild(spawnedNode);
+        spawnedNode.GlobalPosition = spawnPosition;
+
         return spawnedNode;
+    }
+
+    private Node ResolveSpawnParent()
+    {
+        var fallbackParent = GetParent();
+        var world = FindWorld();
+        if (world?.ActiveRoom == null)
+        {
+            GD.PushWarning($"{nameof(DebugSpawner)} could not resolve an active room. Falling back to persistent world parenting.");
+            return fallbackParent;
+        }
+
+        var unscaledRoot = world.ActiveRoom.GetUnscaledRoot();
+        if (unscaledRoot == null)
+        {
+            GD.PushWarning($"{nameof(DebugSpawner)} could not resolve the active room unscaled root for '{world.ActiveRoom.Name}'. Falling back to persistent world parenting.");
+            return fallbackParent;
+        }
+
+        return unscaledRoot;
+    }
+
+    private World FindWorld()
+    {
+        var current = GetParent();
+        while (current != null)
+        {
+            if (current is World world)
+                return world;
+
+            current = current.GetParent();
+        }
+
+        return null;
     }
 
     private IFactionMember FindClosestFactionMemberAtScreenPosition(Vector2 screenPosition)

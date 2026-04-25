@@ -44,6 +44,8 @@ public partial class World : Node2D
     private bool _isGameOver;
     private float _transitionCooldownRemaining;
 
+    public RoomScreen ActiveRoom => GodotObject.IsInstanceValid(_activeRoom) ? _activeRoom : null;
+
     public override void _Ready()
     {
         _roomContainer = GetNodeOrNull<Node>(RoomContainerPath);
