@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LootTable" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/loot/LootTable.cs" id="1_loot_table_script"]
+[ext_resource type="Script" path="res://scripts/loot/LootEntry.cs" id="2_loot_entry_script"]
+[ext_resource type="Resource" path="res://resources/drops/chest_key_drop_definition.tres" id="3_chest_key_definition"]
+
+[sub_resource type="Resource" id="1_chest_key_entry"]
+script = ExtResource("2_loot_entry_script")
+DisplayName = "Chest Key"
+Definition = ExtResource("3_chest_key_definition")
+Amount = 1
+
+[resource]
+script = ExtResource("1_loot_table_script")
+Entries = Array[ExtResource("2_loot_entry_script")]([SubResource("1_chest_key_entry")])

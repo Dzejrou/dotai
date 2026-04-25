@@ -24,4 +24,13 @@ public sealed class InventoryStack
         Quantity += amountToAdd;
         return remaining - amountToAdd;
     }
+
+    public int RemoveQuantity(int quantity)
+    {
+        var amountToRemove = Math.Clamp(quantity, 0, Quantity);
+        Quantity -= amountToRemove;
+        return amountToRemove;
+    }
+
+    public bool IsEmpty => Quantity <= 0;
 }

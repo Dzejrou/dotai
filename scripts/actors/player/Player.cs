@@ -66,6 +66,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public bool HasInteractionTarget => _activeInteractable != null;
     public Node2D CurrentInteractionTarget => _activeInteractableNode;
     public int Gold { get; private set; }
+    public InventoryController InventoryController => (GetParent() as World)?.ResolveInventoryController();
 
     public void ShowFloatingText(string text, Color color)
     {

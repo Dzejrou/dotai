@@ -66,7 +66,7 @@ public partial class Chest : WorldObject, ILockable
         if (!IsLocked)
             return true;
 
-        if (!CanUnlock(interactor))
+        if (interactor is Player player && !TryConsumeChestKey(player))
             return false;
 
         UnlockExternal();
@@ -109,10 +109,13 @@ public partial class Chest : WorldObject, ILockable
         return true;
     }
 
-    private bool CanUnlock(Node interactor)
+    private bool TryConsumeChestKey(Player player)
     {
-        // TODO: Add key or other unlock requirements here.
-        return true;
+        if (player == null || !GodotObject.IsInstanceValid(player))
+            return false;
+
+        var inventory = player.InventoryController;
+        return inventory != null && inventory.TryConsumeKeyKind(InventoryKeyKind.ChestKey, 1);
     }
 
     private void ApplyVisualState()

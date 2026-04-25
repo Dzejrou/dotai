@@ -96,13 +96,15 @@ public partial class Drop : Area2D
         if (_collected || player == null || !GodotObject.IsInstanceValid(player))
             return;
 
+        if (!TryApplyTo(player))
+            return;
+
         _collected = true;
         SetDeferred(Area2D.PropertyName.Monitoring, false);
 
         if (_collisionShape != null)
             _collisionShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
 
-        ApplyTo(player);
         QueueFree();
     }
 
@@ -155,5 +157,8 @@ public partial class Drop : Area2D
         _isSpawnMotionPlaying = false;
     }
 
-    protected virtual void ApplyTo(Player player) { }
+    protected virtual bool TryApplyTo(Player player)
+    {
+        return true;
+    }
 }

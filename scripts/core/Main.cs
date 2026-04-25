@@ -97,7 +97,7 @@ public partial class Main : Node2D
         }
 
         _inventoryController = _world != null && !_world.InventoryPath.IsEmpty
-            ? _world.GetNodeOrNull<InventoryController>(_world.InventoryPath)
+            ? _world.ResolveInventoryController()
             : null;
         _inventoryWindow?.Bind(_inventoryController);
 

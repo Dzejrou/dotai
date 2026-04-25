@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/drops/drop.tscn" id="1_drop_scene"]
+[ext_resource type="Script" path="res://scripts/world/drops/InventoryItemDrop.cs" id="2_inventory_item_drop_script"]
+
+[node name="Drop" instance=ExtResource("1_drop_scene")]
+script = ExtResource("2_inventory_item_drop_script")

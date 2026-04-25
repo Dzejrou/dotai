@@ -8,9 +8,10 @@ public partial class GoldSackDrop : Drop
     [Export]
     public int GoldAmount { get; set; } = 5;
 
-    protected override void ApplyTo(Player player)
+    protected override bool TryApplyTo(Player player)
     {
         player.AddGold(ResolveGrantedGoldAmount());
+        return true;
     }
 
     private int ResolveGrantedGoldAmount()

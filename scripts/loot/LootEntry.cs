@@ -33,8 +33,7 @@ public partial class LootEntry : Resource
         if (drop == null)
             return null;
 
-        if (drop is GoldSackDrop goldSackDrop)
-            goldSackDrop.GoldAmount = Math.Max(0, Amount);
+        Definition.ConfigureDrop(drop, Math.Max(0, Amount));
 
         return drop;
     }

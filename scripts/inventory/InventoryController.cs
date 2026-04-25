@@ -59,6 +59,54 @@ public partial class InventoryController : Node
         return remaining;
     }
 
+    public bool CanAddItem(InventoryItemDefinition item, int quantity)
+    {
+        return GetRemainingQuantityAfterAdd(item, quantity) == 0;
+    }
+
+    public int GetQuantityByKeyKind(InventoryKeyKind keyKind)
+    {
+        if (keyKind == InventoryKeyKind.None)
+            return 0;
+
+        var total = 0;
+        foreach (var stack in _slots)
+        {
+            if (stack?.Item == null || stack.Item.KeyKind != keyKind)
+                continue;
+
+            total += stack.Quantity;
+        }
+
+        return total;
+    }
+
+    public bool HasKeyKind(InventoryKeyKind keyKind, int quantity = 1)
+    {
+        return GetQuantityByKeyKind(keyKind) >= Math.Max(1, quantity);
+    }
+
+    public bool TryConsumeKeyKind(InventoryKeyKind keyKind, int quantity = 1)
+    {
+        var remaining = Math.Max(1, quantity);
+        if (!HasKeyKind(keyKind, remaining))
+            return false;
+
+        for (var i = 0; i < _slots.Count && remaining > 0; i++)
+        {
+            var stack = _slots[i];
+            if (stack?.Item == null || stack.Item.KeyKind != keyKind)
+                continue;
+
+            remaining -= stack.RemoveQuantity(remaining);
+            if (stack.IsEmpty)
+                _slots[i] = null;
+        }
+
+        EmitInventoryChanged();
+        return true;
+    }
+
     public void Clear()
     {
         var changed = false;
@@ -122,6 +170,38 @@ public partial class InventoryController : Node
             var stackAmount = Math.Min(item.MaxStackSize, remaining);
             _slots[i] = new InventoryStack(item, stackAmount);
             remaining -= stackAmount;
+        }
+
+        return remaining;
+    }
+
+    private int GetRemainingQuantityAfterAdd(InventoryItemDefinition item, int quantity)
+    {
+        if (item == null)
+            return Math.Max(0, quantity);
+
+        var remaining = Math.Max(0, quantity);
+        if (remaining == 0)
+            return 0;
+
+        foreach (var stack in _slots)
+        {
+            if (stack == null || !CanMerge(stack, item))
+                continue;
+
+            remaining -= Math.Min(stack.AvailableSpace, remaining);
+            if (remaining == 0)
+                return 0;
+        }
+
+        foreach (var stack in _slots)
+        {
+            if (stack != null)
+                continue;
+
+            remaining -= Math.Min(item.MaxStackSize, remaining);
+            if (remaining == 0)
+                return 0;
         }
 
         return remaining;

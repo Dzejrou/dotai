@@ -38,6 +38,7 @@ public partial class World : Node2D
     private Camera2D _playerCamera;
     private Node _roomContainer;
     private CorpseManager _corpseManager;
+    private InventoryController _inventoryController;
     private Dungeon _dungeon;
     private RoomScreen _activeRoom;
     private bool _isGameOver;
@@ -53,6 +54,7 @@ public partial class World : Node2D
 
         _dungeon = GetNodeOrNull<Dungeon>(DungeonPath);
         _corpseManager = ResolveCorpseManager();
+        _inventoryController = ResolveInventoryController();
         _player = GetNodeOrNull<Player>(PlayerPath);
         _playerCamera = _player?.GetNodeOrNull<Camera2D>("Camera2D");
 
@@ -84,6 +86,18 @@ public partial class World : Node2D
     public void RegisterCorpse(Corpse corpse)
     {
         ResolveCorpseManager()?.Register(corpse);
+    }
+
+    public InventoryController ResolveInventoryController()
+    {
+        if (_inventoryController != null && GodotObject.IsInstanceValid(_inventoryController))
+            return _inventoryController;
+
+        if (InventoryPath.IsEmpty)
+            return null;
+
+        _inventoryController = GetNodeOrNull<InventoryController>(InventoryPath);
+        return _inventoryController;
     }
 
     private void LoadInitialRoom()

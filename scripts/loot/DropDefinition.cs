@@ -12,7 +12,7 @@ public partial class DropDefinition : Resource
     [Export]
     public PackedScene DropScene { get; set; }
 
-    public Drop CreateDropInstance()
+    public virtual Drop CreateDropInstance()
     {
         if (DropScene == null)
             return null;
@@ -24,5 +24,11 @@ public partial class DropDefinition : Resource
         GD.PushError($"DropDefinition '{DisplayName}' points to a scene that does not inherit Drop.");
         instance.Free();
         return null;
+    }
+
+    public virtual void ConfigureDrop(Drop drop, int amount)
+    {
+        if (drop is GoldSackDrop goldSackDrop)
+            goldSackDrop.GoldAmount = Mathf.Max(0, amount);
     }
 }
