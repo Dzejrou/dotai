@@ -14,6 +14,7 @@ public partial class DebugSpawner : Node2D
         public Vector2 Scale { get; init; } = Vector2.One;
         public Vector2 Offset { get; init; } = Vector2.Zero;
         public Faction DefaultFaction { get; init; }
+        public SpawnCatalogEntryKind EntryKind { get; init; }
     }
 
     [Export]
@@ -66,8 +67,12 @@ public partial class DebugSpawner : Node2D
         if (!_entriesById.ContainsKey(spawnId))
             return;
 
-        if (_previewById.TryGetValue(spawnId, out var previewData) && previewData.DefaultFaction != null)
+        if (_previewById.TryGetValue(spawnId, out var previewData) &&
+            previewData.EntryKind == SpawnCatalogEntryKind.Character &&
+            previewData.DefaultFaction != null)
+        {
             _selectedFaction = previewData.DefaultFaction;
+        }
         _pendingSpawnId = spawnId;
         UpdatePlacementGhost(spawnId);
     }
@@ -174,14 +179,19 @@ public partial class DebugSpawner : Node2D
         if (spawnedNode == null)
             return null;
 
-        var factionState = FactionState.ResolveFor(spawnedNode);
-        factionState?.SetFaction(_selectedFaction);
+        if (entry.EntryKind == SpawnCatalogEntryKind.Character)
+        {
+            var factionState = FactionState.ResolveFor(spawnedNode);
+            factionState?.SetFaction(_selectedFaction);
+        }
 
         var parent = GetParent();
         if (parent != null)
         {
             spawnedNode.GlobalPosition = spawnPosition;
-            spawnedNode.ZIndex = -1;
+            if (entry.EntryKind == SpawnCatalogEntryKind.Character)
+                spawnedNode.ZIndex = -1;
+
             parent.AddChild(spawnedNode);
         }
 
@@ -261,20 +271,20 @@ public partial class DebugSpawner : Node2D
 
         foreach (var entry in _orderedEntries)
         {
-            var previewData = BuildPreviewData(entry.SpawnScene);
+            var previewData = BuildPreviewData(entry);
             if (previewData != null)
                 _previewById[entry.Id] = previewData;
         }
     }
 
-    private PreviewData BuildPreviewData(PackedScene enemyScene)
+    private PreviewData BuildPreviewData(SpawnCatalogEntry entry)
     {
-        var enemy = enemyScene?.Instantiate<Node>();
-        if (enemy == null)
+        var spawnedNode = entry?.SpawnScene?.Instantiate<Node>();
+        if (spawnedNode == null)
             return null;
 
-        var omniSprite = enemy.GetNodeOrNull<OmniSprite>("OmniSprite");
-        var animatedSprite = omniSprite?.AnimatedSprite ?? enemy.GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
+        var omniSprite = spawnedNode.GetNodeOrNull<OmniSprite>("OmniSprite");
+        var animatedSprite = omniSprite?.AnimatedSprite ?? spawnedNode.GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
         if (animatedSprite?.SpriteFrames != null)
         {
             var spriteFrames = animatedSprite.SpriteFrames;
@@ -290,29 +300,32 @@ public partial class DebugSpawner : Node2D
                 Texture = texture,
                 Scale = animatedSprite.Scale,
                 Offset = animatedSprite.Position,
-                DefaultFaction = ResolvePreviewFaction(enemy),
+                DefaultFaction = ResolvePreviewFaction(spawnedNode),
+                EntryKind = entry.EntryKind,
             };
 
-            enemy.Free();
+            spawnedNode.Free();
             return previewData;
         }
 
-        var sprite = omniSprite?.StaticSprite ?? enemy.GetNodeOrNull<Sprite2D>("Sprite2D");
-        if (sprite?.Texture == null)
+        var sprite = omniSprite?.StaticSprite ?? spawnedNode.GetNodeOrNull<Sprite2D>("Sprite2D");
+        var staticTexture = sprite?.Texture ?? (spawnedNode as Drop)?.WorldSprite;
+        if (staticTexture == null)
         {
-            enemy.Free();
+            spawnedNode.Free();
             return null;
         }
 
         var staticPreviewData = new PreviewData
         {
-            Texture = sprite.Texture,
-            Scale = sprite.Scale,
-            Offset = sprite.Position,
-            DefaultFaction = ResolvePreviewFaction(enemy),
+            Texture = staticTexture,
+            Scale = sprite?.Scale ?? Vector2.One,
+            Offset = sprite?.Position ?? Vector2.Zero,
+            DefaultFaction = ResolvePreviewFaction(spawnedNode),
+            EntryKind = entry.EntryKind,
         };
 
-        enemy.Free();
+        spawnedNode.Free();
         return staticPreviewData;
     }
 

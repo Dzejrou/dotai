@@ -18,6 +18,9 @@ public partial class DebugTray : Control
     public NodePath FactionSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/FactionSelector");
 
     [Export]
+    public NodePath ModeSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/ModeSelector");
+
+    [Export]
     public NodePath DebugSpawnerPath { get; set; } = new NodePath("../../World/DebugSpawner");
 
     private const float DragThreshold = 12.0f;
@@ -28,11 +31,13 @@ public partial class DebugTray : Control
     private Label _statusLabel;
     private HBoxContainer _cardsContainer;
     private OptionButton _factionSelector;
+    private OptionButton _modeSelector;
     private readonly Dictionary<string, Button> _cardsById = new();
     private readonly Dictionary<Button, Control.GuiInputEventHandler> _cardInputHandlers = new();
     private string _pressedCardId;
     private Vector2 _pressStartScreenPosition;
     private bool _draggingFromCard;
+    private SpawnCatalogEntryKind _activeEntryKind = SpawnCatalogEntryKind.Character;
 
     public bool TrayVisible => Visible;
 
@@ -47,6 +52,7 @@ public partial class DebugTray : Control
         _statusLabel = GetNodeOrNull<Label>(StatusLabelPath);
         _cardsContainer = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
         _factionSelector = GetNodeOrNull<OptionButton>(FactionSelectorPath);
+        _modeSelector = GetNodeOrNull<OptionButton>(ModeSelectorPath);
         ConfigureControls();
         BuildCardsFromCatalog();
 
@@ -57,20 +63,7 @@ public partial class DebugTray : Control
 
     public override void _ExitTree()
     {
-        foreach (var (button, handler) in _cardInputHandlers)
-        {
-            if (button != null)
-                button.GuiInput -= handler;
-        }
-
-        if (_cardsContainer != null)
-        {
-            foreach (var child in _cardsContainer.GetChildren())
-                child.QueueFree();
-        }
-
-        _cardsById.Clear();
-        _cardInputHandlers.Clear();
+        ClearCards();
     }
 
     public override void _Input(InputEvent @event)
@@ -133,16 +126,12 @@ public partial class DebugTray : Control
         if (_cardsContainer == null || _debugSpawner == null)
             return;
 
-        foreach (var child in _cardsContainer.GetChildren())
-            child.QueueFree();
-
-        _cardsById.Clear();
-        _cardInputHandlers.Clear();
+        ClearCards();
         var rowsByCategory = new Dictionary<string, HBoxContainer>();
 
         foreach (var entry in _debugSpawner.GetCatalogEntries())
         {
-            if (entry == null || string.IsNullOrWhiteSpace(entry.Id))
+            if (entry == null || entry.EntryKind != _activeEntryKind || string.IsNullOrWhiteSpace(entry.Id))
                 continue;
 
             var category = NormalizeCategory(entry.Category);
@@ -165,6 +154,15 @@ public partial class DebugTray : Control
 
     private void ConfigureControls()
     {
+        if (_modeSelector != null)
+        {
+            _modeSelector.Clear();
+            AddModeOption("Characters", SpawnCatalogEntryKind.Character);
+            AddModeOption("Drops", SpawnCatalogEntryKind.Drop);
+            _modeSelector.ItemSelected += OnModeSelected;
+            SyncModeSelector();
+        }
+
         if (_factionSelector != null)
         {
             _factionSelector.Clear();
@@ -175,6 +173,15 @@ public partial class DebugTray : Control
             SyncFactionSelector();
         }
 
+    }
+
+    private void AddModeOption(string label, SpawnCatalogEntryKind entryKind)
+    {
+        if (_modeSelector == null)
+            return;
+
+        _modeSelector.AddItem(label);
+        _modeSelector.SetItemMetadata(_modeSelector.ItemCount - 1, (int)entryKind);
     }
 
     private void AddFactionOption(string label, string factionKey)
@@ -299,18 +306,18 @@ public partial class DebugTray : Control
         return card;
     }
 
-    private void ConfigurePreview(string enemyId, AnimatedSprite2D animatedPreviewSprite, Sprite2D staticPreviewSprite)
+    private void ConfigurePreview(string spawnId, AnimatedSprite2D animatedPreviewSprite, Sprite2D staticPreviewSprite)
     {
         if (_debugSpawner == null)
             return;
 
-        var spriteFrames = _debugSpawner.GetPreviewFrames(enemyId);
+        var spriteFrames = _debugSpawner.GetPreviewFrames(spawnId);
         if (spriteFrames != null && animatedPreviewSprite != null)
         {
-            var animationName = _debugSpawner.GetPreviewAnimationName(enemyId);
+            var animationName = _debugSpawner.GetPreviewAnimationName(spawnId);
             animatedPreviewSprite.SpriteFrames = spriteFrames;
-            animatedPreviewSprite.Scale = _debugSpawner.GetPreviewScale(enemyId);
-            animatedPreviewSprite.Position = PreviewCenter + _debugSpawner.GetPreviewOffset(enemyId);
+            animatedPreviewSprite.Scale = _debugSpawner.GetPreviewScale(spawnId);
+            animatedPreviewSprite.Position = PreviewCenter + _debugSpawner.GetPreviewOffset(spawnId);
             animatedPreviewSprite.Visible = true;
 
             if (!animationName.IsEmpty && spriteFrames.HasAnimation(animationName))
@@ -330,13 +337,13 @@ public partial class DebugTray : Control
             }
         }
 
-        var texture = _debugSpawner.GetPreviewTexture(enemyId);
+        var texture = _debugSpawner.GetPreviewTexture(spawnId);
         if (texture == null || staticPreviewSprite == null)
             return;
 
         staticPreviewSprite.Texture = texture;
-        staticPreviewSprite.Scale = _debugSpawner.GetPreviewScale(enemyId);
-        staticPreviewSprite.Position = PreviewCenter + _debugSpawner.GetPreviewOffset(enemyId);
+        staticPreviewSprite.Scale = _debugSpawner.GetPreviewScale(spawnId);
+        staticPreviewSprite.Position = PreviewCenter + _debugSpawner.GetPreviewOffset(spawnId);
         staticPreviewSprite.Visible = true;
         if (animatedPreviewSprite != null)
             animatedPreviewSprite.Visible = false;
@@ -440,12 +447,12 @@ public partial class DebugTray : Control
 
     private void UpdateCardSelection()
     {
-        foreach (var (enemyId, card) in _cardsById)
+        foreach (var (spawnId, card) in _cardsById)
         {
             if (card == null)
                 continue;
 
-            card.ButtonPressed = HasPendingPlacement && _debugSpawner?.PendingSpawnId == enemyId;
+            card.ButtonPressed = HasPendingPlacement && _debugSpawner?.PendingSpawnId == spawnId;
         }
     }
 
@@ -472,8 +479,11 @@ public partial class DebugTray : Control
 
     private string GetModeSummary()
     {
+        if (_activeEntryKind == SpawnCatalogEntryKind.Drop)
+            return "Mode: Drops.";
+
         var factionKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
-        return $"Faction: {Capitalize(factionKey)}.";
+        return $"Mode: Characters. Faction: {Capitalize(factionKey)}.";
     }
 
     private bool IsMouseOverTray(Vector2 screenPosition)
@@ -506,10 +516,26 @@ public partial class DebugTray : Control
         UpdateStatusLabel();
     }
 
+    private void OnModeSelected(long index)
+    {
+        if (_modeSelector == null)
+            return;
+
+        _activeEntryKind = (SpawnCatalogEntryKind)_modeSelector.GetItemMetadata((int)index).AsInt32();
+        CancelPlacement();
+        BuildCardsFromCatalog();
+        SyncModeSelector();
+        SyncFactionSelector();
+        UpdateCardSelection();
+        UpdateStatusLabel();
+    }
+
     private void SyncFactionSelector()
     {
         if (_factionSelector == null)
             return;
+
+        _factionSelector.Disabled = _activeEntryKind != SpawnCatalogEntryKind.Character;
 
         var selectedKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
         for (var index = 0; index < _factionSelector.ItemCount; index++)
@@ -519,6 +545,36 @@ public partial class DebugTray : Control
 
             _factionSelector.Select(index);
             break;
+        }
+    }
+
+    private void SyncModeSelector()
+    {
+        if (_modeSelector == null)
+            return;
+
+        for (var index = 0; index < _modeSelector.ItemCount; index++)
+        {
+            if ((SpawnCatalogEntryKind)_modeSelector.GetItemMetadata(index).AsInt32() != _activeEntryKind)
+                continue;
+
+            _modeSelector.Select(index);
+            break;
+        }
+    }
+
+    private void ClearCards()
+    {
+        _cardInputHandlers.Clear();
+        _cardsById.Clear();
+
+        if (_cardsContainer == null)
+            return;
+
+        foreach (var child in _cardsContainer.GetChildren())
+        {
+            _cardsContainer.RemoveChild(child);
+            child.QueueFree();
         }
     }
 

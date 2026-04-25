@@ -1,8 +1,17 @@
 using Godot;
 
+public enum SpawnCatalogEntryKind
+{
+    Character = 0,
+    Drop = 1,
+}
+
 [GlobalClass]
 public partial class SpawnCatalogEntry : Resource
 {
+    [Export]
+    public SpawnCatalogEntryKind EntryKind { get; set; } = SpawnCatalogEntryKind.Character;
+
     [Export]
     public string Id { get; set; } = string.Empty;
 

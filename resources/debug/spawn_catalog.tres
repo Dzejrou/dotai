@@ -9,6 +9,12 @@
 [ext_resource type="PackedScene" uid="uid://chmx43pfadld4" path="res://scenes/actors/enemies/elf_ranger.tscn" id="8_elf_ranger_scene"]
 [ext_resource type="PackedScene" uid="uid://dvt5dfelupt64" path="res://scenes/actors/enemies/wolf.tscn" id="9_wolf_scene"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="10_dryad_scene"]
+[ext_resource type="PackedScene" path="res://scenes/world/drops/gold_sack_drop.tscn" id="11_gold_sack_drop"]
+[ext_resource type="PackedScene" path="res://scenes/world/drops/health_potion_drop.tscn" id="12_health_potion_drop"]
+[ext_resource type="PackedScene" path="res://scenes/world/drops/big_health_potion_drop.tscn" id="13_big_health_potion_drop"]
+[ext_resource type="PackedScene" path="res://scenes/world/drops/mana_potion_drop.tscn" id="14_mana_potion_drop"]
+[ext_resource type="PackedScene" path="res://scenes/world/drops/big_mana_potion_drop.tscn" id="15_big_mana_potion_drop"]
+[ext_resource type="PackedScene" path="res://scenes/world/drops/chest_key_drop.tscn" id="16_chest_key_drop"]
 
 [sub_resource type="Resource" id="Resource_spawn_catalog_entry_skeleton"]
 script = ExtResource("2_spawn_catalog_entry_script")
@@ -66,6 +72,60 @@ Category = "Objects"
 SpawnScene = ExtResource("7_target_dummy_scene")
 SortOrder = 50
 
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_gold_sack"]
+script = ExtResource("2_spawn_catalog_entry_script")
+EntryKind = 1
+Id = "gold_sack"
+DisplayName = "Gold Sack"
+Category = "Currency"
+SpawnScene = ExtResource("11_gold_sack_drop")
+SortOrder = 110
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_health_potion"]
+script = ExtResource("2_spawn_catalog_entry_script")
+EntryKind = 1
+Id = "health_potion"
+DisplayName = "Health Potion"
+Category = "Potions"
+SpawnScene = ExtResource("12_health_potion_drop")
+SortOrder = 120
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_big_health_potion"]
+script = ExtResource("2_spawn_catalog_entry_script")
+EntryKind = 1
+Id = "big_health_potion"
+DisplayName = "Big Health Potion"
+Category = "Potions"
+SpawnScene = ExtResource("13_big_health_potion_drop")
+SortOrder = 125
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_mana_potion"]
+script = ExtResource("2_spawn_catalog_entry_script")
+EntryKind = 1
+Id = "mana_potion"
+DisplayName = "Mana Potion"
+Category = "Potions"
+SpawnScene = ExtResource("14_mana_potion_drop")
+SortOrder = 130
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_big_mana_potion"]
+script = ExtResource("2_spawn_catalog_entry_script")
+EntryKind = 1
+Id = "big_mana_potion"
+DisplayName = "Big Mana Potion"
+Category = "Potions"
+SpawnScene = ExtResource("15_big_mana_potion_drop")
+SortOrder = 135
+
+[sub_resource type="Resource" id="Resource_spawn_catalog_entry_chest_key"]
+script = ExtResource("2_spawn_catalog_entry_script")
+EntryKind = 1
+Id = "chest_key"
+DisplayName = "Chest Key"
+Category = "Keys"
+SpawnScene = ExtResource("16_chest_key_drop")
+SortOrder = 140
+
 [resource]
 script = ExtResource("1_spawn_catalog_script")
-Entries = Array[ExtResource("2_spawn_catalog_entry_script")]([SubResource("Resource_spawn_catalog_entry_skeleton"), SubResource("Resource_spawn_catalog_entry_wolf"), SubResource("Resource_spawn_catalog_entry_ogre"), SubResource("Resource_spawn_catalog_entry_skeleton_mage"), SubResource("Resource_spawn_catalog_entry_elf_ranger"), SubResource("Resource_spawn_catalog_entry_dryad"), SubResource("Resource_spawn_catalog_entry_target_dummy")])
+Entries = Array[ExtResource("2_spawn_catalog_entry_script")]([SubResource("Resource_spawn_catalog_entry_skeleton"), SubResource("Resource_spawn_catalog_entry_wolf"), SubResource("Resource_spawn_catalog_entry_ogre"), SubResource("Resource_spawn_catalog_entry_skeleton_mage"), SubResource("Resource_spawn_catalog_entry_elf_ranger"), SubResource("Resource_spawn_catalog_entry_dryad"), SubResource("Resource_spawn_catalog_entry_target_dummy"), SubResource("Resource_spawn_catalog_entry_gold_sack"), SubResource("Resource_spawn_catalog_entry_health_potion"), SubResource("Resource_spawn_catalog_entry_big_health_potion"), SubResource("Resource_spawn_catalog_entry_mana_potion"), SubResource("Resource_spawn_catalog_entry_big_mana_potion"), SubResource("Resource_spawn_catalog_entry_chest_key")])
