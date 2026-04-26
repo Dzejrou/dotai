@@ -23,6 +23,12 @@ public partial class Chest : WorldObject, ILockable
     [Export]
     public LootTable LootTable { get; set; }
 
+    [Export]
+    public InventoryKeyKind RequiredKeyKind { get; set; } = InventoryKeyKind.ChestKey;
+
+    [Export]
+    public bool ConsumesKeyOnUnlock { get; set; } = true;
+
     [Export(PropertyHint.Range, "0,128,1")]
     public float DropSpreadDistanceMin { get; set; } = 12.0f;
 
@@ -71,7 +77,7 @@ public partial class Chest : WorldObject, ILockable
         if (!IsLocked)
             return true;
 
-        if (interactor is Player player && !TryConsumeChestKey(player))
+        if (interactor is Player player && !TrySatisfyKeyRequirement(player))
             return false;
 
         UnlockExternal();
@@ -114,13 +120,21 @@ public partial class Chest : WorldObject, ILockable
         return true;
     }
 
-    private bool TryConsumeChestKey(Player player)
+    private bool TrySatisfyKeyRequirement(Player player)
     {
+        if (RequiredKeyKind == InventoryKeyKind.None)
+            return true;
+
         if (player == null || !GodotObject.IsInstanceValid(player))
             return false;
 
         var inventory = player.InventoryController;
-        return inventory != null && inventory.TryConsumeKeyKind(InventoryKeyKind.ChestKey, 1);
+        if (inventory == null)
+            return false;
+
+        return ConsumesKeyOnUnlock
+            ? inventory.TryConsumeKeyKind(RequiredKeyKind, 1)
+            : inventory.HasKeyKind(RequiredKeyKind, 1);
     }
 
     private void ApplyVisualState()
