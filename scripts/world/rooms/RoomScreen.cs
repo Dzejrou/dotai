@@ -22,6 +22,9 @@ public partial class RoomScreen : Node2D
     public StringName RoomSize { get; set; } = default;
 
     [Export]
+    public bool PersistInstance { get; set; }
+
+    [Export]
     public NodePath ExitsPath { get; set; } = new NodePath("Scaled/Exits");
 
     [Export]
@@ -47,7 +50,7 @@ public partial class RoomScreen : Node2D
     private readonly Dictionary<StringName, RoomTransition> _transitionsById = new();
     private Node _attachedContentInstance;
 
-    public override void _Ready()
+    public override void _EnterTree()
     {
         EnsureTransitionsCached();
     }
@@ -58,7 +61,6 @@ public partial class RoomScreen : Node2D
             transition.TransitionRequested -= OnTransitionRequested;
 
         _transitionsById.Clear();
-        _attachedContentInstance = null;
     }
 
     public RoomTransition GetTransition(StringName exitId)

@@ -47,6 +47,8 @@ public abstract partial class Actor : CombatCharacter
     private Vector2 _lastNavigationDestination;
     private ActorHUD _actorHud;
     private bool _subscribedToNavigationDebug;
+    private bool _animationFinishedConnected;
+    private bool _statusEffectsBound;
     private static PackedScene _corpseScene;
     private static readonly RandomNumberGenerator LootRandom = CreateLootRandom();
 
@@ -64,8 +66,6 @@ public abstract partial class Actor : CombatCharacter
         {
             NavigationAgent.PathDesiredDistance = DefaultPathDesiredDistance;
             NavigationAgent.TargetDesiredDistance = DefaultTargetDesiredDistance;
-            ApplyNavigationDebugState(NavigationDebugSettings.Enabled);
-            SubscribeToNavigationDebug();
         }
 
         AddToGroup(CombatGroups.Actors);
@@ -89,11 +89,13 @@ public abstract partial class Actor : CombatCharacter
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
         else
             _actorHud.Bind(this);
-        BindStatusEffects();
         RefreshHealthLabel();
+        EnsureTreeLifetimeConnections();
+    }
 
-        if (OmniSprite != null)
-            OmniSprite.AnimationFinished += OnAnimatedSpriteAnimationFinished;
+    public override void _EnterTree()
+    {
+        EnsureTreeLifetimeConnections();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -130,11 +132,7 @@ public abstract partial class Actor : CombatCharacter
 
     public override void _ExitTree()
     {
-        if (OmniSprite != null)
-            OmniSprite.AnimationFinished -= OnAnimatedSpriteAnimationFinished;
-
-        UnsubscribeFromNavigationDebug();
-        UnbindStatusEffects();
+        DisconnectTreeLifetimeConnections();
         OnActorExitTree();
     }
 
@@ -222,6 +220,12 @@ public abstract partial class Actor : CombatCharacter
             return false;
 
         return CanReachDestination(target.GlobalPosition);
+    }
+
+    public void ResetHomePositionToCurrentPosition()
+    {
+        HomePosition = GlobalPosition;
+        ResetNavigationPathState();
     }
 
     private void AppendBehaviorNodes(Node root)
@@ -412,6 +416,47 @@ public abstract partial class Actor : CombatCharacter
 
     protected virtual void OnActorExitTree() { }
 
+    private void EnsureTreeLifetimeConnections()
+    {
+        EnsureAnimationFinishedConnected();
+        EnsureNavigationDebugSubscribed();
+        EnsureStatusEffectsBound();
+    }
+
+    private void DisconnectTreeLifetimeConnections()
+    {
+        DisconnectAnimationFinished();
+        UnsubscribeFromNavigationDebug();
+        UnbindStatusEffects();
+    }
+
+    private void EnsureAnimationFinishedConnected()
+    {
+        if (_animationFinishedConnected || OmniSprite == null)
+            return;
+
+        OmniSprite.AnimationFinished += OnAnimatedSpriteAnimationFinished;
+        _animationFinishedConnected = true;
+    }
+
+    private void DisconnectAnimationFinished()
+    {
+        if (!_animationFinishedConnected || OmniSprite == null)
+            return;
+
+        OmniSprite.AnimationFinished -= OnAnimatedSpriteAnimationFinished;
+        _animationFinishedConnected = false;
+    }
+
+    private void EnsureNavigationDebugSubscribed()
+    {
+        if (NavigationAgent == null)
+            return;
+
+        ApplyNavigationDebugState(NavigationDebugSettings.Enabled);
+        SubscribeToNavigationDebug();
+    }
+
     private void BindStatusEffects()
     {
         if (StatusEffectControllerNode == null)
@@ -429,9 +474,18 @@ public abstract partial class Actor : CombatCharacter
             OnStatusVisualStateChanged(effect.StatusKey, effect, true);
     }
 
+    private void EnsureStatusEffectsBound()
+    {
+        if (_statusEffectsBound || StatusEffectControllerNode == null)
+            return;
+
+        BindStatusEffects();
+        _statusEffectsBound = true;
+    }
+
     private void UnbindStatusEffects()
     {
-        if (StatusEffectControllerNode == null || !GodotObject.IsInstanceValid(StatusEffectControllerNode))
+        if (!_statusEffectsBound || StatusEffectControllerNode == null || !GodotObject.IsInstanceValid(StatusEffectControllerNode))
             return;
 
         var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
@@ -441,6 +495,8 @@ public abstract partial class Actor : CombatCharacter
         var textCallable = new Callable(this, nameof(OnStatusFloatingTextRequested));
         if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
             StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
+
+        _statusEffectsBound = false;
     }
 
     private void OnStatusVisualStateChanged(StringName statusKey, StatusEffect effect, bool active)

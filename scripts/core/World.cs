@@ -1,6 +1,7 @@
 using Godot;
 
 using System;
+using System.Collections.Generic;
 
 [GlobalClass]
 public partial class World : Node2D
@@ -31,6 +32,9 @@ public partial class World : Node2D
     [Export]
     public StringName InitialExitId { get; set; } = default;
 
+    [Export]
+    public bool UsePersistentRoomCache { get; set; } = true;
+
     [Signal]
     public delegate void PlayerDiedEventHandler();
 
@@ -43,6 +47,7 @@ public partial class World : Node2D
     private RoomScreen _activeRoom;
     private bool _isGameOver;
     private float _transitionCooldownRemaining;
+    private readonly Dictionary<StringName, RoomScreen> _persistentRoomsById = new();
 
     public RoomScreen ActiveRoom => GodotObject.IsInstanceValid(_activeRoom) ? _activeRoom : null;
 
@@ -77,6 +82,8 @@ public partial class World : Node2D
     public override void _ExitTree()
     {
         DisconnectActiveRoom();
+        FreeDetachedCachedRooms();
+        _persistentRoomsById.Clear();
 
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
@@ -160,12 +167,10 @@ public partial class World : Node2D
             return false;
 
         DisconnectActiveRoom();
-
-        if (_activeRoom != null && GodotObject.IsInstanceValid(_activeRoom))
-            _activeRoom.QueueFree();
+        DetachOrFreeActiveRoom();
 
         _activeRoom = nextRoom;
-        (_roomContainer ?? this).AddChild(_activeRoom);
+        AttachActiveRoom();
         _activeRoom.TransitionTriggered += OnTransitionTriggered;
 
         PlacePlayerAtRoomEntry(_activeRoom, entryExitId);
@@ -181,6 +186,9 @@ public partial class World : Node2D
         {
             return dungeonRoom;
         }
+
+        if (TryGetCachedRoom(screenId, out var cachedRoom))
+            return cachedRoom;
 
         if (RoomRegistry == null)
         {
@@ -206,13 +214,112 @@ public partial class World : Node2D
             return null;
         }
 
+        CacheRoom(room);
         return room;
     }
 
     private void DisconnectActiveRoom()
     {
-        if (_activeRoom != null)
+        if (_activeRoom != null && GodotObject.IsInstanceValid(_activeRoom))
             _activeRoom.TransitionTriggered -= OnTransitionTriggered;
+    }
+
+    private void DetachOrFreeActiveRoom()
+    {
+        if (_activeRoom == null || !GodotObject.IsInstanceValid(_activeRoom))
+        {
+            _activeRoom = null;
+            return;
+        }
+
+        if (ShouldPersistRoom(_activeRoom))
+        {
+            var parent = _activeRoom.GetParent();
+            if (parent != null)
+                parent.RemoveChild(_activeRoom);
+        }
+        else
+        {
+            RemoveCachedRoom(_activeRoom);
+            _activeRoom.QueueFree();
+        }
+
+        _activeRoom = null;
+    }
+
+    private void AttachActiveRoom()
+    {
+        if (_activeRoom == null || !GodotObject.IsInstanceValid(_activeRoom))
+            return;
+
+        var targetParent = _roomContainer ?? this;
+        var currentParent = _activeRoom.GetParent();
+        if (currentParent == targetParent)
+            return;
+
+        if (currentParent != null)
+            currentParent.RemoveChild(_activeRoom);
+
+        targetParent.AddChild(_activeRoom);
+    }
+
+    private bool ShouldPersistRoom(RoomScreen room)
+    {
+        return UsePersistentRoomCache &&
+            room != null &&
+            GodotObject.IsInstanceValid(room) &&
+            room.PersistInstance &&
+            HasValue(room.ScreenId);
+    }
+
+    private bool TryGetCachedRoom(StringName screenId, out RoomScreen room)
+    {
+        room = null;
+        if (!UsePersistentRoomCache || !HasValue(screenId))
+            return false;
+
+        if (!_persistentRoomsById.TryGetValue(screenId, out var cachedRoom))
+            return false;
+
+        if (!GodotObject.IsInstanceValid(cachedRoom))
+        {
+            _persistentRoomsById.Remove(screenId);
+            return false;
+        }
+
+        room = cachedRoom;
+        return true;
+    }
+
+    private void CacheRoom(RoomScreen room)
+    {
+        if (!ShouldPersistRoom(room))
+            return;
+
+        _persistentRoomsById[room.ScreenId] = room;
+    }
+
+    private void RemoveCachedRoom(RoomScreen room)
+    {
+        if (room == null || !HasValue(room.ScreenId))
+            return;
+
+        if (_persistentRoomsById.TryGetValue(room.ScreenId, out var cachedRoom) &&
+            (!GodotObject.IsInstanceValid(cachedRoom) || cachedRoom == room))
+        {
+            _persistentRoomsById.Remove(room.ScreenId);
+        }
+    }
+
+    private void FreeDetachedCachedRooms()
+    {
+        foreach (var room in _persistentRoomsById.Values)
+        {
+            if (room == null || !GodotObject.IsInstanceValid(room) || room.GetParent() != null)
+                continue;
+
+            room.QueueFree();
+        }
     }
 
     private void PlacePlayerAtRoomEntry(RoomScreen room, StringName entryExitId)

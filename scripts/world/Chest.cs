@@ -39,12 +39,18 @@ public partial class Chest : WorldObject, ILockable
     private readonly RandomNumberGenerator _lootRandom = CreateLootRandom();
     private AnimatedSprite2D _animatedSprite;
     private bool _isLocked = true;
+    private bool _animationFinishedConnected;
+
+    public override void _EnterTree()
+    {
+        base._EnterTree();
+        EnsureAnimationSignalConnected();
+    }
 
     public override void _Ready()
     {
         _animatedSprite = GetNodeOrNull<AnimatedSprite2D>(AnimatedSpritePath);
-        if (_animatedSprite != null)
-            _animatedSprite.AnimationFinished += OnAnimatedSpriteAnimationFinished;
+        EnsureAnimationSignalConnected();
 
         InitializeWorldObject(collisionShape: GetNodeOrNull<CollisionShape2D>("CollisionShape2D"));
         ApplyVisualState();
@@ -52,8 +58,7 @@ public partial class Chest : WorldObject, ILockable
 
     public override void _ExitTree()
     {
-        if (_animatedSprite != null)
-            _animatedSprite.AnimationFinished -= OnAnimatedSpriteAnimationFinished;
+        DisconnectAnimationSignal();
     }
 
     public override bool CanInteract(Node interactor)
@@ -256,5 +261,23 @@ public partial class Chest : WorldObject, ILockable
         var random = new RandomNumberGenerator();
         random.Randomize();
         return random;
+    }
+
+    private void EnsureAnimationSignalConnected()
+    {
+        if (_animationFinishedConnected || _animatedSprite == null)
+            return;
+
+        _animatedSprite.AnimationFinished += OnAnimatedSpriteAnimationFinished;
+        _animationFinishedConnected = true;
+    }
+
+    private void DisconnectAnimationSignal()
+    {
+        if (!_animationFinishedConnected || _animatedSprite == null)
+            return;
+
+        _animatedSprite.AnimationFinished -= OnAnimatedSpriteAnimationFinished;
+        _animationFinishedConnected = false;
     }
 }

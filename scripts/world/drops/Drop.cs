@@ -28,6 +28,7 @@ public partial class Drop : Area2D
     private bool _hasSpawnMotion;
     private bool _isSpawnMotionPlaying;
     private Vector2 _spawnTargetPosition;
+    private bool _bodyEnteredConnected;
 
     public void ConfigureSpawnMotion(Vector2 startPosition, Vector2 targetPosition)
     {
@@ -42,6 +43,11 @@ public partial class Drop : Area2D
             return;
 
         _attractionTarget = player;
+    }
+
+    public override void _EnterTree()
+    {
+        EnsureBodyEnteredConnected();
     }
 
     public override void _Ready()
@@ -59,10 +65,15 @@ public partial class Drop : Area2D
             _baseSpritePosition = _sprite.Position;
         }
 
-        BodyEntered += OnBodyEntered;
+        EnsureBodyEnteredConnected();
 
         if (_hasSpawnMotion)
             PlaySpawnMotion();
+    }
+
+    public override void _ExitTree()
+    {
+        DisconnectBodyEntered();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -160,5 +171,23 @@ public partial class Drop : Area2D
     protected virtual bool TryApplyTo(Player player)
     {
         return true;
+    }
+
+    private void EnsureBodyEnteredConnected()
+    {
+        if (_bodyEnteredConnected)
+            return;
+
+        BodyEntered += OnBodyEntered;
+        _bodyEnteredConnected = true;
+    }
+
+    private void DisconnectBodyEntered()
+    {
+        if (!_bodyEnteredConnected)
+            return;
+
+        BodyEntered -= OnBodyEntered;
+        _bodyEnteredConnected = false;
     }
 }

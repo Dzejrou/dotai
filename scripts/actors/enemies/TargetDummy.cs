@@ -30,6 +30,13 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
     private OmniSprite _omniSprite;
     private CollisionShape2D _collisionShape;
     private Vector2 _spawnPosition;
+    private bool _respawnTimerConnected;
+    private bool _statusEffectsBound;
+
+    public override void _EnterTree()
+    {
+        EnsureTreeLifetimeConnections();
+    }
 
     public override void _Ready()
     {
@@ -57,20 +64,13 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
         if (statusEffectController == null)
             GD.PushError($"{GetPath()}: missing required StatusEffectController child.");
-        else
-            BindStatusEffects(statusEffectController);
 
         AddToGroup(CombatGroups.Actors);
         ResetCombatState();
         UpdateHud();
         RefreshVisualState();
-
-        if (_respawnTimer != null)
-        {
-            _respawnTimer.OneShot = true;
-            _respawnTimer.WaitTime = Math.Max(0.01f, RespawnDelaySeconds);
-            _respawnTimer.Timeout += OnRespawnTimerTimeout;
-        }
+        ConfigureRespawnTimer();
+        EnsureTreeLifetimeConnections();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -80,10 +80,7 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
     public override void _ExitTree()
     {
-        if (_respawnTimer != null)
-            _respawnTimer.Timeout -= OnRespawnTimerTimeout;
-
-        UnbindStatusEffects();
+        DisconnectTreeLifetimeConnections();
     }
 
     public void ApplyDamage(Damage damageInfo)
@@ -112,6 +109,11 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
         UpdateHud();
         _actorHud?.ShowFloatingText($"+{recovered}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+    }
+
+    public void ResetSpawnPositionToCurrentPosition()
+    {
+        _spawnPosition = GlobalPosition;
     }
 
     private void StartDeath()
@@ -158,6 +160,15 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
         _actorHud.SetFaction(Faction);
     }
 
+    private void ConfigureRespawnTimer()
+    {
+        if (_respawnTimer == null)
+            return;
+
+        _respawnTimer.OneShot = true;
+        _respawnTimer.WaitTime = Math.Max(0.01f, RespawnDelaySeconds);
+    }
+
     private void BindStatusEffects(StatusEffectController statusEffectController)
     {
         statusEffectController.Connect(
@@ -172,9 +183,48 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
             OnStatusVisualStateChanged(effect.StatusKey, effect, true);
     }
 
+    private void EnsureTreeLifetimeConnections()
+    {
+        EnsureRespawnTimerConnected();
+        EnsureStatusEffectsBound();
+    }
+
+    private void DisconnectTreeLifetimeConnections()
+    {
+        DisconnectRespawnTimer();
+        UnbindStatusEffects();
+    }
+
+    private void EnsureRespawnTimerConnected()
+    {
+        if (_respawnTimerConnected || _respawnTimer == null)
+            return;
+
+        _respawnTimer.Timeout += OnRespawnTimerTimeout;
+        _respawnTimerConnected = true;
+    }
+
+    private void DisconnectRespawnTimer()
+    {
+        if (!_respawnTimerConnected || _respawnTimer == null)
+            return;
+
+        _respawnTimer.Timeout -= OnRespawnTimerTimeout;
+        _respawnTimerConnected = false;
+    }
+
+    private void EnsureStatusEffectsBound()
+    {
+        if (_statusEffectsBound || StatusEffectControllerNode == null)
+            return;
+
+        BindStatusEffects(StatusEffectControllerNode);
+        _statusEffectsBound = true;
+    }
+
     private void UnbindStatusEffects()
     {
-        if (StatusEffectControllerNode == null || !GodotObject.IsInstanceValid(StatusEffectControllerNode))
+        if (!_statusEffectsBound || StatusEffectControllerNode == null || !GodotObject.IsInstanceValid(StatusEffectControllerNode))
             return;
 
         var callable = new Callable(this, nameof(OnStatusVisualStateChanged));
@@ -184,6 +234,8 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
         var textCallable = new Callable(this, nameof(OnStatusFloatingTextRequested));
         if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable))
             StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.StatusFloatingTextRequested, textCallable);
+
+        _statusEffectsBound = false;
     }
 
     private void OnStatusVisualStateChanged(StringName statusKey, StatusEffect effect, bool active)

@@ -29,6 +29,7 @@ DisplayName = "Courtyard"
 Theme = &"castle"
 RoomType = &"courtyard"
 RoomSize = &"single_screen"
+PersistInstance = true
 CameraBoundsRect = Rect2(0, 0, 400, 400)
 
 [node name="Scaled" type="Node2D" parent="." unique_id=313994288]

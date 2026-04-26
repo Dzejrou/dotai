@@ -198,8 +198,18 @@ public partial class DebugSpawner : Node2D
 
         parent.AddChild(spawnedNode);
         spawnedNode.GlobalPosition = spawnPosition;
+        RefreshSpawnedNodePlacementState(spawnedNode);
 
         return spawnedNode;
+    }
+
+    private static void RefreshSpawnedNodePlacementState(Node2D spawnedNode)
+    {
+        if (spawnedNode is Actor actor)
+            actor.ResetHomePositionToCurrentPosition();
+
+        if (spawnedNode is TargetDummy targetDummy)
+            targetDummy.ResetSpawnPositionToCurrentPosition();
     }
 
     private Node ResolveSpawnParent()

@@ -30,19 +30,18 @@ public partial class RoomTransition : Area2D
 
     private bool _playerInside;
     private bool _transitionQueued;
+    private bool _bodySignalsConnected;
 
     protected bool IsPlayerInside => _playerInside;
 
-    public override void _Ready()
+    public override void _EnterTree()
     {
-        BodyEntered += OnBodyEntered;
-        BodyExited += OnBodyExited;
+        EnsureBodySignalsConnected();
     }
 
     public override void _ExitTree()
     {
-        BodyEntered -= OnBodyEntered;
-        BodyExited -= OnBodyExited;
+        DisconnectBodySignals();
     }
 
     public Marker2D GetSpawnPoint()
@@ -98,5 +97,25 @@ public partial class RoomTransition : Area2D
     protected static bool HasValue(StringName value)
     {
         return value != null && !value.IsEmpty;
+    }
+
+    private void EnsureBodySignalsConnected()
+    {
+        if (_bodySignalsConnected)
+            return;
+
+        BodyEntered += OnBodyEntered;
+        BodyExited += OnBodyExited;
+        _bodySignalsConnected = true;
+    }
+
+    private void DisconnectBodySignals()
+    {
+        if (!_bodySignalsConnected)
+            return;
+
+        BodyEntered -= OnBodyEntered;
+        BodyExited -= OnBodyExited;
+        _bodySignalsConnected = false;
     }
 }
