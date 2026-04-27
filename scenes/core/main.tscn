@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://drwf66y3lnatq" path="res://scripts/core/Main.cs" id="3_main"]
 [ext_resource type="PackedScene" path="res://scenes/core/pause_menu.tscn" id="4_pausemenu"]
 [ext_resource type="PackedScene" path="res://scenes/core/debug_tray.tscn" id="5_debugtray"]
+[ext_resource type="Script" path="res://scripts/shared/FloatingTextLayer.cs" id="6_floating_text_layer"]
 
 [node name="Main" type="Node2D" unique_id=9817962]
 script = ExtResource("3_main")
@@ -16,3 +17,17 @@ script = ExtResource("3_main")
 [node name="PauseMenu" parent="." unique_id=1978111045 instance=ExtResource("4_pausemenu")]
 
 [node name="DebugTray" parent="." unique_id=963173231 instance=ExtResource("5_debugtray")]
+
+[node name="FloatingTextLayer" type="Node2D" parent="." unique_id=1383873198]
+script = ExtResource("6_floating_text_layer")
+Enabled = true
+GoodColor = Color(0, 1, 0, 1)
+BadColor = Color(1, 0, 0, 1)
+NeutralColor = Color(1, 1, 0, 1)
+OutlineColor = Color(0, 0, 0, 1)
+OutlineSize = 2
+VerticalOffset = -16.0
+RiseDistance = 18.0
+Duration = 0.6
+FontSize = 20
+z_index = 4

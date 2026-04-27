@@ -2,31 +2,53 @@ using Godot;
 
 public static class FloatingText
 {
-    private const string CentralLayerName = "FloatingTextLayer";
-    private const float DefaultVerticalOffset = -16.0f;
-    private const float DefaultRiseDistance = 18.0f;
-    private const float DefaultDuration = 0.6f;
-    private const int DefaultFontSize = 20;
-    private const int DefaultOutlineSize = 2;
-    private const int DefaultZIndex = 4;
+    private const float FallbackVerticalOffset = -16.0f;
+    private const float FallbackRiseDistance = 18.0f;
+    private const float FallbackDuration = 0.6f;
+    private const int FallbackFontSize = 20;
+    private const int FallbackOutlineSize = 2;
+    private const int FallbackZIndex = 4;
 
-    private static readonly Color GoodColor = new Color(0.0f, 1.0f, 0.0f, 1.0f);
-    private static readonly Color BadColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
-    private static readonly Color NeutralColor = new Color(1.0f, 1.0f, 0.0f, 1.0f);
+    private static readonly Color FallbackGoodColor = new Color(0.0f, 1.0f, 0.0f, 1.0f);
+    private static readonly Color FallbackBadColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+    private static readonly Color FallbackNeutralColor = new Color(1.0f, 1.0f, 0.0f, 1.0f);
+    private static FloatingTextLayer _registeredLayer;
+    private static bool _didWarnMissingLayer;
 
     public static void ShowGood(string text, Node2D origin, Node attachTo = null)
     {
-        Show(text, origin, GoodColor, attachTo);
+        var layer = ResolveLayer();
+        if (layer != null)
+        {
+            layer.ShowGood(text, origin, attachTo);
+            return;
+        }
+
+        ShowFallback(text, origin, FallbackGoodColor, attachTo);
     }
 
     public static void ShowBad(string text, Node2D origin, Node attachTo = null)
     {
-        Show(text, origin, BadColor, attachTo);
+        var layer = ResolveLayer();
+        if (layer != null)
+        {
+            layer.ShowBad(text, origin, attachTo);
+            return;
+        }
+
+        ShowFallback(text, origin, FallbackBadColor, attachTo);
     }
 
     public static void ShowNeutral(string text, Node2D origin, Node attachTo = null)
     {
-        Show(text, origin, NeutralColor, attachTo);
+        var layer = ResolveLayer();
+        if (layer != null)
+        {
+            layer.ShowNeutral(text, origin, attachTo);
+            return;
+        }
+
+        ShowFallback(text, origin, FallbackNeutralColor, attachTo);
     }
 
     public static void ShowCustom(string text, Node2D origin, Color color, Node attachTo = null)
@@ -34,14 +56,67 @@ public static class FloatingText
         Show(text, origin, color, attachTo);
     }
 
+    internal static void RegisterLayer(FloatingTextLayer layer)
+    {
+        if (layer == null || !GodotObject.IsInstanceValid(layer))
+            return;
+
+        _registeredLayer = layer;
+        _didWarnMissingLayer = false;
+    }
+
+    internal static void UnregisterLayer(FloatingTextLayer layer)
+    {
+        if (_registeredLayer == null)
+            return;
+
+        if (!IsLayerValid(_registeredLayer) || ReferenceEquals(_registeredLayer, layer))
+            _registeredLayer = null;
+    }
+
     internal static void Show(
         string text,
         Node2D origin,
         Color color,
         Node attachTo = null,
-        float riseDistance = DefaultRiseDistance,
-        float duration = DefaultDuration,
-        int fontSize = DefaultFontSize)
+        float riseDistance = FallbackRiseDistance,
+        float duration = FallbackDuration,
+        int fontSize = FallbackFontSize)
+    {
+        var layer = ResolveLayer();
+        if (layer != null)
+        {
+            layer.ShowCustom(text, origin, color, attachTo, riseDistance, duration, fontSize);
+            return;
+        }
+
+        ShowFallback(text, origin, color, attachTo, riseDistance, duration, fontSize);
+    }
+
+    private static FloatingTextLayer ResolveLayer()
+    {
+        if (!IsLayerValid(_registeredLayer))
+        {
+            _registeredLayer = null;
+            return null;
+        }
+
+        return _registeredLayer;
+    }
+
+    private static bool IsLayerValid(FloatingTextLayer layer)
+    {
+        return layer != null && GodotObject.IsInstanceValid(layer) && layer.IsInsideTree();
+    }
+
+    private static void ShowFallback(
+        string text,
+        Node2D origin,
+        Color color,
+        Node attachTo = null,
+        float riseDistance = FallbackRiseDistance,
+        float duration = FallbackDuration,
+        int fontSize = FallbackFontSize)
     {
         if (origin == null ||
             !GodotObject.IsInstanceValid(origin) ||
@@ -51,6 +126,8 @@ public static class FloatingText
             return;
         }
 
+        WarnMissingLayerOnce();
+
         var tree = origin.GetTree();
         if (tree == null)
             return;
@@ -58,23 +135,23 @@ public static class FloatingText
         var popup = new Node2D
         {
             Name = "FloatingTextPopup",
-            ZIndex = DefaultZIndex
+            ZIndex = FallbackZIndex
         };
 
         var label = new Label
         {
             Name = "Label",
             Text = text,
-            ZIndex = DefaultZIndex
+            ZIndex = FallbackZIndex
         };
         label.AddThemeFontSizeOverride("font_size", fontSize);
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeColorOverride("font_outline_color", Colors.Black);
-        label.AddThemeConstantOverride("outline_size", DefaultOutlineSize);
+        label.AddThemeConstantOverride("outline_size", FallbackOutlineSize);
         popup.AddChild(label);
 
-        var worldPosition = origin.GlobalPosition + new Vector2(0.0f, DefaultVerticalOffset);
-        if (!TryResolveParent(origin, attachTo, out var parent, out var localSpaceNode))
+        var worldPosition = origin.GlobalPosition + new Vector2(0.0f, FallbackVerticalOffset);
+        if (!TryResolveFallbackParent(origin, attachTo, out var parent, out var localSpaceNode))
             return;
 
         parent.AddChild(popup);
@@ -106,55 +183,34 @@ public static class FloatingText
         };
     }
 
-    private static bool TryResolveParent(Node2D origin, Node attachTo, out Node2D parent, out Node2D localSpaceNode)
+    private static void WarnMissingLayerOnce()
     {
-        if (attachTo is Node2D attachTarget && GodotObject.IsInstanceValid(attachTarget) && attachTarget.IsInsideTree())
+        if (_didWarnMissingLayer)
+            return;
+
+        _didWarnMissingLayer = true;
+        GD.PushWarning($"{nameof(FloatingTextLayer)} is not registered. Using compatibility fallback for floating text.");
+    }
+
+    private static bool TryResolveFallbackParent(Node2D origin, Node attachTo, out Node parent, out Node2D localSpaceNode)
+    {
+        if (attachTo != null && GodotObject.IsInstanceValid(attachTo) && attachTo.IsInsideTree())
         {
-            parent = attachTarget;
-            localSpaceNode = attachTarget;
+            parent = attachTo;
+            localSpaceNode = attachTo as Node2D;
             return true;
         }
 
-        if (TryResolveCentralLayer(origin, out parent))
+        var fallbackParent = origin.GetTree()?.CurrentScene ?? origin.GetParent();
+        if (fallbackParent != null && GodotObject.IsInstanceValid(fallbackParent))
         {
-            localSpaceNode = null;
-            return true;
-        }
-
-        if (origin.GetParent() is Node2D originParent && GodotObject.IsInstanceValid(originParent))
-        {
-            parent = originParent;
-            localSpaceNode = originParent;
+            parent = fallbackParent;
+            localSpaceNode = fallbackParent as Node2D;
             return true;
         }
 
         parent = null;
         localSpaceNode = null;
         return false;
-    }
-
-    private static bool TryResolveCentralLayer(Node2D origin, out Node2D layer)
-    {
-        layer = null;
-
-        var tree = origin.GetTree();
-        var scene = tree?.CurrentScene;
-        if (scene == null || !GodotObject.IsInstanceValid(scene))
-            return false;
-
-        layer = scene.GetNodeOrNull<Node2D>(CentralLayerName);
-        if (layer != null && GodotObject.IsInstanceValid(layer))
-            return true;
-
-        if (scene is not Node2D sceneRoot)
-            return false;
-
-        layer = new Node2D
-        {
-            Name = CentralLayerName,
-            ZIndex = DefaultZIndex
-        };
-        sceneRoot.AddChild(layer);
-        return true;
     }
 }
