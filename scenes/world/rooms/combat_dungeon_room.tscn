@@ -101,7 +101,11 @@ position = Vector2(200, 286)
 [node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=995183462]
 position = Vector2(200, 200)
 
+[node name="Ephemeral" type="Node" parent="Scaled"]
+
 [node name="Unscaled" type="Node2D" parent="." unique_id=2005725258]
+
+[node name="Ephemeral" type="Node" parent="Unscaled"]
 
 [node name="EncounterMarkers" type="Node2D" parent="Unscaled" unique_id=1436865109]
 

@@ -54,8 +54,14 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
 
     public void UpdatePlacementPreview(SpellCastRequest request)
     {
-        if (!IsAwaitingPlacement || _previewArea == null)
+        if (!IsAwaitingPlacement)
             return;
+
+        if (_previewArea == null || !GodotObject.IsInstanceValid(_previewArea))
+        {
+            _previewArea = null;
+            return;
+        }
 
         if (request == null || !request.TryResolveTargetPosition(out var worldPosition))
             return;
@@ -98,12 +104,14 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
             return false;
         }
 
-        var parent = caster?.SpellOrigin?.GetParent();
-        if (parent == null)
+        var fallbackParent = caster?.SpellOrigin?.GetParent();
+        if (fallbackParent == null)
         {
             CancelPlacement();
             return false;
         }
+
+        var parent = ResolveAreaSpawnParent(caster, fallbackParent);
 
         if (ResolveAreaTemplate()?.Duplicate() is not AreaOfEffect area)
         {
@@ -130,7 +138,11 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
 
     private bool ShowPreview(ISpellCaster caster, SpellCastRequest request)
     {
-        if (caster?.SpellOrigin == null || caster.SpellOrigin.GetParent() == null)
+        if (caster?.SpellOrigin == null)
+            return false;
+
+        var fallbackParent = caster.SpellOrigin.GetParent();
+        if (fallbackParent == null)
             return false;
 
         if (ResolveAreaTemplate()?.Duplicate() is not AreaOfEffect previewArea)
@@ -144,7 +156,7 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
 
         previewArea.InitializePreview();
         previewArea.GlobalPosition = previewPosition;
-        caster.SpellOrigin.GetParent().AddChild(previewArea);
+        ResolveAreaSpawnParent(caster, fallbackParent).AddChild(previewArea);
         _previewArea = previewArea;
         return true;
     }
@@ -172,6 +184,37 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
         {
             if (child is AreaOfEffect areaTemplate)
                 return areaTemplate;
+        }
+
+        return null;
+    }
+
+    private Node ResolveAreaSpawnParent(ISpellCaster caster, Node fallbackParent)
+    {
+        var world = FindWorld(caster?.SpellOrigin) ?? FindWorld(this);
+        if (world?.ActiveRoom == null)
+        {
+            GD.PushWarning($"{GetPath()}: {GetType().Name} could not resolve an active room for AreaOfEffect parenting. Falling back to the spell origin parent.");
+            return fallbackParent;
+        }
+
+        var ephemeralRoot = world.ActiveRoom.GetUnscaledEphemeralRoot();
+        if (ephemeralRoot != null)
+            return ephemeralRoot;
+
+        GD.PushWarning($"{GetPath()}: {GetType().Name} could not resolve '{world.ActiveRoom.Name}' unscaled ephemeral root. Falling back to the spell origin parent.");
+        return fallbackParent;
+    }
+
+    private static World FindWorld(Node node)
+    {
+        var current = node;
+        while (current != null)
+        {
+            if (current is World world)
+                return world;
+
+            current = current.GetParent();
         }
 
         return null;

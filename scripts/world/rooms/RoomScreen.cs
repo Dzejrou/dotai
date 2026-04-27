@@ -6,6 +6,8 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class RoomScreen : Node2D
 {
+    private const string EphemeralNodeName = "Ephemeral";
+
     [Export]
     public StringName ScreenId { get; set; } = default;
 
@@ -76,6 +78,16 @@ public partial class RoomScreen : Node2D
         return GetTransition(exitId) as Door;
     }
 
+    public virtual void OnEnter()
+    {
+    }
+
+    public virtual void OnExit()
+    {
+        ClearEphemeralChildren(GetScaledEphemeralRoot());
+        ClearEphemeralChildren(GetUnscaledEphemeralRoot());
+    }
+
     public bool TryGetSpawnMarker(StringName exitId, out Marker2D marker)
     {
         EnsureTransitionsCached();
@@ -129,6 +141,16 @@ public partial class RoomScreen : Node2D
             return null;
 
         return GetNodeOrNull<Node2D>(UnscaledPath);
+    }
+
+    public Node GetScaledEphemeralRoot()
+    {
+        return ResolveEphemeralRoot(ScaledPath, nameof(ScaledPath));
+    }
+
+    public Node GetUnscaledEphemeralRoot()
+    {
+        return ResolveEphemeralRoot(UnscaledPath, nameof(UnscaledPath));
     }
 
     public bool TryAttachContent(PackedScene contentScene, bool replaceExisting = false)
@@ -209,6 +231,46 @@ public partial class RoomScreen : Node2D
             return;
 
         CacheTransitions();
+    }
+
+    private void ClearEphemeralChildren(Node ephemeralRoot)
+    {
+        if (ephemeralRoot == null)
+            return;
+
+        foreach (Node child in ephemeralRoot.GetChildren())
+        {
+            ephemeralRoot.RemoveChild(child);
+            child.QueueFree();
+        }
+    }
+
+    private Node ResolveEphemeralRoot(NodePath parentPath, string parentPathName)
+    {
+        if (parentPath.IsEmpty)
+        {
+            GD.PushError($"{nameof(RoomScreen)} '{Name}' has an empty {parentPathName} and cannot resolve '{EphemeralNodeName}'.");
+            return null;
+        }
+
+        var parentRoot = GetNodeOrNull<Node>(parentPath);
+        if (parentRoot == null)
+        {
+            GD.PushError($"{nameof(RoomScreen)} '{Name}' could not resolve '{parentPath}' and cannot attach '{EphemeralNodeName}'.");
+            return null;
+        }
+
+        var ephemeralRoot = parentRoot.GetNodeOrNull<Node>(EphemeralNodeName);
+        if (ephemeralRoot != null)
+            return ephemeralRoot;
+
+        ephemeralRoot = new Node
+        {
+            Name = EphemeralNodeName,
+        };
+        parentRoot.AddChild(ephemeralRoot);
+        GD.PushWarning($"{nameof(RoomScreen)} '{Name}' was missing '{parentPath}/{EphemeralNodeName}'. Created it at runtime.");
+        return ephemeralRoot;
     }
 
     private void OnTransitionRequested(RoomTransition transition)

@@ -93,7 +93,11 @@ position = Vector2(200, 286)
 [node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=904984013]
 position = Vector2(200, 200)
 
+[node name="Ephemeral" type="Node" parent="Scaled"]
+
 [node name="Unscaled" type="Node2D" parent="." unique_id=2023304438]
+
+[node name="Ephemeral" type="Node" parent="Unscaled"]
 
 [node name="Dryad" parent="Unscaled" unique_id=1021416576 instance=ExtResource("4_dryad")]
 position = Vector2(332, 436)

@@ -167,6 +167,7 @@ public partial class World : Node2D
             return false;
 
         DisconnectActiveRoom();
+        CallActiveRoomExit();
         DetachOrFreeActiveRoom();
 
         _activeRoom = nextRoom;
@@ -175,6 +176,7 @@ public partial class World : Node2D
 
         PlacePlayerAtRoomEntry(_activeRoom, entryExitId);
         ApplyRoomCameraBounds(_activeRoom);
+        _activeRoom.OnEnter();
         return true;
     }
 
@@ -245,6 +247,12 @@ public partial class World : Node2D
         }
 
         _activeRoom = null;
+    }
+
+    private void CallActiveRoomExit()
+    {
+        if (_activeRoom != null && GodotObject.IsInstanceValid(_activeRoom))
+            _activeRoom.OnExit();
     }
 
     private void AttachActiveRoom()
