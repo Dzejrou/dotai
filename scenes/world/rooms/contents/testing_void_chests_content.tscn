@@ -1,9 +1,11 @@
 [gd_scene format=3 uid="uid://dwochr8ocdyfl"]
 
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/TestingVoidChestsContent.cs" id="1_content_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="1_chest"]
 [ext_resource type="Resource" uid="uid://dawb58lrh7or3" path="res://resources/loot_tables/testing_void_chest_key_loot_table.tres" id="2_testing_void_chest_key_loot_table"]
 
 [node name="TestingVoidChestsContent" type="Node2D" unique_id=2093513246]
+script = ExtResource("1_content_script")
 
 [node name="LockedChest" parent="." unique_id=1675497592 instance=ExtResource("1_chest")]
 position = Vector2(99, 580)
