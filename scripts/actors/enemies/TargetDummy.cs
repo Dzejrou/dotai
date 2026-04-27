@@ -91,7 +91,7 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
         var damage = HealthStateNode.ApplyDamage(damageInfo.Amount);
         damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
         UpdateHud();
-        _actorHud?.ShowFloatingText(damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
+        FloatingText.ShowBad(damage.ToString(), this);
 
         if (HealthStateNode.IsDead)
             StartDeath();
@@ -108,7 +108,7 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
             return;
 
         UpdateHud();
-        _actorHud?.ShowFloatingText($"+{recovered}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+        FloatingText.ShowGood($"+{recovered}", this);
     }
 
     public void ResetSpawnPositionToCurrentPosition()
@@ -248,7 +248,10 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
     private void OnStatusFloatingTextRequested(string text, Color color)
     {
-        _actorHud?.ShowFloatingText(text, color);
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        FloatingText.ShowCustom(text, this, color);
     }
 
     private void RefreshVisualState()

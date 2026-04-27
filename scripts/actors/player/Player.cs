@@ -70,7 +70,10 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     public void ShowFloatingText(string text, Color color)
     {
-        _actorHud?.ShowFloatingText(text, color);
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        FloatingText.ShowCustom(text, this, color);
     }
 
     public override void _Ready()
@@ -240,7 +243,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return 0;
 
         Gold += amount;
-        ShowFloatingText($"+{amount} gold", new Color(1.0f, 0.88f, 0.32f, 1.0f));
+        FloatingText.ShowCustom($"+{amount} gold", this, new Color(1.0f, 0.88f, 0.32f, 1.0f));
         EmitSignal(SignalName.GoldChanged, Gold);
         return amount;
     }
@@ -254,7 +257,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         NotifyManaChanged();
 
         if (restored > 0)
-            ShowFloatingText($"+{restored} mana", new Color(0.45f, 0.78f, 1.0f, 1.0f));
+            FloatingText.ShowCustom($"+{restored} mana", this, new Color(0.45f, 0.78f, 1.0f, 1.0f));
 
         return restored;
     }
@@ -732,7 +735,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     private void ShowFloatingDamageNumber(int amount)
     {
-        ShowFloatingText(amount.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
+        FloatingText.ShowBad(amount.ToString(), this);
     }
 
     private void ShowFloatingHealingNumber(int amount)
@@ -740,7 +743,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (amount <= 0)
             return;
 
-        ShowFloatingText($"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+        FloatingText.ShowGood($"+{amount}", this);
     }
 
     private void RefreshActorHud()

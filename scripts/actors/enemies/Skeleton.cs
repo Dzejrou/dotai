@@ -24,7 +24,7 @@ public partial class Skeleton : Actor, IAttackable, ITargetable
         if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;
 
-        ShowFloatingDamageNumber(damage.ToString(), new Color(1.0f, 0.0f, 0.0f, 1.0f));
+        FloatingText.ShowBad(damage.ToString(), this);
         if (died)
             StartDeath();
     }

@@ -206,7 +206,10 @@ public abstract partial class Actor : CombatCharacter
 
     public void ShowFloatingDamageNumber(string text, Color color)
     {
-        _actorHud?.ShowFloatingText(text, color);
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        FloatingText.ShowCustom(text, this, color);
     }
 
     public static bool IsStructurallyValidTarget(Node2D target)
@@ -330,10 +333,10 @@ public abstract partial class Actor : CombatCharacter
 
     protected void ShowFloatingHealingNumber(int amount)
     {
-        if (amount <= 0 || _actorHud == null)
+        if (amount <= 0)
             return;
 
-        _actorHud.ShowFloatingText($"+{amount}", new Color(0.0f, 1.0f, 0.0f, 1.0f));
+        FloatingText.ShowGood($"+{amount}", this);
     }
 
     protected bool TryApplyIncomingDamage(Damage damageInfo, out int damage, out bool died)
@@ -509,7 +512,10 @@ public abstract partial class Actor : CombatCharacter
 
     private void OnStatusFloatingTextRequested(string text, Color color)
     {
-        _actorHud?.ShowFloatingText(text, color);
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        FloatingText.ShowCustom(text, this, color);
     }
 
     private void OnAnimatedSpriteAnimationFinished()
