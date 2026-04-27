@@ -27,5 +27,5 @@ sprite_frames = ExtResource("3_ring_of_fire_frames")
 
 [node name="Damage" type="Node" parent="." unique_id=2001900101]
 script = ExtResource("2_damage")
-MinimumDamage = 2
-MaximumDamage = 5
+MinimumDamage = 4
+MaximumDamage = 10

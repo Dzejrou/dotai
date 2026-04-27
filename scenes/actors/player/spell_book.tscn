@@ -100,6 +100,8 @@ Cooldown = 6.0
 
 [node name="RingOfFireArea" parent="RingOfFire" unique_id=1053815237 instance=ExtResource("10_ring_of_fire_area")]
 visible = false
+EffectLifetime = 16.0
+TickInterval = 4.0
 ApplyOnEnter = true
 
 [node name="FireNova" type="Node" parent="." unique_id=1877980814]
