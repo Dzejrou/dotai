@@ -1,27 +1,26 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://hr7vnxvywkg0"]
 
-[ext_resource type="Script" path="res://scripts/world/doors/Portal.cs" id="1_portal_script"]
+[ext_resource type="Script" uid="uid://bohmm5x2ep8qb" path="res://scripts/world/doors/Portal.cs" id="1_portal_script"]
 [ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="2_omni_sprite"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/portal_base_spriteframes.tres" id="3_portal_frames"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_portal"]
 radius = 20.0
 
-[node name="Portal" type="Area2D"]
+[node name="Portal" type="Area2D" unique_id=927704410]
 script = ExtResource("1_portal_script")
 TransitionType = &"portal"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=253221044]
 position = Vector2(0, -4)
 shape = SubResource("CircleShape2D_portal")
 
-[node name="OmniSprite" type="Node2D" parent="."]
+[node name="OmniSprite" type="Node2D" parent="." unique_id=905226850]
 position = Vector2(0, -24)
 script = ExtResource("2_omni_sprite")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=1082945707]
 sprite_frames = ExtResource("3_portal_frames")
-animation = &"default"
 
-[node name="SpawnPoint" type="Marker2D" parent="."]
+[node name="SpawnPoint" type="Marker2D" parent="." unique_id=1627931966]
 position = Vector2(0, 28)

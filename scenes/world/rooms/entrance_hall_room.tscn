@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://djv557mac6kfa" path="res://assets/world/castle/entrance_hall.png" id="1_room_texture"]
 [ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
-[ext_resource type="PackedScene" path="res://scenes/world/doors/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="4_dryad"]
 
 [sub_resource type="NavigationPolygon" id="9_room_navigation"]
@@ -21,19 +21,7 @@ size = Vector2(18, 268)
 [sub_resource type="RectangleShape2D" id="8_plinth"]
 size = Vector2(28, 58.75)
 
-[sub_resource type="RectangleShape2D" id="1_exit_north_center"]
-size = Vector2(32, 24)
-
-[sub_resource type="RectangleShape2D" id="2_exit_south_center"]
-size = Vector2(40, 20)
-
-[sub_resource type="RectangleShape2D" id="3_exit_north_side"]
-size = Vector2(28, 22)
-
-[sub_resource type="RectangleShape2D" id="4_exit_side"]
-size = Vector2(20, 28)
-
-[node name="RoomScreen" type="Node2D" unique_id=1948024229]
+[node name="RoomScreen2" type="Node2D" unique_id=1948024229]
 script = ExtResource("2_room_screen")
 ScreenId = &"entrance_hall"
 DisplayName = "Entrance Hall"
@@ -41,7 +29,6 @@ Theme = &"castle"
 RoomType = &"hall"
 RoomSize = &"single_screen"
 PersistInstance = true
-CameraBoundsRect = Rect2(0, 0, 400, 400)
 
 [node name="Scaled" type="Node2D" parent="." unique_id=592246932]
 scale = Vector2(2, 2)
@@ -109,9 +96,6 @@ TargetScreenId = &"dungeon_runtime"
 TargetExitId = &"south_return"
 Direction = &"north"
 
-[node name="SpawnPoint" parent="Scaled/Exits/NorthCenterDoor" unique_id=634121480]
-position = Vector2(0, 34)
-
 [node name="SouthCenterDoor" parent="Scaled/Exits" unique_id=1881665610 instance=ExtResource("3_door")]
 position = Vector2(200, 321)
 ExitId = &"south_center"
@@ -119,47 +103,32 @@ TargetScreenId = &"courtyard"
 TargetExitId = &"north_center"
 Direction = &"south"
 
-[node name="SpawnPoint" parent="Scaled/Exits/SouthCenterDoor" unique_id=493874949]
-position = Vector2(0, -36)
-
 [node name="NorthWestDoor" parent="Scaled/Exits" unique_id=1314545739 instance=ExtResource("3_door")]
 position = Vector2(83, 92)
+IsLocked = true
 ExitId = &"north_west"
 Direction = &"north"
-IsLocked = true
-
-[node name="SpawnPoint" parent="Scaled/Exits/NorthWestDoor" unique_id=868760688]
-position = Vector2(0, 30)
 
 [node name="NorthEastDoor" parent="Scaled/Exits" unique_id=1836981997 instance=ExtResource("3_door")]
 position = Vector2(317, 92)
+IsLocked = true
 ExitId = &"north_east"
 Direction = &"north"
-IsLocked = true
-
-[node name="SpawnPoint" parent="Scaled/Exits/NorthEastDoor" unique_id=1897713086]
-position = Vector2(0, 30)
 
 [node name="WestMidDoor" parent="Scaled/Exits" unique_id=1511204497 instance=ExtResource("3_door")]
 position = Vector2(76.5, 203)
+IndicatorOffset = Vector2(18, 0)
+IsLocked = true
 ExitId = &"west_mid"
 Direction = &"west"
-IsLocked = true
-IndicatorOffset = Vector2(18, 0)
-
-[node name="SpawnPoint" parent="Scaled/Exits/WestMidDoor" unique_id=15014988]
-position = Vector2(29.5, 2)
 
 [node name="EastMidDoor" parent="Scaled/Exits" unique_id=1398337522 instance=ExtResource("3_door")]
 position = Vector2(324, 201)
+IsLocked = true
 ExitId = &"east_mid"
 TargetScreenId = &"testing_void"
 TargetExitId = &"PlayerStart"
 Direction = &"east"
-IsLocked = true
-
-[node name="SpawnPoint" parent="Scaled/Exits/EastMidDoor" unique_id=1698083979]
-position = Vector2(-30, 4)
 
 [node name="Markers" type="Node2D" parent="Scaled" unique_id=1254473867]
 

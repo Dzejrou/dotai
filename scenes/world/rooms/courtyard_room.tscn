@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://cc2h84iv7ona2" path="res://assets/world/castle/courtyard.png" id="1_room_texture"]
 [ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
-[ext_resource type="PackedScene" path="res://scenes/world/doors/portal.tscn" id="4_portal"]
+[ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="4_portal"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_vqtlv"]
 vertices = PackedVector2Array(362.9375, 317.97656, 46.578125, 317.5078, 47.90625, 157.71094, 174.59375, 160.42969, 201.36719, 180.36719, 362.04688, 160.42969, 230.65625, 159.52344)
@@ -22,7 +22,7 @@ size = Vector2(17, 228)
 [sub_resource type="RectangleShape2D" id="5_south_wall"]
 size = Vector2(356.5, 31.5)
 
-[node name="RoomScreen" type="Node2D" unique_id=1964627908]
+[node name="RoomScreen2" type="Node2D" unique_id=1964627908]
 script = ExtResource("2_room_screen")
 ScreenId = &"courtyard"
 DisplayName = "Courtyard"
@@ -30,7 +30,6 @@ Theme = &"castle"
 RoomType = &"courtyard"
 RoomSize = &"single_screen"
 PersistInstance = true
-CameraBoundsRect = Rect2(0, 0, 400, 400)
 
 [node name="Scaled" type="Node2D" parent="." unique_id=313994288]
 scale = Vector2(2, 2)
@@ -93,7 +92,7 @@ TargetScreenId = &"entrance_hall"
 TargetExitId = &"south_center"
 Direction = &"north"
 
-[node name="TestingVoidPortal" parent="Scaled/Exits" instance=ExtResource("4_portal")]
+[node name="TestingVoidPortal" parent="Scaled/Exits" unique_id=165008214 instance=ExtResource("4_portal")]
 position = Vector2(320, 250)
 ExitId = &"testing_void_portal"
 TargetScreenId = &"testing_void"
