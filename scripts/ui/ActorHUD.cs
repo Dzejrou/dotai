@@ -191,7 +191,15 @@ public partial class ActorHUD : Node2D
         if (_owner == null || !GodotObject.IsInstanceValid(_owner))
             return;
 
-        FloatingNumberHelper.ShowFloatingNumber(_owner, text, color, riseDistance, duration, fontSize);
+        if (Mathf.IsEqualApprox(riseDistance, 18.0f) &&
+            Mathf.IsEqualApprox(duration, 0.6f) &&
+            fontSize == 20)
+        {
+            FloatingText.ShowCustom(text, _owner, color);
+            return;
+        }
+
+        FloatingText.Show(text, _owner, color, riseDistance: riseDistance, duration: duration, fontSize: fontSize);
     }
 
     public void SetUnitFrameVisible(bool visible)

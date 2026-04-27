@@ -6,7 +6,6 @@ using System;
 public partial class Chest : WorldObject, ILockable
 {
     private const string DefaultAnimationName = "default";
-    private static readonly Color LockedFloatingTextColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
 
     [Export]
     public bool IsLocked
@@ -80,7 +79,7 @@ public partial class Chest : WorldObject, ILockable
 
         if (interactor is Player player && !TrySatisfyKeyRequirement(player))
         {
-            ShowLockedFeedback(player);
+            ShowLockedFeedback();
             return false;
         }
 
@@ -141,12 +140,9 @@ public partial class Chest : WorldObject, ILockable
             : inventory.HasKeyKind(RequiredKeyKind, 1);
     }
 
-    private void ShowLockedFeedback(Player player)
+    private void ShowLockedFeedback()
     {
-        if (player == null || !GodotObject.IsInstanceValid(player))
-            return;
-
-        player.ShowFloatingText("LOCKED", LockedFloatingTextColor);
+        FloatingText.ShowBad("LOCKED", this);
     }
 
     private void ApplyVisualState()
