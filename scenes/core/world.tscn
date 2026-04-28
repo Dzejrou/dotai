@@ -14,12 +14,13 @@
 [ext_resource type="Resource" uid="uid://cg45ru2xpdwtd" path="res://resources/dungeon/encounters/bone_horde.tres" id="11_bone_horde_encounter"]
 [ext_resource type="PackedScene" uid="uid://cd8ph5fhvyjvb" path="res://scenes/world/rooms/combat_dungeon_room.tscn" id="12_combat_dungeon_room"]
 [ext_resource type="PackedScene" uid="uid://c8qcan8jddo8k" path="res://scenes/world/rooms/special_dungeon_room.tscn" id="13_special_dungeon_room"]
-[ext_resource type="Script" path="res://scripts/inventory/InventoryController.cs" id="14_inventory"]
-[ext_resource type="PackedScene" path="res://scenes/world/rooms/timed_dungeon_room.tscn" id="15_timed_dungeon_room"]
+[ext_resource type="Script" uid="uid://djb1hs85i6uga" path="res://scripts/inventory/InventoryController.cs" id="14_inventory"]
+[ext_resource type="PackedScene" uid="uid://dbld31u62o1rn" path="res://scenes/world/rooms/timed_dungeon_room.tscn" id="15_timed_dungeon_room"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
 RoomRegistry = ExtResource("6_room_registry")
+TransitionCooldownSeconds = 1.0
 
 [node name="RoomContainer" type="Node2D" parent="." unique_id=1250668101]
 
@@ -41,4 +42,3 @@ EncounterPool = Array[ExtResource("8_o57w4")]([ExtResource("8_skeleton_patrol_en
 CombatRoomTemplates = Array[PackedScene]([ExtResource("12_combat_dungeon_room")])
 SpecialRoomTemplates = Array[PackedScene]([ExtResource("13_special_dungeon_room")])
 TimedRoomTemplates = Array[PackedScene]([ExtResource("15_timed_dungeon_room")])
-TimedRoomChance = 0.15

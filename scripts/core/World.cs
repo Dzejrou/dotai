@@ -6,8 +6,6 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class World : Node2D
 {
-    private const float TransitionCooldownSeconds = 0.2f;
-
     [Export]
     public NodePath PlayerPath { get; set; } = new NodePath("Player");
 
@@ -34,6 +32,9 @@ public partial class World : Node2D
 
     [Export]
     public bool UsePersistentRoomCache { get; set; } = true;
+
+    [Export(PropertyHint.Range, "0,2,0.01")]
+    public float TransitionCooldownSeconds { get; set; } = 0.2f;
 
     [Signal]
     public delegate void PlayerDiedEventHandler();
