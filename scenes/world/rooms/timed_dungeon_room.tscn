@@ -104,9 +104,9 @@ position = Vector2(200, 200)
 
 [node name="Ephemeral" type="Node" parent="Unscaled" unique_id=1196283217]
 
-[node name="EnemyContent" parent="Unscaled" unique_id=1822319566 instance=ExtResource("4_enemy_content_scene")]
+[node name="EnemyContent" parent="Unscaled" unique_id=463852066 instance=ExtResource("4_enemy_content_scene")]
 
 [node name="BonusChest" parent="Unscaled" unique_id=1853003058 instance=ExtResource("5_chest_scene")]
-position = Vector2(400, 200)
+position = Vector2(574, 147)
 RequiredKeyKind = 2
 ConsumesKeyOnUnlock = false

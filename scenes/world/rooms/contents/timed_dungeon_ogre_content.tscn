@@ -4,39 +4,39 @@
 [ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="2_ogre_scene"]
 [ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="3_static_actor_spawn_point_script"]
 
-[node name="TimedDungeonOgreContent" type="Node2D" unique_id=814960090]
+[node name="TimedDungeonOgreContent" type="Node2D" unique_id=463852066]
 script = ExtResource("1_content_script")
 
-[node name="Objects" type="Node2D" parent="." unique_id=1761883411]
+[node name="Objects" type="Node2D" parent="." unique_id=1664129504]
 
-[node name="Actors" type="Node2D" parent="." unique_id=658267240]
+[node name="Actors" type="Node2D" parent="." unique_id=413847477]
 
-[node name="OgreNorthWest" type="Marker2D" parent="Actors" unique_id=442058945]
-position = Vector2(270, 278)
+[node name="OgreNorthWest" type="Marker2D" parent="Actors" unique_id=654580976]
+position = Vector2(200, 314)
 script = ExtResource("3_static_actor_spawn_point_script")
 ActorScene = ExtResource("2_ogre_scene")
 ClearLootTable = true
 
-[node name="OgreNorthEast" type="Marker2D" parent="Actors" unique_id=1648506957]
-position = Vector2(530, 278)
+[node name="OgreNorthEast" type="Marker2D" parent="Actors" unique_id=432354046]
+position = Vector2(587, 303)
 script = ExtResource("3_static_actor_spawn_point_script")
 ActorScene = ExtResource("2_ogre_scene")
 ClearLootTable = true
 
-[node name="OgreCenter" type="Marker2D" parent="Actors" unique_id=1022628997]
+[node name="OgreCenter" type="Marker2D" parent="Actors" unique_id=697748088]
 position = Vector2(400, 356)
 script = ExtResource("3_static_actor_spawn_point_script")
 ActorScene = ExtResource("2_ogre_scene")
 ClearLootTable = true
 
-[node name="OgreSouthWest" type="Marker2D" parent="Actors" unique_id=452717350]
-position = Vector2(221, 479)
+[node name="OgreSouthWest" type="Marker2D" parent="Actors" unique_id=755438450]
+position = Vector2(150, 444)
 script = ExtResource("3_static_actor_spawn_point_script")
 ActorScene = ExtResource("2_ogre_scene")
 ClearLootTable = true
 
-[node name="OgreSouthEast" type="Marker2D" parent="Actors" unique_id=798283775]
-position = Vector2(500, 478)
+[node name="OgreSouthEast" type="Marker2D" parent="Actors" unique_id=1484686258]
+position = Vector2(616, 493)
 script = ExtResource("3_static_actor_spawn_point_script")
 ActorScene = ExtResource("2_ogre_scene")
 ClearLootTable = true
