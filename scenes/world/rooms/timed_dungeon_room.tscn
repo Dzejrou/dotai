@@ -1,0 +1,112 @@
+[gd_scene format=3 uid="uid://dbld31u62o1rn"]
+
+[ext_resource type="Texture2D" uid="uid://ctakc0i0h52nj" path="res://assets/world/dungeon/basic_room_1_door.png" id="1_room_texture"]
+[ext_resource type="Script" uid="uid://cqloab27lcvmo" path="res://scripts/world/rooms/TimedDungeonRoom.cs" id="2_timed_dungeon_room_script"]
+[ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door_scene"]
+[ext_resource type="PackedScene" uid="uid://cdqmfnayi70xg" path="res://scenes/world/rooms/contents/timed_dungeon_ogre_content.tscn" id="4_enemy_content_scene"]
+[ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="5_chest_scene"]
+
+[sub_resource type="NavigationPolygon" id="1_navigation"]
+vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+
+[sub_resource type="RectangleShape2D" id="2_wall_north"]
+size = Vector2(336, 18)
+
+[sub_resource type="RectangleShape2D" id="3_wall_south"]
+size = Vector2(342, 24)
+
+[sub_resource type="RectangleShape2D" id="4_wall_vertical"]
+size = Vector2(18, 301.375)
+
+[node name="RoomScreen" type="Node2D" unique_id=550245860]
+script = ExtResource("2_timed_dungeon_room_script")
+ScreenId = &"timed_dungeon_test"
+DisplayName = "Timed Dungeon Room"
+Theme = &"dungeon"
+RoomType = &"timed"
+RoomSize = &"single_screen"
+
+[node name="Scaled" type="Node2D" parent="." unique_id=758774478]
+scale = Vector2(2, 2)
+
+[node name="Visual" type="Node2D" parent="Scaled" unique_id=920952117]
+
+[node name="RoomSprite" type="Sprite2D" parent="Scaled/Visual" unique_id=1923861647]
+z_index = -10
+texture = ExtResource("1_room_texture")
+centered = false
+
+[node name="Navigation" type="Node2D" parent="Scaled" unique_id=2077913236]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation" unique_id=1071861412]
+visible = false
+navigation_polygon = SubResource("1_navigation")
+
+[node name="Collision" type="Node2D" parent="Scaled" unique_id=1993720677]
+
+[node name="NorthWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=625897458]
+position = Vector2(200, 53)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/NorthWall" unique_id=149138082]
+position = Vector2(-2, -13)
+shape = SubResource("2_wall_north")
+
+[node name="SouthWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1875214109]
+position = Vector2(200, 347)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/SouthWall" unique_id=301102262]
+position = Vector2(2, 22)
+shape = SubResource("3_wall_south")
+
+[node name="WestWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=1619620713]
+position = Vector2(25, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/WestWall" unique_id=1346810301]
+position = Vector2(-3, 4.625)
+shape = SubResource("4_wall_vertical")
+
+[node name="EastWall" type="StaticBody2D" parent="Scaled/Collision" unique_id=98714916]
+position = Vector2(375, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/EastWall" unique_id=1075305578]
+position = Vector2(2, 2.3125)
+shape = SubResource("4_wall_vertical")
+
+[node name="Exits" type="Node2D" parent="Scaled" unique_id=1835923865]
+
+[node name="NorthCenterDoor" parent="Scaled/Exits" unique_id=1593509860 instance=ExtResource("3_door_scene")]
+position = Vector2(197, 53)
+ShowUnlockedIndicator = true
+IsLocked = true
+ExitId = &"north_center"
+TargetScreenId = &"entrance_hall"
+TargetExitId = &"north_west"
+Direction = &"north"
+
+[node name="SouthReturnDoor" parent="Scaled/Exits" unique_id=200614067 instance=ExtResource("3_door_scene")]
+position = Vector2(197, 359)
+IsLocked = true
+ExitId = &"south_return"
+Direction = &"south"
+
+[node name="Markers" type="Node2D" parent="Scaled" unique_id=101974157]
+
+[node name="PlayerStart" type="Marker2D" parent="Scaled/Markers" unique_id=1215199551]
+position = Vector2(200, 286)
+
+[node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=1596617501]
+position = Vector2(200, 200)
+
+[node name="Ephemeral" type="Node" parent="Scaled" unique_id=705196053]
+
+[node name="Unscaled" type="Node2D" parent="." unique_id=284940371]
+
+[node name="Ephemeral" type="Node" parent="Unscaled" unique_id=1196283217]
+
+[node name="EnemyContent" parent="Unscaled" unique_id=1822319566 instance=ExtResource("4_enemy_content_scene")]
+
+[node name="BonusChest" parent="Unscaled" unique_id=1853003058 instance=ExtResource("5_chest_scene")]
+position = Vector2(400, 200)
+RequiredKeyKind = 2
+ConsumesKeyOnUnlock = false

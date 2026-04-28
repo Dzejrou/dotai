@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/CountdownHUD.cs" id="1_countdown_hud_script"]
+
+[node name="CountdownHUD" type="Control"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_countdown_hud_script")
+
+[node name="TopCenter" type="MarginContainer" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -128.0
+offset_top = 16.0
+offset_right = 128.0
+offset_bottom = 96.0
+grow_horizontal = 2
+
+[node name="Panel" type="PanelContainer" parent="TopCenter"]
+custom_minimum_size = Vector2(256, 80)
+
+[node name="Margin" type="MarginContainer" parent="TopCenter/Panel"]
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="TopCenter/Panel/Margin"]
+
+[node name="TitleLabel" type="Label" parent="TopCenter/Panel/Margin/VBox"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 15
+text = "Timed Dungeon Room"
+
+[node name="CountdownLabel" type="Label" parent="TopCenter/Panel/Margin/VBox"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+text = "00:30"

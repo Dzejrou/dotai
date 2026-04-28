@@ -45,6 +45,7 @@ public partial class World : Node2D
     private InventoryController _inventoryController;
     private Dungeon _dungeon;
     private RoomScreen _activeRoom;
+    private CountdownHUD _countdownHud;
     private bool _isGameOver;
     private float _transitionCooldownRemaining;
     private readonly Dictionary<StringName, RoomScreen> _persistentRoomsById = new();
@@ -107,6 +108,26 @@ public partial class World : Node2D
 
         _inventoryController = GetNodeOrNull<InventoryController>(InventoryPath);
         return _inventoryController;
+    }
+
+    public CountdownHUD ResolveCountdownHud()
+    {
+        if (_countdownHud != null && GodotObject.IsInstanceValid(_countdownHud))
+            return _countdownHud;
+
+        var current = GetParent();
+        while (current != null)
+        {
+            if (current is Main main)
+            {
+                _countdownHud = main.ResolveCountdownHud();
+                return _countdownHud;
+            }
+
+            current = current.GetParent();
+        }
+
+        return null;
     }
 
     private void LoadInitialRoom()

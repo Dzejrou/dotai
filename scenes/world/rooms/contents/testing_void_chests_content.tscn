@@ -7,10 +7,14 @@
 [node name="TestingVoidChestsContent" type="Node2D" unique_id=2093513246]
 script = ExtResource("1_content_script")
 
-[node name="LockedChest" parent="." unique_id=1675497592 instance=ExtResource("1_chest")]
+[node name="Objects" type="Node2D" parent="."]
+
+[node name="LockedChest" parent="Objects" unique_id=1675497592 instance=ExtResource("1_chest")]
 position = Vector2(99, 580)
 
-[node name="UnlockedChest" parent="." unique_id=272966836 instance=ExtResource("1_chest")]
+[node name="UnlockedChest" parent="Objects" unique_id=272966836 instance=ExtResource("1_chest")]
 position = Vector2(169, 742)
 IsLocked = false
 LootTable = ExtResource("2_testing_void_chest_key_loot_table")
+
+[node name="Actors" type="Node2D" parent="."]

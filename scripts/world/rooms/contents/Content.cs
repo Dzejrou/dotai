@@ -4,90 +4,87 @@ using System.Collections.Generic;
 
 public abstract partial class Content : Node2D
 {
-    private readonly List<Node> _initialChildTemplates = new();
-    private bool _initialChildSnapshotCaptured;
+    [Export]
+    public NodePath ObjectsPath { get; set; } = new("Objects");
+
+    [Export]
+    public NodePath ActorsPath { get; set; } = new("Actors");
+
+    private Node _objectsRoot;
+    private Node _actorsRoot;
+    private bool _objectsRootResolved;
+    private bool _actorsRootResolved;
 
     public bool IsEmpty => GetActiveChildCount() == 0;
 
     public override void _Ready()
     {
-        CaptureInitialChildSnapshot();
+        Respawn();
     }
 
     public void Respawn()
     {
-        ClearCurrentChildren();
-        RecreateInitialChildren();
+        foreach (var spawnPoint in GetActorSpawnPoints())
+            spawnPoint.Respawn();
     }
 
     public int GetActiveChildCount()
     {
         var activeChildCount = 0;
-        foreach (var child in GetChildren())
+        foreach (var spawnPoint in GetActorSpawnPoints())
         {
-            if (child is Node node &&
-                GodotObject.IsInstanceValid(node) &&
-                !node.IsQueuedForDeletion())
-            {
+            if (spawnPoint.IsOccupied())
                 activeChildCount++;
-            }
         }
 
         return activeChildCount;
     }
 
-    private void CaptureInitialChildSnapshot()
+    protected Node GetObjectsRoot()
     {
-        if (_initialChildSnapshotCaptured)
-            return;
+        if (_objectsRootResolved)
+            return GodotObject.IsInstanceValid(_objectsRoot) ? _objectsRoot : null;
 
-        _initialChildTemplates.Clear();
-        foreach (var child in GetChildren())
-        {
-            if (child is not Node node || !GodotObject.IsInstanceValid(node))
-                continue;
-
-            if (node.Duplicate() is not Node template)
-            {
-                GD.PushWarning($"{nameof(Content)} '{Name}' could not snapshot child '{node.Name}'.");
-                continue;
-            }
-
-            _initialChildTemplates.Add(template);
-        }
-
-        _initialChildSnapshotCaptured = true;
+        _objectsRootResolved = true;
+        _objectsRoot = ResolveRoot(ObjectsPath, nameof(ObjectsPath));
+        return _objectsRoot;
     }
 
-    private void ClearCurrentChildren()
+    protected Node GetActorsRoot()
     {
-        foreach (var child in GetChildren())
-        {
-            if (child is not Node node || !GodotObject.IsInstanceValid(node))
-                continue;
+        if (_actorsRootResolved)
+            return GodotObject.IsInstanceValid(_actorsRoot) ? _actorsRoot : null;
 
-            RemoveChild(node);
-            node.QueueFree();
+        _actorsRootResolved = true;
+        _actorsRoot = ResolveRoot(ActorsPath, nameof(ActorsPath));
+        return _actorsRoot;
+    }
+
+    private IEnumerable<ActorSpawnPoint> GetActorSpawnPoints()
+    {
+        var actorsRoot = GetActorsRoot();
+        if (actorsRoot == null)
+            yield break;
+
+        foreach (var child in actorsRoot.GetChildren())
+        {
+            if (child is ActorSpawnPoint spawnPoint)
+                yield return spawnPoint;
         }
     }
 
-    private void RecreateInitialChildren()
+    private Node ResolveRoot(NodePath rootPath, string rootPathName)
     {
-        foreach (var template in _initialChildTemplates)
+        if (rootPath.IsEmpty)
         {
-            if (!GodotObject.IsInstanceValid(template))
-            {
-                GD.PushWarning($"{nameof(Content)} '{Name}' is missing a valid child template during respawn.");
-                continue;
-            }
-
-            if (template.Duplicate() is not Node childInstance)
-            {
-                GD.PushWarning($"{nameof(Content)} '{Name}' could not recreate child '{template.Name}' during respawn.");
-                continue;
-            }
-
-            AddChild(childInstance);
+            GD.PushError($"{nameof(Content)} '{Name}' has an empty {rootPathName}.");
+            return null;
         }
+
+        var root = GetNodeOrNull<Node>(rootPath);
+        if (root == null)
+            GD.PushError($"{nameof(Content)} '{Name}' could not resolve '{rootPath}'.");
+
+        return root;
     }
 }

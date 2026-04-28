@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://cd8ph5fhvyjvb" path="res://scenes/world/rooms/combat_dungeon_room.tscn" id="12_combat_dungeon_room"]
 [ext_resource type="PackedScene" uid="uid://c8qcan8jddo8k" path="res://scenes/world/rooms/special_dungeon_room.tscn" id="13_special_dungeon_room"]
 [ext_resource type="Script" path="res://scripts/inventory/InventoryController.cs" id="14_inventory"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/timed_dungeon_room.tscn" id="15_timed_dungeon_room"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
@@ -39,3 +40,5 @@ script = ExtResource("7_dungeon")
 EncounterPool = Array[ExtResource("8_o57w4")]([ExtResource("8_skeleton_patrol_encounter"), ExtResource("9_bone_wall_encounter"), ExtResource("10_ogre_guard_encounter"), ExtResource("11_bone_horde_encounter")])
 CombatRoomTemplates = Array[PackedScene]([ExtResource("12_combat_dungeon_room")])
 SpecialRoomTemplates = Array[PackedScene]([ExtResource("13_special_dungeon_room")])
+TimedRoomTemplates = Array[PackedScene]([ExtResource("15_timed_dungeon_room")])
+TimedRoomChance = 0.15

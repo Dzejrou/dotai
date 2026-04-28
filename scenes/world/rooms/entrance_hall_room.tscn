@@ -105,8 +105,10 @@ Direction = &"south"
 
 [node name="NorthWestDoor" parent="Scaled/Exits" unique_id=1314545739 instance=ExtResource("3_door")]
 position = Vector2(83, 92)
-IsLocked = true
+IsLocked = false
 ExitId = &"north_west"
+TargetScreenId = &"timed_dungeon_test"
+TargetExitId = &"south_return"
 Direction = &"north"
 
 [node name="NorthEastDoor" parent="Scaled/Exits" unique_id=1836981997 instance=ExtResource("3_door")]

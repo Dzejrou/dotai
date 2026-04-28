@@ -42,10 +42,19 @@ public partial class Main : Node2D
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
     private const string InventoryWindowScenePath = "res://scenes/ui/inventory_window.tscn";
+    private const string CountdownHudScenePath = "res://scenes/ui/countdown_hud.tscn";
     private const string InteractionPromptGlyphPath = "res://assets/glyphs/letter_g.png";
     private const string SpellBookActionName = "spell_book";
     private const string ToggleInventoryActionName = "toggle_inventory";
     private int _windowPresetIndex;
+    private CountdownHUD _countdownHud;
+
+    public CountdownHUD ResolveCountdownHud()
+    {
+        return _countdownHud != null && GodotObject.IsInstanceValid(_countdownHud)
+            ? _countdownHud
+            : null;
+    }
 
     public override void _Ready()
     {
@@ -235,6 +244,13 @@ public partial class Main : Node2D
         {
             _inventoryWindow = inventoryWindow;
             hudCanvas.AddChild(_inventoryWindow);
+        }
+
+        var countdownHudScene = ResourceLoader.Load<PackedScene>(CountdownHudScenePath);
+        if (countdownHudScene?.Instantiate<CountdownHUD>() is CountdownHUD countdownHud)
+        {
+            _countdownHud = countdownHud;
+            hudCanvas.AddChild(_countdownHud);
         }
 
         var interactionPromptTexture = ResourceLoader.Load<Texture2D>(InteractionPromptGlyphPath);

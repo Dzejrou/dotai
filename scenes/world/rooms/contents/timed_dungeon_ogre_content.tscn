@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://cdqmfnayi70xg"]
+
+[ext_resource type="Script" uid="uid://bnf7lhtyqgf6c" path="res://scripts/world/rooms/contents/TimedDungeonOgreContent.cs" id="1_content_script"]
+[ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="2_ogre_scene"]
+[ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="3_static_actor_spawn_point_script"]
+
+[node name="TimedDungeonOgreContent" type="Node2D" unique_id=814960090]
+script = ExtResource("1_content_script")
+
+[node name="Objects" type="Node2D" parent="." unique_id=1761883411]
+
+[node name="Actors" type="Node2D" parent="." unique_id=658267240]
+
+[node name="OgreNorthWest" type="Marker2D" parent="Actors" unique_id=442058945]
+position = Vector2(270, 278)
+script = ExtResource("3_static_actor_spawn_point_script")
+ActorScene = ExtResource("2_ogre_scene")
+ClearLootTable = true
+
+[node name="OgreNorthEast" type="Marker2D" parent="Actors" unique_id=1648506957]
+position = Vector2(530, 278)
+script = ExtResource("3_static_actor_spawn_point_script")
+ActorScene = ExtResource("2_ogre_scene")
+ClearLootTable = true
+
+[node name="OgreCenter" type="Marker2D" parent="Actors" unique_id=1022628997]
+position = Vector2(400, 356)
+script = ExtResource("3_static_actor_spawn_point_script")
+ActorScene = ExtResource("2_ogre_scene")
+ClearLootTable = true
+
+[node name="OgreSouthWest" type="Marker2D" parent="Actors" unique_id=452717350]
+position = Vector2(221, 479)
+script = ExtResource("3_static_actor_spawn_point_script")
+ActorScene = ExtResource("2_ogre_scene")
+ClearLootTable = true
+
+[node name="OgreSouthEast" type="Marker2D" parent="Actors" unique_id=798283775]
+position = Vector2(500, 478)
+script = ExtResource("3_static_actor_spawn_point_script")
+ActorScene = ExtResource("2_ogre_scene")
+ClearLootTable = true

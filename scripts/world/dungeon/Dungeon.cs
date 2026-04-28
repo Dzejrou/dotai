@@ -9,6 +9,7 @@ public partial class Dungeon : Node
     {
         Combat,
         Special,
+        Timed,
     }
 
     private sealed class DungeonRoomDescriptor
@@ -38,8 +39,14 @@ public partial class Dungeon : Node
     [Export]
     public Godot.Collections.Array<PackedScene> SpecialRoomTemplates { get; set; } = new();
 
+    [Export]
+    public Godot.Collections.Array<PackedScene> TimedRoomTemplates { get; set; } = new();
+
     [Export(PropertyHint.Range, "0,1,0.01")]
     public float SpecialRoomChance { get; set; } = 0.2f;
+
+    [Export(PropertyHint.Range, "0,1,0.01")]
+    public float TimedRoomChance { get; set; } = 0.15f;
 
     [Export(PropertyHint.Range, "0,20,1")]
     public int SpecialRoomPity { get; set; } = 3;
@@ -94,6 +101,9 @@ public partial class Dungeon : Node
             case DungeonRoomKind.Special:
                 ConfigureSpecialRoom((SpecialDungeonRoom)room);
                 break;
+            case DungeonRoomKind.Timed:
+                ConfigureTimedRoom((TimedDungeonRoom)room);
+                break;
         }
     }
 
@@ -110,6 +120,11 @@ public partial class Dungeon : Node
         room.ConfigureProgressionDoor(DungeonRuntimeScreenId, DungeonEntryExitId);
         room.ConfigureReturnDoor(EntranceHallScreenId, EntranceHallReturnExitId);
         SetProgressionDoor(SpecialTopExitId, DungeonRoomKind.Combat);
+    }
+
+    private void ConfigureTimedRoom(TimedDungeonRoom room)
+    {
+        room.ConfigureProgressionDoor(EntranceHallScreenId, EntranceHallReturnExitId);
     }
 
     private void SpawnEncounter(CombatDungeonRoom room)
@@ -266,6 +281,7 @@ public partial class Dungeon : Node
         {
             DungeonRoomKind.Combat => CombatRoomTemplates,
             DungeonRoomKind.Special => SpecialRoomTemplates,
+            DungeonRoomKind.Timed => TimedRoomTemplates,
             _ => null,
         };
 
@@ -287,6 +303,10 @@ public partial class Dungeon : Node
 
     private DungeonRoomKind RollCombatProgressionRoomKind()
     {
+        var timedChance = Mathf.Clamp(TimedRoomChance, 0.0f, 1.0f);
+        if (_random.Randf() < timedChance)
+            return DungeonRoomKind.Timed;
+
         var specialChance = Mathf.Clamp(SpecialRoomChance, 0.0f, 1.0f);
         return _random.Randf() < specialChance
             ? DungeonRoomKind.Special
@@ -322,7 +342,7 @@ public partial class Dungeon : Node
 
     private static bool IsDungeonRoom(RoomScreen room)
     {
-        return room is CombatDungeonRoom || room is SpecialDungeonRoom;
+        return room is CombatDungeonRoom || room is SpecialDungeonRoom || room is TimedDungeonRoom;
     }
 
     private static bool HasValue(StringName value)
