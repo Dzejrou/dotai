@@ -28,6 +28,12 @@ public abstract partial class Content : Node2D
             spawnPoint.Respawn();
     }
 
+    public void Restore()
+    {
+        foreach (var spawnPoint in GetActorSpawnPoints())
+            spawnPoint.Restore();
+    }
+
     public int GetActiveChildCount()
     {
         var activeChildCount = 0;

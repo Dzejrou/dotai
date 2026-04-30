@@ -48,5 +48,13 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         StatusEffectControllerNode = statusEffectController;
     }
 
+    public virtual void RestoreCombatState(bool clearStatusEffects = true)
+    {
+        HealthStateNode?.RestoreToFull();
+
+        if (clearStatusEffects)
+            StatusEffectControllerNode?.ClearAllEffects();
+    }
+
     public abstract void ApplyHealing(Healing healing);
 }

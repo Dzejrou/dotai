@@ -52,7 +52,7 @@ public partial class TimedDungeonRoom : TimedRoom
 
     protected override void OnTimerExpired()
     {
-        ResolveContent()?.Respawn();
+        ResolveContent()?.Restore();
         RemoveBonusChestOnFirstFailure();
         RestartTimer();
     }

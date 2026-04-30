@@ -188,6 +188,12 @@ public abstract partial class Actor : CombatCharacter
         ShowFloatingHealingNumber(healedAmount);
     }
 
+    public override void RestoreCombatState(bool clearStatusEffects = true)
+    {
+        base.RestoreCombatState(clearStatusEffects);
+        RefreshHealthLabel();
+    }
+
     public bool TryMoveTowardDestination(Vector2 destinationPosition, float speedMultiplier, CombatUnitState movingState, double delta)
     {
         var movement = ResolveMovementDirection(destinationPosition, delta);

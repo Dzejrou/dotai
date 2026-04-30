@@ -57,4 +57,9 @@ public partial class HealthState : Node
         if (isDead)
             Current = 0;
     }
+
+    public void RestoreToFull()
+    {
+        SetCurrent(Max);
+    }
 }
