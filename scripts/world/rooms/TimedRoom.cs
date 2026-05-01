@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public abstract partial class TimedRoom : RoomScreen
+public abstract partial class TimedRoom : Room
 {
     [Export(PropertyHint.Range, "1,300,0.1")]
     public float DurationSeconds { get; set; } = 30.0f;

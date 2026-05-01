@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cqwa3wd6p5g6t"]
 
 [ext_resource type="Texture2D" uid="uid://cc2h84iv7ona2" path="res://assets/world/castle/courtyard.png" id="1_room_texture"]
-[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
+[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/Room.cs" id="2_room_screen"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="4_portal"]
 
@@ -22,7 +22,7 @@ size = Vector2(17, 228)
 [sub_resource type="RectangleShape2D" id="5_south_wall"]
 size = Vector2(356.5, 31.5)
 
-[node name="RoomScreen2" type="Node2D" unique_id=1964627908]
+[node name="Room2" type="Node2D" unique_id=1964627908]
 script = ExtResource("2_room_screen")
 ScreenId = &"courtyard"
 DisplayName = "Courtyard"

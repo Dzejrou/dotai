@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://belxu0qkq53ti"]
 
 [ext_resource type="Texture2D" uid="uid://djv557mac6kfa" path="res://assets/world/castle/entrance_hall.png" id="1_room_texture"]
-[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="2_room_screen"]
+[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/Room.cs" id="2_room_screen"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="4_dryad"]
 
@@ -21,7 +21,7 @@ size = Vector2(18, 268)
 [sub_resource type="RectangleShape2D" id="8_plinth"]
 size = Vector2(28, 58.75)
 
-[node name="RoomScreen2" type="Node2D" unique_id=1948024229]
+[node name="Room2" type="Node2D" unique_id=1948024229]
 script = ExtResource("2_room_screen")
 ScreenId = &"entrance_hall"
 DisplayName = "Entrance Hall"

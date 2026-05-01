@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class SpecialDungeonRoom : RoomScreen
+public partial class SpecialDungeonRoom : Room
 {
     private static readonly StringName TopProgressionExitId = "north_center";
     private static readonly StringName BottomReturnExitId = "south_return";

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class RoomScreen : Node2D
+public partial class Room : Node2D
 {
     private const string EphemeralNodeName = "Ephemeral";
 
@@ -157,14 +157,14 @@ public partial class RoomScreen : Node2D
     {
         if (contentScene == null)
         {
-            GD.PushError($"{nameof(RoomScreen)} '{Name}' cannot attach a null content scene.");
+            GD.PushError($"{nameof(Room)} '{Name}' cannot attach a null content scene.");
             return false;
         }
 
         var unscaledRoot = GetUnscaledRoot();
         if (unscaledRoot == null)
         {
-            GD.PushError($"{nameof(RoomScreen)} '{Name}' could not resolve unscaled root '{UnscaledPath}' for content attachment.");
+            GD.PushError($"{nameof(Room)} '{Name}' could not resolve unscaled root '{UnscaledPath}' for content attachment.");
             return false;
         }
 
@@ -172,7 +172,7 @@ public partial class RoomScreen : Node2D
         {
             if (!replaceExisting)
             {
-                GD.PushError($"{nameof(RoomScreen)} '{Name}' already has attached runtime content.");
+                GD.PushError($"{nameof(Room)} '{Name}' already has attached runtime content.");
                 return false;
             }
 
@@ -182,7 +182,7 @@ public partial class RoomScreen : Node2D
         var contentInstance = contentScene.Instantiate();
         if (contentInstance == null)
         {
-            GD.PushError($"{nameof(RoomScreen)} '{Name}' failed to instantiate content scene '{contentScene.ResourcePath}'.");
+            GD.PushError($"{nameof(Room)} '{Name}' failed to instantiate content scene '{contentScene.ResourcePath}'.");
             return false;
         }
 
@@ -249,14 +249,14 @@ public partial class RoomScreen : Node2D
     {
         if (parentPath.IsEmpty)
         {
-            GD.PushError($"{nameof(RoomScreen)} '{Name}' has an empty {parentPathName} and cannot resolve '{EphemeralNodeName}'.");
+            GD.PushError($"{nameof(Room)} '{Name}' has an empty {parentPathName} and cannot resolve '{EphemeralNodeName}'.");
             return null;
         }
 
         var parentRoot = GetNodeOrNull<Node>(parentPath);
         if (parentRoot == null)
         {
-            GD.PushError($"{nameof(RoomScreen)} '{Name}' could not resolve '{parentPath}' and cannot attach '{EphemeralNodeName}'.");
+            GD.PushError($"{nameof(Room)} '{Name}' could not resolve '{parentPath}' and cannot attach '{EphemeralNodeName}'.");
             return null;
         }
 
@@ -269,7 +269,7 @@ public partial class RoomScreen : Node2D
             Name = EphemeralNodeName,
         };
         parentRoot.AddChild(ephemeralRoot);
-        GD.PushWarning($"{nameof(RoomScreen)} '{Name}' was missing '{parentPath}/{EphemeralNodeName}'. Created it at runtime.");
+        GD.PushWarning($"{nameof(Room)} '{Name}' was missing '{parentPath}/{EphemeralNodeName}'. Created it at runtime.");
         return ephemeralRoot;
     }
 

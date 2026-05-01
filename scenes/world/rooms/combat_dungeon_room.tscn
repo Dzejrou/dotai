@@ -19,7 +19,7 @@ size = Vector2(336, 24)
 [sub_resource type="RectangleShape2D" id="4_wall_vertical"]
 size = Vector2(18, 283.5)
 
-[node name="RoomScreen" type="Node2D" unique_id=1908132245]
+[node name="Room" type="Node2D" unique_id=1908132245]
 script = ExtResource("2_combat_dungeon_room")
 ScreenId = &"dungeon_combat"
 DisplayName = "Combat Dungeon Room"

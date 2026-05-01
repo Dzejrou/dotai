@@ -54,7 +54,7 @@ public partial class Dungeon : Node
     private readonly RandomNumberGenerator _random = new();
     private readonly Dictionary<StringName, DungeonRoomDescriptor> _activeProgressionDoors = new();
 
-    private RoomScreen _activeDungeonRoom;
+    private Room _activeDungeonRoom;
     private int _consecutiveNonSpecialRooms;
 
     public override void _Ready()
@@ -62,7 +62,7 @@ public partial class Dungeon : Node
         _random.Randomize();
     }
 
-    public bool TryCreateRoom(StringName screenId, RoomScreen currentRoom, RoomTransition sourceTransition, StringName entryExitId, out RoomScreen room)
+    public bool TryCreateRoom(StringName screenId, Room currentRoom, RoomTransition sourceTransition, StringName entryExitId, out Room room)
     {
         room = null;
         if (screenId != DungeonRuntimeScreenId)
@@ -83,13 +83,13 @@ public partial class Dungeon : Node
         return true;
     }
 
-    public void OnTransitionCompleted(RoomScreen previousRoom, RoomTransition usedTransition, RoomScreen nextRoom)
+    public void OnTransitionCompleted(Room previousRoom, RoomTransition usedTransition, Room nextRoom)
     {
         if (IsDungeonRoom(previousRoom) && !IsDungeonRoom(nextRoom))
             EndRun();
     }
 
-    private void ConfigureDungeonRoom(RoomScreen room, DungeonRoomKind roomKind)
+    private void ConfigureDungeonRoom(Room room, DungeonRoomKind roomKind)
     {
         _activeProgressionDoors.Clear();
 
@@ -223,7 +223,7 @@ public partial class Dungeon : Node
         SetActiveDungeonRoom(null);
     }
 
-    private void SetActiveDungeonRoom(RoomScreen room)
+    private void SetActiveDungeonRoom(Room room)
     {
         if (_activeDungeonRoom is CombatDungeonRoom previousCombatRoom &&
             GodotObject.IsInstanceValid(previousCombatRoom))
@@ -237,7 +237,7 @@ public partial class Dungeon : Node
             activeCombatRoom.RoomCleared += OnActiveRoomCleared;
     }
 
-    private DungeonRoomKind ResolveRequestedRoomKind(RoomScreen currentRoom, RoomTransition sourceTransition)
+    private DungeonRoomKind ResolveRequestedRoomKind(Room currentRoom, RoomTransition sourceTransition)
     {
         if (!IsDungeonRoom(currentRoom))
             return DungeonRoomKind.Combat;
@@ -254,7 +254,7 @@ public partial class Dungeon : Node
             : RollCombatProgressionRoomKind();
     }
 
-    private bool TryInstantiateDungeonRoom(DungeonRoomKind roomKind, out RoomScreen room)
+    private bool TryInstantiateDungeonRoom(DungeonRoomKind roomKind, out Room room)
     {
         room = null;
 
@@ -265,7 +265,7 @@ public partial class Dungeon : Node
             return false;
         }
 
-        room = template.Instantiate<RoomScreen>();
+        room = template.Instantiate<Room>();
         if (room == null)
         {
             GD.PushError($"{nameof(Dungeon)} could not instantiate a dungeon room for {roomKind}.");
@@ -340,7 +340,7 @@ public partial class Dungeon : Node
         _activeProgressionDoors[exitId] = new DungeonRoomDescriptor(roomKind);
     }
 
-    private static bool IsDungeonRoom(RoomScreen room)
+    private static bool IsDungeonRoom(Room room)
     {
         return room is CombatDungeonRoom || room is SpecialDungeonRoom || room is TimedDungeonRoom;
     }

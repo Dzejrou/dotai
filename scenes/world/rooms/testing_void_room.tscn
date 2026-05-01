@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ccyfthojw57t7"]
 
-[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/RoomScreen.cs" id="1_room_screen"]
+[ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/Room.cs" id="1_room_screen"]
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="2_w4qed"]
 [ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="2_xd34g"]
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="4_3evjt"]
@@ -13,7 +13,7 @@
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
 
-[node name="RoomScreen2" type="Node2D" unique_id=117793925]
+[node name="Room2" type="Node2D" unique_id=117793925]
 script = ExtResource("1_room_screen")
 ScreenId = &"testing_void"
 DisplayName = "Testing Void"

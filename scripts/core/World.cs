@@ -45,13 +45,13 @@ public partial class World : Node2D
     private CorpseManager _corpseManager;
     private InventoryController _inventoryController;
     private Dungeon _dungeon;
-    private RoomScreen _activeRoom;
+    private Room _activeRoom;
     private CountdownHUD _countdownHud;
     private bool _isGameOver;
     private float _transitionCooldownRemaining;
-    private readonly Dictionary<StringName, RoomScreen> _persistentRoomsById = new();
+    private readonly Dictionary<StringName, Room> _persistentRoomsById = new();
 
-    public RoomScreen ActiveRoom => GodotObject.IsInstanceValid(_activeRoom) ? _activeRoom : null;
+    public Room ActiveRoom => GodotObject.IsInstanceValid(_activeRoom) ? _activeRoom : null;
 
     public override void _Ready()
     {
@@ -202,7 +202,7 @@ public partial class World : Node2D
         return true;
     }
 
-    private RoomScreen InstantiateRoom(StringName screenId, StringName entryExitId, RoomTransition sourceTransition)
+    private Room InstantiateRoom(StringName screenId, StringName entryExitId, RoomTransition sourceTransition)
     {
         if (_dungeon != null &&
             _dungeon.TryCreateRoom(screenId, _activeRoom, sourceTransition, entryExitId, out var dungeonRoom) &&
@@ -232,9 +232,9 @@ public partial class World : Node2D
             return null;
         }
 
-        if (roomScene.Instantiate() is not RoomScreen room)
+        if (roomScene.Instantiate() is not Room room)
         {
-            GD.PushError($"Registered room scene for '{screenId}' does not instantiate a {nameof(RoomScreen)} root.");
+            GD.PushError($"Registered room scene for '{screenId}' does not instantiate a {nameof(Room)} root.");
             return null;
         }
 
@@ -293,7 +293,7 @@ public partial class World : Node2D
         targetParent.AddChild(_activeRoom);
     }
 
-    private bool ShouldPersistRoom(RoomScreen room)
+    private bool ShouldPersistRoom(Room room)
     {
         return UsePersistentRoomCache &&
             room != null &&
@@ -302,7 +302,7 @@ public partial class World : Node2D
             HasValue(room.ScreenId);
     }
 
-    private bool TryGetCachedRoom(StringName screenId, out RoomScreen room)
+    private bool TryGetCachedRoom(StringName screenId, out Room room)
     {
         room = null;
         if (!UsePersistentRoomCache || !HasValue(screenId))
@@ -321,7 +321,7 @@ public partial class World : Node2D
         return true;
     }
 
-    private void CacheRoom(RoomScreen room)
+    private void CacheRoom(Room room)
     {
         if (!ShouldPersistRoom(room))
             return;
@@ -329,7 +329,7 @@ public partial class World : Node2D
         _persistentRoomsById[room.ScreenId] = room;
     }
 
-    private void RemoveCachedRoom(RoomScreen room)
+    private void RemoveCachedRoom(Room room)
     {
         if (room == null || !HasValue(room.ScreenId))
             return;
@@ -352,7 +352,7 @@ public partial class World : Node2D
         }
     }
 
-    private void PlacePlayerAtRoomEntry(RoomScreen room, StringName entryExitId)
+    private void PlacePlayerAtRoomEntry(Room room, StringName entryExitId)
     {
         if (_player == null || room == null)
             return;
@@ -367,7 +367,7 @@ public partial class World : Node2D
         _player.Velocity = Vector2.Zero;
     }
 
-    private void ApplyRoomCameraBounds(RoomScreen room)
+    private void ApplyRoomCameraBounds(Room room)
     {
         if (_playerCamera == null || room == null)
             return;

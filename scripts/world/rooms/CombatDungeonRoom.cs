@@ -3,7 +3,7 @@ using Godot;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class CombatDungeonRoom : RoomScreen
+public partial class CombatDungeonRoom : Room
 {
     private static readonly StringName TopLeftExitId = "north_west";
     private static readonly StringName TopRightExitId = "north_east";
