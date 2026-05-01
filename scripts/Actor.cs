@@ -89,12 +89,13 @@ public abstract partial class Actor : CombatCharacter
             GD.PushError($"{GetPath()}: missing required ActorHUD child.");
         else
             _actorHud.Bind(this);
-        RefreshHealthLabel();
+        OnHealthStateChanged();
         EnsureTreeLifetimeConnections();
     }
 
     public override void _EnterTree()
     {
+        base._EnterTree();
         EnsureTreeLifetimeConnections();
     }
 
@@ -134,6 +135,7 @@ public abstract partial class Actor : CombatCharacter
     {
         DisconnectTreeLifetimeConnections();
         OnActorExitTree();
+        base._ExitTree();
     }
 
     public void SetTarget(Node2D target)
@@ -184,14 +186,7 @@ public abstract partial class Actor : CombatCharacter
         if (healedAmount <= 0)
             return;
 
-        RefreshHealthLabel();
         ShowFloatingHealingNumber(healedAmount);
-    }
-
-    public override void RestoreCombatState(bool clearStatusEffects = true)
-    {
-        base.RestoreCombatState(clearStatusEffects);
-        RefreshHealthLabel();
     }
 
     public bool TryMoveTowardDestination(Vector2 destinationPosition, float speedMultiplier, CombatUnitState movingState, double delta)
@@ -318,6 +313,11 @@ public abstract partial class Actor : CombatCharacter
         CleanupNavigationForInactiveState();
     }
 
+    protected override void OnHealthStateChanged()
+    {
+        RefreshHealthLabel();
+    }
+
     protected void SpawnCorpseAndFree()
     {
         PrepareForRemoval();
@@ -371,7 +371,6 @@ public abstract partial class Actor : CombatCharacter
         }
 
         damage = HealthStateNode.ApplyDamage(damageInfo.Amount);
-        RefreshHealthLabel();
         damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
 
         died = HealthStateNode.IsDead;

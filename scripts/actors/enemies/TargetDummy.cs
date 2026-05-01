@@ -35,6 +35,7 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
     public override void _EnterTree()
     {
+        base._EnterTree();
         EnsureTreeLifetimeConnections();
     }
 
@@ -67,7 +68,7 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
         AddToGroup(CombatGroups.Actors);
         ResetCombatState();
-        UpdateHud();
+        OnHealthStateChanged();
         RefreshVisualState();
         ConfigureRespawnTimer();
         EnsureTreeLifetimeConnections();
@@ -81,6 +82,7 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
     public override void _ExitTree()
     {
         DisconnectTreeLifetimeConnections();
+        base._ExitTree();
     }
 
     public void ApplyDamage(Damage damageInfo)
@@ -90,7 +92,6 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
 
         var damage = HealthStateNode.ApplyDamage(damageInfo.Amount);
         damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
-        UpdateHud();
         FloatingText.ShowBad(damage.ToString(), this);
 
         if (HealthStateNode.IsDead)
@@ -107,7 +108,6 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
         if (recovered <= 0)
             return;
 
-        UpdateHud();
         FloatingText.ShowGood($"+{recovered}", this);
     }
 
@@ -124,7 +124,6 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
         HealthStateNode.SetDead(true);
         ResetCombatState();
         StatusEffectControllerNode?.ClearAllEffects();
-        UpdateHud();
         SetCollisionEnabled(false);
         RefreshVisualState();
 
@@ -147,8 +146,12 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
         HealthStateNode.SetCurrent(MaxHealableHealth);
         ResetCombatState();
         SetCollisionEnabled(true);
-        UpdateHud();
         RefreshVisualState();
+    }
+
+    protected override void OnHealthStateChanged()
+    {
+        UpdateHud();
     }
 
     private void UpdateHud()

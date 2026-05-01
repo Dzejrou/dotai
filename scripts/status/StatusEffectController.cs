@@ -7,6 +7,9 @@ using System.Collections.Generic;
 public partial class StatusEffectController : Node
 {
     [Signal]
+    public delegate void ChangedEventHandler();
+
+    [Signal]
     public delegate void StatusVisualStateChangedEventHandler(StringName statusKey, StatusEffect effect, bool active);
 
     [Signal]
@@ -61,6 +64,9 @@ public partial class StatusEffectController : Node
 
         foreach (var entry in effectsToRemove)
             RemoveEffect(entry.StatusKey, entry.SourceId, entry.Effect, expired: true);
+
+        if (effectsToRemove.Count > 0)
+            EmitSignal(SignalName.Changed);
     }
 
     public override void _ExitTree()
@@ -104,6 +110,9 @@ public partial class StatusEffectController : Node
 
         foreach (var entry in effectsToRemove)
             RemoveEffect(entry.StatusKey, entry.SourceId, entry.Effect, expired: false);
+
+        if (effectsToRemove.Count > 0)
+            EmitSignal(SignalName.Changed);
     }
 
     public void ClearAllEffects()
@@ -117,6 +126,8 @@ public partial class StatusEffectController : Node
 
         foreach (var entry in effectsToRemove)
             RemoveEffect(entry.StatusKey, entry.SourceId, entry.Effect, expired: false);
+
+        EmitSignal(SignalName.Changed);
     }
 
     public void ApplyStatusEffect(StatusEffect effect, Node2D source = null, ulong sourceInstanceId = 0UL)
@@ -135,6 +146,7 @@ public partial class StatusEffectController : Node
         {
             existingUniqueEffect.Effect.Refresh(effect, source, ResolveSourceInstanceId(source, sourceInstanceId));
             effect.QueueFree();
+            EmitSignal(SignalName.Changed);
             return;
         }
 
@@ -147,6 +159,7 @@ public partial class StatusEffectController : Node
         {
             existingEffect.Refresh(effect, source, sourceId);
             effect.QueueFree();
+            EmitSignal(SignalName.Changed);
             return;
         }
 
@@ -158,6 +171,7 @@ public partial class StatusEffectController : Node
         _activeEffects[effectKey] = effect;
         AdjustStatusCount(statusKey, 1, effect);
         EmitStatusFloatingText(effect, applied: true);
+        EmitSignal(SignalName.Changed);
     }
 
     public bool IsStatusImmune(StringName statusKey)

@@ -2,6 +2,9 @@ using Godot;
 
 public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMember, IHealable
 {
+    private bool _healthStateChangedBound;
+    private bool _statusEffectsChangedBound;
+
     protected HealthState HealthStateNode { get; private set; }
     protected CombatState CombatStateNode { get; private set; }
     protected FactionState FactionStateNode { get; private set; }
@@ -25,6 +28,16 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public virtual float AttackSpeedMultiplier => StatusEffectControllerNode?.GetAttackSpeedMultiplier() ?? 1.0f;
     public virtual float CastSpeedMultiplier => StatusEffectControllerNode?.GetCastSpeedMultiplier() ?? 1.0f;
 
+    public override void _EnterTree()
+    {
+        EnsureModelChangeSubscriptions();
+    }
+
+    public override void _ExitTree()
+    {
+        DisconnectModelChangeSubscriptions();
+    }
+
     protected void InitializeCombatCharacter(bool requireManaState = false)
     {
         CombatStateNode = GetNode<CombatState>("CombatState");
@@ -35,6 +48,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
             ? GetNode<ManaState>("ManaState")
             : GetNodeOrNull<ManaState>("ManaState");
         ManaStateNode?.Initialize();
+        EnsureModelChangeSubscriptions();
     }
 
     protected void ResetCombatState()
@@ -45,7 +59,11 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
 
     protected void SetStatusEffectController(StatusEffectController statusEffectController)
     {
+        if (!ReferenceEquals(StatusEffectControllerNode, statusEffectController))
+            DisconnectStatusEffectsChanged();
+
         StatusEffectControllerNode = statusEffectController;
+        EnsureStatusEffectsChangedConnected();
     }
 
     public virtual void RestoreCombatState(bool clearStatusEffects = true)
@@ -56,5 +74,79 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
             StatusEffectControllerNode?.ClearAllEffects();
     }
 
+    protected virtual void OnHealthStateChanged() { }
+
+    protected virtual void OnStatusEffectsChanged() { }
+
     public abstract void ApplyHealing(Healing healing);
+
+    private void EnsureModelChangeSubscriptions()
+    {
+        EnsureHealthStateChangedConnected();
+        EnsureStatusEffectsChangedConnected();
+    }
+
+    private void DisconnectModelChangeSubscriptions()
+    {
+        DisconnectHealthStateChanged();
+        DisconnectStatusEffectsChanged();
+    }
+
+    private void EnsureHealthStateChangedConnected()
+    {
+        if (_healthStateChangedBound || HealthStateNode == null)
+            return;
+
+        HealthStateNode.Connect(HealthState.SignalName.Changed, new Callable(this, nameof(HandleHealthStateChanged)));
+        _healthStateChangedBound = true;
+    }
+
+    private void DisconnectHealthStateChanged()
+    {
+        if (!_healthStateChangedBound || HealthStateNode == null || !GodotObject.IsInstanceValid(HealthStateNode))
+            return;
+
+        var callable = new Callable(this, nameof(HandleHealthStateChanged));
+        if (HealthStateNode.IsConnected(HealthState.SignalName.Changed, callable))
+            HealthStateNode.Disconnect(HealthState.SignalName.Changed, callable);
+
+        _healthStateChangedBound = false;
+    }
+
+    private void EnsureStatusEffectsChangedConnected()
+    {
+        if (_statusEffectsChangedBound || StatusEffectControllerNode == null)
+            return;
+
+        StatusEffectControllerNode.Connect(
+            StatusEffectController.SignalName.Changed,
+            new Callable(this, nameof(HandleStatusEffectsChanged)));
+        _statusEffectsChangedBound = true;
+    }
+
+    private void DisconnectStatusEffectsChanged()
+    {
+        if (!_statusEffectsChangedBound ||
+            StatusEffectControllerNode == null ||
+            !GodotObject.IsInstanceValid(StatusEffectControllerNode))
+        {
+            return;
+        }
+
+        var callable = new Callable(this, nameof(HandleStatusEffectsChanged));
+        if (StatusEffectControllerNode.IsConnected(StatusEffectController.SignalName.Changed, callable))
+            StatusEffectControllerNode.Disconnect(StatusEffectController.SignalName.Changed, callable);
+
+        _statusEffectsChangedBound = false;
+    }
+
+    private void HandleHealthStateChanged()
+    {
+        OnHealthStateChanged();
+    }
+
+    private void HandleStatusEffectsChanged()
+    {
+        OnStatusEffectsChanged();
+    }
 }

@@ -98,7 +98,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         SetAnimationSafe(GetIdleAnimationName());
         AddToGroup(CombatGroups.Actors);
 
-        RefreshActorHud();
+        OnHealthStateChanged();
         NotifyManaChanged();
         UpdateInteractionState();
     }
@@ -120,6 +120,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         }
 
         UnbindStatusEffects();
+        base._ExitTree();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -207,7 +208,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         damageInfo.RegisterHit(this, setReceiverTargetToSource: true);
 
         ShowFloatingDamageNumber(damage);
-        RefreshActorHud();
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
 
         if (HealthStateNode.IsDead)
@@ -233,7 +233,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
 
         ShowFloatingHealingNumber(recovered);
-        RefreshActorHud();
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
@@ -753,6 +752,11 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         _actorHud.SetHealth(CurrentHealth, MaxHealableHealth);
         _actorHud.SetFaction(Faction);
+    }
+
+    protected override void OnHealthStateChanged()
+    {
+        RefreshActorHud();
     }
 
     public void NotifyManaChanged()
