@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://byvfwjncgqxvi"]
+
+[ext_resource type="Script" uid="uid://bkg44wdrfu6qa" path="res://scripts/actors/npcs/Knight.cs" id="1_knight_script"]
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="2_omni_sprite"]
+[ext_resource type="SpriteFrames" uid="uid://duo4k3u2cxlvs" path="res://resources/animations/knight_spriteframes.tres" id="3_knight_frames"]
+[ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="4_actor_hud"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="5_combat_state"]
+[ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="6_health_state"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="7_faction_state"]
+[ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="8_status_effect_controller"]
+[ext_resource type="Script" uid="uid://birryig8e7hfp" path="res://scripts/ai/behaviors/PatrolBehavior.cs" id="9_patrol_behavior"]
+[ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="10_pdevh"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_knight"]
+radius = 5.0
+height = 26.0
+
+[node name="Knight" type="CharacterBody2D" unique_id=231595167]
+z_index = -1
+script = ExtResource("1_knight_script")
+
+[node name="OmniSprite" type="Node2D" parent="." unique_id=1579455186]
+script = ExtResource("2_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=1258830854]
+position = Vector2(0, -2)
+sprite_frames = ExtResource("3_knight_frames")
+animation = &"idle_south"
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=728363770]
+avoidance_enabled = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1383766870]
+position = Vector2(0, 12)
+shape = SubResource("CapsuleShape2D_knight")
+
+[node name="ActorHUD" parent="." unique_id=1820044430 instance=ExtResource("4_actor_hud")]
+DisplayName = "Knight"
+VerticalOffset = -45.0
+
+[node name="CombatState" type="Node" parent="." unique_id=1023727058]
+script = ExtResource("5_combat_state")
+
+[node name="HealthState" type="Node" parent="." unique_id=1661241903]
+script = ExtResource("6_health_state")
+Max = 18
+
+[node name="FactionState" type="Node" parent="." unique_id=488786375]
+script = ExtResource("7_faction_state")
+FactionKey = "neutral"
+
+[node name="StatusEffectController" type="Node" parent="." unique_id=460505141]
+script = ExtResource("8_status_effect_controller")
+
+[node name="Behaviors" type="Node" parent="." unique_id=419834094]
+
+[node name="Tier10_Targeting" type="Node" parent="Behaviors" unique_id=34153784]
+
+[node name="Tier50_Combat" type="Node" parent="Behaviors" unique_id=762290679]
+
+[node name="Tier80_ReturnHome" type="Node" parent="Behaviors" unique_id=1318221157]
+
+[node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=2134932662]
+
+[node name="PatrolBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=1390144637]
+script = ExtResource("9_patrol_behavior")
+
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=131503090]
+script = ExtResource("10_pdevh")
+metadata/_custom_type_script = "uid://dj1w43i7akv4s"
