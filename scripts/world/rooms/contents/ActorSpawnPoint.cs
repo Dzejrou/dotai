@@ -83,5 +83,25 @@ public abstract partial class ActorSpawnPoint : Marker2D
         return _currentSpawnedActor;
     }
 
+    protected Node2D InstantiateActorScene(PackedScene actorScene, bool clearLootTable, string spawnPointTypeName)
+    {
+        if (actorScene == null)
+        {
+            GD.PushWarning($"{spawnPointTypeName} '{Name}' is missing an actor scene.");
+            return null;
+        }
+
+        if (actorScene.Instantiate<Node2D>() is not Node2D actor)
+        {
+            GD.PushWarning($"{spawnPointTypeName} '{Name}' could not instantiate a Node2D actor from '{actorScene.ResourcePath}'.");
+            return null;
+        }
+
+        if (clearLootTable && actor is Actor combatActor)
+            combatActor.LootTable = null;
+
+        return actor;
+    }
+
     protected abstract Node2D SpawnActor();
 }

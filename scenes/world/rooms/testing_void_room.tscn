@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
 [ext_resource type="PackedScene" uid="uid://dwochr8ocdyfl" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="7_content"]
 [ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="8_portal"]
+[ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="9_8vkdo"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -31,6 +32,7 @@ scale = Vector2(2, 2)
 [node name="Navigation" type="Node2D" parent="Scaled" unique_id=1764590847]
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation" unique_id=1509053010]
+scale = Vector2(2, 2)
 navigation_polygon = SubResource("1_room_navigation")
 
 [node name="Collision" type="Node2D" parent="Scaled" unique_id=1541060653]
@@ -38,7 +40,7 @@ navigation_polygon = SubResource("1_room_navigation")
 [node name="Exits" type="Node2D" parent="Scaled" unique_id=1265552701]
 
 [node name="CourtyardPortal" parent="Scaled/Exits" unique_id=128912651 instance=ExtResource("8_portal")]
-position = Vector2(317.5, 272.5)
+position = Vector2(489, 442.5)
 ExitId = &"courtyard_portal"
 TargetScreenId = &"courtyard"
 TargetExitId = &"testing_void_portal"
@@ -47,36 +49,50 @@ Direction = &"west"
 [node name="Markers" type="Node2D" parent="Scaled" unique_id=790925687]
 
 [node name="PlayerStart" type="Marker2D" parent="Scaled/Markers" unique_id=1555369952]
-position = Vector2(200, 220)
+position = Vector2(424, 510.5)
 
 [node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=30306381]
-position = Vector2(200, 200)
+position = Vector2(423, 487)
 
-[node name="Ephemeral" type="Node" parent="Scaled"]
+[node name="Ephemeral" type="Node" parent="Scaled" unique_id=293498997]
 
 [node name="Unscaled" type="Node2D" parent="." unique_id=560598129]
 
-[node name="Ephemeral" type="Node" parent="Unscaled"]
+[node name="Ephemeral" type="Node" parent="Unscaled" unique_id=516310178]
 
 [node name="BlizzardArea" parent="Unscaled" unique_id=26160184 instance=ExtResource("2_xd34g")]
-position = Vector2(618, 122)
+position = Vector2(1121, 449)
 EffectLifetime = 0.0
 
 [node name="PoisonCloudArea" parent="Unscaled" unique_id=1438068207 instance=ExtResource("2_w4qed")]
-position = Vector2(166, 128)
+position = Vector2(780, 445)
 EffectLifetime = 0.0
 
 [node name="RingOfFireArea" parent="Unscaled" unique_id=2075497863 instance=ExtResource("4_3evjt")]
-position = Vector2(386, 122)
+position = Vector2(957, 448)
 EffectLifetime = 0.0
 
-[node name="Dryad" parent="Unscaled" unique_id=1856568282 instance=ExtResource("5_ttrfo")]
-position = Vector2(397, 529)
-
 [node name="Altar" parent="Unscaled" unique_id=487314875 instance=ExtResource("6_67bni")]
-position = Vector2(145, 392)
+position = Vector2(276, 894)
 scale = Vector2(0.6, 0.6)
 
 [node name="ChestContent" parent="Unscaled" unique_id=288433992 instance=ExtResource("7_content")]
+
+[node name="LockedChest" parent="Unscaled/ChestContent/Objects" index="0" unique_id=1675497592]
+position = Vector2(514, 849)
+
+[node name="UnlockedChest" parent="Unscaled/ChestContent/Objects" index="1" unique_id=272966836]
+position = Vector2(515, 952)
+
+[node name="RandomRespawnActor" parent="Unscaled/ChestContent/Actors" index="0"]
+position = Vector2(265, 432)
+
+[node name="CachedRespawnActor" parent="Unscaled/ChestContent/Actors" index="1"]
+position = Vector2(412, 168)
+
+[node name="DryadSpawnPoint" type="Marker2D" parent="Unscaled/ChestContent/Actors" index="2" unique_id=2129428696]
+position = Vector2(691, 894)
+script = ExtResource("9_8vkdo")
+ActorScene = ExtResource("5_ttrfo")
 
 [editable path="Unscaled/ChestContent"]

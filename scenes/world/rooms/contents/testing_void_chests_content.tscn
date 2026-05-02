@@ -3,6 +3,28 @@
 [ext_resource type="Script" path="res://scripts/world/rooms/contents/TestingVoidChestsContent.cs" id="1_content_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="1_chest"]
 [ext_resource type="Resource" uid="uid://dawb58lrh7or3" path="res://resources/loot_tables/testing_void_chest_key_loot_table.tres" id="2_testing_void_chest_key_loot_table"]
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/RandomActorSpawnPoint.cs" id="3_random_actor_spawn_point_script"]
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="4_random_actor_spawn_option_script"]
+[ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="5_skeleton_scene"]
+[ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="6_ogre_scene"]
+[ext_resource type="PackedScene" uid="uid://cke5y8t7ihlt5" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="7_skeleton_mage_scene"]
+
+[sub_resource type="Resource" id="1_skeleton_option"]
+script = ExtResource("4_random_actor_spawn_option_script")
+ActorScene = ExtResource("5_skeleton_scene")
+Weight = 6.0
+ClearLootTable = true
+
+[sub_resource type="Resource" id="2_ogre_option"]
+script = ExtResource("4_random_actor_spawn_option_script")
+ActorScene = ExtResource("6_ogre_scene")
+Weight = 2.0
+ClearLootTable = true
+
+[sub_resource type="Resource" id="3_skeleton_mage_option"]
+script = ExtResource("4_random_actor_spawn_option_script")
+ActorScene = ExtResource("7_skeleton_mage_scene")
+ClearLootTable = true
 
 [node name="TestingVoidChestsContent" type="Node2D" unique_id=2093513246]
 script = ExtResource("1_content_script")
@@ -18,3 +40,14 @@ IsLocked = false
 LootTable = ExtResource("2_testing_void_chest_key_loot_table")
 
 [node name="Actors" type="Node2D" parent="."]
+
+[node name="RandomRespawnActor" type="Marker2D" parent="Actors"]
+position = Vector2(300, 338)
+script = ExtResource("3_random_actor_spawn_point_script")
+Options = Array[ExtResource("4_random_actor_spawn_option_script")]([SubResource("1_skeleton_option"), SubResource("2_ogre_option"), SubResource("3_skeleton_mage_option")])
+
+[node name="CachedRespawnActor" type="Marker2D" parent="Actors"]
+position = Vector2(500, 338)
+script = ExtResource("3_random_actor_spawn_point_script")
+Options = Array[ExtResource("4_random_actor_spawn_option_script")]([SubResource("1_skeleton_option"), SubResource("2_ogre_option"), SubResource("3_skeleton_mage_option")])
+RandomizeOnRespawn = false
