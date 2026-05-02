@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://chmx43pfadld4"]
 
 [ext_resource type="Script" uid="uid://gosarrlge42r" path="res://scripts/actors/enemies/ElfRanger.cs" id="1_elf_ranger_script"]
-[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://dy0ma2kx46j4w" path="res://resources/animations/elf_ranger_spriteframes.tres" id="2_elf_ranger_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
@@ -10,13 +10,13 @@
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="8_combat_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="9_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
-[ext_resource type="Script" path="res://scripts/status/StatusEffectController.cs" id="14_status_effect_controller"]
 [ext_resource type="Script" uid="uid://cckkqobewqxb1" path="res://scripts/ai/actions/RangedAttackController.cs" id="11_ranged_action"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="12_projectile_scene"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="13_wander_behavior"]
-[ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="15_damage"]
+[ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="14_status_effect_controller"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="15_damage"]
 [ext_resource type="Resource" path="res://resources/arrow_directional_textures.tres" id="16_arrow_directional_textures"]
-[ext_resource type="Resource" path="res://resources/loot_tables/elf_ranger_loot_table.tres" id="17_elf_ranger_loot_table"]
+[ext_resource type="Resource" uid="uid://cprp2c4fxjr15" path="res://resources/loot_tables/elf_ranger_loot_table.tres" id="17_elf_ranger_loot_table"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_elf_ranger"]
 radius = 5.0
@@ -30,10 +30,10 @@ LootTable = ExtResource("17_elf_ranger_loot_table")
 [node name="OmniSprite" type="Node2D" parent="." unique_id=1877841505]
 script = ExtResource("1_omni_sprite")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
-position = Vector2(0, -2)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=1197218676]
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_elf_ranger_frames")
+animation = &"idle_south"
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1849446510]
 

@@ -29,7 +29,7 @@ script = ExtResource("1_omni_sprite")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=957860090]
 sprite_frames = ExtResource("2_dryad_frames")
-animation = &""
+animation = &"idle_south"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1940295191]
 position = Vector2(0, 6)

@@ -87,9 +87,11 @@ position = Vector2(515, 952)
 
 [node name="RandomRespawnActor" parent="Unscaled/ChestContent/Actors" index="0"]
 position = Vector2(265, 432)
+InactiveChance = 0.2
 
 [node name="CachedRespawnActor" parent="Unscaled/ChestContent/Actors" index="1"]
 position = Vector2(412, 168)
+RandomizeInactivity = false
 
 [node name="DryadSpawnPoint" type="Marker2D" parent="Unscaled/ChestContent/Actors" index="2" unique_id=2129428696]
 position = Vector2(679, 879)

@@ -31,10 +31,9 @@ LootTable = ExtResource("16_skeleton_loot_table")
 script = ExtResource("1_omni_sprite")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=1544264427]
-position = Vector2(0, -2)
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_skeleton_frames")
-animation = &""
+animation = &"idle_south"
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1135505834]
 avoidance_enabled = true
