@@ -6,6 +6,7 @@ public partial class RandomActorSpawnPoint : ActorSpawnPoint
 {
     private readonly RandomNumberGenerator _random = CreateRandom();
     private RandomActorSpawnOption _cachedOption;
+    private bool? _cachedIsActive;
 
     [Export]
     public Godot.Collections.Array<RandomActorSpawnOption> Options { get; set; } = new();
@@ -13,8 +14,17 @@ public partial class RandomActorSpawnPoint : ActorSpawnPoint
     [Export]
     public bool RandomizeOnRespawn { get; set; } = true;
 
+    [Export(PropertyHint.Range, "0,1,0.01")]
+    public float InactiveChance { get; set; } = 0.0f;
+
+    [Export]
+    public bool RandomizeInactivity { get; set; } = true;
+
     protected override Node2D SpawnActor()
     {
+        if (!ShouldSpawnActor())
+            return null;
+
         var validOptions = GetValidOptions();
         if (validOptions.Count == 0)
         {
@@ -107,6 +117,30 @@ public partial class RandomActorSpawnPoint : ActorSpawnPoint
         }
 
         return lastOption;
+    }
+
+    private bool ShouldSpawnActor()
+    {
+        if (RandomizeInactivity)
+            return RollIsActive();
+
+        if (_cachedIsActive.HasValue)
+            return _cachedIsActive.Value;
+
+        _cachedIsActive = RollIsActive();
+        return _cachedIsActive.Value;
+    }
+
+    private bool RollIsActive()
+    {
+        var inactiveChance = Mathf.Clamp(InactiveChance, 0.0f, 1.0f);
+        if (inactiveChance <= 0.0f)
+            return true;
+
+        if (inactiveChance >= 1.0f)
+            return false;
+
+        return _random.Randf() >= inactiveChance;
     }
 
     private static RandomNumberGenerator CreateRandom()
