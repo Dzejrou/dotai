@@ -2,6 +2,8 @@ using Godot;
 
 public abstract partial class ActorSpawnPoint : Marker2D
 {
+    private const string PatrolPathNodeName = "PatrolPath";
+
     private Node2D _currentSpawnedActor;
 
     public void Respawn()
@@ -14,6 +16,7 @@ public abstract partial class ActorSpawnPoint : Marker2D
 
         AddChild(actor);
         actor.Position = Vector2.Zero;
+        CopyPatrolPathToActor(actor);
         _currentSpawnedActor = actor;
     }
 
@@ -43,16 +46,13 @@ public abstract partial class ActorSpawnPoint : Marker2D
 
     public void ClearSpawnedActor()
     {
+        var actor = ResolveTrackedActor();
         _currentSpawnedActor = null;
+        if (actor == null)
+            return;
 
-        foreach (var child in GetChildren())
-        {
-            if (child is not Node node || !GodotObject.IsInstanceValid(node))
-                continue;
-
-            RemoveChild(node);
-            node.QueueFree();
-        }
+        RemoveChild(actor);
+        actor.QueueFree();
     }
 
     public bool IsOccupied()
@@ -101,6 +101,29 @@ public abstract partial class ActorSpawnPoint : Marker2D
             combatActor.LootTable = null;
 
         return actor;
+    }
+
+    private void CopyPatrolPathToActor(Node2D actor)
+    {
+        var sourcePatrolPath = GetNodeOrNull<Node>(PatrolPathNodeName);
+        if (sourcePatrolPath == null)
+            return;
+
+        if (sourcePatrolPath.Duplicate() is not Node copiedPatrolPath)
+        {
+            GD.PushWarning($"{nameof(ActorSpawnPoint)} '{Name}' could not duplicate '{PatrolPathNodeName}' for spawned actor '{actor.Name}'.");
+            return;
+        }
+
+        var existingPatrolPath = actor.GetNodeOrNull<Node>(PatrolPathNodeName);
+        if (existingPatrolPath != null)
+        {
+            GD.PushWarning($"{nameof(ActorSpawnPoint)} '{Name}' replaced existing '{PatrolPathNodeName}' on spawned actor '{actor.Name}'.");
+            actor.RemoveChild(existingPatrolPath);
+            existingPatrolPath.QueueFree();
+        }
+
+        actor.AddChild(copiedPatrolPath);
     }
 
     protected abstract Node2D SpawnActor();

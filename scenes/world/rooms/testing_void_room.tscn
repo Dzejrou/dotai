@@ -92,9 +92,20 @@ position = Vector2(265, 432)
 position = Vector2(412, 168)
 
 [node name="DryadSpawnPoint" type="Marker2D" parent="Unscaled/ChestContent/Actors" index="2" unique_id=2129428696]
-position = Vector2(691, 894)
+position = Vector2(679, 879)
 script = ExtResource("9_8vkdo")
 ActorScene = ExtResource("5_ttrfo")
+
+[node name="PatrolPath" type="Node" parent="Unscaled/ChestContent/Actors/DryadSpawnPoint" unique_id=316296924]
+
+[node name="PatrolNode1" type="Marker2D" parent="Unscaled/ChestContent/Actors/DryadSpawnPoint/PatrolPath" unique_id=626553828]
+position = Vector2(753.6626, 929.74023)
+
+[node name="PatrolNode2" type="Marker2D" parent="Unscaled/ChestContent/Actors/DryadSpawnPoint/PatrolPath" unique_id=12772416]
+position = Vector2(602.37634, 932.4418)
+
+[node name="PatrolNode3" type="Marker2D" parent="Unscaled/ChestContent/Actors/DryadSpawnPoint/PatrolPath" unique_id=1697219256]
+position = Vector2(677.10095, 1018.40625)
 
 [node name="WanderingKnight" parent="Unscaled" unique_id=231595167 instance=ExtResource("10_knight")]
 position = Vector2(1392, 1146)

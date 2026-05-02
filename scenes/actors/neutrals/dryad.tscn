@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bvpoidanjqur5"]
 
 [ext_resource type="Script" uid="uid://cl1k5okddker6" path="res://scripts/actors/neutrals/Dryad.cs" id="1_dryad_script"]
-[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="1_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://dovt5sl4stpqa" path="res://resources/animations/dryad_spriteframes.tres" id="2_dryad_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="4_combat_state"]
@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://deh8bm7hdtw8o" path="res://scripts/spells/HealOverTimeSpell.cs" id="12_heal_over_time_spell"]
 [ext_resource type="Script" uid="uid://dor2m1wfs1yvd" path="res://scripts/status/HealOverTimeEffect.cs" id="13_heal_over_time_effect"]
 [ext_resource type="Script" uid="uid://covl5c8k0ld1c" path="res://scripts/combat/Healing.cs" id="16_healing"]
+[ext_resource type="Script" uid="uid://birryig8e7hfp" path="res://scripts/ai/behaviors/PatrolBehavior.cs" id="16_k7g6i"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
@@ -26,7 +27,7 @@ script = ExtResource("1_dryad_script")
 [node name="OmniSprite" type="Node2D" parent="." unique_id=891692441]
 script = ExtResource("1_omni_sprite")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=957860090]
 sprite_frames = ExtResource("2_dryad_frames")
 animation = &""
 
@@ -92,6 +93,13 @@ AnimationSpeedMultiplier = 2.0
 [node name="Behaviors" type="Node" parent="." unique_id=1488017195]
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=1057247949]
+
+[node name="PatrolBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=887843713]
+script = ExtResource("16_k7g6i")
+LoopMode = true
+PointPauseSeconds = 0.2
+EndpointPauseSeconds = 0.2
+metadata/_custom_type_script = "uid://birryig8e7hfp"
 
 [node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=798267328]
 script = ExtResource("7_wander_behavior")
