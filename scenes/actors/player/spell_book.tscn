@@ -23,6 +23,7 @@
 [ext_resource type="SpriteFrames" path="res://resources/animations/ice_ball_spriteframes.tres" id="21_ice_ball_frames"]
 [ext_resource type="Script" uid="uid://b05kftwrcxc3p" path="res://scripts/spells/DoomSpell.cs" id="22_doom_spell"]
 [ext_resource type="PackedScene" uid="uid://5wyjxhtl686q" path="res://scenes/effects/doom_area.tscn" id="23_doom_area"]
+[ext_resource type="Script" path="res://scripts/spells/TEST_AoE_respawn.cs" id="24_test_aoe_respawn_spell"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -178,3 +179,8 @@ HudLabel = "Doom"
 
 [node name="DoomArea" parent="Doom" unique_id=54320717 instance=ExtResource("23_doom_area")]
 visible = false
+
+[node name="TEST_AoE_respawn" type="Node" parent="." unique_id=849602331]
+script = ExtResource("24_test_aoe_respawn_spell")
+SpellId = "TEST_AoE_respawn"
+HudLabel = "TEST_AoE_respawn"
