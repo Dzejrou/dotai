@@ -2,9 +2,16 @@ using Godot;
 
 public abstract partial class ActorSpawnPoint : Marker2D
 {
+    [Signal]
+    public delegate void OccupancyChangedEventHandler(bool occupied);
+
     private const string PatrolPathNodeName = "PatrolPath";
 
     private Node2D _currentSpawnedActor;
+    private CombatCharacter _trackedCombatCharacter;
+    private bool _isOccupied;
+
+    public Node2D CurrentSpawnedActor => ResolveTrackedActor();
 
     public void Respawn()
     {
@@ -18,6 +25,8 @@ public abstract partial class ActorSpawnPoint : Marker2D
         actor.Position = Vector2.Zero;
         CopyPatrolPathToActor(actor);
         _currentSpawnedActor = actor;
+        ConnectTrackedActorSignals(actor);
+        SetOccupied(true);
     }
 
     public void Restore()
@@ -47,7 +56,9 @@ public abstract partial class ActorSpawnPoint : Marker2D
     public void ClearSpawnedActor()
     {
         var actor = ResolveTrackedActor();
+        DisconnectTrackedActorSignals();
         _currentSpawnedActor = null;
+        SetOccupied(false);
         if (actor == null)
             return;
 
@@ -62,9 +73,12 @@ public abstract partial class ActorSpawnPoint : Marker2D
             return false;
 
         if (actor is CombatCharacter combatCharacter && combatCharacter.IsDead)
+        {
+            SetOccupied(false);
             return false;
+        }
 
-        return true;
+        return _isOccupied;
     }
 
     private Node2D ResolveTrackedActor()
@@ -76,7 +90,9 @@ public abstract partial class ActorSpawnPoint : Marker2D
             _currentSpawnedActor.IsQueuedForDeletion() ||
             _currentSpawnedActor.GetParent() != this)
         {
+            DisconnectTrackedActorSignals();
             _currentSpawnedActor = null;
+            SetOccupied(false);
             return null;
         }
 
@@ -124,6 +140,66 @@ public abstract partial class ActorSpawnPoint : Marker2D
         }
 
         actor.AddChild(copiedPatrolPath);
+    }
+
+    private void ConnectTrackedActorSignals(Node2D actor)
+    {
+        if (actor == null)
+            return;
+
+        var treeExitedCallable = new Callable(this, nameof(OnTrackedActorTreeExited));
+        if (!actor.IsConnected(Node.SignalName.TreeExited, treeExitedCallable))
+            actor.Connect(Node.SignalName.TreeExited, treeExitedCallable, (uint)ConnectFlags.OneShot);
+
+        _trackedCombatCharacter = actor as CombatCharacter;
+        if (_trackedCombatCharacter == null)
+            return;
+
+        var diedCallable = new Callable(this, nameof(OnTrackedCombatCharacterDied));
+        if (!_trackedCombatCharacter.IsConnected(CombatCharacter.SignalName.Died, diedCallable))
+            _trackedCombatCharacter.Connect(CombatCharacter.SignalName.Died, diedCallable, (uint)ConnectFlags.OneShot);
+    }
+
+    private void DisconnectTrackedActorSignals()
+    {
+        var treeExitedCallable = new Callable(this, nameof(OnTrackedActorTreeExited));
+        if (_currentSpawnedActor != null &&
+            GodotObject.IsInstanceValid(_currentSpawnedActor) &&
+            _currentSpawnedActor.IsConnected(Node.SignalName.TreeExited, treeExitedCallable))
+        {
+            _currentSpawnedActor.Disconnect(Node.SignalName.TreeExited, treeExitedCallable);
+        }
+
+        var diedCallable = new Callable(this, nameof(OnTrackedCombatCharacterDied));
+        if (_trackedCombatCharacter != null &&
+            GodotObject.IsInstanceValid(_trackedCombatCharacter) &&
+            _trackedCombatCharacter.IsConnected(CombatCharacter.SignalName.Died, diedCallable))
+        {
+            _trackedCombatCharacter.Disconnect(CombatCharacter.SignalName.Died, diedCallable);
+        }
+
+        _trackedCombatCharacter = null;
+    }
+
+    private void OnTrackedCombatCharacterDied()
+    {
+        SetOccupied(false);
+    }
+
+    private void OnTrackedActorTreeExited()
+    {
+        DisconnectTrackedActorSignals();
+        _currentSpawnedActor = null;
+        SetOccupied(false);
+    }
+
+    private void SetOccupied(bool occupied)
+    {
+        if (_isOccupied == occupied)
+            return;
+
+        _isOccupied = occupied;
+        EmitSignal(SignalName.OccupancyChanged, occupied);
     }
 
     protected abstract Node2D SpawnActor();

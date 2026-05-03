@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="5_ttrfo"]
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
 [ext_resource type="PackedScene" uid="uid://dwochr8ocdyfl" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="7_content"]
+[ext_resource type="Script" uid="uid://dfe2si08tcaji" path="res://scripts/world/rooms/contents/RespawnTimer.cs" id="8_kj6pv"]
 [ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="8_portal"]
 [ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="9_8vkdo"]
 [ext_resource type="PackedScene" uid="uid://byvfwjncgqxvi" path="res://scenes/actors/npcs/knight.tscn" id="10_knight"]
@@ -92,6 +93,10 @@ InactiveChance = 0.2
 [node name="CachedRespawnActor" parent="Unscaled/ChestContent/Actors" index="1"]
 position = Vector2(412, 168)
 RandomizeInactivity = false
+
+[node name="RespawnTimer" type="Timer" parent="Unscaled/ChestContent/Actors/CachedRespawnActor" index="0" unique_id=1783351236]
+wait_time = 10.0
+script = ExtResource("8_kj6pv")
 
 [node name="DryadSpawnPoint" type="Marker2D" parent="Unscaled/ChestContent/Actors" index="2" unique_id=2129428696]
 position = Vector2(679, 879)

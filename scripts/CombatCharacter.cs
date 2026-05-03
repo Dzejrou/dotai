@@ -2,8 +2,12 @@ using Godot;
 
 public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMember, IHealable
 {
+    [Signal]
+    public delegate void DiedEventHandler();
+
     private bool _healthStateChangedBound;
     private bool _statusEffectsChangedBound;
+    private bool _lastKnownIsDead;
 
     protected HealthState HealthStateNode { get; private set; }
     protected CombatState CombatStateNode { get; private set; }
@@ -48,6 +52,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
             ? GetNode<ManaState>("ManaState")
             : GetNodeOrNull<ManaState>("ManaState");
         ManaStateNode?.Initialize();
+        _lastKnownIsDead = IsDead;
         EnsureModelChangeSubscriptions();
     }
 
@@ -142,7 +147,13 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
 
     private void HandleHealthStateChanged()
     {
+        var wasDead = _lastKnownIsDead;
+        _lastKnownIsDead = IsDead;
+
         OnHealthStateChanged();
+
+        if (!wasDead && _lastKnownIsDead)
+            EmitSignal(SignalName.Died);
     }
 
     private void HandleStatusEffectsChanged()
