@@ -161,8 +161,8 @@ public partial class RangedAttackController : Node, ICombatActionController
         if (parent == null)
             return;
 
-        projectile.GlobalPosition = actor.GlobalPosition;
         parent.AddChild(projectile);
+        projectile.GlobalPosition = actor.GlobalPosition;
 
         var damagePayload = Damage.DuplicateFrom(this);
         damagePayload?.InitializeRuntime(actor, damagePayload.ResolveAmount());
