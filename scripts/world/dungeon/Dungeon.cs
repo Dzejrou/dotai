@@ -119,7 +119,7 @@ public partial class Dungeon : Node
 
     private void ConfigureTimedRoom(TimedDungeonRoom room)
     {
-        room.ConfigureProgressionDoor(EntranceHallScreenId, EntranceHallReturnExitId);
+        room.ConfigureProgressionDoor(DungeonRuntimeScreenId, DungeonEntryExitId);
     }
 
     private void OnActiveRoomCleared()
