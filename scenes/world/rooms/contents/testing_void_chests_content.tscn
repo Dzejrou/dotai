@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dwochr8ocdyfl"]
 
-[ext_resource type="Script" path="res://scripts/world/rooms/contents/TestingVoidChestsContent.cs" id="1_content_script"]
+[ext_resource type="Script" uid="uid://b3cd7y84rpjic" path="res://scripts/world/rooms/contents/Content.cs" id="1_content_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="1_chest"]
 [ext_resource type="Resource" uid="uid://dawb58lrh7or3" path="res://resources/loot_tables/testing_void_chest_key_loot_table.tres" id="2_testing_void_chest_key_loot_table"]
 [ext_resource type="Script" path="res://scripts/world/rooms/contents/RandomActorSpawnPoint.cs" id="3_random_actor_spawn_point_script"]

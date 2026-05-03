@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cdqmfnayi70xg"]
 
-[ext_resource type="Script" uid="uid://bnf7lhtyqgf6c" path="res://scripts/world/rooms/contents/TimedDungeonOgreContent.cs" id="1_content_script"]
+[ext_resource type="Script" uid="uid://b3cd7y84rpjic" path="res://scripts/world/rooms/contents/Content.cs" id="1_content_script"]
 [ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="2_ogre_scene"]
 [ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="3_static_actor_spawn_point_script"]
 
