@@ -1,7 +1,5 @@
 using Godot;
 
-using System.Collections.Generic;
-
 [GlobalClass]
 public partial class CombatDungeonRoom : Room
 {
@@ -13,51 +11,45 @@ public partial class CombatDungeonRoom : Room
     public delegate void RoomClearedEventHandler();
 
     [Export]
-    public NodePath EncounterMarkersPath { get; set; } = new NodePath("Unscaled/EncounterMarkers");
+    public ContentSet ContentTemplates { get; set; }
+
+    [Export]
+    public NodePath ContentRootPath { get; set; } = new("Unscaled/ContentRoot");
 
     [Export]
     public NodePath RoomClearUnlockerPath { get; set; } = new NodePath("RoomClearUnlocker");
 
-    private readonly Dictionary<StringName, Marker2D> _encounterMarkersById = new();
-    private readonly Dictionary<Node, Callable> _enemyExitCallables = new();
+    private readonly RandomNumberGenerator _random = new();
+    private Content _activeContent;
+    private Node _contentRoot;
     private bool _isCleared;
+    private bool _contentInitialized;
+    private bool _contentRootResolved;
     private RoomClearUnlocker _roomClearUnlocker;
 
     public override void _Ready()
     {
         base._Ready();
         RoomCleared += OnRoomCleared;
-        CacheEncounterMarkers();
         _roomClearUnlocker = ResolveRoomClearUnlocker();
+        _random.Randomize();
         SetTopDoorsLocked(true);
+        InitializeContent();
+        EvaluateRoomState();
     }
 
     public override void _ExitTree()
     {
         RoomCleared -= OnRoomCleared;
-        DisconnectTrackedEnemies();
-        _encounterMarkersById.Clear();
+        _activeContent = null;
+        _contentRoot = null;
         _roomClearUnlocker = null;
         base._ExitTree();
     }
 
-    public IReadOnlyList<StringName> GetEncounterMarkerIds()
+    public override void _Process(double delta)
     {
-        CacheEncounterMarkers();
-        return new List<StringName>(_encounterMarkersById.Keys);
-    }
-
-    public bool TryGetEncounterMarkerGlobalPosition(StringName markerId, out Vector2 globalPosition)
-    {
-        CacheEncounterMarkers();
-        if (_encounterMarkersById.TryGetValue(markerId, out var marker))
-        {
-            globalPosition = marker.GlobalPosition;
-            return true;
-        }
-
-        globalPosition = Vector2.Zero;
-        return false;
+        EvaluateRoomState();
     }
 
     public void ConfigureProgressionDoors(StringName targetScreenId, StringName targetExitId)
@@ -71,28 +63,6 @@ public partial class CombatDungeonRoom : Room
         ConfigureDoor(BottomReturnExitId, targetScreenId, targetExitId);
     }
 
-    public void PrepareEncounter()
-    {
-        _isCleared = false;
-        DisconnectTrackedEnemies();
-        SetTopDoorsLocked(true);
-    }
-
-    public void RegisterEncounterEnemy(Node enemy)
-    {
-        if (enemy == null || _enemyExitCallables.ContainsKey(enemy))
-            return;
-
-        var callable = Callable.From(() => OnTrackedEnemyExited(enemy));
-        _enemyExitCallables[enemy] = callable;
-        enemy.Connect(Node.SignalName.TreeExited, callable, (uint)ConnectFlags.OneShot);
-    }
-
-    public void FinalizeEncounterSetup()
-    {
-        EvaluateEncounterState();
-    }
-
     private void ConfigureDoor(StringName exitId, StringName targetScreenId, StringName targetExitId)
     {
         var door = GetDoor(exitId);
@@ -103,44 +73,54 @@ public partial class CombatDungeonRoom : Room
         door.TargetExitId = targetExitId;
     }
 
-    private void CacheEncounterMarkers()
+    private void InitializeContent()
     {
-        if (_encounterMarkersById.Count > 0)
+        if (_contentInitialized)
             return;
 
-        var markersRoot = GetNodeOrNull<Node>(EncounterMarkersPath);
-        if (markersRoot == null)
+        _contentInitialized = true;
+
+        var contentRoot = ResolveContentRoot();
+        if (contentRoot == null)
+        {
+            GD.PushWarning($"{nameof(CombatDungeonRoom)} '{Name}' could not resolve content root at '{ContentRootPath}'.");
             return;
-
-        foreach (Node child in markersRoot.GetChildren())
-        {
-            if (child is Marker2D marker)
-                _encounterMarkersById[marker.Name] = marker;
-        }
-    }
-
-    private void DisconnectTrackedEnemies()
-    {
-        foreach (var entry in _enemyExitCallables)
-        {
-            var enemy = entry.Key;
-            var callable = entry.Value;
-            if (GodotObject.IsInstanceValid(enemy) && enemy.IsConnected(Node.SignalName.TreeExited, callable))
-                enemy.Disconnect(Node.SignalName.TreeExited, callable);
         }
 
-        _enemyExitCallables.Clear();
+        if (ContentTemplates == null)
+        {
+            GD.PushWarning($"{nameof(CombatDungeonRoom)} '{Name}' does not define any content templates.");
+            return;
+        }
+
+        var contentScene = ContentTemplates.PickTemplate(_random);
+        if (contentScene == null)
+        {
+            GD.PushWarning($"{nameof(CombatDungeonRoom)} '{Name}' could not choose a valid content template.");
+            return;
+        }
+
+        var contentInstance = contentScene.Instantiate();
+        if (contentInstance == null)
+        {
+            GD.PushWarning($"{nameof(CombatDungeonRoom)} '{Name}' failed to instantiate content scene '{contentScene.ResourcePath}'.");
+            return;
+        }
+
+        contentRoot.AddChild(contentInstance);
+        if (contentInstance is not Content content)
+        {
+            GD.PushWarning(
+                $"{nameof(CombatDungeonRoom)} '{Name}' instantiated '{contentScene.ResourcePath}', but its root is '{contentInstance.GetType().Name}' instead of {nameof(Content)}.");
+            return;
+        }
+
+        _activeContent = content;
     }
 
-    private void OnTrackedEnemyExited(Node enemy)
+    private void EvaluateRoomState()
     {
-        _enemyExitCallables.Remove(enemy);
-        EvaluateEncounterState();
-    }
-
-    private void EvaluateEncounterState()
-    {
-        if (_isCleared || _enemyExitCallables.Count > 0)
+        if (_isCleared || GetActiveContent()?.IsEmpty != true)
             return;
 
         _isCleared = true;
@@ -170,6 +150,21 @@ public partial class CombatDungeonRoom : Room
         var door = GetDoor(exitId);
         if (door != null)
             door.IsLocked = isLocked;
+    }
+
+    private Content GetActiveContent()
+    {
+        return GodotObject.IsInstanceValid(_activeContent) ? _activeContent : null;
+    }
+
+    private Node ResolveContentRoot()
+    {
+        if (_contentRootResolved)
+            return GodotObject.IsInstanceValid(_contentRoot) ? _contentRoot : null;
+
+        _contentRootResolved = true;
+        _contentRoot = ContentRootPath.IsEmpty ? null : GetNodeOrNull<Node>(ContentRootPath);
+        return _contentRoot;
     }
 
     private RoomClearUnlocker ResolveRoomClearUnlocker()

@@ -31,9 +31,6 @@ public partial class Dungeon : Node
     private static readonly StringName SpecialTopExitId = "north_center";
 
     [Export]
-    public Godot.Collections.Array<DungeonEncounterDefinition> EncounterPool { get; set; } = new();
-
-    [Export]
     public Godot.Collections.Array<PackedScene> CombatRoomTemplates { get; set; } = new();
 
     [Export]
@@ -111,8 +108,6 @@ public partial class Dungeon : Node
     {
         room.ConfigureProgressionDoors(DungeonRuntimeScreenId, DungeonEntryExitId);
         room.ConfigureReturnDoor(EntranceHallScreenId, EntranceHallReturnExitId);
-        room.PrepareEncounter();
-        SpawnEncounter(room);
     }
 
     private void ConfigureSpecialRoom(SpecialDungeonRoom room)
@@ -125,74 +120,6 @@ public partial class Dungeon : Node
     private void ConfigureTimedRoom(TimedDungeonRoom room)
     {
         room.ConfigureProgressionDoor(EntranceHallScreenId, EntranceHallReturnExitId);
-    }
-
-    private void SpawnEncounter(CombatDungeonRoom room)
-    {
-        var spawnRoot = room.GetUnscaledRoot();
-        if (spawnRoot == null)
-        {
-            GD.PushError($"{nameof(Dungeon)} could not resolve the unscaled root for {nameof(CombatDungeonRoom)}.");
-            room.FinalizeEncounterSetup();
-            return;
-        }
-
-        var encounterDefinition = ChooseEncounterDefinition();
-        if (encounterDefinition == null)
-        {
-            GD.PushError($"{nameof(Dungeon)} has no valid encounter definitions configured.");
-            room.FinalizeEncounterSetup();
-            return;
-        }
-
-        var markerIds = new List<StringName>(room.GetEncounterMarkerIds());
-        if (markerIds.Count == 0)
-        {
-            GD.PushError($"{nameof(CombatDungeonRoom)} does not define any encounter spawn markers.");
-            room.FinalizeEncounterSetup();
-            return;
-        }
-
-        Shuffle(markerIds);
-
-        var encounterCount = Mathf.Clamp(
-            _random.RandiRange(encounterDefinition.GetResolvedMinSpawnCount(), encounterDefinition.GetResolvedMaxSpawnCount()),
-            1,
-            markerIds.Count);
-
-        for (var i = 0; i < encounterCount; i++)
-        {
-            if (!room.TryGetEncounterMarkerGlobalPosition(markerIds[i], out var spawnPosition))
-                continue;
-
-            var enemyScene = encounterDefinition.RollEnemyScene(_random);
-            if (enemyScene?.Instantiate<Node2D>() is not Node2D enemy)
-                continue;
-
-            enemy.GlobalPosition = spawnPosition;
-            spawnRoot.AddChild(enemy);
-            room.RegisterEncounterEnemy(enemy);
-        }
-
-        room.FinalizeEncounterSetup();
-    }
-
-    private DungeonEncounterDefinition ChooseEncounterDefinition()
-    {
-        var validDefinitions = new List<DungeonEncounterDefinition>();
-        if (EncounterPool != null)
-        {
-            foreach (var encounterDefinition in EncounterPool)
-            {
-                if (encounterDefinition?.IsConfigured == true)
-                    validDefinitions.Add(encounterDefinition);
-            }
-        }
-
-        if (validDefinitions.Count == 0)
-            return null;
-
-        return validDefinitions[_random.RandiRange(0, validDefinitions.Count - 1)];
     }
 
     private void OnActiveRoomCleared()
@@ -350,12 +277,4 @@ public partial class Dungeon : Node
         return value != null && !value.IsEmpty;
     }
 
-    private void Shuffle<T>(IList<T> items)
-    {
-        for (var i = items.Count - 1; i > 0; i--)
-        {
-            var swapIndex = _random.RandiRange(0, i);
-            (items[i], items[swapIndex]) = (items[swapIndex], items[i]);
-        }
-    }
 }

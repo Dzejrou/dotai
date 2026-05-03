@@ -2,7 +2,7 @@ using Godot;
 
 using System.Collections.Generic;
 
-public abstract partial class Content : Node2D
+public partial class Content : Node2D
 {
     [Export]
     public NodePath ObjectsPath { get; set; } = new("Objects");

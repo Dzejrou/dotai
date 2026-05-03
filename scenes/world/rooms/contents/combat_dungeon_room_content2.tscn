@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://drto7ni3dk0bc"]
+
+[ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/RandomActorSpawnPoint.cs" id="1_fbv4c"]
+[ext_resource type="Script" uid="uid://b3cd7y84rpjic" path="res://scripts/world/rooms/contents/Content.cs" id="1_o3k6q"]
+[ext_resource type="Script" uid="uid://b7sn68drsf3oj" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="2_o3k6q"]
+[ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="3_6sdgs"]
+[ext_resource type="PackedScene" uid="uid://cke5y8t7ihlt5" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="4_nwnl7"]
+[ext_resource type="Texture2D" uid="uid://bi1lqm84duw44" path="res://assets/world/dungeon/fork.png" id="6_6sdgs"]
+
+[sub_resource type="Resource" id="Resource_8i6kl"]
+script = ExtResource("2_o3k6q")
+ActorScene = ExtResource("3_6sdgs")
+Weight = 4.8
+metadata/_custom_type_script = "uid://b7sn68drsf3oj"
+
+[sub_resource type="Resource" id="Resource_udkr3"]
+script = ExtResource("2_o3k6q")
+ActorScene = ExtResource("4_nwnl7")
+metadata/_custom_type_script = "uid://b7sn68drsf3oj"
+
+[node name="Content" type="Node2D" unique_id=1321229390]
+script = ExtResource("1_o3k6q")
+
+[node name="Objects" type="Node2D" parent="." unique_id=1060858916]
+
+[node name="Actors" type="Node2D" parent="." unique_id=1589317674]
+
+[node name="Marker2D" type="Marker2D" parent="Actors" unique_id=1989900156]
+position = Vector2(579, 260)
+script = ExtResource("1_fbv4c")
+Options = Array[ExtResource("2_o3k6q")]([SubResource("Resource_8i6kl"), SubResource("Resource_udkr3")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="Marker2D2" type="Marker2D" parent="Actors" unique_id=462798419]
+position = Vector2(191, 241)
+script = ExtResource("1_fbv4c")
+Options = Array[ExtResource("2_o3k6q")]([SubResource("Resource_8i6kl"), SubResource("Resource_udkr3")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="Marker2D3" type="Marker2D" parent="Actors" unique_id=1029440807]
+position = Vector2(475, 332)
+script = ExtResource("1_fbv4c")
+Options = Array[ExtResource("2_o3k6q")]([SubResource("Resource_8i6kl"), SubResource("Resource_udkr3")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="Marker2D4" type="Marker2D" parent="Actors" unique_id=327371662]
+position = Vector2(204, 439)
+script = ExtResource("1_fbv4c")
+Options = Array[ExtResource("2_o3k6q")]([SubResource("Resource_8i6kl"), SubResource("Resource_udkr3")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="Marker2D5" type="Marker2D" parent="Actors" unique_id=1239695618]
+position = Vector2(603, 425)
+script = ExtResource("1_fbv4c")
+Options = Array[ExtResource("2_o3k6q")]([SubResource("Resource_8i6kl"), SubResource("Resource_udkr3")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="Marker2D6" type="Marker2D" parent="Actors" unique_id=1240978839]
+position = Vector2(336, 364)
+script = ExtResource("1_fbv4c")
+Options = Array[ExtResource("2_o3k6q")]([SubResource("Resource_8i6kl"), SubResource("Resource_udkr3")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="Guidance" type="Node2D" parent="." unique_id=355282884]
+visible = false
+scale = Vector2(2, 2)
+metadata/_edit_lock_ = true
+
+[node name="RoomSprite" type="Sprite2D" parent="Guidance" unique_id=465178868]
+z_index = -10
+texture = ExtResource("6_6sdgs")
+centered = false
+metadata/_edit_lock_ = true

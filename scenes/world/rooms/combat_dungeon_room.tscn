@@ -5,6 +5,22 @@
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="4_2ubne"]
 [ext_resource type="Script" uid="uid://bnwnfcww81y3p" path="res://scripts/world/rooms/RoomClearUnlocker.cs" id="4_room_clear_unlocker"]
+[ext_resource type="Script" uid="uid://c0dqo44pkt1r" path="res://scripts/world/rooms/contents/ContentSet.cs" id="5_content_set_script"]
+[ext_resource type="Script" uid="uid://byj4p1nimu1if" path="res://scripts/world/rooms/contents/ContentTemplateEntry.cs" id="6_content_template_entry_script"]
+[ext_resource type="PackedScene" uid="uid://b037su72uf678" path="res://scenes/world/rooms/contents/combat_dungeon_room_content1.tscn" id="7_content_template_1"]
+[ext_resource type="PackedScene" uid="uid://drto7ni3dk0bc" path="res://scenes/world/rooms/contents/combat_dungeon_room_content2.tscn" id="8_content_template_2"]
+
+[sub_resource type="Resource" id="1_content_template_entry"]
+script = ExtResource("6_content_template_entry_script")
+ContentScene = ExtResource("7_content_template_1")
+
+[sub_resource type="Resource" id="2_content_template_entry"]
+script = ExtResource("6_content_template_entry_script")
+ContentScene = ExtResource("8_content_template_2")
+
+[sub_resource type="Resource" id="1_content_set"]
+script = ExtResource("5_content_set_script")
+Entries = Array[ExtResource("6_content_template_entry_script")]([SubResource("1_content_template_entry"), SubResource("2_content_template_entry")])
 
 [sub_resource type="NavigationPolygon" id="1_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -21,6 +37,7 @@ size = Vector2(18, 283.5)
 
 [node name="Room" type="Node2D" unique_id=1908132245]
 script = ExtResource("2_combat_dungeon_room")
+ContentTemplates = SubResource("1_content_set")
 ScreenId = &"dungeon_combat"
 DisplayName = "Combat Dungeon Room"
 Theme = &"dungeon"
@@ -101,73 +118,13 @@ position = Vector2(200, 286)
 [node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=995183462]
 position = Vector2(200, 200)
 
-[node name="Ephemeral" type="Node" parent="Scaled"]
+[node name="Ephemeral" type="Node" parent="Scaled" unique_id=166424245]
 
 [node name="Unscaled" type="Node2D" parent="." unique_id=2005725258]
 
-[node name="Ephemeral" type="Node" parent="Unscaled"]
+[node name="Ephemeral" type="Node" parent="Unscaled" unique_id=1631364828]
 
-[node name="EncounterMarkers" type="Node2D" parent="Unscaled" unique_id=1436865109]
-
-[node name="spawn_01" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1882167542]
-position = Vector2(160, 220)
-
-[node name="spawn_02" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=618310048]
-position = Vector2(260, 220)
-
-[node name="spawn_03" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1706437583]
-position = Vector2(360, 220)
-
-[node name="spawn_04" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1001358161]
-position = Vector2(460, 220)
-
-[node name="spawn_05" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=201181799]
-position = Vector2(560, 220)
-
-[node name="spawn_06" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=730792423]
-position = Vector2(660, 220)
-
-[node name="spawn_07" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=2071026717]
-position = Vector2(140, 320)
-
-[node name="spawn_08" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=350457704]
-position = Vector2(260, 320)
-
-[node name="spawn_09" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=221235897]
-position = Vector2(400, 320)
-
-[node name="spawn_10" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=17198148]
-position = Vector2(540, 320)
-
-[node name="spawn_11" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1292467257]
-position = Vector2(660, 320)
-
-[node name="spawn_12" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=2127971346]
-position = Vector2(160, 420)
-
-[node name="spawn_13" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=751835036]
-position = Vector2(280, 420)
-
-[node name="spawn_14" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1549240660]
-position = Vector2(400, 420)
-
-[node name="spawn_15" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=2030973508]
-position = Vector2(520, 420)
-
-[node name="spawn_16" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=428114716]
-position = Vector2(640, 420)
-
-[node name="spawn_17" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1080641263]
-position = Vector2(220, 520)
-
-[node name="spawn_18" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1798156058]
-position = Vector2(340, 520)
-
-[node name="spawn_19" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=714228667]
-position = Vector2(460, 520)
-
-[node name="spawn_20" type="Marker2D" parent="Unscaled/EncounterMarkers" unique_id=1782920358]
-position = Vector2(580, 520)
+[node name="ContentRoot" type="Node2D" parent="Unscaled" unique_id=1436865109]
 
 [node name="Chest" parent="Unscaled" unique_id=1263117603 instance=ExtResource("4_2ubne")]
 position = Vector2(402, 163)
