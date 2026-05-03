@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="3_6sdgs"]
 [ext_resource type="PackedScene" uid="uid://cke5y8t7ihlt5" path="res://scenes/actors/enemies/skeleton_mage.tscn" id="4_nwnl7"]
 [ext_resource type="Texture2D" uid="uid://bi1lqm84duw44" path="res://assets/world/dungeon/fork.png" id="6_6sdgs"]
+[ext_resource type="Script" uid="uid://2h8y08gi5trs" path="res://scripts/world/rooms/contents/ContentGuidance.cs" id="6_nwnl7"]
 
 [sub_resource type="Resource" id="Resource_8i6kl"]
 script = ExtResource("2_o3k6q")
@@ -68,8 +69,8 @@ RandomizeOnRespawn = false
 RandomizeInactivity = false
 
 [node name="Guidance" type="Node2D" parent="." unique_id=355282884]
-visible = false
 scale = Vector2(2, 2)
+script = ExtResource("6_nwnl7")
 metadata/_edit_lock_ = true
 
 [node name="RoomSprite" type="Sprite2D" parent="Guidance" unique_id=465178868]

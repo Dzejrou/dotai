@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://b3cd7y84rpjic" path="res://scripts/world/rooms/contents/Content.cs" id="1_content_script"]
 [ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="2_ogre_scene"]
 [ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="3_static_actor_spawn_point_script"]
+[ext_resource type="Script" uid="uid://2h8y08gi5trs" path="res://scripts/world/rooms/contents/ContentGuidance.cs" id="4_lm4a5"]
+[ext_resource type="Texture2D" uid="uid://ctakc0i0h52nj" path="res://assets/world/dungeon/basic_room_1_door.png" id="5_gw5bp"]
 
 [node name="TimedDungeonOgreContent" type="Node2D" unique_id=463852066]
 script = ExtResource("1_content_script")
@@ -40,3 +42,12 @@ position = Vector2(539, 448)
 script = ExtResource("3_static_actor_spawn_point_script")
 ActorScene = ExtResource("2_ogre_scene")
 ClearLootTable = true
+
+[node name="Guidance" type="Node2D" parent="." unique_id=42080891]
+scale = Vector2(2, 2)
+script = ExtResource("4_lm4a5")
+
+[node name="RoomSprite" type="Sprite2D" parent="Guidance" unique_id=1531626763]
+z_index = -10
+texture = ExtResource("5_gw5bp")
+centered = false

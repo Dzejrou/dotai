@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="3_0tk0a"]
 [ext_resource type="PackedScene" uid="uid://chmx43pfadld4" path="res://scenes/actors/enemies/elf_ranger.tscn" id="4_kf6iy"]
 [ext_resource type="Texture2D" uid="uid://bi1lqm84duw44" path="res://assets/world/dungeon/fork.png" id="6_0tk0a"]
+[ext_resource type="Script" uid="uid://2h8y08gi5trs" path="res://scripts/world/rooms/contents/ContentGuidance.cs" id="6_kf6iy"]
 
 [sub_resource type="Resource" id="Resource_2d42u"]
 script = ExtResource("2_5rs3g")
@@ -63,6 +64,7 @@ RandomizeInactivity = false
 [node name="Guidance" type="Node2D" parent="." unique_id=233011219]
 visible = false
 scale = Vector2(2, 2)
+script = ExtResource("6_kf6iy")
 metadata/_edit_lock_ = true
 
 [node name="RoomSprite" type="Sprite2D" parent="Guidance" unique_id=208573251]
