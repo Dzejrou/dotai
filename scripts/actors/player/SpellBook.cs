@@ -32,6 +32,11 @@ public partial class SpellBook : Node
         return null;
     }
 
+    public Spell GetSpellTemplateById(StringName spellId)
+    {
+        return spellId.IsEmpty ? null : GetSpellTemplateById(spellId.ToString());
+    }
+
     public override void _Ready()
     {
         ValidateTemplates();

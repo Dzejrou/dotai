@@ -24,10 +24,27 @@
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="22_damage"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="23_fire_ball_frames"]
 [ext_resource type="Resource" uid="uid://dmk5k387wovtt" path="res://resources/loot_tables/skeleton_mage_loot_table.tres" id="24_skeleton_mage_loot_table"]
+[ext_resource type="Script" path="res://scripts/ai/actions/AiSpellOption.cs" id="25_ai_spell_option"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
 height = 26.0
+
+[sub_resource type="Resource" id="Resource_fire_ball_option"]
+script = ExtResource("25_ai_spell_option")
+SpellId = &"fire_ball"
+MinRange = 70.0
+MaxRange = 120.0
+
+[sub_resource type="Resource" id="Resource_fire_nova_option"]
+script = ExtResource("25_ai_spell_option")
+SpellId = &"fire_nova"
+MaxRange = 56.0
+
+[sub_resource type="Resource" id="Resource_poison_cloud_option"]
+script = ExtResource("25_ai_spell_option")
+SpellId = &"poison_cloud"
+MinRange = 120.001
 
 [node name="SkeletonMage" type="CharacterBody2D" unique_id=1516039641]
 z_index = -1
@@ -123,8 +140,7 @@ visible = false
 [node name="PrimaryActionController" type="Node" parent="." unique_id=612694339]
 script = ExtResource("11_spell_cast_action")
 AnimationSpeedMultiplier = 2.0
-CloseRangeSpellNodePath = NodePath("../Spells/FireNova")
-LongRangeSpellNodePath = NodePath("../Spells/PoisonCloud")
+SpellOptions = Array[ExtResource("25_ai_spell_option")]([SubResource("Resource_fire_ball_option"), SubResource("Resource_fire_nova_option"), SubResource("Resource_poison_cloud_option")])
 
 [node name="Behaviors" type="Node" parent="." unique_id=258315963]
 

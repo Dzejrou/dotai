@@ -50,6 +50,29 @@ public partial class SpellLoadout : Node
         return GetEquippedSpell(slotAction)?.SpellId ?? string.Empty;
     }
 
+    public Spell GetEquippedSpellById(StringName spellId)
+    {
+        return spellId.IsEmpty ? null : GetEquippedSpellById(spellId.ToString());
+    }
+
+    public Spell GetEquippedSpellById(string spellId)
+    {
+        if (string.IsNullOrWhiteSpace(spellId))
+            return null;
+
+        foreach (var slotAction in SlotActions)
+        {
+            var equippedSpell = GetEquippedSpell(slotAction);
+            if (equippedSpell != null &&
+                string.Equals(equippedSpell.SpellId, spellId, StringComparison.Ordinal))
+            {
+                return equippedSpell;
+            }
+        }
+
+        return null;
+    }
+
     public bool TryFindAssignedSlotAction(string spellId, out StringName slotAction)
     {
         slotAction = default;
