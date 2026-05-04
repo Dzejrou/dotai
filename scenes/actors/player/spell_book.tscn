@@ -23,7 +23,7 @@
 [ext_resource type="SpriteFrames" path="res://resources/animations/ice_ball_spriteframes.tres" id="21_ice_ball_frames"]
 [ext_resource type="Script" uid="uid://b05kftwrcxc3p" path="res://scripts/spells/DoomSpell.cs" id="22_doom_spell"]
 [ext_resource type="PackedScene" uid="uid://5wyjxhtl686q" path="res://scenes/effects/doom_area.tscn" id="23_doom_area"]
-[ext_resource type="Script" path="res://scripts/spells/TEST_AoE_respawn.cs" id="24_test_aoe_respawn_spell"]
+[ext_resource type="Script" uid="uid://che406lu07qqo" path="res://scripts/spells/TEST_AoE_respawn.cs" id="24_test_aoe_respawn_spell"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -158,6 +158,7 @@ CastAction = &"cast_spell7"
 HudLabel = "Blizzard"
 ManaCost = 35
 Cooldown = 6.0
+CastTimeSeconds = 3.0
 
 [node name="BlizzardArea" parent="Blizzard" unique_id=1509322492 instance=ExtResource("17_blizzard_area")]
 visible = false

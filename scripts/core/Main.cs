@@ -35,10 +35,12 @@ public partial class Main : Node2D
     private bool _gameOverActive;
     private bool _restartingFromGameOver;
     private bool _pauseMenuOpen;
+    private CastBar _castBar;
     private PlayerSpellBar _spellBar;
     private PlayerSpellBindingWindow _spellBindingWindow;
     private InventoryWindow _inventoryWindow;
     private Sprite2D _interactionPrompt;
+    private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
     private const string InventoryWindowScenePath = "res://scenes/ui/inventory_window.tscn";
@@ -94,12 +96,14 @@ public partial class Main : Node2D
         if (player != null)
         {
             player.Connect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
+            player.BindCastBar(_castBar);
             _spellBar?.Bind(player);
             _spellBindingWindow?.Bind(player);
             UpdateInteractionPrompt(player.HasInteractionTarget);
         }
         else
         {
+            _castBar?.HideCast();
             _spellBar?.Bind(null);
             _spellBindingWindow?.Bind(null);
             UpdateInteractionPrompt(false);
@@ -224,6 +228,13 @@ public partial class Main : Node2D
             Layer = 100
         };
         AddChild(hudCanvas);
+
+        var castBarScene = ResourceLoader.Load<PackedScene>(CastBarScenePath);
+        if (castBarScene?.Instantiate<CastBar>() is CastBar castBar)
+        {
+            _castBar = castBar;
+            hudCanvas.AddChild(_castBar);
+        }
 
         var spellBarScene = ResourceLoader.Load<PackedScene>(PlayerSpellBarScenePath);
         if (spellBarScene?.Instantiate<PlayerSpellBar>() is PlayerSpellBar spellBar)

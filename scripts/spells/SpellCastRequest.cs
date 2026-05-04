@@ -8,6 +8,16 @@ public sealed class SpellCastRequest
     public Node2D TargetNode { get; set; }
     public Vector2? Direction { get; set; }
 
+    public SpellCastRequest Clone()
+    {
+        return new SpellCastRequest
+        {
+            TargetPosition = TargetPosition,
+            TargetNode = TargetNode,
+            Direction = Direction,
+        };
+    }
+
     public bool TryResolveTargetNode(out Node2D targetNode)
     {
         if (TargetNode != null &&

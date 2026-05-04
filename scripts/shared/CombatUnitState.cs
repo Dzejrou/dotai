@@ -5,5 +5,6 @@ public enum CombatUnitState
     ReturningHome,
     PursuingTarget,
     Engaged,
+    Casting,
     Attacking,
 }

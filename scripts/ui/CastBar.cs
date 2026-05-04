@@ -1,0 +1,72 @@
+using Godot;
+
+using System;
+
+[GlobalClass]
+public partial class CastBar : Control
+{
+    [Export]
+    public NodePath SpellLabelPath { get; set; } = new("BottomLeft/Panel/Margin/VBox/TopRow/SpellLabel");
+
+    [Export]
+    public NodePath TimeLabelPath { get; set; } = new("BottomLeft/Panel/Margin/VBox/TopRow/TimeLabel");
+
+    [Export]
+    public NodePath ProgressBarPath { get; set; } = new("BottomLeft/Panel/Margin/VBox/ProgressBar");
+
+    private Label _spellLabel;
+    private Label _timeLabel;
+    private ProgressBar _progressBar;
+    private float _durationSeconds;
+
+    public override void _Ready()
+    {
+        MouseFilter = MouseFilterEnum.Ignore;
+        _spellLabel = GetNodeOrNull<Label>(SpellLabelPath);
+        _timeLabel = GetNodeOrNull<Label>(TimeLabelPath);
+        _progressBar = GetNodeOrNull<ProgressBar>(ProgressBarPath);
+        HideCast();
+    }
+
+    public void ShowCast(string label, float durationSeconds)
+    {
+        _durationSeconds = Math.Max(0.0f, durationSeconds);
+
+        if (_spellLabel != null)
+            _spellLabel.Text = string.IsNullOrWhiteSpace(label) ? "Casting" : label;
+
+        if (_progressBar != null)
+        {
+            _progressBar.MinValue = 0.0;
+            _progressBar.MaxValue = Math.Max(0.001f, _durationSeconds);
+            _progressBar.Value = 0.0;
+        }
+
+        UpdateCast(0.0f);
+        Visible = true;
+    }
+
+    public void UpdateCast(float elapsedSeconds)
+    {
+        var clampedElapsed = Mathf.Clamp(elapsedSeconds, 0.0f, Math.Max(0.0f, _durationSeconds));
+        var remainingSeconds = Math.Max(0.0f, _durationSeconds - clampedElapsed);
+
+        if (_progressBar != null)
+            _progressBar.Value = clampedElapsed;
+
+        if (_timeLabel != null)
+            _timeLabel.Text = $"{remainingSeconds:0.0}s";
+    }
+
+    public void HideCast()
+    {
+        Visible = false;
+        _durationSeconds = 0.0f;
+
+        if (_progressBar != null)
+            _progressBar.Value = 0.0;
+
+        if (_timeLabel != null)
+            _timeLabel.Text = "0.0s";
+    }
+}

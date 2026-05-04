@@ -6,6 +6,17 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellCaster
 {
+    private sealed class PendingPlayerCast
+    {
+        public Spell Spell { get; init; }
+        public SpellCastRequest Request { get; init; }
+        public float DurationSeconds { get; init; }
+        public float ElapsedSeconds { get; set; }
+    }
+
+    private const string CastingAnimationBaseName = "casting";
+    private const string CastAnimationBaseName = "cast";
+
     [Signal]
     public delegate void PlayerDiedEventHandler();
 
@@ -44,6 +55,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     private bool _isDead;
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
+    private PendingPlayerCast _pendingCast;
     private IPlacementSpell _pendingPlacementSpell;
     private float _healthRegenTimer;
     private float _healthRegenDelayTimer;
@@ -55,6 +67,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private ActorHUD _activeTargetHud;
     private readonly HashSet<ActorHUD> _visibleTargetHuds = new();
     private readonly HashSet<ActorHUD> _nextVisibleTargetHuds = new();
+    private CastBar _castBar;
+    private string _activeCompletionAnimationName;
+    private bool _animationFinishedConnected;
 
     public bool CanBeTargeted => !_isDead;
     public PlayerTargetingState Targeting { get; } = new();
@@ -76,9 +91,16 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         FloatingText.ShowCustom(text, this, color);
     }
 
+    public void BindCastBar(CastBar castBar)
+    {
+        _castBar = castBar;
+        RefreshCastBar();
+    }
+
     public override void _Ready()
     {
         SetOmniSprite(GetNode<OmniSprite>("OmniSprite"));
+        EnsureAnimationFinishedConnected();
         InitializeCombatCharacter(requireManaState: true);
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         _lootMagnetArea = GetNodeOrNull<Area2D>("LootMagnetArea");
@@ -119,6 +141,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             _lootMagnetArea.Disconnect(Area2D.SignalName.AreaEntered, new Callable(this, nameof(OnLootMagnetAreaEntered)));
         }
 
+        CancelPendingCast();
+        DisconnectAnimationFinished();
         UnbindStatusEffects();
         base._ExitTree();
     }
@@ -150,20 +174,30 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         TryCastEquippedSpells();
         var direction = GetInputDirection();
 
+        if (UpdatePendingCast((float)delta, direction))
+            return;
+
         if (direction == Vector2.Zero)
         {
             UpdateTargetingState();
             Velocity = Vector2.Zero;
+            if (TryHoldCompletionAnimation())
+                return;
+
             SetAnimationSafe(GetIdleAnimationName());
             return;
         }
 
         direction = direction.Normalized();
         SetFacingDirection(direction);
+        ClearCompletionAnimation();
         if (!CanMove)
         {
             Velocity = Vector2.Zero;
             UpdateTargetingState();
+            if (TryHoldCompletionAnimation())
+                return;
+
             SetAnimationSafe(GetIdleAnimationName());
             return;
         }
@@ -192,10 +226,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (mouseButton.ButtonIndex != MouseButton.Left)
             return;
 
-        _pendingPlacementSpell.TryPlace(this, CreatePlacementCastRequest(GetGlobalMousePosition()));
-        if (!_pendingPlacementSpell.IsAwaitingPlacement)
-            _pendingPlacementSpell = null;
-
+        TryFinalizePlacementSpellCast(_pendingPlacementSpell, CreatePlacementCastRequest(GetGlobalMousePosition()));
         GetViewport().SetInputAsHandled();
     }
 
@@ -215,6 +246,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             _isDead = true;
             ResetCombatState();
             Targeting.ClearAllTargets();
+            CancelPendingCast();
             ClearPendingPlacementSpell();
             UpdateTargetHudVisibility();
             EmitSignal(SignalName.PlayerDied);
@@ -812,6 +844,32 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         _pendingPlacementSpell.UpdatePlacementPreview(CreatePlacementCastRequest(GetGlobalMousePosition()));
     }
 
+    private bool UpdatePendingCast(float delta, Vector2 movementInput)
+    {
+        if (_pendingCast == null)
+            return false;
+
+        if (movementInput != Vector2.Zero)
+        {
+            CancelPendingCast();
+            return false;
+        }
+
+        UpdateTargetingState();
+        Velocity = Vector2.Zero;
+        _pendingCast.ElapsedSeconds = Math.Min(
+            _pendingCast.DurationSeconds,
+            _pendingCast.ElapsedSeconds + Math.Max(0.0f, delta));
+        RefreshCastBar();
+        PlayCastingAnimationIfAvailable();
+
+        if (_pendingCast.ElapsedSeconds < _pendingCast.DurationSeconds)
+            return true;
+
+        CompletePendingCast();
+        return false;
+    }
+
     private Vector2 GetSpellDirection()
     {
         var inputDirection = GetInputDirection();
@@ -853,9 +911,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
                     var tabTarget = Targeting.TabTarget;
                     if (IsValidTabTarget(tabTarget))
                     {
-                        placementSpell.TryPlace(this, CreatePlacementCastRequest(tabTarget.GlobalPosition, tabTarget));
-                        if (!placementSpell.IsAwaitingPlacement)
-                            _pendingPlacementSpell = null;
+                        TryFinalizePlacementSpellCast(placementSpell, CreatePlacementCastRequest(tabTarget.GlobalPosition, tabTarget));
                     }
                     else
                     {
@@ -873,7 +929,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             }
 
             ClearPendingPlacementSpell();
-            spell.TryCast(this, CreateSpellCastRequest());
+            TryStartSpellCast(spell, CreateSpellCastRequest());
             return;
         }
     }
@@ -921,6 +977,141 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     {
         _pendingPlacementSpell?.CancelPlacement();
         _pendingPlacementSpell = null;
+    }
+
+    private bool TryFinalizePlacementSpellCast(IPlacementSpell placementSpell, SpellCastRequest request)
+    {
+        if (placementSpell is not Spell spell)
+            return false;
+
+        ClearPendingPlacementSpell();
+        return TryStartSpellCast(spell, request);
+    }
+
+    private bool TryStartSpellCast(Spell spell, SpellCastRequest request)
+    {
+        if (spell == null || !GodotObject.IsInstanceValid(spell))
+            return false;
+
+        ClearCompletionAnimation();
+        CancelPendingCast();
+
+        var lockedRequest = request?.Clone() ?? SpellCastRequest.Empty;
+        if (!spell.CanCast(this, lockedRequest))
+            return false;
+
+        var castDuration = spell.CastTimeDuration;
+        if (castDuration <= 0.0f)
+            return spell.TryCast(this, lockedRequest);
+
+        _pendingCast = new PendingPlayerCast
+        {
+            Spell = spell,
+            Request = lockedRequest,
+            DurationSeconds = castDuration,
+            ElapsedSeconds = 0.0f,
+        };
+
+        RefreshCastBar();
+        PlayCastingAnimationIfAvailable();
+        return true;
+    }
+
+    private void CompletePendingCast()
+    {
+        var completedCast = _pendingCast;
+        _pendingCast = null;
+        RefreshCastBar();
+
+        if (completedCast?.Spell == null || !GodotObject.IsInstanceValid(completedCast.Spell))
+            return;
+
+        PlayCastCompletionAnimationIfAvailable();
+        completedCast.Spell.TryCast(this, completedCast.Request ?? SpellCastRequest.Empty);
+    }
+
+    private void CancelPendingCast()
+    {
+        _pendingCast = null;
+        RefreshCastBar();
+    }
+
+    private void RefreshCastBar()
+    {
+        if (_castBar == null || !GodotObject.IsInstanceValid(_castBar))
+            return;
+
+        if (_pendingCast?.Spell == null || !GodotObject.IsInstanceValid(_pendingCast.Spell))
+        {
+            _castBar.HideCast();
+            return;
+        }
+
+        _castBar.ShowCast(_pendingCast.Spell.DisplayLabel, _pendingCast.DurationSeconds);
+        _castBar.UpdateCast(_pendingCast.ElapsedSeconds);
+    }
+
+    private void PlayCastingAnimationIfAvailable()
+    {
+        var animationName = ResolveDirectionalAnimationName(CastingAnimationBaseName);
+        if (!string.IsNullOrEmpty(animationName))
+            SetAnimationSafe(animationName);
+    }
+
+    private void PlayCastCompletionAnimationIfAvailable()
+    {
+        ClearCompletionAnimation();
+        var animationName = ResolveDirectionalAnimationName(CastAnimationBaseName);
+        if (string.IsNullOrEmpty(animationName) || OmniSprite == null)
+            return;
+
+        if (OmniSprite.TryPlay(animationName))
+            _activeCompletionAnimationName = animationName;
+    }
+
+    private bool TryHoldCompletionAnimation()
+    {
+        if (string.IsNullOrEmpty(_activeCompletionAnimationName))
+            return false;
+
+        if (OmniSprite == null ||
+            !GodotObject.IsInstanceValid(OmniSprite) ||
+            OmniSprite.CurrentAnimation != _activeCompletionAnimationName ||
+            !OmniSprite.IsAnimationPlaying)
+        {
+            _activeCompletionAnimationName = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ClearCompletionAnimation()
+    {
+        _activeCompletionAnimationName = null;
+    }
+
+    private void EnsureAnimationFinishedConnected()
+    {
+        if (_animationFinishedConnected || OmniSprite == null)
+            return;
+
+        OmniSprite.AnimationFinished += OnOmniSpriteAnimationFinished;
+        _animationFinishedConnected = true;
+    }
+
+    private void DisconnectAnimationFinished()
+    {
+        if (!_animationFinishedConnected || OmniSprite == null)
+            return;
+
+        OmniSprite.AnimationFinished -= OnOmniSpriteAnimationFinished;
+        _animationFinishedConnected = false;
+    }
+
+    private void OnOmniSpriteAnimationFinished()
+    {
+        ClearCompletionAnimation();
     }
 
     private void LoadEquippedSpells()

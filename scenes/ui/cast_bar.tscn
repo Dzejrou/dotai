@@ -1,0 +1,52 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/CastBar.cs" id="1_cast_bar_script"]
+
+[node name="CastBar" type="Control"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_cast_bar_script")
+
+[node name="BottomLeft" type="MarginContainer" parent="."]
+offset_left = 12.0
+offset_top = -132.0
+offset_right = 332.0
+offset_bottom = -76.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="BottomLeft"]
+custom_minimum_size = Vector2(320, 56)
+
+[node name="Margin" type="MarginContainer" parent="BottomLeft/Panel"]
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="BottomLeft/Panel/Margin"]
+theme_override_constants/separation = 6
+
+[node name="TopRow" type="HBoxContainer" parent="BottomLeft/Panel/Margin/VBox"]
+theme_override_constants/separation = 8
+
+[node name="SpellLabel" type="Label" parent="BottomLeft/Panel/Margin/VBox/TopRow"]
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 15
+text = "Casting"
+
+[node name="TimeLabel" type="Label" parent="BottomLeft/Panel/Margin/VBox/TopRow"]
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 14
+text = "0.0s"
+
+[node name="ProgressBar" type="ProgressBar" parent="BottomLeft/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 18)
+show_percentage = false
+max_value = 1.0
+value = 0.0

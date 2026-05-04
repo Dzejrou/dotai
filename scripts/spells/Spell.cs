@@ -20,10 +20,19 @@ public abstract partial class Spell : Node
     [Export]
     public float Cooldown { get; set; } = 0.0f;
 
+    private float _castTimeSeconds;
     private float _cooldownRemaining;
 
     public string DisplayLabel => !string.IsNullOrWhiteSpace(HudLabel) ? HudLabel : Name;
     public virtual int DisplayManaCost => Math.Max(0, ManaCost);
+    [Export]
+    public float CastTimeSeconds
+    {
+        get => _castTimeSeconds;
+        set => _castTimeSeconds = Math.Max(0.0f, value);
+    }
+
+    public virtual float CastTimeDuration => Math.Max(0.0f, CastTimeSeconds);
     public virtual float CooldownDuration => Math.Max(0.0f, Cooldown);
     public virtual float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
 
