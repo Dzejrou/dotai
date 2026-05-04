@@ -33,17 +33,20 @@ height = 26.0
 [sub_resource type="Resource" id="Resource_fire_ball_option"]
 script = ExtResource("25_ai_spell_option")
 SpellId = &"fire_ball"
+TargetRelation = 0
 MinRange = 70.0
 MaxRange = 120.0
 
 [sub_resource type="Resource" id="Resource_fire_nova_option"]
 script = ExtResource("25_ai_spell_option")
 SpellId = &"fire_nova"
+TargetRelation = 0
 MaxRange = 56.0
 
 [sub_resource type="Resource" id="Resource_poison_cloud_option"]
 script = ExtResource("25_ai_spell_option")
 SpellId = &"poison_cloud"
+TargetRelation = 0
 MinRange = 120.001
 
 [node name="SkeletonMage" type="CharacterBody2D" unique_id=1516039641]

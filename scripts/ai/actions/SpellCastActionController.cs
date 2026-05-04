@@ -65,7 +65,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
     public bool CanStartAction(Actor actor, Node2D target)
     {
-        if (actor is not ISpellCaster caster || !IsValidHostileTarget(actor, target))
+        if (actor is not ISpellCaster caster)
             return false;
 
         var request = CreateSpellCastRequest(actor, target);
@@ -154,9 +154,22 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
         EnsureOptionCooldownCapacity();
 
+        var highestPriority = int.MinValue;
         var totalWeight = 0.0f;
         foreach (var currentCandidate in EnumerateValidCandidates(actor, caster, target, request))
+        {
+            var currentPriority = currentCandidate.Option.Priority;
+            if (currentPriority < highestPriority)
+                continue;
+
+            if (currentPriority > highestPriority)
+            {
+                highestPriority = currentPriority;
+                totalWeight = 0.0f;
+            }
+
             totalWeight += currentCandidate.Option.Weight;
+        }
 
         if (!(totalWeight > 0.0f))
             return false;
@@ -167,6 +180,9 @@ public partial class SpellCastActionController : Node, ICombatActionController
         var hasFallbackCandidate = false;
         foreach (var currentCandidate in EnumerateValidCandidates(actor, caster, target, request))
         {
+            if (currentCandidate.Option.Priority != highestPriority)
+                continue;
+
             cumulativeWeight += currentCandidate.Option.Weight;
             fallbackCandidate = currentCandidate;
             hasFallbackCandidate = true;
@@ -210,7 +226,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (!IsValidOptionConfiguration(option, optionIndex))
             return false;
 
-        if (option.RequiresHostileTarget && !IsValidHostileTarget(actor, target))
+        if (!IsTargetValidForRelation(actor, target, option.TargetRelation))
             return false;
 
         if (!IsTargetInRange(caster, target, option))
@@ -321,6 +337,9 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (option.SpellId.IsEmpty)
             return WarnInvalidOption(optionIndex, option, "SpellId is required.");
 
+        if (!Enum.IsDefined(option.TargetRelation))
+            return WarnInvalidOption(optionIndex, option, "TargetRelation must be a defined AiSpellTargetRelation value.");
+
         if (!float.IsFinite(option.Weight) || option.Weight <= 0.0f)
             return WarnInvalidOption(optionIndex, option, "Weight must be a finite value greater than 0.");
 
@@ -346,7 +365,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
         return false;
     }
 
-    private static bool IsValidHostileTarget(Actor actor, Node2D target)
+    private static bool IsTargetValidForRelation(Actor actor, Node2D target, AiSpellTargetRelation targetRelation)
     {
         if (actor == null || !Actor.IsStructurallyValidTarget(target))
             return false;
@@ -354,6 +373,18 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (target is not ITargetable targetable || !targetable.CanBeTargeted)
             return false;
 
+        return targetRelation switch
+        {
+            AiSpellTargetRelation.Hostile => IsValidHostileTarget(actor, target),
+            AiSpellTargetRelation.Friendly => ReferenceEquals(actor, target) || actor.IsFriendlyTo(target),
+            AiSpellTargetRelation.Self => ReferenceEquals(actor, target),
+            AiSpellTargetRelation.Any => true,
+            _ => false,
+        };
+    }
+
+    private static bool IsValidHostileTarget(Actor actor, Node2D target)
+    {
         var targetFactionState = FactionState.ResolveFor(target);
         return targetFactionState != null && targetFactionState.CanBeDamagedBy(actor.Faction);
     }

@@ -8,17 +8,31 @@
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="5_health_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="6_faction_state"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="7_wander_behavior"]
-[ext_resource type="Script" uid="uid://bukgdh1j2jhsm" path="res://scripts/ai/actions/HealActionController.cs" id="8_heal_action"]
+[ext_resource type="Script" uid="uid://81lj2bds5kdy" path="res://scripts/ai/actions/SpellCastActionController.cs" id="8_spell_cast_action"]
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="9_status_effect_controller"]
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="10_mana_state"]
 [ext_resource type="Script" uid="uid://dlgsq13qbelcj" path="res://scripts/spells/HealSpell.cs" id="11_heal_spell"]
 [ext_resource type="Script" uid="uid://deh8bm7hdtw8o" path="res://scripts/spells/HealOverTimeSpell.cs" id="12_heal_over_time_spell"]
 [ext_resource type="Script" uid="uid://dor2m1wfs1yvd" path="res://scripts/status/HealOverTimeEffect.cs" id="13_heal_over_time_effect"]
+[ext_resource type="Script" path="res://scripts/ai/actions/AiSpellOption.cs" id="14_ai_spell_option"]
 [ext_resource type="Script" uid="uid://covl5c8k0ld1c" path="res://scripts/combat/Healing.cs" id="16_healing"]
 [ext_resource type="Script" uid="uid://birryig8e7hfp" path="res://scripts/ai/behaviors/PatrolBehavior.cs" id="16_k7g6i"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
+
+[sub_resource type="Resource" id="Resource_heal_option"]
+script = ExtResource("14_ai_spell_option")
+SpellId = &"heal"
+TargetRelation = 1
+MaxRange = 256.0
+
+[sub_resource type="Resource" id="Resource_rejuvenation_option"]
+script = ExtResource("14_ai_spell_option")
+SpellId = &"rejuvenation"
+TargetRelation = 1
+Priority = 10
+MaxRange = 256.0
 
 [node name="Dryad" type="CharacterBody2D" unique_id=1856568282]
 z_index = -1
@@ -87,8 +101,9 @@ MinimumHealing = 3
 MaximumHealing = 3
 
 [node name="PrimaryActionController" type="Node" parent="." unique_id=925153119]
-script = ExtResource("8_heal_action")
+script = ExtResource("8_spell_cast_action")
 AnimationSpeedMultiplier = 2.0
+SpellOptions = Array[ExtResource("14_ai_spell_option")]([SubResource("Resource_heal_option"), SubResource("Resource_rejuvenation_option")])
 
 [node name="Behaviors" type="Node" parent="." unique_id=1488017195]
 
