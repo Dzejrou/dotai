@@ -21,6 +21,7 @@ public partial class OmniSprite : Node2D
     private Sprite2D _missingSprite;
     private Texture2D _configuredStaticTexture;
     private Color _baseModulate = Colors.White;
+    private bool _animatedSpriteSignalsConnected;
 
     public AnimatedSprite2D AnimatedSprite
     {
@@ -44,10 +45,14 @@ public partial class OmniSprite : Node2D
     public StringName CurrentAnimation => AnimatedSprite?.Animation ?? default;
     public bool IsAnimationPlaying => AnimatedSprite?.IsPlaying() ?? false;
 
+    public override void _EnterTree()
+    {
+        ConnectAnimatedSpriteSignals();
+    }
+
     public override void _Ready()
     {
         ResolveChildVisuals();
-        ConnectAnimatedSpriteSignals();
         RefreshVisualState();
     }
 
@@ -166,6 +171,9 @@ public partial class OmniSprite : Node2D
 
     private void ConnectAnimatedSpriteSignals()
     {
+        if (_animatedSpriteSignalsConnected)
+            return;
+
         var animatedSprite = AnimatedSprite;
         if (animatedSprite == null)
             return;
@@ -173,17 +181,27 @@ public partial class OmniSprite : Node2D
         var callable = new Callable(this, nameof(OnAnimatedSpriteAnimationFinished));
         if (!animatedSprite.IsConnected(AnimatedSprite2D.SignalName.AnimationFinished, callable))
             animatedSprite.Connect(AnimatedSprite2D.SignalName.AnimationFinished, callable);
+
+        _animatedSpriteSignalsConnected = true;
     }
 
     private void DisconnectAnimatedSpriteSignals()
     {
+        if (!_animatedSpriteSignalsConnected)
+            return;
+
         var animatedSprite = _animatedSprite;
         if (animatedSprite == null || !GodotObject.IsInstanceValid(animatedSprite))
+        {
+            _animatedSpriteSignalsConnected = false;
             return;
+        }
 
         var callable = new Callable(this, nameof(OnAnimatedSpriteAnimationFinished));
         if (animatedSprite.IsConnected(AnimatedSprite2D.SignalName.AnimationFinished, callable))
             animatedSprite.Disconnect(AnimatedSprite2D.SignalName.AnimationFinished, callable);
+
+        _animatedSpriteSignalsConnected = false;
     }
 
     private void OnAnimatedSpriteAnimationFinished()
