@@ -172,6 +172,7 @@ Cooldown = 8.0
 
 [node name="PoisonCloudArea" parent="PoisonCloud" unique_id=1438068207 instance=ExtResource("19_y1cuy")]
 visible = false
+EffectLifetime = 30.0
 
 [node name="Doom" type="Node" parent="." unique_id=1321180177]
 script = ExtResource("22_doom_spell")

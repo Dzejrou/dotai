@@ -69,11 +69,6 @@ public partial class StatusEffectController : Node
             EmitSignal(SignalName.Changed);
     }
 
-    public override void _ExitTree()
-    {
-        ClearAllEffects();
-    }
-
     public bool HasStatus(StringName statusKey)
     {
         return _activeStatusCounts.TryGetValue(statusKey, out var count) && count > 0;
