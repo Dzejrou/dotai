@@ -13,6 +13,11 @@ public abstract partial class ActorSpawnPoint : Marker2D
 
     public Node2D CurrentSpawnedActor => ResolveTrackedActor();
 
+    public override void _EnterTree()
+    {
+        ReconcileTrackedActor();
+    }
+
     public void Respawn()
     {
         ClearSpawnedActor();
@@ -83,6 +88,9 @@ public abstract partial class ActorSpawnPoint : Marker2D
 
     private Node2D ResolveTrackedActor()
     {
+        if (_currentSpawnedActor == null)
+            _currentSpawnedActor = FindExistingChildActor();
+
         if (_currentSpawnedActor == null)
             return null;
 
@@ -188,6 +196,15 @@ public abstract partial class ActorSpawnPoint : Marker2D
 
     private void OnTrackedActorTreeExited()
     {
+        var actor = _currentSpawnedActor;
+        if (actor != null &&
+            GodotObject.IsInstanceValid(actor) &&
+            !actor.IsQueuedForDeletion() &&
+            actor.GetParent() == this)
+        {
+            return;
+        }
+
         DisconnectTrackedActorSignals();
         _currentSpawnedActor = null;
         SetOccupied(false);
@@ -200,6 +217,40 @@ public abstract partial class ActorSpawnPoint : Marker2D
 
         _isOccupied = occupied;
         EmitSignal(SignalName.OccupancyChanged, occupied);
+    }
+
+    private void ReconcileTrackedActor()
+    {
+        var actor = ResolveTrackedActor();
+        if (actor == null)
+        {
+            SetOccupied(false);
+            return;
+        }
+
+        ConnectTrackedActorSignals(actor);
+        SetOccupied(!IsTrackedActorDead(actor));
+    }
+
+    private Node2D FindExistingChildActor()
+    {
+        foreach (var child in GetChildren())
+        {
+            if (child is not CombatCharacter candidate ||
+                candidate.IsQueuedForDeletion())
+            {
+                continue;
+            }
+
+            return candidate;
+        }
+
+        return null;
+    }
+
+    private static bool IsTrackedActorDead(Node2D actor)
+    {
+        return actor is CombatCharacter combatCharacter && combatCharacter.IsDead;
     }
 
     protected abstract Node2D SpawnActor();
