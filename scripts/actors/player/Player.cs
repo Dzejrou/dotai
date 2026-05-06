@@ -53,12 +53,15 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Export(PropertyHint.Range, "0,256,1")]
     public float LootMagnetRadius { get; set; } = 80.0f;
 
+    private float _spellCastPushbackPercent = 0.10f;
+    private float _spellCastPushbackInternalCooldownSeconds = 0.5f;
     private bool _isDead;
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
     private PendingPlayerCast _pendingCast;
     private IPlacementSpell _pendingPlacementSpell;
     private float _healthRegenTimer;
     private float _healthRegenDelayTimer;
+    private float _spellCastPushbackCooldownRemaining;
     private IInteractable _activeInteractable;
     private Node2D _activeInteractableNode;
     private ActorHUD _actorHud;
@@ -82,6 +85,19 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public Node2D CurrentInteractionTarget => _activeInteractableNode;
     public int Gold { get; private set; }
     public InventoryController InventoryController => (GetParent() as World)?.ResolveInventoryController();
+    [Export]
+    public float SpellCastPushbackPercent
+    {
+        get => _spellCastPushbackPercent;
+        set => _spellCastPushbackPercent = Math.Max(0.0f, value);
+    }
+
+    [Export]
+    public float SpellCastPushbackInternalCooldownSeconds
+    {
+        get => _spellCastPushbackInternalCooldownSeconds;
+        set => _spellCastPushbackInternalCooldownSeconds = Math.Max(0.0f, value);
+    }
 
     public void ShowFloatingText(string text, Color color)
     {
@@ -156,6 +172,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (!InCombat && ManaState.Tick(delta) > 0)
             NotifyManaChanged();
 
+        TickSpellCastPushbackCooldown((float)delta);
         HandleHealthRegenerationDelay((float)delta);
         if (InCombat)
             _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
@@ -240,6 +257,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         ShowFloatingDamageNumber(damage);
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
+        TryApplySpellCastPushback(damage);
 
         if (HealthStateNode.IsDead)
         {
@@ -842,6 +860,38 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
 
         _pendingPlacementSpell.UpdatePlacementPreview(CreatePlacementCastRequest(GetGlobalMousePosition()));
+    }
+
+    private void TickSpellCastPushbackCooldown(float delta)
+    {
+        if (_spellCastPushbackCooldownRemaining <= 0.0f)
+            return;
+
+        _spellCastPushbackCooldownRemaining = Math.Max(
+            0.0f,
+            _spellCastPushbackCooldownRemaining - Math.Max(0.0f, delta));
+    }
+
+    private void TryApplySpellCastPushback(int damage)
+    {
+        if (damage <= 0 ||
+            _pendingCast == null ||
+            SpellCastPushbackPercent <= 0.0f ||
+            _spellCastPushbackCooldownRemaining > 0.0f)
+        {
+            return;
+        }
+
+        var pushbackSeconds = Math.Max(0.0f, _pendingCast.DurationSeconds * SpellCastPushbackPercent);
+        if (pushbackSeconds <= 0.0f)
+            return;
+
+        _pendingCast.ElapsedSeconds = Math.Max(0.0f, _pendingCast.ElapsedSeconds - pushbackSeconds);
+        _spellCastPushbackCooldownRemaining = SpellCastPushbackInternalCooldownSeconds;
+        RefreshCastBar();
+
+        if (_castBar != null && GodotObject.IsInstanceValid(_castBar))
+            _castBar.ShowPushback(pushbackSeconds);
     }
 
     private bool UpdatePendingCast(float delta, Vector2 movementInput)

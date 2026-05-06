@@ -36,6 +36,7 @@ ProjectileVisualFrames = ExtResource("20_fire_ball_frames")
 SpellId = "fire_ball"
 CastAction = &"cast_spell1"
 HudLabel = "Fireball"
+CastTimeSeconds = 1.0
 
 [node name="Damage" type="Node" parent="FireBall" unique_id=76691458]
 script = ExtResource("14_damage")
@@ -98,6 +99,7 @@ CastAction = &"cast_spell4"
 HudLabel = "Ring of Fire"
 ManaCost = 35
 Cooldown = 6.0
+CastTimeSeconds = 2.0
 
 [node name="RingOfFireArea" parent="RingOfFire" unique_id=1053815237 instance=ExtResource("10_ring_of_fire_area")]
 visible = false
@@ -138,6 +140,7 @@ ProjectileVisualFrames = ExtResource("21_ice_ball_frames")
 SpellId = "ice_ball"
 CastAction = &"cast_spell6"
 HudLabel = "Ice Ball"
+CastTimeSeconds = 1.0
 
 [node name="Damage" type="Node" parent="IceBall" unique_id=1071426036]
 script = ExtResource("14_damage")

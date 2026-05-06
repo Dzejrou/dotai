@@ -34,6 +34,7 @@ script = ExtResource("1_omni_sprite")
 scale = Vector2(1.1, 1.1)
 sprite_frames = ExtResource("2_skeleton_frames")
 animation = &"idle_south"
+speed_scale = 2.0
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1135505834]
 avoidance_enabled = true
