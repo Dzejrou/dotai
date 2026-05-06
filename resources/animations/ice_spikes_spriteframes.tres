@@ -1,0 +1,58 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_000.png" id="1_ice_spikes_0"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_001.png" id="2_ice_spikes_1"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_002.png" id="3_ice_spikes_2"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_003.png" id="4_ice_spikes_3"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_004.png" id="5_ice_spikes_4"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_005.png" id="6_ice_spikes_5"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_006.png" id="7_ice_spikes_6"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_007.png" id="8_ice_spikes_7"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_008.png" id="9_ice_spikes_8"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_009.png" id="10_ice_spikes_9"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_010.png" id="11_ice_spikes_10"]
+[ext_resource type="Texture2D" path="res://assets/ice_spikes/base/frame_011.png" id="12_ice_spikes_11"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ice_spikes_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_ice_spikes_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ice_spikes_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_ice_spikes_3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_ice_spikes_4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_ice_spikes_5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ice_spikes_6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_ice_spikes_7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_ice_spikes_8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_ice_spikes_9")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_ice_spikes_10")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_ice_spikes_11")
+}],
+"loop": true,
+"name": &"default",
+"speed": 10.0
+}]

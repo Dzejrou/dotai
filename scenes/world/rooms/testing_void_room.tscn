@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/Room.cs" id="1_room_screen"]
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="2_w4qed"]
-[ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="2_xd34g"]
+[ext_resource type="PackedScene" path="res://scenes/effects/ice_spikes_area.tscn" id="2_xd34g"]
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="4_3evjt"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="5_ttrfo"]
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
@@ -62,7 +62,7 @@ position = Vector2(423, 487)
 
 [node name="Ephemeral" type="Node" parent="Unscaled" unique_id=516310178]
 
-[node name="BlizzardArea" parent="Unscaled" unique_id=26160184 instance=ExtResource("2_xd34g")]
+[node name="IceSpikesArea" parent="Unscaled" unique_id=26160184 instance=ExtResource("2_xd34g")]
 position = Vector2(1121, 449)
 EffectLifetime = 0.0
 

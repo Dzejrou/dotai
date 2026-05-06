@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://buj2n6nnk6s2e"]
+
+[ext_resource type="Script" path="res://scripts/spells/IceSpikesArea.cs" id="1_ice_spikes_area_script"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="2_damage"]
+[ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="3_slowed_effect"]
+[ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="4_immobilized_effect"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/ice_spikes_spriteframes.tres" id="5_ice_spikes_frames"]
+[ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="6_omni_sprite"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ice_spikes"]
+radius = 56.0
+
+[node name="IceSpikesArea" type="Area2D" unique_id=26160184]
+z_index = -2
+monitorable = false
+script = ExtResource("1_ice_spikes_area_script")
+EffectLifetime = 4.0
+FillColor = Color(1, 1, 1, 0)
+OutlineColor = Color(1, 1, 1, 0)
+PreviewFillColor = Color(1, 1, 1, 0)
+PreviewOutlineColor = Color(1, 1, 1, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2026040801]
+shape = SubResource("CircleShape2D_ice_spikes")
+
+[node name="OmniSprite" type="Node2D" parent="."]
+script = ExtResource("6_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
+sprite_frames = ExtResource("5_ice_spikes_frames")
+
+[node name="Damage" type="Node" parent="." unique_id=2026040802]
+script = ExtResource("2_damage")
+MaximumDamage = 3
+
+[node name="SlowedEffect" type="Node" parent="." unique_id=2026040803]
+script = ExtResource("3_slowed_effect")
+DisplayName = "SLOWED"
+FloatingTextLabel = "SLOWED"
+DurationSeconds = 6.0
+TickIntervalSeconds = 0.0
+
+[node name="ImmobilizedEffect" type="Node" parent="." unique_id=2026040804]
+script = ExtResource("4_immobilized_effect")
+DisplayName = "IMMOBILIZED"
+FloatingTextLabel = "IMMOBILIZED"
+DurationSeconds = 2.0
+TickIntervalSeconds = 0.0

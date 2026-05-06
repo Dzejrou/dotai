@@ -15,8 +15,8 @@
 [ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="13_immobilized_effect"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="14_damage"]
 [ext_resource type="Script" uid="uid://cm5iqbvcugdr8" path="res://scripts/spells/IceBallSpell.cs" id="15_ice_ball_spell"]
-[ext_resource type="Script" uid="uid://u1hmkvcw1a2l" path="res://scripts/spells/BlizzardSpell.cs" id="16_blizzard_spell"]
-[ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="17_blizzard_area"]
+[ext_resource type="Script" path="res://scripts/spells/IceSpikesSpell.cs" id="16_ice_spikes_spell"]
+[ext_resource type="PackedScene" path="res://scenes/effects/ice_spikes_area.tscn" id="17_ice_spikes_area"]
 [ext_resource type="Script" uid="uid://dlxqxvyam785x" path="res://scripts/spells/PoisonCloudSpell.cs" id="18_y1cuy"]
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="19_y1cuy"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="20_fire_ball_frames"]
@@ -154,16 +154,16 @@ TickIntervalSeconds = 0.0
 DisplayName = "SLOWED"
 FloatingTextLabel = "SLOWED"
 
-[node name="Blizzard" type="Node" parent="." unique_id=1345449359]
-script = ExtResource("16_blizzard_spell")
-SpellId = "blizzard"
+[node name="IceSpikes" type="Node" parent="." unique_id=1345449359]
+script = ExtResource("16_ice_spikes_spell")
+SpellId = "ice_spikes"
 CastAction = &"cast_spell7"
-HudLabel = "Blizzard"
+HudLabel = "Ice Spikes"
 ManaCost = 35
 Cooldown = 6.0
 CastTimeSeconds = 3.0
 
-[node name="BlizzardArea" parent="Blizzard" unique_id=1509322492 instance=ExtResource("17_blizzard_area")]
+[node name="IceSpikesArea" parent="IceSpikes" unique_id=1509322492 instance=ExtResource("17_ice_spikes_area")]
 visible = false
 
 [node name="PoisonCloud" type="Node" parent="." unique_id=1689448805]
