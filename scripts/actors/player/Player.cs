@@ -1080,6 +1080,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (!spell.CanCast(this, lockedRequest))
             return false;
 
+        FaceSpellRequest(spell, lockedRequest);
+
         var castDuration = spell.CastTimeDuration;
         if (castDuration <= 0.0f)
             return StartSpellEffect(spell, lockedRequest);
@@ -1124,6 +1126,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
         }
 
+        FaceSpellRequest(completedCast.Spell, completedCast.Request ?? SpellCastRequest.Empty);
         PlayCastCompletionAnimationIfAvailable();
         completedCast.Spell.TryCast(this, completedCast.Request ?? SpellCastRequest.Empty);
         SetState(CombatUnitState.Idle);
@@ -1247,6 +1250,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return false;
 
         var lockedRequest = request?.Clone() ?? SpellCastRequest.Empty;
+        FaceSpellRequest(spell, lockedRequest);
         var shouldOwnRuntimeNodes = spell.IsChanneled;
         lockedRequest.OwnRuntimeNodesForChannel = shouldOwnRuntimeNodes;
 
@@ -1276,6 +1280,44 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         SetState(CombatUnitState.Channeling);
         RefreshCastBar();
         PlayCastingAnimationIfAvailable();
+        return true;
+    }
+
+    // TODO: Keep facing synced to the live tab target / single-target channeled spell target while targeting, casting, and channeling.
+    private void FaceSpellRequest(Spell spell, SpellCastRequest request)
+    {
+        if (!TryResolveSpellFacingDirection(spell, request, out var facingDirection))
+            return;
+
+        SetFacingDirection(facingDirection);
+    }
+
+    private bool TryResolveSpellFacingDirection(Spell spell, SpellCastRequest request, out Vector2 facingDirection)
+    {
+        facingDirection = Vector2.Zero;
+        if (spell == null ||
+            !spell.ShouldFaceCastRequest ||
+            request == null ||
+            SpellOrigin == null ||
+            !GodotObject.IsInstanceValid(SpellOrigin))
+        {
+            return false;
+        }
+
+        if (request.TryResolveTargetPosition(out var targetPosition))
+        {
+            var toTarget = targetPosition - SpellOrigin.GlobalPosition;
+            if (toTarget == Vector2.Zero)
+                return false;
+
+            facingDirection = toTarget.Normalized();
+            return true;
+        }
+
+        if (!request.Direction.HasValue || request.Direction.Value == Vector2.Zero)
+            return false;
+
+        facingDirection = request.Direction.Value.Normalized();
         return true;
     }
 

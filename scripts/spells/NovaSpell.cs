@@ -11,6 +11,8 @@ public abstract partial class NovaSpell : Spell
     [Export]
     public float Range { get; set; } = 72.0f;
 
+    public override bool ShouldFaceCastRequest => false;
+
     public override bool CanCast(ISpellCaster caster, SpellCastRequest request)
     {
         return base.CanCast(caster, request) && VfxScene != null && caster?.Faction != null;

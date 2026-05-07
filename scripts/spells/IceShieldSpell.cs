@@ -8,6 +8,8 @@ public partial class IceShieldSpell : Spell
     [Export]
     public PackedScene ShieldScene { get; set; }
 
+    public override bool ShouldFaceCastRequest => false;
+
     public override bool TryCast(ISpellCaster caster, SpellCastRequest request)
     {
         if (!base.CanCast(caster, request))

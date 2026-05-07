@@ -5,6 +5,8 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class TEST_AoE_respawn : Spell
 {
+    public override bool ShouldFaceCastRequest => false;
+
     public override bool TryCast(ISpellCaster caster, SpellCastRequest request)
     {
         if (!CanCast(caster, request))

@@ -43,6 +43,7 @@ public abstract partial class Spell : Node
 
     public virtual float ChannelDuration => Math.Max(0.0f, ChannelDurationSeconds);
     public bool IsChanneled => ChannelDuration > 0.0f;
+    public virtual bool ShouldFaceCastRequest => true;
     public virtual float CooldownDuration => Math.Max(0.0f, Cooldown);
     public virtual float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
 
