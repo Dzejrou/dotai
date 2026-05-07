@@ -1,5 +1,8 @@
 using Godot;
 
+using System;
+using System.Collections.Generic;
+
 public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMember, IHealable
 {
     [Signal]
@@ -85,6 +88,21 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
 
     public abstract void ApplyHealing(Healing healing);
 
+    protected bool TryApplyDamageToHealth(Damage damageInfo, bool setReceiverTargetToSource, out int appliedDamage)
+    {
+        appliedDamage = 0;
+        if (damageInfo == null || IsDead)
+            return false;
+
+        var remainingDamage = ResolveRemainingDamageAfterAbsorption(damageInfo);
+        damageInfo.RegisterHit(this, setReceiverTargetToSource);
+        if (remainingDamage <= 0)
+            return false;
+
+        appliedDamage = HealthStateNode.ApplyDamage(remainingDamage);
+        return appliedDamage > 0;
+    }
+
     private void EnsureModelChangeSubscriptions()
     {
         EnsureHealthStateChangedConnected();
@@ -159,5 +177,37 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     private void HandleStatusEffectsChanged()
     {
         OnStatusEffectsChanged();
+    }
+
+    private int ResolveRemainingDamageAfterAbsorption(Damage damageInfo)
+    {
+        var remainingDamage = Math.Max(0, damageInfo?.Amount ?? 0);
+        if (remainingDamage <= 0)
+            return 0;
+
+        var absorbers = new List<IDamageAbsorber>();
+        CollectDamageAbsorbers(this, absorbers);
+        foreach (var absorber in absorbers)
+        {
+            remainingDamage = Math.Clamp(absorber.AbsorbDamage(remainingDamage), 0, remainingDamage);
+            if (remainingDamage <= 0)
+                return 0;
+        }
+
+        return remainingDamage;
+    }
+
+    private static void CollectDamageAbsorbers(Node node, List<IDamageAbsorber> absorbers)
+    {
+        foreach (var child in node.GetChildren())
+        {
+            if (child is not Node childNode)
+                continue;
+
+            if (childNode is IDamageAbsorber absorber)
+                absorbers.Add(absorber);
+
+            CollectDamageAbsorbers(childNode, absorbers);
+        }
     }
 }

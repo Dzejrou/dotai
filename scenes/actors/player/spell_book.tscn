@@ -26,6 +26,8 @@
 [ext_resource type="Script" uid="uid://che406lu07qqo" path="res://scripts/spells/TEST_AoE_respawn.cs" id="24_test_aoe_respawn_spell"]
 [ext_resource type="Script" uid="uid://u1hmkvcw1a2l" path="res://scripts/spells/BlizzardSpell.cs" id="25_blizzard_spell"]
 [ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="26_blizzard_area"]
+[ext_resource type="Script" path="res://scripts/spells/IceShieldSpell.cs" id="27_ice_shield_spell"]
+[ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="28_ice_shield_scene"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -167,6 +169,13 @@ CastTimeSeconds = 3.0
 
 [node name="IceSpikesArea" parent="IceSpikes" unique_id=1509322492 instance=ExtResource("17_ice_spikes_area")]
 visible = false
+
+[node name="IceShield" type="Node" parent="." unique_id=2006183179]
+script = ExtResource("27_ice_shield_spell")
+ShieldScene = ExtResource("28_ice_shield_scene")
+SpellId = "ice_shield"
+HudLabel = "Ice Shield"
+Cooldown = 60.0
 
 [node name="Blizzard" type="Node" parent="." unique_id=1938442057]
 script = ExtResource("25_blizzard_spell")

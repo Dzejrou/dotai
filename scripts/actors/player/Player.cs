@@ -263,8 +263,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (_isDead)
             return;
 
-        var damage = HealthStateNode.ApplyDamage(damageInfo.Amount);
-        damageInfo.RegisterHit(this, setReceiverTargetToSource: true);
+        if (!TryApplyDamageToHealth(damageInfo, setReceiverTargetToSource: true, out var damage))
+            return;
 
         ShowFloatingDamageNumber(damage);
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);

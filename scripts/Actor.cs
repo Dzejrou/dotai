@@ -370,8 +370,8 @@ public abstract partial class Actor : CombatCharacter
             break;
         }
 
-        damage = HealthStateNode.ApplyDamage(damageInfo.Amount);
-        damageInfo.RegisterHit(this, setReceiverTargetToSource: false);
+        if (!TryApplyDamageToHealth(damageInfo, setReceiverTargetToSource: false, out damage))
+            return false;
 
         died = HealthStateNode.IsDead;
         if (died)

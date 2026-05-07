@@ -1,0 +1,42 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ice_shield/base/frame_000.png" id="1_ice_shield_0"]
+[ext_resource type="Texture2D" path="res://assets/ice_shield/base/frame_001.png" id="2_ice_shield_1"]
+[ext_resource type="Texture2D" path="res://assets/ice_shield/base/frame_002.png" id="3_ice_shield_2"]
+[ext_resource type="Texture2D" path="res://assets/ice_shield/base/frame_003.png" id="4_ice_shield_3"]
+[ext_resource type="Texture2D" path="res://assets/ice_shield/base/frame_004.png" id="5_ice_shield_4"]
+[ext_resource type="Texture2D" path="res://assets/ice_shield/base/frame_005.png" id="6_ice_shield_5"]
+[ext_resource type="Texture2D" path="res://assets/ice_shield/base/frame_006.png" id="7_ice_shield_6"]
+[ext_resource type="Texture2D" path="res://assets/ice_shield/base/frame_007.png" id="8_ice_shield_7"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ice_shield_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_ice_shield_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ice_shield_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_ice_shield_3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_ice_shield_4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_ice_shield_5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ice_shield_6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_ice_shield_7")
+}],
+"loop": true,
+"name": &"default",
+"speed": 12.0
+}]
