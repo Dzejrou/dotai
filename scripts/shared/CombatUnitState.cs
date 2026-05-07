@@ -6,5 +6,6 @@ public enum CombatUnitState
     PursuingTarget,
     Engaged,
     Casting,
+    Channeling,
     Attacking,
 }

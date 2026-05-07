@@ -22,8 +22,14 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
 
     public override bool TryCast(ISpellCaster caster, SpellCastRequest request)
     {
+        return TryCast(caster, request, out _);
+    }
+
+    public override bool TryCast(ISpellCaster caster, SpellCastRequest request, out SpellCastResult result)
+    {
+        result = null;
         if (TryResolvePlacementPosition(caster, request, out var worldPosition))
-            return SpawnArea(caster, worldPosition);
+            return SpawnArea(caster, worldPosition, request?.OwnRuntimeNodesForChannel ?? false, out result);
 
         return LogMissingCastRequestData("Ground-placed spell requires a target position or target node.");
     }
@@ -49,7 +55,7 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
         if (!TryResolvePlacementPosition(caster, request, out var worldPosition))
             return LogMissingCastRequestData("Ground-placed spell requires a target position or target node.");
 
-        return SpawnArea(caster, worldPosition);
+        return SpawnArea(caster, worldPosition, ownRuntimeNodesForChannel: false, out _);
     }
 
     public void UpdatePlacementPreview(SpellCastRequest request)
@@ -96,8 +102,13 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
     {
     }
 
-    private bool SpawnArea(ISpellCaster caster, Vector2 worldPosition)
+    private bool SpawnArea(
+        ISpellCaster caster,
+        Vector2 worldPosition,
+        bool ownRuntimeNodesForChannel,
+        out SpellCastResult result)
     {
+        result = null;
         if (!CanCast(caster, SpellCastRequest.Empty))
         {
             CancelPlacement();
@@ -130,6 +141,12 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
         area.GlobalPosition = worldPosition;
         area.InitializeRuntime(caster.SpellOrigin, caster.Faction);
         parent.AddChild(area);
+
+        if (ownRuntimeNodesForChannel)
+        {
+            result = new SpellCastResult();
+            result.AddChannelOwnedNode(area);
+        }
 
         StartCooldown();
         CancelPlacement();

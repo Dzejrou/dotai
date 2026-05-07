@@ -25,6 +25,7 @@ public partial class CastBar : Control
     private ProgressBar _progressBar;
     private float _durationSeconds;
     private float _pushbackDisplayRemaining;
+    private bool _isChanneling;
 
     public override void _Ready()
     {
@@ -46,9 +47,10 @@ public partial class CastBar : Control
             _pushbackLabel.Visible = false;
     }
 
-    public void ShowCast(string label, float durationSeconds)
+    public void ShowCast(string label, float durationSeconds, bool isChanneling = false)
     {
         _durationSeconds = Math.Max(0.0f, durationSeconds);
+        _isChanneling = isChanneling;
 
         if (_spellLabel != null)
             _spellLabel.Text = string.IsNullOrWhiteSpace(label) ? "Casting" : label;
@@ -86,9 +88,10 @@ public partial class CastBar : Control
     {
         var clampedElapsed = Mathf.Clamp(elapsedSeconds, 0.0f, Math.Max(0.0f, _durationSeconds));
         var remainingSeconds = Math.Max(0.0f, _durationSeconds - clampedElapsed);
+        var progressValue = _isChanneling ? remainingSeconds : clampedElapsed;
 
         if (_progressBar != null)
-            _progressBar.Value = clampedElapsed;
+            _progressBar.Value = progressValue;
 
         if (_timeLabel != null)
             _timeLabel.Text = $"{remainingSeconds:0.0}s";
@@ -99,6 +102,7 @@ public partial class CastBar : Control
         Visible = false;
         _durationSeconds = 0.0f;
         _pushbackDisplayRemaining = 0.0f;
+        _isChanneling = false;
 
         if (_progressBar != null)
             _progressBar.Value = 0.0;

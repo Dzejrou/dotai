@@ -21,6 +21,7 @@ public abstract partial class Spell : Node
     public float Cooldown { get; set; } = 0.0f;
 
     private float _castTimeSeconds;
+    private float _channelDurationSeconds;
     private float _cooldownRemaining;
 
     public string DisplayLabel => !string.IsNullOrWhiteSpace(HudLabel) ? HudLabel : Name;
@@ -33,6 +34,15 @@ public abstract partial class Spell : Node
     }
 
     public virtual float CastTimeDuration => Math.Max(0.0f, CastTimeSeconds);
+    [Export]
+    public float ChannelDurationSeconds
+    {
+        get => _channelDurationSeconds;
+        set => _channelDurationSeconds = Math.Max(0.0f, value);
+    }
+
+    public virtual float ChannelDuration => Math.Max(0.0f, ChannelDurationSeconds);
+    public bool IsChanneled => ChannelDuration > 0.0f;
     public virtual float CooldownDuration => Math.Max(0.0f, Cooldown);
     public virtual float CooldownRemaining => Math.Max(0.0f, _cooldownRemaining);
 
@@ -95,6 +105,12 @@ public abstract partial class Spell : Node
             caster.NotifyManaChanged();
 
         return true;
+    }
+
+    public virtual bool TryCast(ISpellCaster caster, SpellCastRequest request, out SpellCastResult result)
+    {
+        result = null;
+        return TryCast(caster, request);
     }
 
     public abstract bool TryCast(ISpellCaster caster, SpellCastRequest request);

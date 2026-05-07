@@ -6,12 +6,20 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellCaster
 {
+    private enum PendingSpellPhase
+    {
+        Casting,
+        Channeling,
+    }
+
     private sealed class PendingPlayerCast
     {
         public Spell Spell { get; init; }
         public SpellCastRequest Request { get; init; }
         public float DurationSeconds { get; init; }
         public float ElapsedSeconds { get; set; }
+        public PendingSpellPhase Phase { get; init; }
+        public SpellCastResult ChannelResult { get; init; }
     }
 
     private const string CastingAnimationBaseName = "casting";
@@ -73,6 +81,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private CastBar _castBar;
     private string _activeCompletionAnimationName;
     private bool _animationFinishedConnected;
+    public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
     public bool CanBeTargeted => !_isDead;
     public PlayerTargetingState Targeting { get; } = new();
@@ -193,6 +202,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         if (UpdatePendingCast((float)delta, direction))
             return;
+
+        SetState(CombatUnitState.Idle);
 
         if (direction == Vector2.Zero)
         {
@@ -886,12 +897,19 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (pushbackSeconds <= 0.0f)
             return;
 
-        _pendingCast.ElapsedSeconds = Math.Max(0.0f, _pendingCast.ElapsedSeconds - pushbackSeconds);
+        if (_pendingCast.Phase == PendingSpellPhase.Channeling)
+            _pendingCast.ElapsedSeconds = Math.Min(_pendingCast.DurationSeconds, _pendingCast.ElapsedSeconds + pushbackSeconds);
+        else
+            _pendingCast.ElapsedSeconds = Math.Max(0.0f, _pendingCast.ElapsedSeconds - pushbackSeconds);
+
         _spellCastPushbackCooldownRemaining = SpellCastPushbackInternalCooldownSeconds;
         RefreshCastBar();
 
         if (_castBar != null && GodotObject.IsInstanceValid(_castBar))
             _castBar.ShowPushback(pushbackSeconds);
+
+        if (_pendingCast != null && _pendingCast.ElapsedSeconds >= _pendingCast.DurationSeconds)
+            CompletePendingCast();
     }
 
     private bool UpdatePendingCast(float delta, Vector2 movementInput)
@@ -907,6 +925,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         UpdateTargetingState();
         Velocity = Vector2.Zero;
+        SetState(_pendingCast.Phase == PendingSpellPhase.Channeling
+            ? CombatUnitState.Channeling
+            : CombatUnitState.Casting);
         _pendingCast.ElapsedSeconds = Math.Min(
             _pendingCast.DurationSeconds,
             _pendingCast.ElapsedSeconds + Math.Max(0.0f, delta));
@@ -956,6 +977,12 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
             if (spell is IPlacementSpell placementSpell)
             {
+                if (ReferenceEquals(_pendingCast?.Spell, spell))
+                    return;
+
+                if (_pendingCast != null)
+                    CancelPendingCast();
+
                 if (ReferenceEquals(_pendingPlacementSpell, placementSpell))
                 {
                     var tabTarget = Targeting.TabTarget;
@@ -1043,6 +1070,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (spell == null || !GodotObject.IsInstanceValid(spell))
             return false;
 
+        if (ReferenceEquals(_pendingCast?.Spell, spell))
+            return false;
+
         ClearCompletionAnimation();
         CancelPendingCast();
 
@@ -1052,7 +1082,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         var castDuration = spell.CastTimeDuration;
         if (castDuration <= 0.0f)
-            return spell.TryCast(this, lockedRequest);
+            return StartSpellEffect(spell, lockedRequest);
 
         _pendingCast = new PendingPlayerCast
         {
@@ -1060,8 +1090,10 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             Request = lockedRequest,
             DurationSeconds = castDuration,
             ElapsedSeconds = 0.0f,
+            Phase = PendingSpellPhase.Casting,
         };
 
+        SetState(CombatUnitState.Casting);
         RefreshCastBar();
         PlayCastingAnimationIfAvailable();
         return true;
@@ -1074,15 +1106,34 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         RefreshCastBar();
 
         if (completedCast?.Spell == null || !GodotObject.IsInstanceValid(completedCast.Spell))
+        {
+            SetState(CombatUnitState.Idle);
             return;
+        }
+
+        if (completedCast.Phase == PendingSpellPhase.Channeling)
+        {
+            CleanupChannelOwnedNodes(completedCast.ChannelResult);
+            SetState(CombatUnitState.Idle);
+            return;
+        }
+
+        if (completedCast.Spell.IsChanneled)
+        {
+            StartSpellEffect(completedCast.Spell, completedCast.Request ?? SpellCastRequest.Empty);
+            return;
+        }
 
         PlayCastCompletionAnimationIfAvailable();
         completedCast.Spell.TryCast(this, completedCast.Request ?? SpellCastRequest.Empty);
+        SetState(CombatUnitState.Idle);
     }
 
     private void CancelPendingCast()
     {
+        CleanupChannelOwnedNodes(_pendingCast?.Phase == PendingSpellPhase.Channeling ? _pendingCast.ChannelResult : null);
         _pendingCast = null;
+        SetState(CombatUnitState.Idle);
         RefreshCastBar();
     }
 
@@ -1097,7 +1148,10 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
         }
 
-        _castBar.ShowCast(_pendingCast.Spell.DisplayLabel, _pendingCast.DurationSeconds);
+        _castBar.ShowCast(
+            _pendingCast.Spell.DisplayLabel,
+            _pendingCast.DurationSeconds,
+            _pendingCast.Phase == PendingSpellPhase.Channeling);
         _castBar.UpdateCast(_pendingCast.ElapsedSeconds);
     }
 
@@ -1185,6 +1239,61 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
             _spellsByAction[spell.CastAction] = spell;
         }
+    }
+
+    private bool StartSpellEffect(Spell spell, SpellCastRequest request)
+    {
+        if (spell == null || !GodotObject.IsInstanceValid(spell))
+            return false;
+
+        var lockedRequest = request?.Clone() ?? SpellCastRequest.Empty;
+        var shouldOwnRuntimeNodes = spell.IsChanneled;
+        lockedRequest.OwnRuntimeNodesForChannel = shouldOwnRuntimeNodes;
+
+        var didCast = spell.TryCast(this, lockedRequest, out var castResult);
+        if (!didCast)
+        {
+            SetState(CombatUnitState.Idle);
+            return false;
+        }
+
+        if (!spell.IsChanneled)
+        {
+            SetState(CombatUnitState.Idle);
+            return true;
+        }
+
+        _pendingCast = new PendingPlayerCast
+        {
+            Spell = spell,
+            Request = lockedRequest,
+            DurationSeconds = spell.ChannelDuration,
+            ElapsedSeconds = 0.0f,
+            Phase = PendingSpellPhase.Channeling,
+            ChannelResult = castResult,
+        };
+
+        SetState(CombatUnitState.Channeling);
+        RefreshCastBar();
+        PlayCastingAnimationIfAvailable();
+        return true;
+    }
+
+    private void CleanupChannelOwnedNodes(SpellCastResult result)
+    {
+        if (result?.ChannelOwnedNodes == null)
+            return;
+
+        foreach (var node in result.ChannelOwnedNodes)
+        {
+            if (node != null && GodotObject.IsInstanceValid(node))
+                node.QueueFree();
+        }
+    }
+
+    private void SetState(CombatUnitState state)
+    {
+        CurrentState = state;
     }
 
 }

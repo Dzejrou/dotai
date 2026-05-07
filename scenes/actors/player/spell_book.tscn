@@ -174,10 +174,11 @@ SpellId = "blizzard"
 HudLabel = "Blizzard"
 ManaCost = 35
 Cooldown = 6.0
-CastTimeSeconds = 3.0
+ChannelDurationSeconds = 12.0
 
 [node name="BlizzardArea" parent="Blizzard" unique_id=1591382954 instance=ExtResource("26_blizzard_area")]
 visible = false
+EffectLifetime = 12.0
 
 [node name="PoisonCloud" type="Node" parent="." unique_id=1689448805]
 script = ExtResource("18_y1cuy")

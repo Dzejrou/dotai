@@ -7,6 +7,7 @@ public sealed class SpellCastRequest
     public Vector2? TargetPosition { get; set; }
     public Node2D TargetNode { get; set; }
     public Vector2? Direction { get; set; }
+    public bool OwnRuntimeNodesForChannel { get; set; }
 
     public SpellCastRequest Clone()
     {
@@ -15,6 +16,7 @@ public sealed class SpellCastRequest
             TargetPosition = TargetPosition,
             TargetNode = TargetNode,
             Direction = Direction,
+            OwnRuntimeNodesForChannel = OwnRuntimeNodesForChannel,
         };
     }
 
