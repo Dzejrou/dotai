@@ -70,8 +70,8 @@ public abstract partial class ProjectileSpell : Spell
             return false;
         }
 
-        projectile.GlobalPosition = spellOrigin.GlobalPosition;
         parent.AddChild(projectile);
+        projectile.GlobalPosition = spellOrigin.GlobalPosition;
         if (!TryResolveProjectileDirection(caster, request, out var projectileDirection))
         {
             projectile.QueueFree();
