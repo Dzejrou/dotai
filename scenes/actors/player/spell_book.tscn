@@ -24,6 +24,8 @@
 [ext_resource type="Script" uid="uid://b05kftwrcxc3p" path="res://scripts/spells/DoomSpell.cs" id="22_doom_spell"]
 [ext_resource type="PackedScene" uid="uid://5wyjxhtl686q" path="res://scenes/effects/doom_area.tscn" id="23_doom_area"]
 [ext_resource type="Script" uid="uid://che406lu07qqo" path="res://scripts/spells/TEST_AoE_respawn.cs" id="24_test_aoe_respawn_spell"]
+[ext_resource type="Script" uid="uid://u1hmkvcw1a2l" path="res://scripts/spells/BlizzardSpell.cs" id="25_blizzard_spell"]
+[ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="26_blizzard_area"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -164,6 +166,17 @@ Cooldown = 6.0
 CastTimeSeconds = 3.0
 
 [node name="IceSpikesArea" parent="IceSpikes" unique_id=1509322492 instance=ExtResource("17_ice_spikes_area")]
+visible = false
+
+[node name="Blizzard" type="Node" parent="." unique_id=1938442057]
+script = ExtResource("25_blizzard_spell")
+SpellId = "blizzard"
+HudLabel = "Blizzard"
+ManaCost = 35
+Cooldown = 6.0
+CastTimeSeconds = 3.0
+
+[node name="BlizzardArea" parent="Blizzard" unique_id=1591382954 instance=ExtResource("26_blizzard_area")]
 visible = false
 
 [node name="PoisonCloud" type="Node" parent="." unique_id=1689448805]
