@@ -209,6 +209,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         {
             UpdateTargetingState();
             Velocity = Vector2.Zero;
+            UpdatePassiveTargetFacing();
             if (TryHoldCompletionAnimation())
                 return;
 
@@ -928,6 +929,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         SetState(_pendingCast.Phase == PendingSpellPhase.Channeling
             ? CombatUnitState.Channeling
             : CombatUnitState.Casting);
+        UpdatePendingCastFacing();
         _pendingCast.ElapsedSeconds = Math.Min(
             _pendingCast.DurationSeconds,
             _pendingCast.ElapsedSeconds + Math.Max(0.0f, delta));
@@ -939,6 +941,29 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         CompletePendingCast();
         return false;
+    }
+
+    // TODO: Pressing Escape while casting/channeling should cancel the cast/channel and suppress menu open; only open the menu when the player is not casting/channeling.
+    private void UpdatePassiveTargetFacing()
+    {
+        var tabTarget = Targeting.TabTarget;
+        if (!IsValidTabTarget(tabTarget) || SpellOrigin == null || !GodotObject.IsInstanceValid(SpellOrigin))
+            return;
+
+        var toTarget = tabTarget.GlobalPosition - SpellOrigin.GlobalPosition;
+        if (toTarget == Vector2.Zero)
+            return;
+
+        SetFacingDirection(toTarget);
+    }
+
+    private void UpdatePendingCastFacing()
+    {
+        if (_pendingCast?.Spell == null || !GodotObject.IsInstanceValid(_pendingCast.Spell))
+            return;
+
+        var followLiveTargetNode = _pendingCast.Phase == PendingSpellPhase.Casting;
+        FaceSpellRequest(_pendingCast.Spell, _pendingCast.Request ?? SpellCastRequest.Empty, followLiveTargetNode);
     }
 
     private Vector2 GetSpellDirection()
@@ -1283,16 +1308,20 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return true;
     }
 
-    // TODO: Keep facing synced to the live tab target / single-target channeled spell target while targeting, casting, and channeling.
-    private void FaceSpellRequest(Spell spell, SpellCastRequest request)
+    // TODO: Add continuous live-facing for future single-target channeled spells when those are supported.
+    private void FaceSpellRequest(Spell spell, SpellCastRequest request, bool followLiveTargetNode = false)
     {
-        if (!TryResolveSpellFacingDirection(spell, request, out var facingDirection))
+        if (!TryResolveSpellFacingDirection(spell, request, followLiveTargetNode, out var facingDirection))
             return;
 
         SetFacingDirection(facingDirection);
     }
 
-    private bool TryResolveSpellFacingDirection(Spell spell, SpellCastRequest request, out Vector2 facingDirection)
+    private bool TryResolveSpellFacingDirection(
+        Spell spell,
+        SpellCastRequest request,
+        bool followLiveTargetNode,
+        out Vector2 facingDirection)
     {
         facingDirection = Vector2.Zero;
         if (spell == null ||
@@ -1302,6 +1331,16 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             !GodotObject.IsInstanceValid(SpellOrigin))
         {
             return false;
+        }
+
+        if (followLiveTargetNode && request.TryResolveTargetNode(out var targetNode))
+        {
+            var toLiveTarget = targetNode.GlobalPosition - SpellOrigin.GlobalPosition;
+            if (toLiveTarget == Vector2.Zero)
+                return false;
+
+            facingDirection = toLiveTarget.Normalized();
+            return true;
         }
 
         if (request.TryResolveTargetPosition(out var targetPosition))
