@@ -339,7 +339,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     {
         if (_pendingCast != null)
         {
-            CancelPendingCast();
+            CancelPendingCast(showCanceledFeedback: true);
             GetViewport()?.SetInputAsHandled();
             return true;
         }
@@ -1165,23 +1165,33 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         if (completedCast.Spell.IsChanneled)
         {
-            StartSpellEffect(completedCast.Spell, completedCast.Request ?? SpellCastRequest.Empty);
+            if (!StartSpellEffect(completedCast.Spell, completedCast.Request ?? SpellCastRequest.Empty))
+                ShowCastCanceled();
+
             return;
         }
 
         FaceSpellRequest(completedCast.Spell, completedCast.Request ?? SpellCastRequest.Empty);
         PlayCastCompletionAnimationIfAvailable();
-        completedCast.Spell.TryCast(this, completedCast.Request ?? SpellCastRequest.Empty);
+        if (!completedCast.Spell.TryCast(this, completedCast.Request ?? SpellCastRequest.Empty))
+            ShowCastCanceled();
+
         SetState(CombatUnitState.Idle);
     }
 
-    private void CancelPendingCast()
+    private void CancelPendingCast(bool showCanceledFeedback = false)
     {
-        // TODO: Show canceled cast/channel feedback on the cast bar with red "CANCELED" text that fades out over about 2 seconds when an in-progress cast/channel is interrupted.
+        var shouldShowCanceledFeedback = showCanceledFeedback &&
+                                         _pendingCast != null &&
+                                         _castBar != null &&
+                                         GodotObject.IsInstanceValid(_castBar);
         CleanupChannelOwnedNodes(_pendingCast?.Phase == PendingSpellPhase.Channeling ? _pendingCast.ChannelResult : null);
         _pendingCast = null;
         SetState(CombatUnitState.Idle);
-        RefreshCastBar();
+        if (shouldShowCanceledFeedback)
+            _castBar.ShowCanceled();
+        else
+            RefreshCastBar();
     }
 
     private void RefreshCastBar()
@@ -1200,6 +1210,14 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             _pendingCast.DurationSeconds,
             _pendingCast.Phase == PendingSpellPhase.Channeling);
         _castBar.UpdateCast(_pendingCast.ElapsedSeconds);
+    }
+
+    private void ShowCastCanceled(string label = "CANCELED")
+    {
+        if (_castBar == null || !GodotObject.IsInstanceValid(_castBar))
+            return;
+
+        _castBar.ShowCanceled(label);
     }
 
     private void PlayCastingAnimationIfAvailable()
