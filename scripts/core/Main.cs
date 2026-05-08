@@ -373,6 +373,13 @@ public partial class Main : Node2D
         if (keyEvent.PhysicalKeycode != Key.Escape)
             return false;
 
+        if (_player != null &&
+            GodotObject.IsInstanceValid(_player) &&
+            _player.TryCancelSpellInputFromEscape())
+        {
+            return true;
+        }
+
         if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
         {
             if (_debugTrayRoot.HandleEscape())

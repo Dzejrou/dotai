@@ -335,6 +335,25 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return Math.Max(0, CurrentHealth - currentHealthBefore);
     }
 
+    public bool TryCancelSpellInputFromEscape()
+    {
+        if (_pendingCast != null)
+        {
+            CancelPendingCast();
+            GetViewport()?.SetInputAsHandled();
+            return true;
+        }
+
+        if (_pendingPlacementSpell != null)
+        {
+            ClearPendingPlacementSpell();
+            GetViewport()?.SetInputAsHandled();
+            return true;
+        }
+
+        return false;
+    }
+
     private void ConfigureLootMagnetArea()
     {
         if (_lootMagnetArea == null)
@@ -943,7 +962,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return false;
     }
 
-    // TODO: Pressing Escape while casting/channeling should cancel the cast/channel and suppress menu open; only open the menu when the player is not casting/channeling.
     private void UpdatePassiveTargetFacing()
     {
         var tabTarget = Targeting.TabTarget;
@@ -1159,6 +1177,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     private void CancelPendingCast()
     {
+        // TODO: Show canceled cast/channel feedback on the cast bar with red "CANCELED" text that fades out over about 2 seconds when an in-progress cast/channel is interrupted.
         CleanupChannelOwnedNodes(_pendingCast?.Phase == PendingSpellPhase.Channeling ? _pendingCast.ChannelResult : null);
         _pendingCast = null;
         SetState(CombatUnitState.Idle);
