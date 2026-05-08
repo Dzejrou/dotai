@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/Room.cs" id="1_room_screen"]
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="2_w4qed"]
-[ext_resource type="PackedScene" path="res://scenes/effects/ice_spikes_area.tscn" id="2_xd34g"]
+[ext_resource type="PackedScene" uid="uid://buj2n6nnk6s2e" path="res://scenes/effects/ice_spikes_area.tscn" id="2_xd34g"]
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="4_3evjt"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="5_ttrfo"]
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="8_portal"]
 [ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="9_8vkdo"]
 [ext_resource type="PackedScene" uid="uid://byvfwjncgqxvi" path="res://scenes/actors/npcs/knight.tscn" id="10_knight"]
+[ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="12_cvsg0"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -116,6 +117,8 @@ position = Vector2(677.10095, 1018.40625)
 
 [node name="WanderingKnight" parent="Unscaled" unique_id=231595167 instance=ExtResource("10_knight")]
 position = Vector2(1392, 1146)
+
+[node name="IceShield" parent="Unscaled/WanderingKnight" unique_id=1145440603 instance=ExtResource("12_cvsg0")]
 
 [node name="Knight" parent="Unscaled" unique_id=1913812295 instance=ExtResource("10_knight")]
 position = Vector2(209, 1255)
