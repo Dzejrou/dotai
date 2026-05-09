@@ -94,10 +94,19 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         if (damageInfo == null || IsDead)
             return false;
 
-        var remainingDamage = ResolveRemainingDamageAfterAbsorption(damageInfo);
+        var remainingDamage = ResolveRemainingDamageAfterAbsorption(damageInfo, out var fullyAbsorbingAbsorber);
         damageInfo.RegisterHit(this, setReceiverTargetToSource);
         if (remainingDamage <= 0)
+        {
+            if (fullyAbsorbingAbsorber != null)
+            {
+                var origin = fullyAbsorbingAbsorber is Node2D absorberNode && GodotObject.IsInstanceValid(absorberNode)
+                    ? absorberNode
+                    : this;
+                FloatingText.ShowNeutral("ABSORB", origin);
+            }
             return false;
+        }
 
         appliedDamage = HealthStateNode.ApplyDamage(remainingDamage);
         return appliedDamage > 0;
@@ -179,8 +188,9 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         OnStatusEffectsChanged();
     }
 
-    private int ResolveRemainingDamageAfterAbsorption(Damage damageInfo)
+    private int ResolveRemainingDamageAfterAbsorption(Damage damageInfo, out IDamageAbsorber fullyAbsorbingAbsorber)
     {
+        fullyAbsorbingAbsorber = null;
         var remainingDamage = Math.Max(0, damageInfo?.Amount ?? 0);
         if (remainingDamage <= 0)
             return 0;
@@ -191,7 +201,10 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         {
             remainingDamage = Math.Clamp(absorber.AbsorbDamage(remainingDamage), 0, remainingDamage);
             if (remainingDamage <= 0)
+            {
+                fullyAbsorbingAbsorber = absorber;
                 return 0;
+            }
         }
 
         return remainingDamage;
