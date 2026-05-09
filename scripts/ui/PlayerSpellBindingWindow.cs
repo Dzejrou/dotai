@@ -20,12 +20,16 @@ public partial class PlayerSpellBindingWindow : Control
     [Export]
     public NodePath SlotGridPath { get; set; } = new("Center/Panel/Margin/VBox/SlotSection/SlotGrid");
 
+    [Export]
+    public NodePath SaveButtonPath { get; set; } = new("Center/Panel/Margin/VBox/Footer/SaveButton");
+
     private Player _player;
     private Label _titleLabel;
     private Button _closeButton;
     private Label _selectionLabel;
     private GridContainer _spellGrid;
     private GridContainer _slotGrid;
+    private Button _saveButton;
     private readonly Dictionary<Button, Spell> _spellButtons = new();
     private readonly Dictionary<Button, StringName> _slotButtons = new();
     private Spell _selectedSpellTemplate;
@@ -40,9 +44,13 @@ public partial class PlayerSpellBindingWindow : Control
         _selectionLabel = GetNodeOrNull<Label>(SelectionLabelPath);
         _spellGrid = GetNodeOrNull<GridContainer>(SpellGridPath);
         _slotGrid = GetNodeOrNull<GridContainer>(SlotGridPath);
+        _saveButton = GetNodeOrNull<Button>(SaveButtonPath);
 
         if (_closeButton != null)
             _closeButton.Pressed += CloseWindow;
+
+        if (_saveButton != null)
+            _saveButton.Pressed += OnSavePressed;
 
         RefreshSelectionLabel();
         RebuildSlotButtons();
@@ -52,6 +60,9 @@ public partial class PlayerSpellBindingWindow : Control
     {
         if (_closeButton != null)
             _closeButton.Pressed -= CloseWindow;
+
+        if (_saveButton != null)
+            _saveButton.Pressed -= OnSavePressed;
 
         UnbindCurrentPlayer();
     }
@@ -202,6 +213,9 @@ public partial class PlayerSpellBindingWindow : Control
             button.Text = BuildSlotButtonText(slotAction);
             button.Disabled = _player?.SpellLoadoutNode == null;
         }
+
+        if (_saveButton != null)
+            _saveButton.Disabled = _player?.SpellLoadoutNode == null;
     }
 
     private string BuildSpellButtonText(Spell spellTemplate)
@@ -245,6 +259,22 @@ public partial class PlayerSpellBindingWindow : Control
         RefreshSlotButtons();
         RefreshSpellButtons();
         RefreshSelectionLabel();
+    }
+
+    private void OnSavePressed()
+    {
+        if (_player == null || !GodotObject.IsInstanceValid(_player))
+            return;
+
+        if (_player.TrySaveSpellLoadoutConfiguration(out var message))
+        {
+            GD.Print(message);
+            _player.ShowFloatingText("Spell loadout saved", new Color(0.62f, 0.95f, 0.72f, 1.0f));
+            return;
+        }
+
+        GD.PushWarning(message);
+        _player.ShowFloatingText("Spell loadout save failed", new Color(1.0f, 0.62f, 0.62f, 1.0f));
     }
 
     private void RefreshSelectionLabel()

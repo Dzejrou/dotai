@@ -110,6 +110,52 @@ public partial class SpellLoadout : Node
         EmitSignal(SignalName.LoadoutChanged);
     }
 
+    public Dictionary<string, string> BuildSpellIdAssignments()
+    {
+        var assignments = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var slotAction in SlotActions)
+            assignments[slotAction.ToString()] = GetAssignedSpellId(slotAction);
+
+        return assignments;
+    }
+
+    public void ApplySpellIdAssignments(SpellBook spellBook, IReadOnlyDictionary<string, string> spellIdsByAction)
+    {
+        if (spellBook == null || spellIdsByAction == null)
+            return;
+
+        var changed = false;
+        foreach (var pair in spellIdsByAction)
+        {
+            var slotAction = new StringName(pair.Key);
+            if (!IsValidSlotAction(slotAction))
+            {
+                GD.PushWarning($"{GetPath()}: ignoring unknown spell loadout slot '{pair.Key}'.");
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(pair.Value))
+            {
+                changed |= ClearSlotInternal(slotAction);
+                continue;
+            }
+
+            var spellTemplate = spellBook.GetSpellTemplateById(pair.Value);
+            if (spellTemplate == null)
+            {
+                GD.PushWarning(
+                    $"{GetPath()}: configured SpellId '{pair.Value}' for slot '{slotAction}' could not be resolved. Leaving the slot empty.");
+                changed |= ClearSlotInternal(slotAction);
+                continue;
+            }
+
+            changed |= AssignSpell(spellTemplate, slotAction, emitSignal: false);
+        }
+
+        if (changed)
+            EmitSignal(SignalName.LoadoutChanged);
+    }
+
     public bool AssignSpell(Spell spellTemplate, StringName slotAction)
     {
         return AssignSpell(spellTemplate, slotAction, emitSignal: true);
@@ -163,11 +209,13 @@ public partial class SpellLoadout : Node
             EmitSignal(SignalName.LoadoutChanged);
     }
 
-    private void ClearSlotInternal(StringName slotAction)
+    private bool ClearSlotInternal(StringName slotAction)
     {
         var slotNode = GetSlotNode(slotAction, createIfMissing: false);
         if (slotNode == null)
-            return;
+            return false;
+
+        var removedAnyChildren = false;
 
         foreach (var child in slotNode.GetChildren())
         {
@@ -175,8 +223,11 @@ public partial class SpellLoadout : Node
             {
                 slotNode.RemoveChild(childNode);
                 childNode.QueueFree();
+                removedAnyChildren = true;
             }
         }
+
+        return removedAnyChildren;
     }
 
     private void EnsureSlotNodes()

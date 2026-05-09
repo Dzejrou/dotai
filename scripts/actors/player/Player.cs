@@ -78,6 +78,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private ActorHUD _activeTargetHud;
     private readonly HashSet<ActorHUD> _visibleTargetHuds = new();
     private readonly HashSet<ActorHUD> _nextVisibleTargetHuds = new();
+    private readonly GameConfigStore _gameConfigStore = new();
     private CastBar _castBar;
     private string _activeCompletionAnimationName;
     private bool _animationFinishedConnected;
@@ -333,6 +334,18 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         healing.InitializeRuntime(this, amount);
         ApplyHealing(healing);
         return Math.Max(0, CurrentHealth - currentHealthBefore);
+    }
+
+    public bool TrySaveSpellLoadoutConfiguration(out string message)
+    {
+        if (SpellLoadoutNode == null || !GodotObject.IsInstanceValid(SpellLoadoutNode))
+        {
+            message = $"{GetPath()}: player spell loadout is unavailable.";
+            return false;
+        }
+
+        // TODO: Revisit whether spell loadout changes should autosave after binding updates once options-menu settings also share config.json.
+        return _gameConfigStore.TrySaveSpellLoadout(SpellLoadoutNode, out message);
     }
 
     public bool TryCancelSpellInputFromEscape()
@@ -851,7 +864,10 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         SpellLoadoutNode = GetNodeOrNull<SpellLoadout>("SpellLoadout");
 
         if (SpellBookNode == null)
+        {
             GD.PushError($"{GetPath()}: missing required SpellBook child.");
+            return;
+        }
 
         if (SpellLoadoutNode == null)
         {
@@ -859,7 +875,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
         }
 
-        SpellLoadoutNode.ApplyDefaultAssignments(SpellBookNode);
+        _gameConfigStore.InitializeSpellLoadout(SpellBookNode, SpellLoadoutNode);
         SpellLoadoutNode.Connect(SpellLoadout.SignalName.LoadoutChanged, new Callable(this, nameof(OnSpellLoadoutChanged)));
     }
 
