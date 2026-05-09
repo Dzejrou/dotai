@@ -125,6 +125,14 @@ public partial class SpellLoadout : Node
             return;
 
         var changed = false;
+
+        // Config is authoritative for all slots: clear any slot not mentioned in the config.
+        foreach (var slotAction in SlotActions)
+        {
+            if (!spellIdsByAction.ContainsKey(slotAction.ToString()))
+                changed |= ClearSlotInternal(slotAction);
+        }
+
         foreach (var pair in spellIdsByAction)
         {
             var slotAction = new StringName(pair.Key);
