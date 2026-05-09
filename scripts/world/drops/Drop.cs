@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [GlobalClass]
-public partial class Drop : Area2D
+public partial class Drop : Area2D, IInteractable, IInteractionPromptAnchor
 {
     private const float SpawnMoveDurationSeconds = 0.16f;
     private const float SpawnHopPeakOffset = 8.0f;
@@ -18,6 +18,12 @@ public partial class Drop : Area2D
 
     [Export(PropertyHint.Range, "0,4000,1")]
     public float AttractionAcceleration { get; set; } = 1400.0f;
+
+    [Export]
+    public DropPickupMode PickupMode { get; set; } = DropPickupMode.AutoAndMagnet;
+
+    [Export]
+    public Vector2 InteractionPromptOffset { get; set; } = new(0.0f, -32.0f);
 
     private Sprite2D _sprite;
     private CollisionShape2D _collisionShape;
@@ -39,14 +45,36 @@ public partial class Drop : Area2D
 
     public void BeginAttraction(Player player)
     {
+        if (PickupMode == DropPickupMode.InteractOnly)
+            return;
+
         if (_collected || player == null || !GodotObject.IsInstanceValid(player))
             return;
 
         _attractionTarget = player;
     }
 
+    public bool CanInteract(Node interactor)
+    {
+        return PickupMode == DropPickupMode.InteractOnly &&
+               !_collected &&
+               interactor != null &&
+               GodotObject.IsInstanceValid(interactor) &&
+               interactor.IsInsideTree() &&
+               IsInsideTree();
+    }
+
+    public void Interact(Node interactor)
+    {
+        if (interactor is Player player)
+            Collect(player);
+    }
+
     public override void _EnterTree()
     {
+        if (PickupMode == DropPickupMode.InteractOnly)
+            AddToGroup(InteractionGroups.Interactables);
+
         EnsureBodyEnteredConnected();
     }
 
@@ -81,12 +109,15 @@ public partial class Drop : Area2D
         if (_collected)
             return;
 
-        foreach (var body in GetOverlappingBodies())
+        if (PickupMode == DropPickupMode.AutoAndMagnet)
         {
-            if (body is Player player)
+            foreach (var body in GetOverlappingBodies())
             {
-                Collect(player);
-                break;
+                if (body is Player player)
+                {
+                    Collect(player);
+                    break;
+                }
             }
         }
 
@@ -98,6 +129,9 @@ public partial class Drop : Area2D
 
     private void OnBodyEntered(Node2D body)
     {
+        if (PickupMode == DropPickupMode.InteractOnly)
+            return;
+
         if (body is Player player)
             Collect(player);
     }

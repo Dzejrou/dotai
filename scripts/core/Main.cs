@@ -528,6 +528,7 @@ public partial class Main : Node2D
         // Configure the drop node (still not in inventory at this point).
         itemDrop.ItemDefinition = stack.Item;
         itemDrop.Quantity = stack.Quantity;
+        itemDrop.PickupMode = DropPickupMode.InteractOnly;
 
         // Compute spawn motion in the coordinate space of the ephemeral root's Node2D parent.
         if (spawnParent.GetParent() is Node2D spawnOriginNode)
