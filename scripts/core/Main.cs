@@ -254,6 +254,7 @@ public partial class Main : Node2D
         if (inventoryWindowScene?.Instantiate<InventoryWindow>() is InventoryWindow inventoryWindow)
         {
             _inventoryWindow = inventoryWindow;
+            _inventoryWindow.Connect(InventoryWindow.SignalName.ItemDroppedToWorld, new Callable(this, nameof(OnInventoryItemDroppedToWorld)));
             hudCanvas.AddChild(_inventoryWindow);
         }
 
@@ -480,5 +481,73 @@ public partial class Main : Node2D
     {
         if (_debugTrayRoot != null)
             _debugTrayRoot.Close(cancelPlacement);
+    }
+
+    private void OnInventoryItemDroppedToWorld(int slotIndex)
+    {
+        if (_inventoryController == null || !GodotObject.IsInstanceValid(_inventoryController))
+            return;
+
+        // Preflight: verify slot still has a stack before doing anything destructive.
+        if (!_inventoryController.TryGetStack(slotIndex, out var stack) || stack?.Item == null)
+            return;
+
+        // Preflight: require an active room and living player to receive the drop.
+        var room = _world?.ActiveRoom;
+        if (room == null || !GodotObject.IsInstanceValid(room))
+            return;
+
+        if (_player == null || !GodotObject.IsInstanceValid(_player) || !_player.IsInsideTree())
+            return;
+
+        // Preflight: load and instantiate the drop scene before touching inventory.
+        var dropScene = ResourceLoader.Load<PackedScene>("res://scenes/world/drops/inventory_item_drop.tscn");
+        if (dropScene == null)
+        {
+            GD.PushError($"{nameof(Main)}: failed to load inventory_item_drop.tscn — item kept in inventory.");
+            return;
+        }
+
+        var instance = dropScene.Instantiate();
+        if (instance is not InventoryItemDrop itemDrop)
+        {
+            instance?.Free();
+            GD.PushError($"{nameof(Main)}: inventory_item_drop.tscn did not produce an InventoryItemDrop — item kept in inventory.");
+            return;
+        }
+
+        // Preflight: resolve the spawn parent.
+        var spawnParent = room.GetUnscaledEphemeralRoot();
+        if (spawnParent == null)
+        {
+            itemDrop.Free();
+            GD.PushError($"{nameof(Main)}: could not resolve unscaled ephemeral root — item kept in inventory.");
+            return;
+        }
+
+        // Configure the drop node (still not in inventory at this point).
+        itemDrop.ItemDefinition = stack.Item;
+        itemDrop.Quantity = stack.Quantity;
+
+        // Compute spawn motion in the coordinate space of the ephemeral root's Node2D parent.
+        if (spawnParent.GetParent() is Node2D spawnOriginNode)
+        {
+            var angle = (float)GD.RandRange(0.0, Mathf.Tau);
+            var distance = (float)GD.RandRange(8.0, 20.0);
+            var offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
+            var localOrigin = spawnOriginNode.ToLocal(_player.GlobalPosition);
+            itemDrop.ConfigureSpawnMotion(localOrigin, localOrigin + offset);
+        }
+
+        // All preflight checks passed — remove from inventory now.
+        var taken = _inventoryController.TakeStack(slotIndex);
+        if (taken == null)
+        {
+            // Slot was vacated between preflight and take; discard the pre-built drop node.
+            itemDrop.Free();
+            return;
+        }
+
+        spawnParent.CallDeferred(Node.MethodName.AddChild, itemDrop);
     }
 }

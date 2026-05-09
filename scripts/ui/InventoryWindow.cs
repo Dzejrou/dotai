@@ -6,6 +6,9 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class InventoryWindow : Control
 {
+    [Signal]
+    public delegate void ItemDroppedToWorldEventHandler(int slotIndex);
+
     [Export]
     public string WindowTitle { get; set; } = "Inventory";
 
@@ -39,6 +42,8 @@ public partial class InventoryWindow : Control
     private Label _titleLabel;
     private Label _summaryLabel;
     private GridContainer _slotGrid;
+    private int _activeDragSlot = -1;
+    private bool _dragConsumed;
 
     public override void _Ready()
     {
@@ -149,6 +154,9 @@ public partial class InventoryWindow : Control
         if (_slotGrid == null)
             return;
 
+        if (_activeDragSlot >= 0)
+            return;
+
         foreach (var slotView in _slotViews)
         {
             if (GodotObject.IsInstanceValid(slotView.Root))
@@ -160,13 +168,19 @@ public partial class InventoryWindow : Control
         var slotCount = GetExpectedSlotCount();
         for (var i = 0; i < slotCount; i++)
         {
-            var slotRoot = new PanelContainer
+            var slotControl = new InventorySlotControl
             {
+                SlotIndex = i,
+                Inventory = _inventory,
                 CustomMinimumSize = new Vector2(CellSize + 10.0f, CellSize + 10.0f),
-                MouseFilter = Control.MouseFilterEnum.Ignore,
+                MouseFilter = Control.MouseFilterEnum.Stop,
                 SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
                 SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
             };
+
+            slotControl.DragStarted = (slot) => OnSlotDragStarted(slot);
+            slotControl.DropReceived = (from, to) => OnSlotDropReceived(from, to);
+            slotControl.DragEnded = (slot) => OnSlotDragEnded(slot);
 
             var margin = new MarginContainer
             {
@@ -176,7 +190,7 @@ public partial class InventoryWindow : Control
             margin.AddThemeConstantOverride("margin_top", 5);
             margin.AddThemeConstantOverride("margin_right", 5);
             margin.AddThemeConstantOverride("margin_bottom", 5);
-            slotRoot.AddChild(margin);
+            slotControl.AddChild(margin);
 
             var overlay = new Control
             {
@@ -206,8 +220,8 @@ public partial class InventoryWindow : Control
             quantityLabel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
             overlay.AddChild(quantityLabel);
 
-            _slotGrid.AddChild(slotRoot);
-            _slotViews.Add(new InventorySlotView(slotRoot, iconRect, quantityLabel));
+            _slotGrid.AddChild(slotControl);
+            _slotViews.Add(new InventorySlotView(slotControl, iconRect, quantityLabel));
         }
     }
 
@@ -244,6 +258,27 @@ public partial class InventoryWindow : Control
             _summaryLabel.Text = $"{occupiedSlotCount}/{GetExpectedSlotCount()} slots occupied";
     }
 
+    private void OnSlotDragStarted(int slotIndex)
+    {
+        _activeDragSlot = slotIndex;
+        _dragConsumed = false;
+    }
+
+    private void OnSlotDropReceived(int fromSlot, int toSlot)
+    {
+        _dragConsumed = true;
+        _inventory?.TryInteractSlots(fromSlot, toSlot);
+    }
+
+    private void OnSlotDragEnded(int slotIndex)
+    {
+        if (!_dragConsumed && _activeDragSlot == slotIndex)
+            EmitSignal(SignalName.ItemDroppedToWorld, slotIndex);
+
+        _activeDragSlot = -1;
+        _dragConsumed = false;
+    }
+
     private int GetExpectedSlotCount()
     {
         return Math.Max(1, Columns) * Math.Max(1, Rows);
@@ -266,14 +301,14 @@ public partial class InventoryWindow : Control
 
     private sealed class InventorySlotView
     {
-        public InventorySlotView(PanelContainer root, TextureRect iconRect, Label quantityLabel)
+        public InventorySlotView(InventorySlotControl root, TextureRect iconRect, Label quantityLabel)
         {
             Root = root;
             IconRect = iconRect;
             QuantityLabel = quantityLabel;
         }
 
-        public PanelContainer Root { get; }
+        public InventorySlotControl Root { get; }
 
         public TextureRect IconRect { get; }
 

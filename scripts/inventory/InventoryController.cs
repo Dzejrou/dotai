@@ -123,6 +123,49 @@ public partial class InventoryController : Node
             EmitInventoryChanged();
     }
 
+    public bool TryInteractSlots(int fromSlot, int toSlot)
+    {
+        if (fromSlot == toSlot) return false;
+        if (fromSlot < 0 || fromSlot >= _slots.Count) return false;
+        if (toSlot < 0 || toSlot >= _slots.Count) return false;
+
+        var fromStack = _slots[fromSlot];
+        if (fromStack == null) return false;
+
+        var toStack = _slots[toSlot];
+
+        if (toStack == null)
+        {
+            _slots[toSlot] = fromStack;
+            _slots[fromSlot] = null;
+        }
+        else if (CanMerge(toStack, fromStack.Item))
+        {
+            var remaining = toStack.AddQuantity(fromStack.Quantity);
+            _slots[fromSlot] = remaining > 0 ? new InventoryStack(fromStack.Item, remaining) : null;
+        }
+        else
+        {
+            _slots[fromSlot] = toStack;
+            _slots[toSlot] = fromStack;
+        }
+
+        EmitInventoryChanged();
+        return true;
+    }
+
+    public InventoryStack TakeStack(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= _slots.Count) return null;
+
+        var stack = _slots[slotIndex];
+        if (stack == null) return null;
+
+        _slots[slotIndex] = null;
+        EmitInventoryChanged();
+        return stack;
+    }
+
     private void ApplyStartingStacks()
     {
         if (_startingStacksApplied)
