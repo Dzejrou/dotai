@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://drto7ni3dk0bc"]
 
-[ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/RandomActorSpawnPoint.cs" id="1_fbv4c"]
+[ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/ActorSpawner.cs" id="1_fbv4c"]
 [ext_resource type="Script" uid="uid://b3cd7y84rpjic" path="res://scripts/world/rooms/contents/Content.cs" id="1_o3k6q"]
 [ext_resource type="Script" uid="uid://b7sn68drsf3oj" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="2_o3k6q"]
 [ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="3_6sdgs"]

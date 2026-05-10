@@ -9,9 +9,8 @@
 [ext_resource type="PackedScene" uid="uid://dwochr8ocdyfl" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="7_content"]
 [ext_resource type="Script" uid="uid://dfe2si08tcaji" path="res://scripts/world/rooms/contents/RespawnTimer.cs" id="8_kj6pv"]
 [ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="8_portal"]
-[ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="9_8vkdo"]
 [ext_resource type="PackedScene" uid="uid://byvfwjncgqxvi" path="res://scenes/actors/npcs/knight.tscn" id="10_knight"]
-[ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/RandomActorSpawnPoint.cs" id="11_xnhs6"]
+[ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/ActorSpawner.cs" id="11_xnhs6"]
 [ext_resource type="Script" uid="uid://b7sn68drsf3oj" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="12_78isi"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="12_cvsg0"]
 [ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="13_ci7sf"]
@@ -35,6 +34,11 @@
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+
+[sub_resource type="Resource" id="Resource_dryad_option"]
+script = ExtResource("12_78isi")
+ActorScene = ExtResource("5_ttrfo")
+metadata/_custom_type_script = "uid://b7sn68drsf3oj"
 
 [sub_resource type="Resource" id="Resource_042ff"]
 script = ExtResource("12_78isi")
@@ -129,8 +133,10 @@ script = ExtResource("8_kj6pv")
 
 [node name="DryadSpawnPoint" type="Marker2D" parent="Unscaled/ChestContent/Actors" index="2" unique_id=2129428696]
 position = Vector2(679, 879)
-script = ExtResource("9_8vkdo")
-ActorScene = ExtResource("5_ttrfo")
+script = ExtResource("11_xnhs6")
+Options = Array[ExtResource("12_78isi")]([SubResource("Resource_dryad_option")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
 
 [node name="PatrolPath" type="Node" parent="Unscaled/ChestContent/Actors/DryadSpawnPoint" unique_id=316296924]
 

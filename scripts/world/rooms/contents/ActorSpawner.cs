@@ -2,7 +2,7 @@ using Godot;
 
 using System.Collections.Generic;
 
-public partial class RandomActorSpawnPoint : ActorSpawnPoint
+public partial class ActorSpawner : ActorSpawnPoint
 {
     private readonly RandomNumberGenerator _random = CreateRandom();
     private RandomActorSpawnOption _cachedOption;
@@ -28,7 +28,7 @@ public partial class RandomActorSpawnPoint : ActorSpawnPoint
         var validOptions = GetValidOptions();
         if (validOptions.Count == 0)
         {
-            GD.PushWarning($"{nameof(RandomActorSpawnPoint)} '{Name}' has no valid options with actor scenes and weight > 0.");
+            GD.PushWarning($"{nameof(ActorSpawner)} '{Name}' has no valid options with actor scenes and weight > 0.");
             return null;
         }
 
@@ -41,7 +41,7 @@ public partial class RandomActorSpawnPoint : ActorSpawnPoint
             if (option == null)
                 break;
 
-            var actor = InstantiateActorScene(option.ActorScene, option.ClearLootTable, nameof(RandomActorSpawnPoint));
+            var actor = InstantiateActorScene(option.ActorScene, option.ClearLootTable, nameof(ActorSpawner));
             if (actor != null)
             {
                 if (!RandomizeOnRespawn)
@@ -53,7 +53,7 @@ public partial class RandomActorSpawnPoint : ActorSpawnPoint
             validOptions.Remove(option);
         }
 
-        GD.PushWarning($"{nameof(RandomActorSpawnPoint)} '{Name}' could not spawn any configured actor scenes.");
+        GD.PushWarning($"{nameof(ActorSpawner)} '{Name}' could not spawn any configured actor scenes.");
         return null;
     }
 
@@ -65,16 +65,16 @@ public partial class RandomActorSpawnPoint : ActorSpawnPoint
 
         if (!validOptions.Contains(_cachedOption))
         {
-            GD.PushWarning($"{nameof(RandomActorSpawnPoint)} '{Name}' cached option is no longer valid. Clearing cache and rolling again.");
+            GD.PushWarning($"{nameof(ActorSpawner)} '{Name}' cached option is no longer valid. Clearing cache and rolling again.");
             _cachedOption = null;
             return false;
         }
 
-        actor = InstantiateActorScene(_cachedOption.ActorScene, _cachedOption.ClearLootTable, nameof(RandomActorSpawnPoint));
+        actor = InstantiateActorScene(_cachedOption.ActorScene, _cachedOption.ClearLootTable, nameof(ActorSpawner));
         if (actor != null)
             return true;
 
-        GD.PushWarning($"{nameof(RandomActorSpawnPoint)} '{Name}' cached option '{DescribeOption(_cachedOption)}' is no longer spawnable. Clearing cache and rolling again.");
+        GD.PushWarning($"{nameof(ActorSpawner)} '{Name}' cached option '{DescribeOption(_cachedOption)}' is no longer spawnable. Clearing cache and rolling again.");
         validOptions.Remove(_cachedOption);
         _cachedOption = null;
         actor = null;

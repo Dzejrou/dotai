@@ -2,9 +2,16 @@
 
 [ext_resource type="Script" uid="uid://b3cd7y84rpjic" path="res://scripts/world/rooms/contents/Content.cs" id="1_content_script"]
 [ext_resource type="PackedScene" uid="uid://dqjxrcx1kyxj2" path="res://scenes/actors/enemies/ogre.tscn" id="2_ogre_scene"]
-[ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="3_static_actor_spawn_point_script"]
-[ext_resource type="Script" uid="uid://2h8y08gi5trs" path="res://scripts/world/rooms/contents/ContentGuidance.cs" id="4_lm4a5"]
-[ext_resource type="Texture2D" uid="uid://ctakc0i0h52nj" path="res://assets/world/dungeon/basic_room_1_door.png" id="5_gw5bp"]
+[ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/ActorSpawner.cs" id="3_actor_spawner_script"]
+[ext_resource type="Script" uid="uid://b7sn68drsf3oj" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="4_option_script"]
+[ext_resource type="Script" uid="uid://2h8y08gi5trs" path="res://scripts/world/rooms/contents/ContentGuidance.cs" id="5_lm4a5"]
+[ext_resource type="Texture2D" uid="uid://ctakc0i0h52nj" path="res://assets/world/dungeon/basic_room_1_door.png" id="6_gw5bp"]
+
+[sub_resource type="Resource" id="Resource_ogre_option"]
+script = ExtResource("4_option_script")
+ActorScene = ExtResource("2_ogre_scene")
+ClearLootTable = true
+metadata/_custom_type_script = "uid://b7sn68drsf3oj"
 
 [node name="TimedDungeonOgreContent" type="Node2D" unique_id=463852066]
 script = ExtResource("1_content_script")
@@ -15,39 +22,39 @@ script = ExtResource("1_content_script")
 
 [node name="OgreNorthWest" type="Marker2D" parent="Actors" unique_id=654580976]
 position = Vector2(200, 314)
-script = ExtResource("3_static_actor_spawn_point_script")
-ActorScene = ExtResource("2_ogre_scene")
-ClearLootTable = true
+script = ExtResource("3_actor_spawner_script")
+Options = Array[ExtResource("4_option_script")]([SubResource("Resource_ogre_option")])
+RandomizeOnRespawn = false
 
 [node name="OgreNorthEast" type="Marker2D" parent="Actors" unique_id=432354046]
 position = Vector2(587, 303)
-script = ExtResource("3_static_actor_spawn_point_script")
-ActorScene = ExtResource("2_ogre_scene")
-ClearLootTable = true
+script = ExtResource("3_actor_spawner_script")
+Options = Array[ExtResource("4_option_script")]([SubResource("Resource_ogre_option")])
+RandomizeOnRespawn = false
 
 [node name="OgreCenter" type="Marker2D" parent="Actors" unique_id=697748088]
 position = Vector2(400, 356)
-script = ExtResource("3_static_actor_spawn_point_script")
-ActorScene = ExtResource("2_ogre_scene")
-ClearLootTable = true
+script = ExtResource("3_actor_spawner_script")
+Options = Array[ExtResource("4_option_script")]([SubResource("Resource_ogre_option")])
+RandomizeOnRespawn = false
 
 [node name="OgreSouthWest" type="Marker2D" parent="Actors" unique_id=755438450]
 position = Vector2(241, 419)
-script = ExtResource("3_static_actor_spawn_point_script")
-ActorScene = ExtResource("2_ogre_scene")
-ClearLootTable = true
+script = ExtResource("3_actor_spawner_script")
+Options = Array[ExtResource("4_option_script")]([SubResource("Resource_ogre_option")])
+RandomizeOnRespawn = false
 
 [node name="OgreSouthEast" type="Marker2D" parent="Actors" unique_id=1484686258]
 position = Vector2(539, 448)
-script = ExtResource("3_static_actor_spawn_point_script")
-ActorScene = ExtResource("2_ogre_scene")
-ClearLootTable = true
+script = ExtResource("3_actor_spawner_script")
+Options = Array[ExtResource("4_option_script")]([SubResource("Resource_ogre_option")])
+RandomizeOnRespawn = false
 
 [node name="Guidance" type="Node2D" parent="." unique_id=42080891]
 scale = Vector2(2, 2)
-script = ExtResource("4_lm4a5")
+script = ExtResource("5_lm4a5")
 
 [node name="RoomSprite" type="Sprite2D" parent="Guidance" unique_id=1531626763]
 z_index = -10
-texture = ExtResource("5_gw5bp")
+texture = ExtResource("6_gw5bp")
 centered = false
