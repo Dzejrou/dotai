@@ -15,6 +15,8 @@ public partial class ActorHUD : Node2D
     private const float DefaultHealthBarHeight = 14.0f;
     private const float DefaultManaBarWidth = 60.0f;
     private const float DefaultManaBarHeight = 10.0f;
+    private const float DefaultXpBarWidth = 60.0f;
+    private const float DefaultXpBarHeight = 8.0f;
 
     private static readonly Color DefaultHealthFillColor = new Color(0.45f, 0.95f, 0.45f, 1.0f);
     private static readonly Color DefaultHealthBackgroundColor = new Color(0.16f, 0.36f, 0.16f, 0.85f);
@@ -78,6 +80,18 @@ public partial class ActorHUD : Node2D
     [Export]
     public Color ManaBackgroundColor { get; set; } = new Color(0.16f, 0.2f, 0.3f, 0.85f);
 
+    [Export]
+    public float XpBarWidth { get; set; } = DefaultXpBarWidth;
+
+    [Export]
+    public float XpBarHeight { get; set; } = DefaultXpBarHeight;
+
+    [Export]
+    public Color XpFillColor { get; set; } = new Color(0.65f, 0.25f, 0.85f, 1.0f);
+
+    [Export]
+    public Color XpBackgroundColor { get; set; } = new Color(0.22f, 0.1f, 0.3f, 0.85f);
+
     private Node2D _contentRoot;
     private CanvasLayer _screenLayer;
     private Control _unitFrame;
@@ -91,6 +105,10 @@ public partial class ActorHUD : Node2D
     private ColorRect _manaBackground;
     private ColorRect _manaFill;
     private Label _manaLabel;
+    private Control _xpBar;
+    private ColorRect _xpBackground;
+    private ColorRect _xpFill;
+    private Label _levelLabel;
     private Node2D _targetBracket;
     private Line2D _leftBracket;
     private Line2D _rightBracket;
@@ -101,6 +119,9 @@ public partial class ActorHUD : Node2D
     private int _currentHealth;
     private int _maxHealth = 1;
     private int _currentGold;
+    private int _currentXp;
+    private int _requiredXp = 1;
+    private int _playerLevel = 1;
     private bool _isPoisoned;
 
     public override void _Ready()
@@ -118,6 +139,10 @@ public partial class ActorHUD : Node2D
         _manaBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/ManaBar/ManaBackground");
         _manaFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/ManaBar/ManaFill");
         _manaLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/ManaBar/ManaLabel");
+        _xpBar = GetNodeOrNull<Control>("ContentRoot/UnitFrame/XpBar");
+        _xpBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/XpBar/XpBackground");
+        _xpFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/XpBar/XpFill");
+        _levelLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/XpBar/LevelLabel");
         _targetBracket = GetNodeOrNull<Node2D>("ContentRoot/TargetBracket");
         _leftBracket = GetNodeOrNull<Line2D>("ContentRoot/TargetBracket/LeftBracket");
         _rightBracket = GetNodeOrNull<Line2D>("ContentRoot/TargetBracket/RightBracket");
@@ -130,6 +155,8 @@ public partial class ActorHUD : Node2D
         RefreshManaColors();
         RefreshHealthBar();
         RefreshGoldDisplay();
+        RefreshXpVisibility();
+        RefreshXpBar();
         SetUnitFrameVisible(false);
         SetTargetBracketVisible(false);
     }
@@ -137,21 +164,29 @@ public partial class ActorHUD : Node2D
     public override void _ExitTree()
     {
         UnbindPlayerGold();
+        UnbindPlayerXp();
         ActorHudSettings.Changed -= OnActorHudSettingsChanged;
     }
 
     public void Bind(Node2D owner)
     {
         UnbindPlayerGold();
+        UnbindPlayerXp();
         _owner = owner;
         _playerOwner = owner as Player;
         _manaState = owner?.GetNodeOrNull<ManaState>("ManaState");
         _currentGold = Math.Max(0, _playerOwner?.Gold ?? 0);
+        _currentXp = Math.Max(0, _playerOwner?.CurrentExperience ?? 0);
+        _requiredXp = Math.Max(1, _playerOwner?.ExperiencePerLevel ?? 1);
+        _playerLevel = _playerOwner?.Level ?? 1;
         BindPlayerGold();
+        BindPlayerXp();
         RefreshName();
         RefreshManaVisibility();
         RefreshManaBar();
         RefreshGoldDisplay();
+        RefreshXpVisibility();
+        RefreshXpBar();
     }
 
     public void SetHealth(int current, int max)
@@ -244,7 +279,9 @@ public partial class ActorHUD : Node2D
     {
         ApplyBarSize(_healthBar, _healthBackground, _healthLabel, HealthBarWidth, HealthBarHeight);
         ApplyBarSize(_manaBar, _manaBackground, _manaLabel, ManaBarWidth, ManaBarHeight);
+        ApplyBarSize(_xpBar, _xpBackground, null, XpBarWidth, XpBarHeight);
         ApplyGoldLabelLayout();
+        ApplyLevelLabelLayout();
     }
 
     private void RefreshName()
@@ -404,6 +441,70 @@ public partial class ActorHUD : Node2D
     {
         _currentGold = Math.Max(0, totalGold);
         RefreshGoldDisplay();
+    }
+
+    private void RefreshXpVisibility()
+    {
+        if (_xpBar == null)
+            return;
+
+        _xpBar.Visible = _playerOwner != null;
+    }
+
+    private void RefreshXpBar()
+    {
+        if (_xpFill == null || _xpBackground == null)
+            return;
+
+        var isMaxLevel = _playerOwner != null && _playerLevel >= Math.Max(1, _playerOwner.MaxLevel);
+        var fraction = isMaxLevel ? 1.0f : (float)_currentXp / Math.Max(1, _requiredXp);
+        SetBarFill(_xpFill, _xpBackground, fraction);
+
+        if (_xpFill != null)
+            _xpFill.Color = XpFillColor;
+
+        if (_xpBackground != null)
+            _xpBackground.Color = XpBackgroundColor;
+
+        if (_levelLabel != null)
+            _levelLabel.Text = $"Lv {_playerLevel}";
+    }
+
+    private void ApplyLevelLabelLayout()
+    {
+        if (_levelLabel == null)
+            return;
+
+        var xpLabelX = Math.Max(0.0f, XpBarWidth) + 5.0f;
+        _levelLabel.Position = new Vector2(xpLabelX, 0.0f);
+        _levelLabel.CustomMinimumSize = new Vector2(44.0f, Math.Max(XpBarHeight, 8.0f));
+        _levelLabel.Size = _levelLabel.CustomMinimumSize;
+    }
+
+    private void BindPlayerXp()
+    {
+        if (_playerOwner == null)
+            return;
+
+        _playerOwner.Connect(Player.SignalName.ExperienceChanged, new Callable(this, nameof(OnPlayerExperienceChanged)));
+    }
+
+    private void UnbindPlayerXp()
+    {
+        if (_playerOwner == null || !GodotObject.IsInstanceValid(_playerOwner))
+            return;
+
+        var callable = new Callable(this, nameof(OnPlayerExperienceChanged));
+        if (_playerOwner.IsConnected(Player.SignalName.ExperienceChanged, callable))
+            _playerOwner.Disconnect(Player.SignalName.ExperienceChanged, callable);
+    }
+
+    private void OnPlayerExperienceChanged(int currentExperience, int requiredExperience, int level)
+    {
+        _currentXp = Math.Max(0, currentExperience);
+        _requiredXp = Math.Max(1, requiredExperience);
+        _playerLevel = level;
+        RefreshXpBar();
     }
 
     private bool ShouldUseFactionHealthColors()

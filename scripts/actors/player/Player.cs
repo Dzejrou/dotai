@@ -43,6 +43,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Signal]
     public delegate void LevelChangedEventHandler(int newLevel);
 
+    [Signal]
+    public delegate void ExperienceChangedEventHandler(int currentExperience, int requiredExperience, int level);
+
     [Export]
     public float Speed { get; set; } = 140.0f;
 
@@ -366,6 +369,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         }
 
         EmitSignal(SignalName.ExperienceGained, amount, _currentExperience);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, xpPerLevel, _level);
     }
 
     public int RestoreManaFromDrop(int amount)
