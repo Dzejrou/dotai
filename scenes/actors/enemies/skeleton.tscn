@@ -87,7 +87,7 @@ script = ExtResource("10_target_combat")
 
 [node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome" unique_id=1998501188]
 script = ExtResource("12_return_home")
-ReturnHomeTriggerDistance = 52.0
+ReturnHomeTriggerDistance = 256.0
 
 [node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=765021105]
 

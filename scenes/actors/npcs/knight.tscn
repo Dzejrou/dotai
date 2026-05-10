@@ -9,7 +9,9 @@
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="7_faction_state"]
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="8_status_effect_controller"]
 [ext_resource type="Script" uid="uid://birryig8e7hfp" path="res://scripts/ai/behaviors/PatrolBehavior.cs" id="9_patrol_behavior"]
+[ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="9_uqbme"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="10_pdevh"]
+[ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="10_quajj"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_knight"]
 radius = 5.0
@@ -47,7 +49,7 @@ Max = 18
 
 [node name="FactionState" type="Node" parent="." unique_id=488786375]
 script = ExtResource("7_faction_state")
-FactionKey = "neutral"
+FactionKey = "allies"
 
 [node name="StatusEffectController" type="Node" parent="." unique_id=460505141]
 script = ExtResource("8_status_effect_controller")
@@ -56,7 +58,16 @@ script = ExtResource("8_status_effect_controller")
 
 [node name="Tier10_Targeting" type="Node" parent="Behaviors" unique_id=34153784]
 
+[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting" unique_id=1165526201]
+script = ExtResource("9_uqbme")
+AcquisitionRange = 75.0
+metadata/_custom_type_script = "uid://cw8iah53nefxn"
+
 [node name="Tier50_Combat" type="Node" parent="Behaviors" unique_id=762290679]
+
+[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat" unique_id=1322448440]
+script = ExtResource("10_quajj")
+metadata/_custom_type_script = "uid://b2fyidq83tn5q"
 
 [node name="Tier80_ReturnHome" type="Node" parent="Behaviors" unique_id=1318221157]
 

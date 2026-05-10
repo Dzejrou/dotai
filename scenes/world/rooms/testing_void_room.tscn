@@ -11,11 +11,39 @@
 [ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="8_portal"]
 [ext_resource type="Script" uid="uid://ccewt1jihoffl" path="res://scripts/world/rooms/contents/StaticActorSpawnPoint.cs" id="9_8vkdo"]
 [ext_resource type="PackedScene" uid="uid://byvfwjncgqxvi" path="res://scenes/actors/npcs/knight.tscn" id="10_knight"]
+[ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/RandomActorSpawnPoint.cs" id="11_xnhs6"]
+[ext_resource type="Script" uid="uid://b7sn68drsf3oj" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="12_78isi"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="12_cvsg0"]
+[ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="13_ci7sf"]
+[ext_resource type="Script" uid="uid://bh7q0agjpycv1" path="res://scripts/actors/enemies/Skeleton.cs" id="16_p80c7"]
+[ext_resource type="Resource" uid="uid://b5wk7g8o25aw1" path="res://resources/loot_tables/skeleton_loot_table.tres" id="17_4qoff"]
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="18_qxkaf"]
+[ext_resource type="SpriteFrames" uid="uid://chvtla7o3is13" path="res://resources/animations/skeleton_spriteframes.tres" id="19_owv0m"]
+[ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="20_wtvlf"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="21_in37r"]
+[ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="22_yhf77"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="23_c4pfk"]
+[ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="24_bohya"]
+[ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="25_l151d"]
+[ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="26_8w8xx"]
+[ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="27_c83su"]
+[ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="28_ynmw1"]
+[ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="29_pt43o"]
+[ext_resource type="Script" uid="uid://birryig8e7hfp" path="res://scripts/ai/behaviors/PatrolBehavior.cs" id="30_jdy5i"]
+[ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="31_fari3"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+
+[sub_resource type="Resource" id="Resource_042ff"]
+script = ExtResource("12_78isi")
+ActorScene = ExtResource("13_ci7sf")
+metadata/_custom_type_script = "uid://b7sn68drsf3oj"
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q6f3w"]
+radius = 5.0
+height = 26.0
 
 [node name="Room2" type="Node2D" unique_id=117793925]
 script = ExtResource("1_room_screen")
@@ -115,6 +143,19 @@ position = Vector2(602.37634, 932.4418)
 [node name="PatrolNode3" type="Marker2D" parent="Unscaled/ChestContent/Actors/DryadSpawnPoint/PatrolPath" unique_id=1697219256]
 position = Vector2(677.10095, 1018.40625)
 
+[node name="SkeletonSpawner" type="Marker2D" parent="Unscaled/ChestContent/Actors" index="3" unique_id=267341223]
+position = Vector2(500, 31)
+script = ExtResource("11_xnhs6")
+Options = Array[ExtResource("12_78isi")]([SubResource("Resource_042ff")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="Skeleton" parent="Unscaled/ChestContent/Actors" index="4" unique_id=1196794662 instance=ExtResource("13_ci7sf")]
+position = Vector2(960, 206)
+
+[node name="HealthState" parent="Unscaled/ChestContent/Actors/Skeleton" index="5" unique_id=1668152086]
+Max = 2
+
 [node name="WanderingKnight" parent="Unscaled" unique_id=231595167 instance=ExtResource("10_knight")]
 position = Vector2(1392, 1146)
 
@@ -140,4 +181,116 @@ position = Vector2(879.80536, 1190.9238)
 [node name="PatrolNode5" type="Marker2D" parent="Unscaled/Knight/PatrolPath" unique_id=547312921]
 position = Vector2(1065.5712, 1401.0784)
 
+[node name="Skeleton" type="CharacterBody2D" parent="." unique_id=759227785]
+z_index = -1
+position = Vector2(1453, 67)
+script = ExtResource("16_p80c7")
+HomeReturnTolerance = 400.0
+DropSpreadDistanceMin = 9.0
+DropSpreadDistanceMax = 30.0
+LootTable = ExtResource("17_4qoff")
+
+[node name="OmniSprite" type="Node2D" parent="Skeleton" unique_id=2100045633]
+script = ExtResource("18_qxkaf")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Skeleton/OmniSprite" unique_id=1544264427]
+scale = Vector2(1.1, 1.1)
+sprite_frames = ExtResource("19_owv0m")
+animation = &"idle_south"
+speed_scale = 2.0
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="Skeleton" unique_id=1135505834]
+avoidance_enabled = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Skeleton" unique_id=434218639]
+position = Vector2(0, 12)
+shape = SubResource("CapsuleShape2D_q6f3w")
+
+[node name="ActorHUD" parent="Skeleton" unique_id=641888673 instance=ExtResource("20_wtvlf")]
+DisplayName = "Skeleton"
+VerticalOffset = -45.0
+
+[node name="CombatState" type="Node" parent="Skeleton" unique_id=1013428647]
+script = ExtResource("21_in37r")
+
+[node name="HealthState" type="Node" parent="Skeleton" unique_id=421423339]
+script = ExtResource("22_yhf77")
+Max = 10
+
+[node name="FactionState" type="Node" parent="Skeleton" unique_id=734064014]
+script = ExtResource("23_c4pfk")
+FactionKey = "allies"
+
+[node name="StatusEffectController" type="Node" parent="Skeleton" unique_id=175232441]
+script = ExtResource("24_bohya")
+
+[node name="PrimaryActionController" type="Node" parent="Skeleton" unique_id=272517061]
+script = ExtResource("25_l151d")
+PreferredRange = 48.0
+AttackCooldown = 1.1
+
+[node name="Damage" type="Node" parent="Skeleton/PrimaryActionController" unique_id=2001900021]
+script = ExtResource("26_8w8xx")
+MaximumDamage = 5
+
+[node name="Behaviors" type="Node" parent="Skeleton" unique_id=298671112]
+
+[node name="Tier10_Targeting" type="Node" parent="Skeleton/Behaviors" unique_id=1590697343]
+
+[node name="AcquireHostileTargetBehavior" type="Node" parent="Skeleton/Behaviors/Tier10_Targeting" unique_id=734316882]
+script = ExtResource("27_c83su")
+InitialTargetPath = NodePath("../Player")
+DebugActorName = "Skeleton"
+
+[node name="Tier50_Combat" type="Node" parent="Skeleton/Behaviors" unique_id=117367814]
+
+[node name="TargetCombatBehavior" type="Node" parent="Skeleton/Behaviors/Tier50_Combat" unique_id=245918730]
+script = ExtResource("28_ynmw1")
+
+[node name="Tier80_ReturnHome" type="Node" parent="Skeleton/Behaviors" unique_id=615091808]
+
+[node name="ReturnHomeBehavior" type="Node" parent="Skeleton/Behaviors/Tier80_ReturnHome" unique_id=1998501188]
+script = ExtResource("29_pt43o")
+ReturnHomeTriggerDistance = 1024.0
+
+[node name="Tier90_Recovery" type="Node" parent="Skeleton/Behaviors" unique_id=765021105]
+
+[node name="PatrolBehavior" type="Node" parent="Skeleton/Behaviors/Tier90_Recovery" unique_id=756308335]
+script = ExtResource("30_jdy5i")
+LoopMode = true
+metadata/_custom_type_script = "uid://birryig8e7hfp"
+
+[node name="WanderBehavior" type="Node" parent="Skeleton/Behaviors/Tier90_Recovery" unique_id=927926458]
+script = ExtResource("31_fari3")
+WanderRadius = 52.0
+MoveDurationMin = 0.9
+MoveDurationMax = 1.6
+PauseDurationMin = 0.7
+PauseDurationMax = 1.4
+SpeedMultiplier = 0.55
+
+[node name="PatrolPath" type="Node" parent="Skeleton" unique_id=1908968124]
+
+[node name="PatrolNode1" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=2019414349]
+position = Vector2(1427.0325, 133.7312)
+
+[node name="PatrolNode2" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=754337634]
+position = Vector2(1294.0112, 157.97989)
+
+[node name="PatrolNode3" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=320211958]
+position = Vector2(1144.362, 107.40405)
+
+[node name="PatrolNode4" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=419112638]
+position = Vector2(1045.2888, 203.706)
+
+[node name="PatrolNode5" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=195342702]
+position = Vector2(1142.9764, 312.47867)
+
+[node name="PatrolNode6" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=670078545]
+position = Vector2(1298.8608, 334.64896)
+
+[node name="PatrolNode7" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=164955460]
+position = Vector2(1439.5033, 291.0013)
+
 [editable path="Unscaled/ChestContent"]
+[editable path="Unscaled/ChestContent/Actors/Skeleton"]
