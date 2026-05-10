@@ -38,7 +38,7 @@ public partial class PatrolBehavior : Node, IActorBehavior
         }
 
         // Yield while higher-priority combat behaviors are active so patrol can coexist with future upgrades.
-        if (actor.Target != null || actor.InCombat)
+        if (actor.Target != null)
             return false;
 
         var patrolPoints = ResolvePatrolPoints(actor);
