@@ -37,6 +37,12 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Signal]
     public delegate void GoldChangedEventHandler(int totalGold);
 
+    [Signal]
+    public delegate void ExperienceGainedEventHandler(int amount, int totalExperience);
+
+    [Signal]
+    public delegate void LevelChangedEventHandler(int newLevel);
+
     [Export]
     public float Speed { get; set; } = 140.0f;
 
@@ -60,6 +66,21 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     [Export(PropertyHint.Range, "0,256,1")]
     public float LootMagnetRadius { get; set; } = 80.0f;
+
+    [Export]
+    public int ExperiencePerLevel { get; set; } = 100;
+
+    [Export]
+    public int MaxLevel { get; set; } = 60;
+
+    [Export]
+    public int MaxLevelExperiencePerGold { get; set; } = 10;
+
+    private int _level = 1;
+    private int _currentExperience;
+
+    public int Level => _level;
+    public int CurrentExperience => _currentExperience;
 
     private float _spellCastPushbackPercent = 0.10f;
     private float _spellCastPushbackInternalCooldownSeconds = 0.5f;
@@ -308,6 +329,43 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         FloatingText.ShowCustom($"+{amount} gold", this, new Color(1.0f, 0.88f, 0.32f, 1.0f));
         EmitSignal(SignalName.GoldChanged, Gold);
         return amount;
+    }
+
+    public void AddExperience(int amount)
+    {
+        if (_isDead || amount <= 0)
+            return;
+
+        var xpPerLevel = Math.Max(1, ExperiencePerLevel);
+        var maxLevel = Math.Max(1, MaxLevel);
+        var xpPerGold = Math.Max(1, MaxLevelExperiencePerGold);
+
+        if (_level >= maxLevel)
+        {
+            AddGold(amount / xpPerGold);
+            return;
+        }
+
+        FloatingText.ShowCustom($"+{amount} XP", this, new Color(0.3f, 1.0f, 0.5f, 1.0f));
+        _currentExperience += amount;
+
+        while (_currentExperience >= xpPerLevel && _level < maxLevel)
+        {
+            _currentExperience -= xpPerLevel;
+            _level++;
+            FloatingText.ShowCustom($"LEVEL {_level}", this, new Color(1.0f, 0.95f, 0.2f, 1.0f));
+            EmitSignal(SignalName.LevelChanged, _level);
+        }
+
+        if (_level >= maxLevel && _currentExperience > 0)
+        {
+            var leftoverGold = _currentExperience / xpPerGold;
+            _currentExperience = 0;
+            if (leftoverGold > 0)
+                AddGold(leftoverGold);
+        }
+
+        EmitSignal(SignalName.ExperienceGained, amount, _currentExperience);
     }
 
     public int RestoreManaFromDrop(int amount)

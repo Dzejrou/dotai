@@ -51,6 +51,7 @@ MaxRange = 420.0
 z_index = -1
 script = ExtResource("1_skeleton_mage")
 LootTable = ExtResource("24_skeleton_mage_loot_table")
+ExperienceReward = 15
 
 [node name="OmniSprite" type="Node2D" parent="." unique_id=589380592]
 script = ExtResource("1_omni_sprite")

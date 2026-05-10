@@ -26,7 +26,10 @@ public partial class Ogre : Actor, IAttackable, ITargetable
             return;
 
         if (died)
+        {
+            TryGrantExperienceToKiller(damageInfo);
             StartDeath();
+        }
     }
 
     private void StartDeath()

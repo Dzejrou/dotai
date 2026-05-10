@@ -26,7 +26,10 @@ public partial class Skeleton : Actor, IAttackable, ITargetable
 
         FloatingText.ShowBad(damage.ToString(), this);
         if (died)
+        {
+            TryGrantExperienceToKiller(damageInfo);
             StartDeath();
+        }
     }
 
     private IActorBehavior[] CreateDefaultBehaviors()

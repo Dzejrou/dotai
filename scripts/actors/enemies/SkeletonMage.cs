@@ -38,7 +38,10 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaste
 
         FloatingText.ShowBad(damage.ToString(), this);
         if (died)
+        {
+            TryGrantExperienceToKiller(damageInfo);
             StartDeath();
+        }
     }
 
     private void StartDeath()

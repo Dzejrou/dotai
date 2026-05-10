@@ -25,7 +25,10 @@ public partial class ElfRanger : Actor, IAttackable, ITargetable
 
         FloatingText.ShowBad(damage.ToString(), this);
         if (died)
+        {
+            TryGrantExperienceToKiller(damageInfo);
             StartDeath();
+        }
     }
 
     private void StartDeath()

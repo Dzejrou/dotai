@@ -25,7 +25,10 @@ public partial class Wolf : Actor, IAttackable, ITargetable
 
         FloatingText.ShowBad(damage.ToString(), this);
         if (died)
+        {
+            TryGrantExperienceToKiller(damageInfo);
             StartDeath();
+        }
     }
 
     private void StartDeath()

@@ -55,6 +55,9 @@ public abstract partial class Actor : CombatCharacter
     [Export]
     public LootTable LootTable { get; set; }
 
+    [Export]
+    public int ExperienceReward { get; set; } = 0;
+
     protected void InitializeActor(
         OmniSprite omniSprite,
         NavigationAgent2D navigationAgent = null)
@@ -420,6 +423,15 @@ public abstract partial class Actor : CombatCharacter
         NavigationAgent.SetPhysicsProcess(false);
         ApplyNavigationDebugState(false);
         UnsubscribeFromNavigationDebug();
+    }
+
+    protected void TryGrantExperienceToKiller(Damage damageInfo)
+    {
+        if (ExperienceReward <= 0)
+            return;
+
+        if (damageInfo?.Source is Player player && GodotObject.IsInstanceValid(player))
+            player.AddExperience(ExperienceReward);
     }
 
     protected virtual void OnActorExitTree() { }
