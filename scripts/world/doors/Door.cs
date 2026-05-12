@@ -39,7 +39,13 @@ public partial class Door : RoomTransition, IInteractable, IInteractionPromptAnc
 
     public bool CanInteract(Node interactor)
     {
-        return IsLocked && UnlockOnInteractWhenLocked && interactor is Player;
+        if (interactor is not Player)
+            return false;
+
+        if (!IsLocked)
+            return false;
+
+        return InteractionRunner.HasInteractions(this) || UnlockOnInteractWhenLocked;
     }
 
     public void Interact(Node interactor)
@@ -48,8 +54,16 @@ public partial class Door : RoomTransition, IInteractable, IInteractionPromptAnc
             return;
 
         if (!IsLocked)
+            return;
+
+        if (InteractionRunner.HasInteractions(this))
         {
-            QueueTransition();
+            var result = InteractionRunner.Execute(this, interactor);
+            if (result == InteractionResult.Stop)
+                return;
+
+            if (!IsLocked && IsPlayerInside)
+                QueueTransition();
             return;
         }
 

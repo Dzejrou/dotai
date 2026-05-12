@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/Room.cs" id="2_room_screen"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="4_dryad"]
+[ext_resource type="Script" uid="uid://by68ickcdy8vn" path="res://scripts/world/interactions/LevelUnlockInteraction.cs" id="5_lvlul"]
 
 [sub_resource type="NavigationPolygon" id="9_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -105,11 +106,15 @@ Direction = &"south"
 
 [node name="NorthWestDoor" parent="Scaled/Exits" unique_id=1314545739 instance=ExtResource("3_door")]
 position = Vector2(83, 92)
-IsLocked = false
+IsLocked = true
 ExitId = &"north_west"
 TargetScreenId = &"timed_dungeon_test"
 TargetExitId = &"south_return"
 Direction = &"north"
+
+[node name="LevelUnlockInteraction" type="Node" parent="Scaled/Exits/NorthWestDoor" unique_id=1314545740]
+script = ExtResource("5_lvlul")
+RequiredLevel = 3
 
 [node name="NorthEastDoor" parent="Scaled/Exits" unique_id=1836981997 instance=ExtResource("3_door")]
 position = Vector2(317, 92)
