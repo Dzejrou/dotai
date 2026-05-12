@@ -7,12 +7,19 @@
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="5_ttrfo"]
 [ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="6_67bni"]
 [ext_resource type="PackedScene" uid="uid://dwochr8ocdyfl" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="7_content"]
+[ext_resource type="Script" uid="uid://ctwjtipe1lo4q" path="res://scripts/world/Chest.cs" id="8_in37r"]
 [ext_resource type="Script" uid="uid://dfe2si08tcaji" path="res://scripts/world/rooms/contents/RespawnTimer.cs" id="8_kj6pv"]
 [ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="8_portal"]
+[ext_resource type="SpriteFrames" uid="uid://dklvcdp6253t3" path="res://resources/animations/chest_open_spriteframes.tres" id="9_yhf77"]
+[ext_resource type="SpriteFrames" path="res://resources/animations/chest_unlock_open_spriteframes.tres" id="10_c4pfk"]
 [ext_resource type="PackedScene" uid="uid://byvfwjncgqxvi" path="res://scenes/actors/npcs/knight.tscn" id="10_knight"]
+[ext_resource type="Resource" uid="uid://cteg4eoid3eeh" path="res://resources/loot_tables/chest_loot_table.tres" id="11_bohya"]
 [ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/ActorSpawner.cs" id="11_xnhs6"]
 [ext_resource type="Script" uid="uid://b7sn68drsf3oj" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="12_78isi"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="12_cvsg0"]
+[ext_resource type="Script" uid="uid://yjidxd7cu4fw" path="res://scripts/world/interactions/UnlockChestInteraction.cs" id="12_l151d"]
+[ext_resource type="Script" path="res://scripts/world/interactions/LevelUnlockInteraction.cs" id="14_lvlul"]
+[ext_resource type="Script" uid="uid://cuga3ps75v2bf" path="res://scripts/world/interactions/DropLootInteraction.cs" id="13_8w8xx"]
 [ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="13_ci7sf"]
 [ext_resource type="Script" uid="uid://bh7q0agjpycv1" path="res://scripts/actors/enemies/Skeleton.cs" id="16_p80c7"]
 [ext_resource type="Resource" uid="uid://b5wk7g8o25aw1" path="res://resources/loot_tables/skeleton_loot_table.tres" id="17_4qoff"]
@@ -34,6 +41,9 @@
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_locked_chest"]
+size = Vector2(46, 28)
 
 [sub_resource type="Resource" id="Resource_dryad_option"]
 script = ExtResource("12_78isi")
@@ -116,7 +126,31 @@ scale = Vector2(0.6, 0.6)
 [node name="LockedChest" parent="Unscaled/ChestContent/Objects" index="0" unique_id=1675497592]
 position = Vector2(514, 849)
 
-[node name="UnlockedChest" parent="Unscaled/ChestContent/Objects" index="1" unique_id=272966836]
+[node name="LevelLockedChest" type="StaticBody2D" parent="Unscaled/ChestContent/Objects" index="1" unique_id=1263117603]
+position = Vector2(384, 771)
+script = ExtResource("8_in37r")
+OpenAnimationFrames = ExtResource("9_yhf77")
+UnlockOpenAnimationFrames = ExtResource("10_c4pfk")
+LootTable = ExtResource("11_bohya")
+RequiredKeyKind = 0
+InteractionPromptOffset = Vector2(0, -42)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Unscaled/ChestContent/Objects/LevelLockedChest" unique_id=286727874]
+position = Vector2(0, -8)
+sprite_frames = ExtResource("10_c4pfk")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Unscaled/ChestContent/Objects/LevelLockedChest" unique_id=1584257650]
+position = Vector2(0, 10)
+shape = SubResource("RectangleShape2D_locked_chest")
+
+[node name="LevelUnlockInteraction" type="Node" parent="Unscaled/ChestContent/Objects/LevelLockedChest" unique_id=2060361463]
+script = ExtResource("14_lvlul")
+RequiredLevel = 2
+
+[node name="DropLootInteraction" type="Node" parent="Unscaled/ChestContent/Objects/LevelLockedChest" unique_id=702824193]
+script = ExtResource("13_8w8xx")
+
+[node name="UnlockedChest" parent="Unscaled/ChestContent/Objects" index="2" unique_id=272966836]
 position = Vector2(515, 952)
 
 [node name="RandomRespawnActor" parent="Unscaled/ChestContent/Actors" index="0"]
