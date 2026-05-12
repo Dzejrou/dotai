@@ -70,8 +70,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Export(PropertyHint.Range, "0,256,1")]
     public float LootMagnetRadius { get; set; } = 80.0f;
 
-    [Export]
-    public int ExperiencePerLevel { get; set; } = 100;
+    private const int DefaultExperiencePerLevelFallback = 100;
 
     [Export]
     public ExperienceTable ExperienceTable { get; set; }
@@ -348,7 +347,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     private int GetRequiredExperienceForLevel(int level)
     {
-        var fallback = Math.Max(1, ExperiencePerLevel);
+        var fallback = Math.Max(1, DefaultExperiencePerLevelFallback);
         var maxLevel = Math.Max(1, MaxLevel);
         if (level >= maxLevel)
             return fallback;
