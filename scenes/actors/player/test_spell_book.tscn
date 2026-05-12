@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://dj6gmhy7ru4n4" path="res://scripts/actors/player/SpellBook.cs" id="1_test_spell_book"]
+[ext_resource type="Script" uid="uid://che406lu07qqo" path="res://scripts/spells/TEST_AoE_respawn.cs" id="2_test_aoe_respawn_spell"]
+[ext_resource type="Script" path="res://scripts/spells/TEST_add_level.cs" id="3_test_add_level_spell"]
+[ext_resource type="Script" path="res://scripts/spells/TEST_sub_level.cs" id="4_test_sub_level_spell"]
+
+[node name="TestSpellBook" type="Node"]
+script = ExtResource("1_test_spell_book")
+
+[node name="TEST_AoE_respawn" type="Node" parent="."]
+script = ExtResource("2_test_aoe_respawn_spell")
+SpellId = "TEST_AoE_respawn"
+HudLabel = "TEST_AoE_respawn"
+
+[node name="TEST_add_level" type="Node" parent="."]
+script = ExtResource("3_test_add_level_spell")
+SpellId = "TEST_add_level"
+HudLabel = "TEST_add_level"
+
+[node name="TEST_sub_level" type="Node" parent="."]
+script = ExtResource("4_test_sub_level_spell")
+SpellId = "TEST_sub_level"
+HudLabel = "TEST_sub_level"

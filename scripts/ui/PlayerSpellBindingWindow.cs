@@ -18,6 +18,9 @@ public partial class PlayerSpellBindingWindow : Control
     public NodePath SpellGridPath { get; set; } = new("Center/Panel/Margin/VBox/SpellList/SpellGrid");
 
     [Export]
+    public NodePath TestTogglePath { get; set; } = new("Center/Panel/Margin/VBox/Header/TestToggle");
+
+    [Export]
     public NodePath SlotGridPath { get; set; } = new("Center/Panel/Margin/VBox/SlotSection/SlotGrid");
 
     [Export]
@@ -27,12 +30,14 @@ public partial class PlayerSpellBindingWindow : Control
     private Label _titleLabel;
     private Button _closeButton;
     private Label _selectionLabel;
+    private CheckButton _testToggle;
     private GridContainer _spellGrid;
     private GridContainer _slotGrid;
     private Button _saveButton;
     private readonly Dictionary<Button, Spell> _spellButtons = new();
     private readonly Dictionary<Button, StringName> _slotButtons = new();
     private Spell _selectedSpellTemplate;
+    private bool _includeTestSpells;
 
     public override void _Ready()
     {
@@ -42,12 +47,19 @@ public partial class PlayerSpellBindingWindow : Control
         _titleLabel = GetNodeOrNull<Label>(TitleLabelPath);
         _closeButton = GetNodeOrNull<Button>(CloseButtonPath);
         _selectionLabel = GetNodeOrNull<Label>(SelectionLabelPath);
+        _testToggle = GetNodeOrNull<CheckButton>(TestTogglePath);
         _spellGrid = GetNodeOrNull<GridContainer>(SpellGridPath);
         _slotGrid = GetNodeOrNull<GridContainer>(SlotGridPath);
         _saveButton = GetNodeOrNull<Button>(SaveButtonPath);
 
         if (_closeButton != null)
             _closeButton.Pressed += CloseWindow;
+
+        if (_testToggle != null)
+        {
+            _testToggle.ButtonPressed = false;
+            _testToggle.Toggled += OnTestToggleToggled;
+        }
 
         if (_saveButton != null)
             _saveButton.Pressed += OnSavePressed;
@@ -60,6 +72,9 @@ public partial class PlayerSpellBindingWindow : Control
     {
         if (_closeButton != null)
             _closeButton.Pressed -= CloseWindow;
+
+        if (_testToggle != null)
+            _testToggle.Toggled -= OnTestToggleToggled;
 
         if (_saveButton != null)
             _saveButton.Pressed -= OnSavePressed;
@@ -140,7 +155,7 @@ public partial class PlayerSpellBindingWindow : Control
         if (_player?.SpellBookNode == null)
             return;
 
-        foreach (var spellTemplate in _player.SpellBookNode.GetSpellTemplates())
+        foreach (var spellTemplate in _player.GetBindableSpells(_includeTestSpells))
         {
             var spellButton = new Button
             {
@@ -154,6 +169,16 @@ public partial class PlayerSpellBindingWindow : Control
         }
 
         RefreshSpellButtons();
+    }
+
+    private void OnTestToggleToggled(bool toggledOn)
+    {
+        _includeTestSpells = toggledOn;
+        if (_selectedSpellTemplate != null && !IsCurrentSpellTemplateVisible(_selectedSpellTemplate))
+            _selectedSpellTemplate = null;
+
+        RebuildSpellButtons();
+        RefreshSelectionLabel();
     }
 
     private void RebuildSlotButtons()
@@ -321,5 +346,19 @@ public partial class PlayerSpellBindingWindow : Control
             _player.Disconnect(Player.SignalName.SpellLoadoutChanged, callable);
 
         _player = null;
+    }
+
+    private bool IsCurrentSpellTemplateVisible(Spell spellTemplate)
+    {
+        if (_player == null || spellTemplate == null)
+            return false;
+
+        foreach (var visibleSpell in _player.GetBindableSpells(_includeTestSpells))
+        {
+            if (ReferenceEquals(visibleSpell, spellTemplate))
+                return true;
+        }
+
+        return false;
     }
 }

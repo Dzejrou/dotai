@@ -60,6 +60,11 @@ text = "Spell Book"
 horizontal_alignment = 0
 theme_override_font_sizes/font_size = 24
 
+[node name="TestToggle" type="CheckButton" parent="Center/Panel/Margin/VBox/Header"]
+layout_mode = 2
+tooltip_text = "Show testing spells"
+text = "Test"
+
 [node name="CloseButton" type="Button" parent="Center/Panel/Margin/VBox/Header"]
 layout_mode = 2
 text = "Close"

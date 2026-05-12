@@ -23,15 +23,16 @@ public sealed class GameConfigStore
         Invalid,
     }
 
-    public void InitializeSpellLoadout(SpellBook spellBook, SpellLoadout spellLoadout)
+    public void InitializeSpellLoadout(SpellBook defaultSpellBook, IReadOnlyList<SpellBook> spellBooks, SpellLoadout spellLoadout)
     {
-        if (spellBook == null || !GodotObject.IsInstanceValid(spellBook) ||
+        if (defaultSpellBook == null || !GodotObject.IsInstanceValid(defaultSpellBook) ||
+            spellBooks == null ||
             spellLoadout == null || !GodotObject.IsInstanceValid(spellLoadout))
         {
             return;
         }
 
-        spellLoadout.ApplyDefaultAssignments(spellBook);
+        spellLoadout.ApplyDefaultAssignments(defaultSpellBook);
 
         var status = TryLoadConfigRoot(out var root, out var message);
         switch (status)
@@ -41,7 +42,7 @@ public sealed class GameConfigStore
                     GD.PushWarning(saveMessage);
                 return;
             case ConfigLoadStatus.Loaded:
-                ApplyConfiguredSpellLoadout(root, spellBook, spellLoadout);
+                ApplyConfiguredSpellLoadout(root, spellBooks, spellLoadout);
                 return;
             case ConfigLoadStatus.Invalid:
                 GD.PushWarning(message);
@@ -101,7 +102,7 @@ public sealed class GameConfigStore
         }
     }
 
-    private void ApplyConfiguredSpellLoadout(JsonObject root, SpellBook spellBook, SpellLoadout spellLoadout)
+    private void ApplyConfiguredSpellLoadout(JsonObject root, IReadOnlyList<SpellBook> spellBooks, SpellLoadout spellLoadout)
     {
         if (!root.TryGetPropertyValue(SpellLoadoutFieldName, out var spellLoadoutNode) || spellLoadoutNode == null)
             return;
@@ -136,7 +137,7 @@ public sealed class GameConfigStore
             configuredAssignments[pair.Key] = string.Empty;
         }
 
-        spellLoadout.ApplySpellIdAssignments(spellBook, configuredAssignments);
+        spellLoadout.ApplySpellIdAssignments(spellBooks, configuredAssignments);
     }
 
     private static JsonObject BuildSpellLoadoutSection(SpellLoadout spellLoadout)

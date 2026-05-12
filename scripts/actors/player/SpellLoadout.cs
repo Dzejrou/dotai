@@ -121,7 +121,12 @@ public partial class SpellLoadout : Node
 
     public void ApplySpellIdAssignments(SpellBook spellBook, IReadOnlyDictionary<string, string> spellIdsByAction)
     {
-        if (spellBook == null || spellIdsByAction == null)
+        ApplySpellIdAssignments(new[] { spellBook }, spellIdsByAction);
+    }
+
+    public void ApplySpellIdAssignments(IReadOnlyList<SpellBook> spellBooks, IReadOnlyDictionary<string, string> spellIdsByAction)
+    {
+        if (spellBooks == null || spellIdsByAction == null)
             return;
 
         var changed = false;
@@ -148,7 +153,7 @@ public partial class SpellLoadout : Node
                 continue;
             }
 
-            var spellTemplate = spellBook.GetSpellTemplateById(pair.Value);
+            var spellTemplate = ResolveSpellTemplate(spellBooks, pair.Value);
             if (spellTemplate == null)
             {
                 GD.PushWarning(
@@ -162,6 +167,24 @@ public partial class SpellLoadout : Node
 
         if (changed)
             EmitSignal(SignalName.LoadoutChanged);
+    }
+
+    private static Spell ResolveSpellTemplate(IReadOnlyList<SpellBook> spellBooks, string spellId)
+    {
+        if (spellBooks == null || string.IsNullOrWhiteSpace(spellId))
+            return null;
+
+        foreach (var spellBook in spellBooks)
+        {
+            if (spellBook == null || !GodotObject.IsInstanceValid(spellBook))
+                continue;
+
+            var spellTemplate = spellBook.GetSpellTemplateById(spellId);
+            if (spellTemplate != null)
+                return spellTemplate;
+        }
+
+        return null;
     }
 
     public bool AssignSpell(Spell spellTemplate, StringName slotAction)

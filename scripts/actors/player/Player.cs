@@ -106,6 +106,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private CastBar _castBar;
     private string _activeCompletionAnimationName;
     private bool _animationFinishedConnected;
+    private readonly List<SpellBook> _spellBooks = new();
+    private readonly List<SpellBook> _extraSpellBooks = new();
     public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
     public bool CanBeTargeted => !_isDead;
@@ -113,6 +115,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public Node2D SpellOrigin => this;
     public Spell ArmedPlacementSpell => _pendingPlacementSpell as Spell;
     public SpellBook SpellBookNode { get; private set; }
+    public SpellBook TestSpellBookNode { get; private set; }
+    public IReadOnlyList<SpellBook> ExtraSpellBookNodes => _extraSpellBooks;
     public SpellLoadout SpellLoadoutNode { get; private set; }
     public bool CanCastSpells => !_isDead;
     public bool HasInteractionTarget => _activeInteractable != null;
@@ -429,6 +433,48 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         // TODO: Revisit whether spell loadout changes should autosave after binding updates once options-menu settings also share config.json.
         return _gameConfigStore.TrySaveSpellLoadout(SpellLoadoutNode, out message);
+    }
+
+    public IReadOnlyList<Spell> GetBindableSpells(bool includeTestSpells)
+    {
+        var spells = new List<Spell>();
+        AddSpellTemplates(spells, SpellBookNode);
+        if (includeTestSpells)
+        {
+            foreach (var extraSpellBook in _extraSpellBooks)
+                AddSpellTemplates(spells, extraSpellBook);
+        }
+
+        return spells;
+    }
+
+    public bool TryResolveSpellById(StringName spellId, out Spell spell)
+    {
+        spell = null;
+        if (spellId.IsEmpty)
+            return false;
+
+        var equippedSpell = SpellLoadoutNode?.GetEquippedSpellById(spellId);
+        if (equippedSpell != null && GodotObject.IsInstanceValid(equippedSpell))
+        {
+            spell = equippedSpell;
+            return true;
+        }
+
+        foreach (var spellBook in _spellBooks)
+        {
+            if (spellBook == null || !GodotObject.IsInstanceValid(spellBook))
+                continue;
+
+            var spellTemplate = spellBook.GetSpellTemplateById(spellId);
+            if (spellTemplate == null)
+                continue;
+
+            spell = spellTemplate;
+            return true;
+        }
+
+        return false;
     }
 
     public bool TryCancelSpellInputFromEscape()
@@ -944,7 +990,10 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private void InitializeSpellInventory()
     {
         SpellBookNode = GetNodeOrNull<SpellBook>("SpellBook");
+        TestSpellBookNode = GetNodeOrNull<SpellBook>("TestSpellBook");
         SpellLoadoutNode = GetNodeOrNull<SpellLoadout>("SpellLoadout");
+        _spellBooks.Clear();
+        _extraSpellBooks.Clear();
 
         if (SpellBookNode == null)
         {
@@ -952,14 +1001,38 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
         }
 
+        _spellBooks.Add(SpellBookNode);
+        CollectExtraSpellBooks();
+
         if (SpellLoadoutNode == null)
         {
             GD.PushError($"{GetPath()}: missing required SpellLoadout child.");
             return;
         }
 
-        _gameConfigStore.InitializeSpellLoadout(SpellBookNode, SpellLoadoutNode);
+        _gameConfigStore.InitializeSpellLoadout(SpellBookNode, _spellBooks, SpellLoadoutNode);
         SpellLoadoutNode.Connect(SpellLoadout.SignalName.LoadoutChanged, new Callable(this, nameof(OnSpellLoadoutChanged)));
+    }
+
+    private static void AddSpellTemplates(List<Spell> spells, SpellBook spellBook)
+    {
+        if (spells == null || spellBook == null || !GodotObject.IsInstanceValid(spellBook))
+            return;
+
+        foreach (var spellTemplate in spellBook.GetSpellTemplates())
+            spells.Add(spellTemplate);
+    }
+
+    private void CollectExtraSpellBooks()
+    {
+        foreach (var child in GetChildren())
+        {
+            if (child is not SpellBook spellBook || ReferenceEquals(spellBook, SpellBookNode))
+                continue;
+
+            _extraSpellBooks.Add(spellBook);
+            _spellBooks.Add(spellBook);
+        }
     }
 
     private void OnSpellLoadoutChanged()

@@ -23,13 +23,10 @@
 [ext_resource type="SpriteFrames" path="res://resources/animations/ice_ball_spriteframes.tres" id="21_ice_ball_frames"]
 [ext_resource type="Script" uid="uid://b05kftwrcxc3p" path="res://scripts/spells/DoomSpell.cs" id="22_doom_spell"]
 [ext_resource type="PackedScene" uid="uid://5wyjxhtl686q" path="res://scenes/effects/doom_area.tscn" id="23_doom_area"]
-[ext_resource type="Script" uid="uid://che406lu07qqo" path="res://scripts/spells/TEST_AoE_respawn.cs" id="24_test_aoe_respawn_spell"]
 [ext_resource type="Script" uid="uid://u1hmkvcw1a2l" path="res://scripts/spells/BlizzardSpell.cs" id="25_blizzard_spell"]
 [ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="26_blizzard_area"]
 [ext_resource type="Script" path="res://scripts/spells/IceShieldSpell.cs" id="27_ice_shield_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="28_ice_shield_scene"]
-[ext_resource type="Script" path="res://scripts/spells/TEST_add_level.cs" id="29_test_add_level_spell"]
-[ext_resource type="Script" path="res://scripts/spells/TEST_sub_level.cs" id="30_test_sub_level_spell"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -209,18 +206,3 @@ HudLabel = "Doom"
 
 [node name="DoomArea" parent="Doom" unique_id=54320717 instance=ExtResource("23_doom_area")]
 visible = false
-
-[node name="TEST_AoE_respawn" type="Node" parent="." unique_id=849602331]
-script = ExtResource("24_test_aoe_respawn_spell")
-SpellId = "TEST_AoE_respawn"
-HudLabel = "TEST_AoE_respawn"
-
-[node name="TEST_add_level" type="Node" parent="."]
-script = ExtResource("29_test_add_level_spell")
-SpellId = "TEST_add_level"
-HudLabel = "TEST_add_level"
-
-[node name="TEST_sub_level" type="Node" parent="."]
-script = ExtResource("30_test_sub_level_spell")
-SpellId = "TEST_sub_level"
-HudLabel = "TEST_sub_level"

@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://cukjsuvqtgem0" path="res://scenes/actors/player/spell_book.tscn" id="1_spell_book_scene"]
 [ext_resource type="Script" uid="uid://dfrfl86atxwo6" path="res://scripts/actors/player/SpellLoadout.cs" id="1_spell_loadout"]
 [ext_resource type="Script" uid="uid://dvutl3mkyi0ph" path="res://scripts/actors/player/Player.cs" id="1_t1u7h"]
+[ext_resource type="PackedScene" path="res://scenes/actors/player/test_spell_book.tscn" id="2_test_spell_book_scene"]
 [ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="2_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://dkc8t7728cd0u" path="res://resources/animations/player_spriteframes.tres" id="3_player_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="4_actor_hud"]
@@ -71,6 +72,8 @@ FactionKey = "allies"
 script = ExtResource("15_status_effect_controller")
 
 [node name="SpellBook" parent="." unique_id=1018490496 instance=ExtResource("1_spell_book_scene")]
+
+[node name="TestSpellBook" parent="." instance=ExtResource("2_test_spell_book_scene")]
 
 [node name="SpellLoadout" type="Node" parent="." unique_id=1185861155]
 script = ExtResource("1_spell_loadout")
