@@ -372,6 +372,27 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         EmitSignal(SignalName.ExperienceChanged, _currentExperience, xpPerLevel, _level);
     }
 
+    public bool TryAdjustLevelForTesting(int delta)
+    {
+        if (_isDead || delta == 0)
+            return false;
+
+        var xpPerLevel = Math.Max(1, ExperiencePerLevel);
+        var maxLevel = Math.Max(1, MaxLevel);
+        var previousLevel = _level;
+        _level = Math.Clamp(_level + delta, 1, maxLevel);
+        if (_level == previousLevel)
+            return false;
+
+        _currentExperience = _level >= maxLevel
+            ? 0
+            : Math.Clamp(_currentExperience, 0, xpPerLevel - 1);
+
+        EmitSignal(SignalName.LevelChanged, _level);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, xpPerLevel, _level);
+        return true;
+    }
+
     public int RestoreManaFromDrop(int amount)
     {
         if (_isDead || amount <= 0 || ManaState == null)

@@ -28,6 +28,8 @@
 [ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="26_blizzard_area"]
 [ext_resource type="Script" path="res://scripts/spells/IceShieldSpell.cs" id="27_ice_shield_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="28_ice_shield_scene"]
+[ext_resource type="Script" path="res://scripts/spells/TEST_add_level.cs" id="29_test_add_level_spell"]
+[ext_resource type="Script" path="res://scripts/spells/TEST_sub_level.cs" id="30_test_sub_level_spell"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -212,3 +214,13 @@ visible = false
 script = ExtResource("24_test_aoe_respawn_spell")
 SpellId = "TEST_AoE_respawn"
 HudLabel = "TEST_AoE_respawn"
+
+[node name="TEST_add_level" type="Node" parent="."]
+script = ExtResource("29_test_add_level_spell")
+SpellId = "TEST_add_level"
+HudLabel = "TEST_add_level"
+
+[node name="TEST_sub_level" type="Node" parent="."]
+script = ExtResource("30_test_sub_level_spell")
+SpellId = "TEST_sub_level"
+HudLabel = "TEST_sub_level"
