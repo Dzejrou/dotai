@@ -74,6 +74,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public int ExperiencePerLevel { get; set; } = 100;
 
     [Export]
+    public ExperienceTable ExperienceTable { get; set; }
+
+    [Export]
     public int MaxLevel { get; set; } = 60;
 
     [Export]
@@ -338,12 +341,26 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return amount;
     }
 
+    public int GetRequiredExperienceForCurrentLevel()
+    {
+        return GetRequiredExperienceForLevel(_level);
+    }
+
+    private int GetRequiredExperienceForLevel(int level)
+    {
+        var fallback = Math.Max(1, ExperiencePerLevel);
+        var maxLevel = Math.Max(1, MaxLevel);
+        if (level >= maxLevel)
+            return fallback;
+
+        return ExperienceTable?.GetRequiredExperienceForLevel(level, fallback) ?? fallback;
+    }
+
     public void AddExperience(int amount)
     {
         if (_isDead || amount <= 0)
             return;
 
-        var xpPerLevel = Math.Max(1, ExperiencePerLevel);
         var maxLevel = Math.Max(1, MaxLevel);
         var xpPerGold = Math.Max(1, MaxLevelExperiencePerGold);
 
@@ -356,12 +373,14 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         FloatingText.ShowCustom($"+{amount} XP", this, new Color(0.3f, 1.0f, 0.5f, 1.0f));
         _currentExperience += amount;
 
-        while (_currentExperience >= xpPerLevel && _level < maxLevel)
+        var required = GetRequiredExperienceForCurrentLevel();
+        while (_currentExperience >= required && _level < maxLevel)
         {
-            _currentExperience -= xpPerLevel;
+            _currentExperience -= required;
             _level++;
             FloatingText.ShowCustom($"LEVEL {_level}", this, new Color(1.0f, 0.95f, 0.2f, 1.0f));
             EmitSignal(SignalName.LevelChanged, _level);
+            required = GetRequiredExperienceForCurrentLevel();
         }
 
         if (_level >= maxLevel && _currentExperience > 0)
@@ -373,7 +392,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         }
 
         EmitSignal(SignalName.ExperienceGained, amount, _currentExperience);
-        EmitSignal(SignalName.ExperienceChanged, _currentExperience, xpPerLevel, _level);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, GetRequiredExperienceForCurrentLevel(), _level);
     }
 
     public bool TryAdjustLevelForTesting(int delta)
@@ -381,19 +400,19 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (_isDead || delta == 0)
             return false;
 
-        var xpPerLevel = Math.Max(1, ExperiencePerLevel);
         var maxLevel = Math.Max(1, MaxLevel);
         var previousLevel = _level;
         _level = Math.Clamp(_level + delta, 1, maxLevel);
         if (_level == previousLevel)
             return false;
 
+        var required = GetRequiredExperienceForCurrentLevel();
         _currentExperience = _level >= maxLevel
             ? 0
-            : Math.Clamp(_currentExperience, 0, xpPerLevel - 1);
+            : Math.Clamp(_currentExperience, 0, required - 1);
 
         EmitSignal(SignalName.LevelChanged, _level);
-        EmitSignal(SignalName.ExperienceChanged, _currentExperience, xpPerLevel, _level);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, _level);
         return true;
     }
 

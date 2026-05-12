@@ -177,7 +177,7 @@ public partial class ActorHUD : Node2D
         _manaState = owner?.GetNodeOrNull<ManaState>("ManaState");
         _currentGold = Math.Max(0, _playerOwner?.Gold ?? 0);
         _currentXp = Math.Max(0, _playerOwner?.CurrentExperience ?? 0);
-        _requiredXp = Math.Max(1, _playerOwner?.ExperiencePerLevel ?? 1);
+        _requiredXp = Math.Max(1, _playerOwner?.GetRequiredExperienceForCurrentLevel() ?? 1);
         _playerLevel = _playerOwner?.Level ?? 1;
         BindPlayerGold();
         BindPlayerXp();

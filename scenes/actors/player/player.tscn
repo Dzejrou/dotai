@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="7_mana_state"]
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="8_faction_state"]
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="15_status_effect_controller"]
+[ext_resource type="Resource" path="res://resources/progression/player_experience_table.tres" id="16_experience_table"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -21,6 +22,7 @@ radius = 80.0
 
 [node name="Player" type="CharacterBody2D" unique_id=320937566]
 script = ExtResource("1_t1u7h")
+ExperienceTable = ExtResource("16_experience_table")
 LootMagnetRadius = 60.0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=122948576]
