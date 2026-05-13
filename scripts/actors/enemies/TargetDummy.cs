@@ -93,7 +93,7 @@ public partial class TargetDummy : CombatCharacter, IAttackable, ITargetable
         if (!TryApplyDamageToHealth(damageInfo, setReceiverTargetToSource: false, out var damage))
             return;
 
-        FloatingText.ShowBad(damage.ToString(), this);
+        FloatingText.ShowDamage(damage, damageInfo.IsCritical, this);
 
         if (HealthStateNode.IsDead)
             StartDeath();

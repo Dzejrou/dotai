@@ -14,7 +14,13 @@ public partial class Damage : Node
     [Export]
     public DamageSchool School { get; set; } = DamageSchool.Physical;
 
+    private static readonly RandomNumberGenerator CritRng = CreateCritRng();
+
     public int Amount { get; private set; }
+
+    public int BaseAmount { get; private set; }
+
+    public bool IsCritical { get; private set; }
 
     public Node Source { get; private set; }
 
@@ -36,7 +42,35 @@ public partial class Damage : Node
         SourceInstanceId = source != null && GodotObject.IsInstanceValid(source)
             ? source.GetInstanceId()
             : 0UL;
-        Amount = Math.Max(0, amount);
+        BaseAmount = Math.Max(0, amount);
+        ResolveCrit();
+    }
+
+    private void ResolveCrit()
+    {
+        IsCritical = false;
+        Amount = BaseAmount;
+
+        if (BaseAmount <= 0 || Source is not CombatCharacter combatCharacter)
+            return;
+
+        var critRate = combatCharacter.ResolvedCritRate;
+        if (critRate <= 0.0f)
+            return;
+
+        if (CritRng.Randf() >= critRate)
+            return;
+
+        IsCritical = true;
+        var multiplier = 1.0f + combatCharacter.ResolvedCritDamage;
+        Amount = Math.Max(BaseAmount, (int)Math.Round(BaseAmount * multiplier));
+    }
+
+    private static RandomNumberGenerator CreateCritRng()
+    {
+        var rng = new RandomNumberGenerator();
+        rng.Randomize();
+        return rng;
     }
 
     public void RegisterHit(Node2D receiver, bool setReceiverTargetToSource = true)

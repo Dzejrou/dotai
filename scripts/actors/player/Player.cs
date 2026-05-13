@@ -298,7 +298,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (!TryApplyDamageToHealth(damageInfo, setReceiverTargetToSource: true, out var damage))
             return;
 
-        ShowFloatingDamageNumber(damage);
+        ShowFloatingDamageNumber(damage, damageInfo.IsCritical);
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
         TryApplySpellCastPushback(damage);
 
@@ -973,9 +973,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
-    private void ShowFloatingDamageNumber(int amount)
+    private void ShowFloatingDamageNumber(int amount, bool isCritical)
     {
-        FloatingText.ShowBad(amount.ToString(), this);
+        FloatingText.ShowDamage(amount, isCritical, this);
     }
 
     private void ShowFloatingHealingNumber(int amount)

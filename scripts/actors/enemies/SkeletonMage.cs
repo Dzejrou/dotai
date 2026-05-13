@@ -36,7 +36,7 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaste
         if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;
 
-        FloatingText.ShowBad(damage.ToString(), this);
+        FloatingText.ShowDamage(damage, damageInfo.IsCritical, this);
         if (died)
         {
             TryGrantExperienceToKiller(damageInfo);

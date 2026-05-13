@@ -24,7 +24,7 @@ public partial class Skeleton : Actor, IAttackable, ITargetable
         if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;
 
-        FloatingText.ShowBad(damage.ToString(), this);
+        FloatingText.ShowDamage(damage, damageInfo.IsCritical, this);
         if (died)
         {
             TryGrantExperienceToKiller(damageInfo);

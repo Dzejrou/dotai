@@ -37,7 +37,7 @@ public partial class Dryad : Actor, IAttackable, ITargetable, ISpellCaster
         if (!TryApplyIncomingDamage(damageInfo, out var damage, out var died))
             return;
 
-        FloatingText.ShowBad(damage.ToString(), this);
+        FloatingText.ShowDamage(damage, damageInfo.IsCritical, this);
         if (died)
             StartDeath();
     }

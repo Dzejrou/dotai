@@ -12,6 +12,7 @@ public static class FloatingText
     private static readonly Color FallbackGoodColor = new Color(0.0f, 1.0f, 0.0f, 1.0f);
     private static readonly Color FallbackBadColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
     private static readonly Color FallbackNeutralColor = new Color(1.0f, 1.0f, 0.0f, 1.0f);
+    private static readonly Color FallbackCritColor = new Color(1.0f, 0.85f, 0.2f, 1.0f);
     private static FloatingTextLayer _registeredLayer;
     private static bool _didWarnMissingLayer;
 
@@ -54,6 +55,14 @@ public static class FloatingText
     public static void ShowCustom(string text, Node2D origin, Color color, Node attachTo = null)
     {
         Show(text, origin, color, attachTo);
+    }
+
+    public static void ShowDamage(int amount, bool isCritical, Node2D origin, Node attachTo = null)
+    {
+        if (isCritical)
+            ShowCustom($"{amount}!", origin, FallbackCritColor, attachTo);
+        else
+            ShowBad(amount.ToString(), origin, attachTo);
     }
 
     internal static void RegisterLayer(FloatingTextLayer layer)

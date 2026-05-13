@@ -8,6 +8,15 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     [Signal]
     public delegate void DiedEventHandler();
 
+    [Export(PropertyHint.Range, "0,1,0.01")]
+    public float CritRate { get; set; } = 0.50f;
+
+    [Export(PropertyHint.Range, "0,10,0.05")]
+    public float CritDamage { get; set; } = 1.0f;
+
+    public float ResolvedCritRate => Math.Clamp(CritRate, 0.0f, 1.0f);
+    public float ResolvedCritDamage => Math.Max(0.0f, CritDamage);
+
     private bool _healthStateChangedBound;
     private bool _statusEffectsChangedBound;
     private bool _lastKnownIsDead;
