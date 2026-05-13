@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="ExperienceTable" format=3]
+[gd_resource type="Resource" script_class="ExperienceTable" format=3 uid="uid://b4hwpk7natshy"]
 
-[ext_resource type="Script" path="res://scripts/progression/ExperienceTable.cs" id="1_experience_table_script"]
+[ext_resource type="Script" uid="uid://dl7guqk2bxwmg" path="res://scripts/progression/ExperienceTable.cs" id="1_experience_table_script"]
 
 [resource]
 script = ExtResource("1_experience_table_script")
