@@ -11,6 +11,9 @@ public partial class Damage : Node
     [Export]
     public int MaximumDamage { get; set; } = 1;
 
+    [Export]
+    public DamageSchool School { get; set; } = DamageSchool.Physical;
+
     public int Amount { get; private set; }
 
     public Node Source { get; private set; }
@@ -50,6 +53,17 @@ public partial class Damage : Node
         if (owner == null || !GodotObject.IsInstanceValid(owner))
             return null;
 
-        return owner.GetNodeOrNull<Damage>("Damage")?.Duplicate() as Damage;
+        if (owner.GetNodeOrNull<Damage>("Damage")?.Duplicate() is not Damage damage)
+            return null;
+
+        damage.ApplyResolvedSchool(owner);
+        return damage;
+    }
+
+    public void ApplyResolvedSchool(Node owner)
+    {
+        var ownerSchool = DamageSchoolTag.Resolve(owner);
+        if (ownerSchool.HasValue)
+            School = ownerSchool.Value;
     }
 }

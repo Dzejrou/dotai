@@ -27,6 +27,7 @@ public partial class FireNovaSpell : NovaSpell
         if (burningEffect == null)
             return;
 
+        DamageSchoolTag.EnsureOnChild(burningEffect, this);
         var source = caster.SpellOrigin;
         controller.ApplyStatusEffect(burningEffect, source, ResolveSourceInstanceId(source));
     }

@@ -4,6 +4,7 @@
 [ext_resource type="SpriteFrames" path="res://resources/animations/poison_cloud_spriteframes.tres" id="2_poison_cloud_frames"]
 [ext_resource type="Script" uid="uid://cq1ljwn1pf717" path="res://scripts/status/PoisonedEffect.cs" id="3_poisoned_effect"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="4_damage"]
+[ext_resource type="Script" path="res://scripts/combat/DamageSchoolTag.cs" id="6_damage_school_tag"]
 [ext_resource type="Script" path="res://scripts/OmniSprite.cs" id="5_omni_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_poison_cloud"]
@@ -28,6 +29,10 @@ script = ExtResource("5_omni_sprite")
 sprite_frames = ExtResource("2_poison_cloud_frames")
 offset = Vector2(0, -8)
 
+[node name="DamageSchoolTag" type="Node" parent="."]
+script = ExtResource("6_damage_school_tag")
+School = 3
+
 [node name="PoisonedEffect" type="Node" parent="." unique_id=2015812129]
 script = ExtResource("3_poisoned_effect")
 DisplayName = "POISON"
@@ -39,3 +44,7 @@ TickIntervalSeconds = 2.0
 script = ExtResource("4_damage")
 MinimumDamage = 5
 MaximumDamage = 5
+
+[node name="DamageSchoolTag" type="Node" parent="PoisonedEffect"]
+script = ExtResource("6_damage_school_tag")
+School = 3

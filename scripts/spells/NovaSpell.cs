@@ -83,6 +83,7 @@ public abstract partial class NovaSpell : Spell
 
             if (damageTemplate?.Duplicate() is Damage damagePayload)
             {
+                damagePayload.ApplyResolvedSchool(this);
                 damagePayload.InitializeRuntime(source, Math.Max(1, ResolveDamage(damageTemplate, node)));
                 attackable.ApplyDamage(damagePayload);
             }

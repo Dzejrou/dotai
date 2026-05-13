@@ -172,13 +172,20 @@ public partial class AreaOfEffect : Area2D
         foreach (var template in _statusTemplates)
         {
             if (template?.Duplicate() is StatusEffect effect)
+            {
+                DamageSchoolTag.EnsureOnChild(effect, this);
                 yield return effect;
+            }
         }
     }
 
     protected StatusEffect DuplicateStatusTemplate(string templateName)
     {
-        return GetNodeOrNull<StatusEffect>(templateName)?.Duplicate() as StatusEffect;
+        if (GetNodeOrNull<StatusEffect>(templateName)?.Duplicate() is not StatusEffect statusEffect)
+            return null;
+
+        DamageSchoolTag.EnsureOnChild(statusEffect, this);
+        return statusEffect;
     }
 
     private void ActivateRuntime()

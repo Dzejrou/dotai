@@ -168,6 +168,7 @@ public abstract partial class StatusEffect : Node
 
         damage.MinimumDamage = replacementDamage.MinimumDamage;
         damage.MaximumDamage = replacementDamage.MaximumDamage;
+        damage.School = replacementDamage.School;
     }
 
     protected void CopyHealingTemplateFrom(StatusEffect replacement)

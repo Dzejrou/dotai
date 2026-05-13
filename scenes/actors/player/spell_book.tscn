@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://cqsn11dvrfth1" path="res://scripts/status/BurningEffect.cs" id="12_burning_effect"]
 [ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="13_immobilized_effect"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="14_damage"]
+[ext_resource type="Script" path="res://scripts/combat/DamageSchoolTag.cs" id="29_damage_school_tag"]
 [ext_resource type="Script" uid="uid://cm5iqbvcugdr8" path="res://scripts/spells/IceBallSpell.cs" id="15_ice_ball_spell"]
 [ext_resource type="Script" path="res://scripts/spells/IceSpikesSpell.cs" id="16_ice_spikes_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_spikes_area.tscn" id="17_ice_spikes_area"]
@@ -46,6 +47,10 @@ script = ExtResource("14_damage")
 MinimumDamage = 4
 MaximumDamage = 4
 
+[node name="DamageSchoolTag" type="Node" parent="FireBall"]
+script = ExtResource("29_damage_school_tag")
+School = 1
+
 [node name="BurningEffect" type="Node" parent="FireBall" unique_id=345145974]
 script = ExtResource("12_burning_effect")
 DurationSeconds = 6.0
@@ -57,6 +62,10 @@ FloatingTextLabel = "BURNING"
 script = ExtResource("14_damage")
 MinimumDamage = 3
 MaximumDamage = 3
+
+[node name="DamageSchoolTag" type="Node" parent="FireBall/BurningEffect"]
+script = ExtResource("29_damage_school_tag")
+School = 1
 
 [node name="FrostNova" type="Node" parent="." unique_id=1635029079]
 script = ExtResource("6_frost_nova_spell")
@@ -71,6 +80,10 @@ Cooldown = 3.0
 script = ExtResource("14_damage")
 MinimumDamage = 5
 MaximumDamage = 5
+
+[node name="DamageSchoolTag" type="Node" parent="FrostNova"]
+script = ExtResource("29_damage_school_tag")
+School = 2
 
 [node name="ImmobilizedEffect" type="Node" parent="FrostNova" unique_id=599701076]
 script = ExtResource("13_immobilized_effect")
@@ -123,6 +136,10 @@ script = ExtResource("14_damage")
 MinimumDamage = 6
 MaximumDamage = 10
 
+[node name="DamageSchoolTag" type="Node" parent="FireNova"]
+script = ExtResource("29_damage_school_tag")
+School = 1
+
 [node name="BurningEffect" type="Node" parent="FireNova" unique_id=1518510396]
 script = ExtResource("12_burning_effect")
 DurationSeconds = 6.0
@@ -134,6 +151,10 @@ FloatingTextLabel = "BURNING"
 script = ExtResource("14_damage")
 MinimumDamage = 3
 MaximumDamage = 3
+
+[node name="DamageSchoolTag" type="Node" parent="FireNova/BurningEffect"]
+script = ExtResource("29_damage_school_tag")
+School = 1
 
 [node name="IceBall" type="Node" parent="." unique_id=1339289238]
 script = ExtResource("15_ice_ball_spell")
@@ -149,6 +170,10 @@ CastTimeSeconds = 1.0
 script = ExtResource("14_damage")
 MinimumDamage = 4
 MaximumDamage = 4
+
+[node name="DamageSchoolTag" type="Node" parent="IceBall"]
+script = ExtResource("29_damage_school_tag")
+School = 2
 
 [node name="SlowedEffect" type="Node" parent="IceBall" unique_id=198852090]
 script = ExtResource("11_slowed_effect")
