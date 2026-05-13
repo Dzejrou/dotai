@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://chwlai6tjyxcn" path="res://scripts/world/rooms/Room.cs" id="2_room_screen"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://hr7vnxvywkg0" path="res://scenes/world/doors/portal.tscn" id="4_portal"]
+[ext_resource type="PackedScene" uid="uid://bt4xu4bcnkoj8" path="res://scenes/actors/enemies/target_dummy.tscn" id="5_xp5ov"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_vqtlv"]
 vertices = PackedVector2Array(362.9375, 317.97656, 46.578125, 317.5078, 47.90625, 157.71094, 174.59375, 160.42969, 201.36719, 180.36719, 362.04688, 160.42969, 230.65625, 159.52344)
@@ -107,8 +108,16 @@ position = Vector2(200, 240)
 [node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers" unique_id=969265028]
 position = Vector2(200, 200)
 
-[node name="Ephemeral" type="Node" parent="Scaled"]
+[node name="Ephemeral" type="Node" parent="Scaled" unique_id=1593124180]
 
 [node name="Unscaled" type="Node2D" parent="." unique_id=273158456]
 
-[node name="Ephemeral" type="Node" parent="Unscaled"]
+[node name="Ephemeral" type="Node" parent="Unscaled" unique_id=2027997439]
+
+[node name="TargetDummy" parent="Unscaled" unique_id=420334247 instance=ExtResource("5_xp5ov")]
+position = Vector2(181, 557)
+
+[node name="HealthState" parent="Unscaled/TargetDummy" index="5" unique_id=1261457113]
+Max = 999
+
+[editable path="Unscaled/TargetDummy"]
