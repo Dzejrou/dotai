@@ -88,7 +88,7 @@ School = 2
 [node name="FrozenEffect" type="Node" parent="FrostNova" unique_id=599701076]
 script = ExtResource("30_frozen_effect")
 VisualScale = 0.5
-DurationSeconds = 2.0
+DurationSeconds = 10.0
 TickIntervalSeconds = 0.0
 DisplayName = "FROZEN"
 FloatingTextLabel = "FROZEN"
