@@ -146,6 +146,10 @@ public abstract partial class StatusEffect : Node
         if (damage == null)
             return null;
 
+        // TODO: Status-effect/DoT damage is hard non-critting for now. Future buffs may make
+        // this configurable per status; until then, force CanCrit off regardless of template.
+        damage.CanCrit = false;
+
         var damageSource = Source != null && GodotObject.IsInstanceValid(Source) ? (Node)Source : null;
         damage.InitializeRuntime(damageSource, damage.ResolveAmount());
         return damage;
@@ -175,6 +179,7 @@ public abstract partial class StatusEffect : Node
         damage.MinimumDamage = replacementDamage.MinimumDamage;
         damage.MaximumDamage = replacementDamage.MaximumDamage;
         damage.School = replacementDamage.School;
+        damage.CanCrit = replacementDamage.CanCrit;
     }
 
     protected void CopyHealingTemplateFrom(StatusEffect replacement)

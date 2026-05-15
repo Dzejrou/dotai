@@ -14,6 +14,9 @@ public partial class Damage : Node
     [Export]
     public DamageSchool School { get; set; } = DamageSchool.Physical;
 
+    [Export]
+    public bool CanCrit { get; set; } = true;
+
     private static readonly RandomNumberGenerator CritRng = CreateCritRng();
 
     public int Amount { get; private set; }
@@ -66,9 +69,10 @@ public partial class Damage : Node
         }
     }
 
-    // TODO: Damage caused by status effects (DoTs) should eventually have 0% crit rate and
-    // must not be forced to crit by Frozen/Ice rules. No Ice DoT exists today, so this is
-    // not yet enforced.
+    // TODO: Status-effect/DoT damage is currently hard non-critting via CanCrit = false set in
+    // StatusEffect.DuplicateDamagePayload(). This blocks both normal source crit and Ice-vs-Frozen
+    // forced crit. Future buffs may make this configurable per status (e.g. "DoTs can crit"),
+    // at which point CanCrit should be driven by those buffs rather than forced off.
     public void ResolveCritForReceiver(Node2D receiver)
     {
         if (_critResolved)
@@ -78,7 +82,7 @@ public partial class Damage : Node
         IsCritical = false;
         Amount = BaseAmount;
 
-        if (BaseAmount <= 0 || !_sourceIsCombatCharacter)
+        if (BaseAmount <= 0 || !_sourceIsCombatCharacter || !CanCrit)
             return;
 
         var forced = School == DamageSchool.Ice && ReceiverHasFrozen(receiver);
