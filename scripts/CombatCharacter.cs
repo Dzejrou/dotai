@@ -103,6 +103,8 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         if (damageInfo == null || IsDead)
             return false;
 
+        damageInfo.ResolveCritForReceiver(this);
+
         var remainingDamage = ResolveRemainingDamageAfterAbsorption(damageInfo, out var fullyAbsorbingAbsorber);
         damageInfo.RegisterHit(this, setReceiverTargetToSource);
         if (remainingDamage <= 0)

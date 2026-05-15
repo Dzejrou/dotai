@@ -26,6 +26,11 @@ public partial class Damage : Node
 
     public ulong SourceInstanceId { get; private set; }
 
+    private float _sourceCritRate;
+    private float _sourceCritDamage;
+    private bool _sourceIsCombatCharacter;
+    private bool _critResolved;
+
     public int ResolveAmount(RandomNumberGenerator randomNumberGenerator = null)
     {
         var maximumDamage = Math.Max(MinimumDamage, MaximumDamage);
@@ -43,27 +48,56 @@ public partial class Damage : Node
             ? source.GetInstanceId()
             : 0UL;
         BaseAmount = Math.Max(0, amount);
-        ResolveCrit();
+        Amount = BaseAmount;
+        IsCritical = false;
+        _critResolved = false;
+
+        if (source is CombatCharacter combatCharacter)
+        {
+            _sourceIsCombatCharacter = true;
+            _sourceCritRate = combatCharacter.ResolvedCritRate;
+            _sourceCritDamage = combatCharacter.ResolvedCritDamage;
+        }
+        else
+        {
+            _sourceIsCombatCharacter = false;
+            _sourceCritRate = 0.0f;
+            _sourceCritDamage = 0.0f;
+        }
     }
 
-    private void ResolveCrit()
+    // TODO: Damage caused by status effects (DoTs) should eventually have 0% crit rate and
+    // must not be forced to crit by Frozen/Ice rules. No Ice DoT exists today, so this is
+    // not yet enforced.
+    public void ResolveCritForReceiver(Node2D receiver)
     {
+        if (_critResolved)
+            return;
+
+        _critResolved = true;
         IsCritical = false;
         Amount = BaseAmount;
 
-        if (BaseAmount <= 0 || Source is not CombatCharacter combatCharacter)
+        if (BaseAmount <= 0 || !_sourceIsCombatCharacter)
             return;
 
-        var critRate = combatCharacter.ResolvedCritRate;
-        if (critRate <= 0.0f)
-            return;
-
-        if (CritRng.Randf() >= critRate)
+        var forced = School == DamageSchool.Ice && ReceiverHasFrozen(receiver);
+        var shouldCrit = forced || (_sourceCritRate > 0.0f && CritRng.Randf() < _sourceCritRate);
+        if (!shouldCrit)
             return;
 
         IsCritical = true;
-        var multiplier = 1.0f + combatCharacter.ResolvedCritDamage;
+        var multiplier = 1.0f + _sourceCritDamage;
         Amount = Math.Max(BaseAmount, (int)Math.Round(BaseAmount * multiplier));
+    }
+
+    private static bool ReceiverHasFrozen(Node2D receiver)
+    {
+        if (receiver == null || !GodotObject.IsInstanceValid(receiver))
+            return false;
+
+        var controller = receiver.GetNodeOrNull<StatusEffectController>("StatusEffectController");
+        return controller != null && controller.HasStatus(FrozenEffect.StatusKeyName);
     }
 
     private static RandomNumberGenerator CreateCritRng()
