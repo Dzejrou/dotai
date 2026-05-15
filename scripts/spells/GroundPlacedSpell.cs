@@ -138,7 +138,6 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
         }
 
         ConfigureArea(area, caster);
-        DamageSchoolTag.EnsureOnChild(area, this);
         area.GlobalPosition = worldPosition;
         area.InitializeRuntime(caster.SpellOrigin, caster.Faction);
         parent.AddChild(area);

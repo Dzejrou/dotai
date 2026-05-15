@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://valw3caskasw" path="res://scripts/spells/DoomArea.cs" id="1_doom_area_script"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="2_damage"]
-[ext_resource type="Script" path="res://scripts/combat/DamageSchoolTag.cs" id="5_damage_school_tag"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/doom_spriteframes.tres" id="3_doom_frames"]
 [ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="4_omni_sprite"]
 
@@ -32,7 +31,4 @@ sprite_frames = ExtResource("3_doom_frames")
 script = ExtResource("2_damage")
 MinimumDamage = 999999
 MaximumDamage = 999999
-
-[node name="DamageSchoolTag" type="Node" parent="."]
-script = ExtResource("5_damage_school_tag")
 School = 4

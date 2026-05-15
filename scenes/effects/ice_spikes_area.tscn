@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="3_slowed_effect"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/ice_spikes_spriteframes.tres" id="5_ice_spikes_frames"]
 [ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="6_omni_sprite"]
-[ext_resource type="Script" uid="uid://6twj5mdosos1" path="res://scripts/combat/DamageSchoolTag.cs" id="7_damage_school_tag"]
 [ext_resource type="Script" uid="uid://gtkj6udlgnar" path="res://scripts/status/FrozenEffect.cs" id="8_frozen_effect"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ice_spikes"]
@@ -29,9 +28,6 @@ sprite_frames = ExtResource("5_ice_spikes_frames")
 [node name="Damage" type="Node" parent="." unique_id=2026040802]
 script = ExtResource("2_damage")
 MaximumDamage = 3
-
-[node name="DamageSchoolTag" type="Node" parent="." unique_id=675156147]
-script = ExtResource("7_damage_school_tag")
 School = 2
 
 [node name="SlowedEffect" type="Node" parent="." unique_id=2026040803]

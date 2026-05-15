@@ -21,7 +21,6 @@ public partial class IceBallSpell : ProjectileSpell
         if (GetNodeOrNull<StatusEffect>("FrozenEffect")?.Duplicate() is not StatusEffect frozen)
             return null;
 
-        DamageSchoolTag.EnsureOnChild(frozen, this);
         return new[] { frozen };
     }
 }

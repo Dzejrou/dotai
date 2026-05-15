@@ -134,7 +134,6 @@ public abstract partial class ProjectileSpell : Spell
         if (damageTemplate?.Duplicate() is not Damage damagePayload)
             return null;
 
-        damagePayload.ApplyResolvedSchool(this);
         damagePayload.InitializeRuntime((Node)caster.SpellOrigin, Math.Max(1, ResolveDamage(damageTemplate)));
         return damagePayload;
     }
@@ -153,7 +152,6 @@ public abstract partial class ProjectileSpell : Spell
         if (GetNodeOrNull<StatusEffect>(ResolveStatusEffectTemplateName())?.Duplicate() is not StatusEffect statusEffect)
             return null;
 
-        DamageSchoolTag.EnsureOnChild(statusEffect, this);
         return statusEffect;
     }
 

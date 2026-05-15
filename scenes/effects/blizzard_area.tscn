@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="3_slowed_effect"]
 [ext_resource type="Texture2D" uid="uid://u14uxiq8yp83" path="res://assets/blizzard/cloud.png" id="5_blizzard_cloud"]
 [ext_resource type="Texture2D" uid="uid://do7k4ivsbjhfo" path="res://assets/ice_ball/base/frame_000.png" id="6_blizzard_ice_ball"]
-[ext_resource type="Script" uid="uid://6twj5mdosos1" path="res://scripts/combat/DamageSchoolTag.cs" id="7_damage_school_tag"]
 [ext_resource type="Script" uid="uid://gtkj6udlgnar" path="res://scripts/status/FrozenEffect.cs" id="8_frozen_effect"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_blizzard"]
@@ -40,9 +39,6 @@ texture = ExtResource("5_blizzard_cloud")
 [node name="Damage" type="Node" parent="." unique_id=2026040802]
 script = ExtResource("2_damage")
 MaximumDamage = 3
-
-[node name="DamageSchoolTag" type="Node" parent="." unique_id=2069952985]
-script = ExtResource("7_damage_school_tag")
 School = 2
 
 [node name="SlowedEffect" type="Node" parent="." unique_id=2026040803]

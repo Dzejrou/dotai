@@ -125,17 +125,6 @@ public partial class Damage : Node
         if (owner == null || !GodotObject.IsInstanceValid(owner))
             return null;
 
-        if (owner.GetNodeOrNull<Damage>("Damage")?.Duplicate() is not Damage damage)
-            return null;
-
-        damage.ApplyResolvedSchool(owner);
-        return damage;
-    }
-
-    public void ApplyResolvedSchool(Node owner)
-    {
-        var ownerSchool = DamageSchoolTag.Resolve(owner);
-        if (ownerSchool.HasValue)
-            School = ownerSchool.Value;
+        return owner.GetNodeOrNull<Damage>("Damage")?.Duplicate() as Damage;
     }
 }

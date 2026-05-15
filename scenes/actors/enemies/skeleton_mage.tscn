@@ -104,6 +104,7 @@ Cooldown = 1.2
 script = ExtResource("22_damage")
 MinimumDamage = 4
 MaximumDamage = 4
+School = 1
 
 [node name="FireNova" type="Node" parent="Spells" unique_id=1734723264]
 script = ExtResource("17_fire_nova_spell")
@@ -117,6 +118,7 @@ Cooldown = 3.2
 script = ExtResource("22_damage")
 MinimumDamage = 8
 MaximumDamage = 12
+School = 1
 
 [node name="BurningEffect" type="Node" parent="Spells/FireNova" unique_id=557692296]
 script = ExtResource("21_burning_effect")
@@ -129,6 +131,7 @@ FloatingTextLabel = "BURNING"
 script = ExtResource("22_damage")
 MinimumDamage = 3
 MaximumDamage = 3
+School = 1
 
 [node name="PoisonCloud" type="Node" parent="Spells" unique_id=1804078723]
 script = ExtResource("18_poison_cloud_spell")
