@@ -20,6 +20,8 @@ public partial class StatusEffectController : Node
     private static readonly Color BuffAppliedColor = new(0.42f, 0.92f, 0.42f, 1.0f);
     private static readonly Color BuffRemovedColor = new(0.92f, 0.28f, 0.28f, 1.0f);
 
+    private static readonly RandomNumberGenerator ApplyChanceRng = CreateApplyChanceRng();
+
     private readonly Dictionary<(StringName StatusKey, ulong SourceId), StatusEffect> _activeEffects = new();
     private readonly Dictionary<StringName, int> _activeStatusCounts = new();
     private readonly HashSet<StringName> _immuneStatusKeys = new();
@@ -129,6 +131,13 @@ public partial class StatusEffectController : Node
     {
         if (_owner == null || effect == null)
             return;
+
+        var applyChance = effect.ResolvedApplyChance;
+        if (applyChance < 1.0f && (applyChance <= 0.0f || ApplyChanceRng.Randf() >= applyChance))
+        {
+            effect.QueueFree();
+            return;
+        }
 
         var statusKey = effect.StatusKey;
         if (IsStatusImmune(statusKey))
@@ -279,6 +288,13 @@ public partial class StatusEffectController : Node
         }
 
         return multiplier;
+    }
+
+    private static RandomNumberGenerator CreateApplyChanceRng()
+    {
+        var rng = new RandomNumberGenerator();
+        rng.Randomize();
+        return rng;
     }
 
     private static ulong ResolveSourceInstanceId(Node2D source, ulong sourceInstanceId)

@@ -27,6 +27,7 @@ public partial class Projectile : Area2D
     private float _traveledDistance;
     private Damage _damage;
     private StatusEffect _statusEffect;
+    private StatusEffect[] _additionalStatusEffects;
     private Node _source;
     private bool _isActive;
     private bool _hasHitTarget;
@@ -80,6 +81,7 @@ public partial class Projectile : Area2D
         Node source,
         Damage damage = null,
         StatusEffect statusEffect = null,
+        StatusEffect[] additionalStatusEffects = null,
         SpriteFrames overrideVisualFrames = null,
         DirectionalTextureSet overrideDirectionalTextures = null,
         string overrideAnimationName = null,
@@ -92,6 +94,7 @@ public partial class Projectile : Area2D
         _source = source;
         _damage = damage;
         _statusEffect = statusEffect;
+        _additionalStatusEffects = additionalStatusEffects;
         _configuredVisualFrames = overrideVisualFrames;
         _configuredDirectionalTextures = overrideDirectionalTextures;
         _configuredAnimationName = string.IsNullOrEmpty(overrideAnimationName)
@@ -125,6 +128,15 @@ public partial class Projectile : Area2D
         if (_statusEffect != null)
             AddChild(_statusEffect);
 
+        if (_additionalStatusEffects != null)
+        {
+            foreach (var extra in _additionalStatusEffects)
+            {
+                if (extra != null && extra.GetParent() == null)
+                    AddChild(extra);
+            }
+        }
+
         QueueRedraw();
     }
 
@@ -146,10 +158,27 @@ public partial class Projectile : Area2D
             attackable.ApplyDamage(_damage);
         }
 
+        var statusController = ResolveStatusEffectController(targetNode);
+        var sourceId = ResolveSourceInstanceId(_source);
         if (_statusEffect != null)
         {
-            var controller = ResolveStatusEffectController(targetNode);
-            controller?.ApplyStatusEffect(_statusEffect, _source as Node2D, ResolveSourceInstanceId(_source));
+            statusController?.ApplyStatusEffect(_statusEffect, _source as Node2D, sourceId);
+            _statusEffect = null;
+        }
+
+        if (_additionalStatusEffects != null)
+        {
+            foreach (var extra in _additionalStatusEffects)
+            {
+                if (extra == null || !GodotObject.IsInstanceValid(extra))
+                    continue;
+
+                if (extra.GetParent() == this)
+                    RemoveChild(extra);
+
+                statusController?.ApplyStatusEffect(extra, _source as Node2D, sourceId);
+            }
+            _additionalStatusEffects = null;
         }
 
         CallDeferred(nameof(Despawn));

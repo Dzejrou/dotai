@@ -26,6 +26,11 @@ public abstract partial class StatusEffect : Node
     [Export]
     public StatusCategory Category { get; set; } = StatusCategory.Debuff;
 
+    [Export(PropertyHint.Range, "0,1,0.01")]
+    public float ApplyChance { get; set; } = 1.0f;
+
+    public float ResolvedApplyChance => Math.Clamp(ApplyChance, 0.0f, 1.0f);
+
     public virtual bool IsUniqueByStatusKey => false;
     public virtual bool PreventsMovement => false;
     public virtual float MovementSpeedMultiplier => 1.0f;
@@ -116,6 +121,7 @@ public abstract partial class StatusEffect : Node
         DisplayName = replacement.DisplayName;
         FloatingTextLabel = replacement.FloatingTextLabel;
         Category = replacement.Category;
+        ApplyChance = replacement.ApplyChance;
     }
 
     protected virtual void OnApplied()

@@ -12,12 +12,10 @@
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="10_ring_of_fire_area"]
 [ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="11_slowed_effect"]
 [ext_resource type="Script" uid="uid://cqsn11dvrfth1" path="res://scripts/status/BurningEffect.cs" id="12_burning_effect"]
-[ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="13_immobilized_effect"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="14_damage"]
-[ext_resource type="Script" path="res://scripts/combat/DamageSchoolTag.cs" id="29_damage_school_tag"]
 [ext_resource type="Script" uid="uid://cm5iqbvcugdr8" path="res://scripts/spells/IceBallSpell.cs" id="15_ice_ball_spell"]
-[ext_resource type="Script" path="res://scripts/spells/IceSpikesSpell.cs" id="16_ice_spikes_spell"]
-[ext_resource type="PackedScene" path="res://scenes/effects/ice_spikes_area.tscn" id="17_ice_spikes_area"]
+[ext_resource type="Script" uid="uid://bkde7e8s5vb0g" path="res://scripts/spells/IceSpikesSpell.cs" id="16_ice_spikes_spell"]
+[ext_resource type="PackedScene" uid="uid://buj2n6nnk6s2e" path="res://scenes/effects/ice_spikes_area.tscn" id="17_ice_spikes_area"]
 [ext_resource type="Script" uid="uid://dlxqxvyam785x" path="res://scripts/spells/PoisonCloudSpell.cs" id="18_y1cuy"]
 [ext_resource type="PackedScene" uid="uid://becvl2glpk5o5" path="res://scenes/effects/poison_cloud_area.tscn" id="19_y1cuy"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="20_fire_ball_frames"]
@@ -26,8 +24,10 @@
 [ext_resource type="PackedScene" uid="uid://5wyjxhtl686q" path="res://scenes/effects/doom_area.tscn" id="23_doom_area"]
 [ext_resource type="Script" uid="uid://u1hmkvcw1a2l" path="res://scripts/spells/BlizzardSpell.cs" id="25_blizzard_spell"]
 [ext_resource type="PackedScene" uid="uid://c5n8uvyjpudvn" path="res://scenes/effects/blizzard_area.tscn" id="26_blizzard_area"]
-[ext_resource type="Script" path="res://scripts/spells/IceShieldSpell.cs" id="27_ice_shield_spell"]
+[ext_resource type="Script" uid="uid://nsh3wv6hplss" path="res://scripts/spells/IceShieldSpell.cs" id="27_ice_shield_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="28_ice_shield_scene"]
+[ext_resource type="Script" uid="uid://6twj5mdosos1" path="res://scripts/combat/DamageSchoolTag.cs" id="29_damage_school_tag"]
+[ext_resource type="Script" uid="uid://gtkj6udlgnar" path="res://scripts/status/FrozenEffect.cs" id="30_frozen_effect"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -47,7 +47,7 @@ script = ExtResource("14_damage")
 MinimumDamage = 4
 MaximumDamage = 4
 
-[node name="DamageSchoolTag" type="Node" parent="FireBall"]
+[node name="DamageSchoolTag" type="Node" parent="FireBall" unique_id=130501989]
 script = ExtResource("29_damage_school_tag")
 School = 1
 
@@ -63,7 +63,7 @@ script = ExtResource("14_damage")
 MinimumDamage = 3
 MaximumDamage = 3
 
-[node name="DamageSchoolTag" type="Node" parent="FireBall/BurningEffect"]
+[node name="DamageSchoolTag" type="Node" parent="FireBall/BurningEffect" unique_id=168482916]
 script = ExtResource("29_damage_school_tag")
 School = 1
 
@@ -81,16 +81,17 @@ script = ExtResource("14_damage")
 MinimumDamage = 5
 MaximumDamage = 5
 
-[node name="DamageSchoolTag" type="Node" parent="FrostNova"]
+[node name="DamageSchoolTag" type="Node" parent="FrostNova" unique_id=290127547]
 script = ExtResource("29_damage_school_tag")
 School = 2
 
-[node name="ImmobilizedEffect" type="Node" parent="FrostNova" unique_id=599701076]
-script = ExtResource("13_immobilized_effect")
+[node name="FrozenEffect" type="Node" parent="FrostNova" unique_id=599701076]
+script = ExtResource("30_frozen_effect")
+VisualScale = 0.5
 DurationSeconds = 2.0
 TickIntervalSeconds = 0.0
-DisplayName = "IMMOBILIZED"
-FloatingTextLabel = "IMMOBILIZED"
+DisplayName = "FROZEN"
+FloatingTextLabel = "FROZEN"
 
 [node name="SlowedEffect" type="Node" parent="FrostNova" unique_id=1948128082]
 script = ExtResource("11_slowed_effect")
@@ -136,7 +137,7 @@ script = ExtResource("14_damage")
 MinimumDamage = 6
 MaximumDamage = 10
 
-[node name="DamageSchoolTag" type="Node" parent="FireNova"]
+[node name="DamageSchoolTag" type="Node" parent="FireNova" unique_id=1240946731]
 script = ExtResource("29_damage_school_tag")
 School = 1
 
@@ -152,7 +153,7 @@ script = ExtResource("14_damage")
 MinimumDamage = 3
 MaximumDamage = 3
 
-[node name="DamageSchoolTag" type="Node" parent="FireNova/BurningEffect"]
+[node name="DamageSchoolTag" type="Node" parent="FireNova/BurningEffect" unique_id=429153626]
 script = ExtResource("29_damage_school_tag")
 School = 1
 
@@ -171,7 +172,7 @@ script = ExtResource("14_damage")
 MinimumDamage = 4
 MaximumDamage = 4
 
-[node name="DamageSchoolTag" type="Node" parent="IceBall"]
+[node name="DamageSchoolTag" type="Node" parent="IceBall" unique_id=1506848784]
 script = ExtResource("29_damage_school_tag")
 School = 2
 
@@ -181,6 +182,15 @@ DurationSeconds = 6.0
 TickIntervalSeconds = 0.0
 DisplayName = "SLOWED"
 FloatingTextLabel = "SLOWED"
+
+[node name="FrozenEffect" type="Node" parent="IceBall" unique_id=178001118]
+script = ExtResource("30_frozen_effect")
+VisualScale = 0.5
+DurationSeconds = 2.0
+TickIntervalSeconds = 0.0
+DisplayName = "FROZEN"
+FloatingTextLabel = "FROZEN"
+ApplyChance = 0.05
 
 [node name="IceSpikes" type="Node" parent="." unique_id=1345449359]
 script = ExtResource("16_ice_spikes_spell")
@@ -211,7 +221,6 @@ ChannelDurationSeconds = 12.0
 
 [node name="BlizzardArea" parent="Blizzard" unique_id=1591382954 instance=ExtResource("26_blizzard_area")]
 visible = false
-EffectLifetime = 12.0
 
 [node name="PoisonCloud" type="Node" parent="." unique_id=1689448805]
 script = ExtResource("18_y1cuy")

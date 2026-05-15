@@ -8,7 +8,7 @@ public partial class FrostNovaSpell : NovaSpell
     private readonly RandomNumberGenerator _random = new();
 
     [Export]
-    public float ImmobilizeChance { get; set; } = 0.33f;
+    public float FreezeChance { get; set; } = 1.0f;
 
     public override void _Ready()
     {
@@ -26,8 +26,8 @@ public partial class FrostNovaSpell : NovaSpell
         if (controller == null)
             return;
 
-        var shouldImmobilize = _random.Randf() < Math.Clamp(ImmobilizeChance, 0.0f, 1.0f);
-        var templateName = shouldImmobilize ? "ImmobilizedEffect" : "SlowedEffect";
+        var shouldFreeze = _random.Randf() < Math.Clamp(FreezeChance, 0.0f, 1.0f);
+        var templateName = shouldFreeze ? "FrozenEffect" : "SlowedEffect";
         var statusTemplate = GetNodeOrNull<StatusEffect>(templateName);
         var statusEffect = statusTemplate?.Duplicate() as StatusEffect;
         if (statusEffect == null)

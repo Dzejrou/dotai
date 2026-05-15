@@ -43,5 +43,8 @@ public partial class IceSpikesArea : AreaOfEffect
 
         if (DuplicateStatusTemplate(templateName) is StatusEffect effect)
             yield return effect;
+
+        if (DuplicateStatusTemplate("FrozenEffect") is StatusEffect frozen)
+            yield return frozen;
     }
 }

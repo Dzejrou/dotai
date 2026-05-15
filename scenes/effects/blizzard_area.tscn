@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://bqaxa0at7jl4n" path="res://scripts/spells/BlizzardArea.cs" id="1_blizzard_area_script"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="2_damage"]
-[ext_resource type="Script" path="res://scripts/combat/DamageSchoolTag.cs" id="7_damage_school_tag"]
 [ext_resource type="Script" uid="uid://c5ef05hrxrkpy" path="res://scripts/status/SlowedEffect.cs" id="3_slowed_effect"]
-[ext_resource type="Script" uid="uid://visasv43ei43" path="res://scripts/status/ImmobilizedEffect.cs" id="4_immobilized_effect"]
 [ext_resource type="Texture2D" uid="uid://u14uxiq8yp83" path="res://assets/blizzard/cloud.png" id="5_blizzard_cloud"]
 [ext_resource type="Texture2D" uid="uid://do7k4ivsbjhfo" path="res://assets/ice_ball/base/frame_000.png" id="6_blizzard_ice_ball"]
+[ext_resource type="Script" uid="uid://6twj5mdosos1" path="res://scripts/combat/DamageSchoolTag.cs" id="7_damage_school_tag"]
+[ext_resource type="Script" uid="uid://gtkj6udlgnar" path="res://scripts/status/FrozenEffect.cs" id="8_frozen_effect"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_blizzard"]
 radius = 56.0
@@ -41,7 +41,7 @@ texture = ExtResource("5_blizzard_cloud")
 script = ExtResource("2_damage")
 MaximumDamage = 3
 
-[node name="DamageSchoolTag" type="Node" parent="."]
+[node name="DamageSchoolTag" type="Node" parent="." unique_id=2069952985]
 script = ExtResource("7_damage_school_tag")
 School = 2
 
@@ -52,9 +52,11 @@ TickIntervalSeconds = 0.0
 DisplayName = "SLOWED"
 FloatingTextLabel = "SLOWED"
 
-[node name="ImmobilizedEffect" type="Node" parent="." unique_id=2026040804]
-script = ExtResource("4_immobilized_effect")
-DurationSeconds = 2.0
+[node name="FrozenEffect" type="Node" parent="." unique_id=2069363144]
+script = ExtResource("8_frozen_effect")
+VisualScale = 0.5
+DurationSeconds = 1.0
 TickIntervalSeconds = 0.0
-DisplayName = "IMMOBILIZED"
-FloatingTextLabel = "IMMOBILIZED"
+DisplayName = "FROZEN"
+FloatingTextLabel = "FROZEN"
+ApplyChance = 0.1

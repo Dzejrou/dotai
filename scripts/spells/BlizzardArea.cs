@@ -128,6 +128,9 @@ public partial class BlizzardArea : AreaOfEffect
 
         if (DuplicateStatusTemplate(templateName) is StatusEffect effect)
             yield return effect;
+
+        if (DuplicateStatusTemplate("FrozenEffect") is StatusEffect frozen)
+            yield return frozen;
     }
 
     private void ApplyCloudPresentation()

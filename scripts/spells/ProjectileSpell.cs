@@ -83,6 +83,7 @@ public abstract partial class ProjectileSpell : Spell
             (Node)spellOrigin,
             CreateDamagePayload(caster),
             CreateStatusEffectPayload(),
+            CreateAdditionalStatusEffectPayloads(),
             overrideVisualFrames: ProjectileVisualFrames,
             overrideAnimationName: ProjectileAnimationName.ToString(),
             overrideSpeed: ProjectileSpeed,
@@ -159,6 +160,11 @@ public abstract partial class ProjectileSpell : Spell
     protected virtual string ResolveStatusEffectTemplateName()
     {
         return string.Empty;
+    }
+
+    protected virtual StatusEffect[] CreateAdditionalStatusEffectPayloads()
+    {
+        return null;
     }
 
     protected virtual float ResolveStatusProcChance()
