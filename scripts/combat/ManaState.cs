@@ -5,18 +5,14 @@ using System;
 [GlobalClass]
 public partial class ManaState : Node
 {
+    private const float MP5IntervalSeconds = 5.0f;
+
     private float _regenerationTimer;
     private float _regenerationDelayTimer;
 
     public int Current { get; private set; }
 
     public int Max { get; private set; } = 1;
-
-    [Export]
-    public int RegenerationAmount { get; set; } = 0;
-
-    [Export]
-    public float RegenerationInterval { get; set; } = 1.0f;
 
     [Export]
     public float RegenerationDelayAfterCast { get; set; } = 1.5f;
@@ -40,7 +36,7 @@ public partial class ManaState : Node
         Current = Math.Clamp(value, 0, Max);
     }
 
-    public int Tick(double delta)
+    public int Tick(double delta, int mp5)
     {
         var deltaSeconds = Math.Max(0.0f, (float)delta);
         if (_regenerationDelayTimer > 0.0f)
@@ -52,7 +48,7 @@ public partial class ManaState : Node
             return 0;
         }
 
-        var regenerationAmount = Math.Max(0, RegenerationAmount);
+        var regenerationAmount = Math.Max(0, mp5);
         if (regenerationAmount <= 0)
             return 0;
 
@@ -62,16 +58,12 @@ public partial class ManaState : Node
             return 0;
         }
 
-        var regenerationInterval = Math.Max(0.0f, RegenerationInterval);
-        if (regenerationInterval <= 0.0f)
-            return Restore(regenerationAmount);
-
         _regenerationTimer += deltaSeconds;
 
         var restored = 0;
-        while (_regenerationTimer >= regenerationInterval && Current < Max)
+        while (_regenerationTimer >= MP5IntervalSeconds && Current < Max)
         {
-            _regenerationTimer -= regenerationInterval;
+            _regenerationTimer -= MP5IntervalSeconds;
             restored += Restore(regenerationAmount);
         }
 

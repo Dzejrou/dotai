@@ -26,7 +26,7 @@ public partial class SkeletonMage : Actor, IAttackable, ITargetable, ISpellCaste
     {
         base._PhysicsProcess(delta);
         if (!Combat.InCombat)
-            ManaState?.Tick(delta);
+            ManaState?.Tick(delta, ResolvedMP5);
     }
 
     public void NotifyManaChanged() { }

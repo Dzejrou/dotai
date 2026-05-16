@@ -11,6 +11,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public float ResolvedCritRate => StatsNode != null ? Math.Clamp(StatsNode.ResolvedCritRate, 0.0f, 1.0f) : 0.0f;
     public float ResolvedCritDamage => StatsNode?.ResolvedCritDamage ?? 0.0f;
     public float ResolvedPower => StatsNode?.ResolvedPower ?? 0.0f;
+    public int ResolvedMP5 => StatsNode?.ResolvedMP5 ?? 0;
 
     private bool _healthStateChangedBound;
     private bool _statusEffectsChangedBound;

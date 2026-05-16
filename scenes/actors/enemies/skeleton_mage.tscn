@@ -86,13 +86,12 @@ script = ExtResource("20_status_effect_controller")
 
 [node name="ManaState" type="Node" parent="." unique_id=48333665]
 script = ExtResource("15_mana_state")
-RegenerationAmount = 2
-RegenerationInterval = 0.75
 
 [node name="Stats" type="Node" parent="."]
 script = ExtResource("26_stats")
 MaxHealth = 22
 MaxMana = 20
+MP5 = 5
 Power = 5.0
 
 [node name="Spells" type="Node" parent="." unique_id=1247757545]

@@ -209,7 +209,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
 
         Combat.Update(delta);
-        if (!InCombat && ManaState.Tick(delta) > 0)
+        if (!InCombat && ManaState.Tick(delta, ResolvedMP5) > 0)
             NotifyManaChanged();
 
         TickSpellCastPushbackCooldown((float)delta);

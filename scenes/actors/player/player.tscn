@@ -62,14 +62,13 @@ script = ExtResource("6_health_state")
 
 [node name="ManaState" type="Node" parent="." unique_id=1010931290]
 script = ExtResource("7_mana_state")
-RegenerationAmount = 20
-RegenerationInterval = 0.5
 RegenerationDelayAfterCast = 1.25
 
 [node name="Stats" type="Node" parent="." unique_id=112797323]
 script = ExtResource("14_stats")
 MaxHealth = 200
 MaxMana = 1000
+MP5 = 20
 CritRate = 0.5
 
 [node name="FactionState" type="Node" parent="." unique_id=780844721]

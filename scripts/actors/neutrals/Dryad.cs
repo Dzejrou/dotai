@@ -27,7 +27,7 @@ public partial class Dryad : Actor, IAttackable, ITargetable, ISpellCaster
     {
         base._PhysicsProcess(delta);
         if (!Combat.InCombat)
-            ManaState?.Tick(delta);
+            ManaState?.Tick(delta, ResolvedMP5);
     }
 
     public void NotifyManaChanged() { }
