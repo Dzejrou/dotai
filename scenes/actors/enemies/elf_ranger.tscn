@@ -17,6 +17,7 @@
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="15_damage"]
 [ext_resource type="Resource" path="res://resources/arrow_directional_textures.tres" id="16_arrow_directional_textures"]
 [ext_resource type="Resource" uid="uid://cprp2c4fxjr15" path="res://resources/loot_tables/elf_ranger_loot_table.tres" id="17_elf_ranger_loot_table"]
+[ext_resource type="Script" path="res://scripts/stats/Stats.cs" id="18_stats"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_elf_ranger"]
 radius = 5.0
@@ -51,13 +52,18 @@ script = ExtResource("8_combat_state")
 
 [node name="HealthState" type="Node" parent="." unique_id=383988540]
 script = ExtResource("9_health_state")
-Max = 18
 
 [node name="FactionState" type="Node" parent="." unique_id=2056568788]
 script = ExtResource("10_faction_state")
 
 [node name="StatusEffectController" type="Node" parent="." unique_id=223881744]
 script = ExtResource("14_status_effect_controller")
+
+[node name="Stats" type="Node" parent="."]
+script = ExtResource("18_stats")
+MaxHealth = 18
+MaxMana = 0
+Power = 3.0
 
 [node name="PrimaryActionController" type="Node" parent="." unique_id=1812847766]
 script = ExtResource("11_ranged_action")
@@ -73,8 +79,9 @@ ProjectileDirectionalTextures = ExtResource("16_arrow_directional_textures")
 
 [node name="Damage" type="Node" parent="PrimaryActionController" unique_id=2001900024]
 script = ExtResource("15_damage")
-MinimumDamage = 3
-MaximumDamage = 3
+PowerScale = 1.0
+MinDamageMultiplier = 0.9
+MaxDamageMultiplier = 1.1
 
 [node name="Behaviors" type="Node" parent="." unique_id=545402278]
 

@@ -37,11 +37,6 @@ public abstract partial class NovaSpell : Spell
         return true;
     }
 
-    protected virtual int ResolveDamage(Damage damageTemplate, Node target)
-    {
-        return damageTemplate?.ResolveAmount() ?? 0;
-    }
-
     protected virtual void OnTargetHit(ISpellCaster caster, Node target, IAttackable attackable)
     {
     }
@@ -83,7 +78,7 @@ public abstract partial class NovaSpell : Spell
 
             if (damageTemplate?.Duplicate() is Damage damagePayload)
             {
-                damagePayload.InitializeRuntime(source, Math.Max(1, ResolveDamage(damageTemplate, node)));
+                damagePayload.InitializeRuntime(source);
                 attackable.ApplyDamage(damagePayload);
             }
 

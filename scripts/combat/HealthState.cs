@@ -12,22 +12,17 @@ public partial class HealthState : Node
 
     public int Current { get; private set; }
 
-    [Export]
-    public int Max
-    {
-        get => _max;
-        set => SetMax(value);
-    }
+    public int Max => _max;
 
     public bool IsDead { get; private set; }
 
-    public void Initialize()
+    public void Initialize(int maxHealth)
     {
         var previousCurrent = Current;
         var previousMax = Max;
         var previousIsDead = IsDead;
 
-        _max = Math.Max(1, _max);
+        _max = Math.Max(1, maxHealth);
         Current = _max;
         IsDead = false;
         EmitChangedIfNeeded(previousCurrent, previousMax, previousIsDead);

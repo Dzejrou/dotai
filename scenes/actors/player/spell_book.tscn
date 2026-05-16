@@ -43,8 +43,9 @@ CastTimeSeconds = 1.0
 
 [node name="Damage" type="Node" parent="FireBall" unique_id=76691458]
 script = ExtResource("14_damage")
-MinimumDamage = 4
-MaximumDamage = 4
+PowerScale = 0.6
+MinDamageMultiplier = 0.9
+MaxDamageMultiplier = 1.1
 School = 1
 
 [node name="BurningEffect" type="Node" parent="FireBall" unique_id=345145974]
@@ -56,8 +57,7 @@ FloatingTextLabel = "BURNING"
 
 [node name="Damage" type="Node" parent="FireBall/BurningEffect" unique_id=166118693]
 script = ExtResource("14_damage")
-MinimumDamage = 3
-MaximumDamage = 3
+PowerScale = 0.3
 School = 1
 
 [node name="FrostNova" type="Node" parent="." unique_id=1635029079]
@@ -71,8 +71,9 @@ Cooldown = 3.0
 
 [node name="Damage" type="Node" parent="FrostNova" unique_id=600181488]
 script = ExtResource("14_damage")
-MinimumDamage = 5
-MaximumDamage = 5
+PowerScale = 0.5
+MinDamageMultiplier = 0.9
+MaxDamageMultiplier = 1.1
 School = 2
 
 [node name="FrozenEffect" type="Node" parent="FrostNova" unique_id=599701076]
@@ -124,8 +125,9 @@ ManaCost = 20
 
 [node name="Damage" type="Node" parent="FireNova" unique_id=1870933637]
 script = ExtResource("14_damage")
-MinimumDamage = 6
-MaximumDamage = 10
+PowerScale = 0.8
+MinDamageMultiplier = 0.75
+MaxDamageMultiplier = 1.25
 School = 1
 
 [node name="BurningEffect" type="Node" parent="FireNova" unique_id=1518510396]
@@ -137,8 +139,7 @@ FloatingTextLabel = "BURNING"
 
 [node name="Damage" type="Node" parent="FireNova/BurningEffect" unique_id=783734252]
 script = ExtResource("14_damage")
-MinimumDamage = 3
-MaximumDamage = 3
+PowerScale = 0.3
 School = 1
 
 [node name="IceBall" type="Node" parent="." unique_id=1339289238]
@@ -153,8 +154,9 @@ CastTimeSeconds = 1.0
 
 [node name="Damage" type="Node" parent="IceBall" unique_id=1071426036]
 script = ExtResource("14_damage")
-MinimumDamage = 4
-MaximumDamage = 4
+PowerScale = 0.6
+MinDamageMultiplier = 0.9
+MaxDamageMultiplier = 1.1
 School = 2
 
 [node name="SlowedEffect" type="Node" parent="IceBall" unique_id=198852090]

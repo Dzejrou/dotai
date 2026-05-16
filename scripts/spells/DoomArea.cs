@@ -60,7 +60,7 @@ public partial class DoomArea : AreaOfEffect
                 ? (Node)DamageSourceNode
                 : this;
 
-            damagePayload.InitializeRuntime(damageSource, damagePayload.ResolveAmount());
+            damagePayload.InitializeRuntime(damageSource);
             attackable.ApplyDamage(damagePayload);
         }
     }

@@ -5,7 +5,6 @@ using System;
 [GlobalClass]
 public partial class MeleeAttackController : Node, ICombatActionController
 {
-    private readonly RandomNumberGenerator _randomNumberGenerator = new();
     private float _cooldownTimer;
 
     [Export]
@@ -27,7 +26,6 @@ public partial class MeleeAttackController : Node, ICombatActionController
         PreferredRange = Math.Max(0.0f, PreferredRange);
         AttackCooldown = Math.Max(0.0f, AttackCooldown);
         AnimationSpeedMultiplier = Math.Max(0.0f, AnimationSpeedMultiplier);
-        _randomNumberGenerator.Randomize();
     }
 
     public void Update(Actor actor, double delta)
@@ -78,7 +76,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
         var damagePayload = Damage.DuplicateFrom(this);
         if (damagePayload != null)
         {
-            damagePayload.InitializeRuntime(actor, damagePayload.ResolveAmount(_randomNumberGenerator));
+            damagePayload.InitializeRuntime(actor);
             attackable.ApplyDamage(damagePayload);
         }
     }

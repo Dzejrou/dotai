@@ -134,13 +134,8 @@ public abstract partial class ProjectileSpell : Spell
         if (damageTemplate?.Duplicate() is not Damage damagePayload)
             return null;
 
-        damagePayload.InitializeRuntime((Node)caster.SpellOrigin, Math.Max(1, ResolveDamage(damageTemplate)));
+        damagePayload.InitializeRuntime((Node)caster.SpellOrigin);
         return damagePayload;
-    }
-
-    protected virtual int ResolveDamage(Damage damageTemplate)
-    {
-        return damageTemplate?.ResolveAmount() ?? 0;
     }
 
     protected virtual StatusEffect CreateStatusEffectPayload()

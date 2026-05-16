@@ -10,8 +10,7 @@ public partial class ManaState : Node
 
     public int Current { get; private set; }
 
-    [Export]
-    public int Max { get; set; } = 1;
+    public int Max { get; private set; } = 1;
 
     [Export]
     public int RegenerationAmount { get; set; } = 0;
@@ -22,9 +21,9 @@ public partial class ManaState : Node
     [Export]
     public float RegenerationDelayAfterCast { get; set; } = 1.5f;
 
-    public void Initialize()
+    public void Initialize(int maxMana)
     {
-        Max = Math.Max(1, Max);
+        Max = Math.Max(0, maxMana);
         Current = Max;
         _regenerationTimer = 0.0f;
         _regenerationDelayTimer = 0.0f;
@@ -32,7 +31,7 @@ public partial class ManaState : Node
 
     public void SetMax(int maxMana)
     {
-        Max = Math.Max(1, maxMana);
+        Max = Math.Max(0, maxMana);
         Current = Math.Clamp(Current, 0, Max);
     }
 

@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="12_faction_state"]
 [ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="13_health_state"]
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="14_status_effect_controller"]
+[ext_resource type="Script" path="res://scripts/stats/Stats.cs" id="15_stats"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_target_dummy"]
 radius = 5.0
@@ -54,7 +55,6 @@ script = ExtResource("11_combat_state")
 
 [node name="HealthState" type="Node" parent="." unique_id=1261457113]
 script = ExtResource("13_health_state")
-Max = 999
 
 [node name="FactionState" type="Node" parent="." unique_id=1281307099]
 script = ExtResource("12_faction_state")
@@ -62,3 +62,9 @@ FactionKey = "neutral"
 
 [node name="StatusEffectController" type="Node" parent="." unique_id=298856024]
 script = ExtResource("14_status_effect_controller")
+
+[node name="Stats" type="Node" parent="."]
+script = ExtResource("15_stats")
+MaxHealth = 999
+MaxMana = 0
+Power = 0.0

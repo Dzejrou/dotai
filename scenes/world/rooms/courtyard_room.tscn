@@ -116,8 +116,3 @@ position = Vector2(200, 200)
 
 [node name="TargetDummy" parent="Unscaled" unique_id=420334247 instance=ExtResource("5_xp5ov")]
 position = Vector2(181, 557)
-
-[node name="HealthState" parent="Unscaled/TargetDummy" index="5" unique_id=1261457113]
-Max = 999
-
-[editable path="Unscaled/TargetDummy"]

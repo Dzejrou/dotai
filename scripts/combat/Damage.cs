@@ -6,10 +6,16 @@ using System;
 public partial class Damage : Node
 {
     [Export]
-    public int MinimumDamage { get; set; } = 1;
+    public int FlatDamage { get; set; } = 0;
 
     [Export]
-    public int MaximumDamage { get; set; } = 1;
+    public float PowerScale { get; set; } = 1.0f;
+
+    [Export]
+    public float MinDamageMultiplier { get; set; } = 1.0f;
+
+    [Export]
+    public float MaxDamageMultiplier { get; set; } = 1.0f;
 
     [Export]
     public DamageSchool School { get; set; } = DamageSchool.Physical;
@@ -17,7 +23,8 @@ public partial class Damage : Node
     [Export]
     public bool CanCrit { get; set; } = true;
 
-    private static readonly RandomNumberGenerator CritRng = CreateCritRng();
+    private static readonly RandomNumberGenerator CritRng = CreateRng();
+    private static readonly RandomNumberGenerator RollRng = CreateRng();
 
     public int Amount { get; private set; }
 
@@ -34,32 +41,20 @@ public partial class Damage : Node
     private bool _sourceIsCombatCharacter;
     private bool _critResolved;
 
-    public int ResolveAmount(RandomNumberGenerator randomNumberGenerator = null)
-    {
-        var maximumDamage = Math.Max(MinimumDamage, MaximumDamage);
-        var minimumDamage = Math.Min(MinimumDamage, maximumDamage);
-        if (randomNumberGenerator != null)
-            return Math.Max(1, randomNumberGenerator.RandiRange(minimumDamage, maximumDamage));
-
-        return Math.Max(1, maximumDamage);
-    }
-
-    public void InitializeRuntime(Node source, int amount)
+    public void InitializeRuntime(Node source)
     {
         Source = source;
         SourceInstanceId = source != null && GodotObject.IsInstanceValid(source)
             ? source.GetInstanceId()
             : 0UL;
-        BaseAmount = Math.Max(0, amount);
-        Amount = BaseAmount;
-        IsCritical = false;
-        _critResolved = false;
 
+        var sourcePower = 0.0f;
         if (source is CombatCharacter combatCharacter)
         {
             _sourceIsCombatCharacter = true;
             _sourceCritRate = combatCharacter.ResolvedCritRate;
             _sourceCritDamage = combatCharacter.ResolvedCritDamage;
+            sourcePower = combatCharacter.ResolvedPower;
         }
         else
         {
@@ -67,6 +62,24 @@ public partial class Damage : Node
             _sourceCritRate = 0.0f;
             _sourceCritDamage = 0.0f;
         }
+
+        BaseAmount = Math.Max(0, ResolveBaseAmount(sourcePower));
+        Amount = BaseAmount;
+        IsCritical = false;
+        _critResolved = false;
+    }
+
+    private int ResolveBaseAmount(float sourcePower)
+    {
+        var scaledDamage = sourcePower * PowerScale + FlatDamage;
+        var maxMultiplier = Math.Max(MinDamageMultiplier, MaxDamageMultiplier);
+        var minMultiplier = Math.Min(MinDamageMultiplier, maxMultiplier);
+        var rolledMultiplier = minMultiplier >= maxMultiplier
+            ? maxMultiplier
+            : RollRng.RandfRange(minMultiplier, maxMultiplier);
+
+        var finalDamage = scaledDamage * rolledMultiplier;
+        return (int)Math.Round(finalDamage);
     }
 
     // TODO: Status-effect/DoT damage is currently hard non-critting via CanCrit = false set in
@@ -104,7 +117,7 @@ public partial class Damage : Node
         return controller != null && controller.HasStatus(FrozenEffect.StatusKeyName);
     }
 
-    private static RandomNumberGenerator CreateCritRng()
+    private static RandomNumberGenerator CreateRng()
     {
         var rng = new RandomNumberGenerator();
         rng.Randomize();

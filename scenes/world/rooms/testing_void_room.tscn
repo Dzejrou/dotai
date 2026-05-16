@@ -32,6 +32,7 @@
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="24_bohya"]
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="25_l151d"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="26_8w8xx"]
+[ext_resource type="Script" path="res://scripts/stats/Stats.cs" id="32_stats"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="27_c83su"]
 [ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="28_ynmw1"]
 [ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="29_pt43o"]
@@ -193,8 +194,8 @@ RandomizeInactivity = false
 [node name="Skeleton" parent="Unscaled/ChestContent/Actors" index="4" unique_id=1196794662 instance=ExtResource("13_ci7sf")]
 position = Vector2(960, 206)
 
-[node name="HealthState" parent="Unscaled/ChestContent/Actors/Skeleton" index="5" unique_id=1668152086]
-Max = 2
+[node name="Stats" parent="Unscaled/ChestContent/Actors/Skeleton" index="8"]
+MaxHealth = 2
 
 [node name="WanderingKnight" parent="Unscaled" unique_id=231595167 instance=ExtResource("10_knight")]
 position = Vector2(1392, 1146)
@@ -255,7 +256,6 @@ script = ExtResource("21_in37r")
 
 [node name="HealthState" type="Node" parent="Skeleton" unique_id=421423339]
 script = ExtResource("22_yhf77")
-Max = 10
 
 [node name="FactionState" type="Node" parent="Skeleton" unique_id=734064014]
 script = ExtResource("23_c4pfk")
@@ -264,6 +264,12 @@ FactionKey = "allies"
 [node name="StatusEffectController" type="Node" parent="Skeleton" unique_id=175232441]
 script = ExtResource("24_bohya")
 
+[node name="Stats" type="Node" parent="Skeleton"]
+script = ExtResource("32_stats")
+MaxHealth = 10
+MaxMana = 0
+Power = 5.0
+
 [node name="PrimaryActionController" type="Node" parent="Skeleton" unique_id=272517061]
 script = ExtResource("25_l151d")
 PreferredRange = 48.0
@@ -271,7 +277,8 @@ AttackCooldown = 1.1
 
 [node name="Damage" type="Node" parent="Skeleton/PrimaryActionController" unique_id=2001900021]
 script = ExtResource("26_8w8xx")
-MaximumDamage = 5
+PowerScale = 1.0
+FlatDamage = 0
 
 [node name="Behaviors" type="Node" parent="Skeleton" unique_id=298671112]
 

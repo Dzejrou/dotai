@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://scripts/ai/actions/AiSpellOption.cs" id="14_ai_spell_option"]
 [ext_resource type="Script" uid="uid://covl5c8k0ld1c" path="res://scripts/combat/Healing.cs" id="16_healing"]
 [ext_resource type="Script" uid="uid://birryig8e7hfp" path="res://scripts/ai/behaviors/PatrolBehavior.cs" id="16_k7g6i"]
+[ext_resource type="Script" path="res://scripts/stats/Stats.cs" id="17_stats"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dryad"]
 size = Vector2(16, 12)
@@ -56,7 +57,6 @@ script = ExtResource("4_combat_state")
 
 [node name="HealthState" type="Node" parent="." unique_id=1366423248]
 script = ExtResource("5_health_state")
-Max = 18
 
 [node name="FactionState" type="Node" parent="." unique_id=218462241]
 script = ExtResource("6_faction_state")
@@ -67,7 +67,12 @@ script = ExtResource("9_status_effect_controller")
 
 [node name="ManaState" type="Node" parent="." unique_id=138436884]
 script = ExtResource("10_mana_state")
-Max = 100
+
+[node name="Stats" type="Node" parent="."]
+script = ExtResource("17_stats")
+MaxHealth = 18
+MaxMana = 100
+Power = 5.0
 
 [node name="Spells" type="Node" parent="." unique_id=1352304342]
 

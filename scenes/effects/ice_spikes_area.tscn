@@ -27,7 +27,7 @@ sprite_frames = ExtResource("5_ice_spikes_frames")
 
 [node name="Damage" type="Node" parent="." unique_id=2026040802]
 script = ExtResource("2_damage")
-MaximumDamage = 3
+PowerScale = 0.3
 School = 2
 
 [node name="SlowedEffect" type="Node" parent="." unique_id=2026040803]

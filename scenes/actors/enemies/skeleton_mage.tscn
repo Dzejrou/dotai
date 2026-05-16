@@ -25,6 +25,7 @@
 [ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="23_fire_ball_frames"]
 [ext_resource type="Resource" uid="uid://dmk5k387wovtt" path="res://resources/loot_tables/skeleton_mage_loot_table.tres" id="24_skeleton_mage_loot_table"]
 [ext_resource type="Script" uid="uid://cda1gppcwjn21" path="res://scripts/ai/actions/AiSpellOption.cs" id="25_ai_spell_option"]
+[ext_resource type="Script" path="res://scripts/stats/Stats.cs" id="26_stats"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l5f1m"]
 radius = 5.0
@@ -76,7 +77,6 @@ script = ExtResource("8_combat_state")
 
 [node name="HealthState" type="Node" parent="." unique_id=472607906]
 script = ExtResource("9_health_state")
-Max = 22
 
 [node name="FactionState" type="Node" parent="." unique_id=326418690]
 script = ExtResource("10_faction_state")
@@ -86,9 +86,14 @@ script = ExtResource("20_status_effect_controller")
 
 [node name="ManaState" type="Node" parent="." unique_id=48333665]
 script = ExtResource("15_mana_state")
-Max = 20
 RegenerationAmount = 2
 RegenerationInterval = 0.75
+
+[node name="Stats" type="Node" parent="."]
+script = ExtResource("26_stats")
+MaxHealth = 22
+MaxMana = 20
+Power = 5.0
 
 [node name="Spells" type="Node" parent="." unique_id=1247757545]
 
@@ -102,8 +107,9 @@ Cooldown = 1.2
 
 [node name="Damage" type="Node" parent="Spells/FireBall" unique_id=2001900011]
 script = ExtResource("22_damage")
-MinimumDamage = 4
-MaximumDamage = 4
+PowerScale = 0.8
+MinDamageMultiplier = 0.9
+MaxDamageMultiplier = 1.1
 School = 1
 
 [node name="FireNova" type="Node" parent="Spells" unique_id=1734723264]
@@ -116,8 +122,9 @@ Cooldown = 3.2
 
 [node name="Damage" type="Node" parent="Spells/FireNova" unique_id=2001900012]
 script = ExtResource("22_damage")
-MinimumDamage = 8
-MaximumDamage = 12
+PowerScale = 1.6
+MinDamageMultiplier = 0.8
+MaxDamageMultiplier = 1.2
 School = 1
 
 [node name="BurningEffect" type="Node" parent="Spells/FireNova" unique_id=557692296]
@@ -129,8 +136,7 @@ FloatingTextLabel = "BURNING"
 
 [node name="Damage" type="Node" parent="Spells/FireNova/BurningEffect" unique_id=2001900104]
 script = ExtResource("22_damage")
-MinimumDamage = 3
-MaximumDamage = 3
+PowerScale = 0.4
 School = 1
 
 [node name="PoisonCloud" type="Node" parent="Spells" unique_id=1804078723]

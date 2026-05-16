@@ -29,6 +29,6 @@ sprite_frames = ExtResource("3_doom_frames")
 
 [node name="Damage" type="Node" parent="." unique_id=291565424]
 script = ExtResource("2_damage")
-MinimumDamage = 999999
-MaximumDamage = 999999
+FlatDamage = 999999
+PowerScale = 0.0
 School = 4

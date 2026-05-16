@@ -151,7 +151,7 @@ public abstract partial class StatusEffect : Node
         damage.CanCrit = false;
 
         var damageSource = Source != null && GodotObject.IsInstanceValid(Source) ? (Node)Source : null;
-        damage.InitializeRuntime(damageSource, damage.ResolveAmount());
+        damage.InitializeRuntime(damageSource);
         return damage;
     }
 
@@ -176,8 +176,10 @@ public abstract partial class StatusEffect : Node
         if (replacementDamage == null || damage == null)
             return;
 
-        damage.MinimumDamage = replacementDamage.MinimumDamage;
-        damage.MaximumDamage = replacementDamage.MaximumDamage;
+        damage.FlatDamage = replacementDamage.FlatDamage;
+        damage.PowerScale = replacementDamage.PowerScale;
+        damage.MinDamageMultiplier = replacementDamage.MinDamageMultiplier;
+        damage.MaxDamageMultiplier = replacementDamage.MaxDamageMultiplier;
         damage.School = replacementDamage.School;
         damage.CanCrit = replacementDamage.CanCrit;
     }

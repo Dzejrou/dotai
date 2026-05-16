@@ -214,7 +214,7 @@ public partial class AreaOfEffect : Area2D
 
         if (Damage.DuplicateFrom(this) is Damage damagePayload && targetNode is IAttackable attackable)
         {
-            damagePayload.InitializeRuntime(ResolveDamageSource(), damagePayload.ResolveAmount());
+            damagePayload.InitializeRuntime(ResolveDamageSource());
             attackable.ApplyDamage(damagePayload);
         }
 

@@ -8,14 +8,9 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     [Signal]
     public delegate void DiedEventHandler();
 
-    [Export(PropertyHint.Range, "0,1,0.01")]
-    public float CritRate { get; set; } = 0.50f;
-
-    [Export(PropertyHint.Range, "0,10,0.05")]
-    public float CritDamage { get; set; } = 1.0f;
-
-    public float ResolvedCritRate => Math.Clamp(CritRate, 0.0f, 1.0f);
-    public float ResolvedCritDamage => Math.Max(0.0f, CritDamage);
+    public float ResolvedCritRate => StatsNode != null ? Math.Clamp(StatsNode.ResolvedCritRate, 0.0f, 1.0f) : 0.0f;
+    public float ResolvedCritDamage => StatsNode?.ResolvedCritDamage ?? 0.0f;
+    public float ResolvedPower => StatsNode?.ResolvedPower ?? 0.0f;
 
     private bool _healthStateChangedBound;
     private bool _statusEffectsChangedBound;
@@ -26,6 +21,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     protected FactionState FactionStateNode { get; private set; }
     protected ManaState ManaStateNode { get; private set; }
     protected StatusEffectController StatusEffectControllerNode { get; private set; }
+    protected Stats StatsNode { get; private set; }
 
     public CombatState Combat => CombatStateNode;
     public bool InCombat => CombatStateNode?.InCombat ?? false;
@@ -57,13 +53,17 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     protected void InitializeCombatCharacter(bool requireManaState = false)
     {
         CombatStateNode = GetNode<CombatState>("CombatState");
+        StatsNode = GetNodeOrNull<Stats>("Stats");
+        if (StatsNode == null)
+            GD.PushWarning($"{GetPath()}: missing Stats child; falling back to defaults (MaxHealth=1, Power=0).");
+
         HealthStateNode = GetNode<HealthState>("HealthState");
-        HealthStateNode.Initialize();
+        HealthStateNode.Initialize(StatsNode?.ResolvedMaxHealth ?? 1);
         FactionStateNode = GetNode<FactionState>("FactionState");
         ManaStateNode = requireManaState
             ? GetNode<ManaState>("ManaState")
             : GetNodeOrNull<ManaState>("ManaState");
-        ManaStateNode?.Initialize();
+        ManaStateNode?.Initialize(StatsNode?.ResolvedMaxMana ?? 0);
         _lastKnownIsDead = IsDead;
         EnsureModelChangeSubscriptions();
     }

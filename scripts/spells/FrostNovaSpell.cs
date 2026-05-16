@@ -15,11 +15,6 @@ public partial class FrostNovaSpell : NovaSpell
         _random.Randomize();
     }
 
-    protected override int ResolveDamage(Damage damageTemplate, Node target)
-    {
-        return damageTemplate?.ResolveAmount() ?? 0;
-    }
-
     protected override void OnTargetHit(ISpellCaster caster, Node target, IAttackable attackable)
     {
         var controller = ResolveStatusEffectController(target);
