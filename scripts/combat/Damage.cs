@@ -49,12 +49,14 @@ public partial class Damage : Node
             : 0UL;
 
         var sourcePower = 0.0f;
+        var sourceSchoolBonus = 0.0f;
         if (source is CombatCharacter combatCharacter)
         {
             _sourceIsCombatCharacter = true;
             _sourceCritRate = combatCharacter.ResolvedCritRate;
             _sourceCritDamage = combatCharacter.ResolvedCritDamage;
             sourcePower = combatCharacter.ResolvedPower;
+            sourceSchoolBonus = combatCharacter.ResolveDamageBonus(School);
         }
         else
         {
@@ -63,10 +65,29 @@ public partial class Damage : Node
             _sourceCritDamage = 0.0f;
         }
 
-        BaseAmount = Math.Max(0, ResolveBaseAmount(sourcePower));
+        var preBonus = Math.Max(0, ResolveBaseAmount(sourcePower));
+        BaseAmount = ApplyOutgoingSchoolBonus(preBonus, sourceSchoolBonus);
         Amount = BaseAmount;
         IsCritical = false;
         _critResolved = false;
+    }
+
+    private static int ApplyOutgoingSchoolBonus(int amount, float bonus)
+    {
+        if (amount <= 0)
+            return 0;
+
+        var multiplier = Math.Max(0.0f, 1.0f + bonus);
+        return Math.Max(0, (int)Math.Round(amount * multiplier));
+    }
+
+    public void ApplyReceiverResistance(float resistance)
+    {
+        if (Amount <= 0)
+            return;
+
+        var multiplier = Math.Max(0.0f, 1.0f - resistance);
+        Amount = Math.Max(0, (int)Math.Round(Amount * multiplier));
     }
 
     private int ResolveBaseAmount(float sourcePower)

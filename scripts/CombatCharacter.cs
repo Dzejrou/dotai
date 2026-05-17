@@ -12,6 +12,8 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public float ResolvedCritDamage => StatsNode?.ResolvedCritDamage ?? 0.0f;
     public float ResolvedPower => StatsNode?.ResolvedPower ?? 0.0f;
     public int ResolvedMP5 => StatsNode?.ResolvedMP5 ?? 0;
+    public float ResolveDamageBonus(DamageSchool school) => StatsNode?.ResolveDamageBonus(school) ?? 0.0f;
+    public float ResolveResistance(DamageSchool school) => StatsNode?.ResolveResistance(school) ?? 0.0f;
 
     private bool _healthStateChangedBound;
     private bool _statusEffectsChangedBound;
@@ -105,6 +107,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
             return false;
 
         damageInfo.ResolveCritForReceiver(this);
+        damageInfo.ApplyReceiverResistance(ResolveResistance(damageInfo.School));
 
         var remainingDamage = ResolveRemainingDamageAfterAbsorption(damageInfo, out var fullyAbsorbingAbsorber);
         damageInfo.RegisterHit(this, setReceiverTargetToSource);
