@@ -12,6 +12,10 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public float ResolvedCritDamage => StatsNode?.ResolvedCritDamage ?? 0.0f;
     public float ResolvedPower => StatsNode?.ResolvedPower ?? 0.0f;
     public int ResolvedMP5 => StatsNode?.ResolvedMP5 ?? 0;
+    public int ResolvedHaste => StatsNode?.ResolvedHaste ?? 0;
+    public float ResolvedHastePercent => StatsNode?.ResolvedHastePercent ?? 0.0f;
+    public float ApplyHasteToDuration(float baseSeconds) =>
+        StatsNode?.ApplyHasteToDuration(baseSeconds) ?? Math.Max(0.0f, baseSeconds);
     public float ResolveDamageBonus(DamageSchool school) => StatsNode?.ResolveDamageBonus(school) ?? 0.0f;
     public float ResolveResistance(DamageSchool school) => StatsNode?.ResolveResistance(school) ?? 0.0f;
 

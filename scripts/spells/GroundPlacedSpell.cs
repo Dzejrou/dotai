@@ -139,7 +139,8 @@ public abstract partial class GroundPlacedSpell : Spell, IPlacementSpell
 
         ConfigureArea(area, caster);
         area.GlobalPosition = worldPosition;
-        area.InitializeRuntime(caster.SpellOrigin, caster.Faction);
+        var casterHaste = (caster as CombatCharacter)?.ResolvedHaste ?? 0;
+        area.InitializeRuntime(caster.SpellOrigin, caster.Faction, casterHaste);
         parent.AddChild(area);
 
         if (ownRuntimeNodesForChannel)

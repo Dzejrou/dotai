@@ -19,6 +19,7 @@ public partial class AreaOfEffect : Area2D
     private bool _pendingInitialOverlapSync;
     private float _elapsedTime;
     private float _nextTickTime;
+    private float _runtimeHasteScale = 1.0f;
 
     [Export]
     public float EffectLifetime { get; set; } = 5.0f;
@@ -85,8 +86,8 @@ public partial class AreaOfEffect : Area2D
         var deltaSeconds = Math.Max(0.0f, (float)delta);
         _elapsedTime += deltaSeconds;
 
-        var lifetime = EffectLifetime > 0.0f ? EffectLifetime : float.PositiveInfinity;
-        var tickInterval = Math.Max(0.1f, TickInterval);
+        var lifetime = EffectLifetime > 0.0f ? EffectLifetime * _runtimeHasteScale : float.PositiveInfinity;
+        var tickInterval = Math.Max(0.1f, TickInterval * _runtimeHasteScale);
         while (ApplyOnTick && _elapsedTime >= _nextTickTime && _nextTickTime <= lifetime + 0.001f)
         {
             OnTick();
@@ -116,12 +117,19 @@ public partial class AreaOfEffect : Area2D
 
     public virtual void InitializeRuntime(Node2D damageSource, Faction sourceFaction)
     {
+        InitializeRuntime(damageSource, sourceFaction, sourceHaste: 0);
+    }
+
+    public virtual void InitializeRuntime(Node2D damageSource, Faction sourceFaction, int sourceHaste)
+    {
         _isPreview = false;
         _damageSource = damageSource;
         _damageSourceInstanceId = damageSource != null && GodotObject.IsInstanceValid(damageSource)
             ? damageSource.GetInstanceId()
             : 0UL;
         _sourceFaction = sourceFaction ?? Factions.Enemies;
+        var hastePercent = Math.Max(0, sourceHaste) / 2000.0f;
+        _runtimeHasteScale = 1.0f / (1.0f + hastePercent);
         Visible = true;
         ActivateRuntime();
     }
@@ -185,7 +193,7 @@ public partial class AreaOfEffect : Area2D
     {
         _runtimeInitialized = true;
         _elapsedTime = 0.0f;
-        _nextTickTime = Math.Max(0.1f, TickInterval);
+        _nextTickTime = Math.Max(0.1f, TickInterval * _runtimeHasteScale);
         _pendingInitialOverlapSync = true;
         _occupants.Clear();
         Monitoring = true;

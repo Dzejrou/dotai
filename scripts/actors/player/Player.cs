@@ -1315,7 +1315,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         FaceSpellRequest(spell, lockedRequest);
 
-        var castDuration = spell.CastTimeDuration;
+        var castDuration = ApplyHasteToDuration(spell.CastTimeDuration);
         if (castDuration <= 0.0f)
             return StartSpellEffect(spell, lockedRequest);
 
@@ -1523,7 +1523,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         {
             Spell = spell,
             Request = lockedRequest,
-            DurationSeconds = spell.ChannelDuration,
+            DurationSeconds = ApplyHasteToDuration(spell.ChannelDuration),
             ElapsedSeconds = 0.0f,
             Phase = PendingSpellPhase.Channeling,
             ChannelResult = castResult,

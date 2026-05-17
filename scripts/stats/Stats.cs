@@ -24,7 +24,7 @@ public partial class Stats : Node
     public float CritDamage { get; set; } = 1.0f;
 
     [Export]
-    public float Haste { get; set; } = 0.0f;
+    public int Haste { get; set; } = 0;
 
     [Export]
     public float MovementSpeedMultiplier { get; set; } = 1.0f;
@@ -65,7 +65,15 @@ public partial class Stats : Node
     public float ResolvedPower => Math.Max(0.0f, Power);
     public float ResolvedCritRate => Math.Max(0.0f, CritRate);
     public float ResolvedCritDamage => Math.Max(0.0f, CritDamage);
-    public float ResolvedHaste => Math.Max(0.0f, Haste);
+    public int ResolvedHaste => Math.Max(0, Haste);
+    public float ResolvedHastePercent => ResolvedHaste / 2000.0f;
+    public float ApplyHasteToDuration(float baseSeconds)
+    {
+        if (baseSeconds <= 0.0f)
+            return 0.0f;
+
+        return baseSeconds / (1.0f + ResolvedHastePercent);
+    }
     public float ResolvedMovementSpeedMultiplier => Math.Max(0.0f, MovementSpeedMultiplier);
 
     public float ResolveDamageBonus(DamageSchool school) => school switch

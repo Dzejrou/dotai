@@ -110,7 +110,7 @@ public partial class RangedAttackController : Node, ICombatActionController
             actor.SetFacingDirection(toTarget);
 
         actor.SetState(CombatUnitState.Attacking);
-        _cooldownTimer = AttackCooldown;
+        _cooldownTimer = actor.ApplyHasteToDuration(AttackCooldown);
 
         var projectileDirection = toTarget != Vector2.Zero ? toTarget.Normalized() : DirectionHelper.GetDirectionVector(actor.LastDirection);
         if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.AttackSpeedMultiplier)))

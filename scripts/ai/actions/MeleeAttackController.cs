@@ -66,7 +66,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
             actor.SetFacingDirection(toTarget);
 
         actor.SetState(CombatUnitState.Attacking);
-        _cooldownTimer = AttackCooldown;
+        _cooldownTimer = actor.ApplyHasteToDuration(AttackCooldown);
 
         if (!actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.AttackSpeedMultiplier)))
         {
