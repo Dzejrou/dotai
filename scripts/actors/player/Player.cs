@@ -415,6 +415,57 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return true;
     }
 
+    public Stats DebugStats => StatsNode;
+    public HealthState DebugHealthState => HealthStateNode;
+    public ManaState DebugManaState => ManaStateNode;
+
+    public bool DebugSetLevel(int level)
+    {
+        var maxLevel = Math.Max(1, MaxLevel);
+        var clamped = Math.Clamp(level, 1, maxLevel);
+        return TryAdjustLevelForTesting(clamped - _level);
+    }
+
+    public void DebugSetCurrentExperience(int amount)
+    {
+        var maxLevel = Math.Max(1, MaxLevel);
+        var required = GetRequiredExperienceForCurrentLevel();
+        var upperBound = _level >= maxLevel ? 0 : Math.Max(0, required - 1);
+        _currentExperience = Math.Clamp(amount, 0, upperBound);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, _level);
+    }
+
+    public void DebugSetCurrentHealth(int value)
+    {
+        HealthStateNode?.SetCurrent(value);
+    }
+
+    public void DebugSetCurrentMana(int value)
+    {
+        if (ManaStateNode == null)
+            return;
+
+        ManaStateNode.SetCurrent(value);
+        NotifyManaChanged();
+    }
+
+    public void DebugResyncMaxHealthFromStats()
+    {
+        if (StatsNode == null || HealthStateNode == null)
+            return;
+
+        HealthStateNode.SetMax(StatsNode.ResolvedMaxHealth);
+    }
+
+    public void DebugResyncMaxManaFromStats()
+    {
+        if (StatsNode == null || ManaStateNode == null)
+            return;
+
+        ManaStateNode.SetMax(StatsNode.ResolvedMaxMana);
+        NotifyManaChanged();
+    }
+
     public int RestoreManaFromDrop(int amount)
     {
         if (_isDead || amount <= 0 || ManaState == null)

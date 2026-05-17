@@ -39,11 +39,13 @@ public partial class Main : Node2D
     private PlayerSpellBar _spellBar;
     private PlayerSpellBindingWindow _spellBindingWindow;
     private InventoryWindow _inventoryWindow;
+    private PlayerDebugStatsWindow _playerDebugStatsWindow;
     private Sprite2D _interactionPrompt;
     private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
     private const string InventoryWindowScenePath = "res://scenes/ui/inventory_window.tscn";
+    private const string PlayerDebugStatsWindowScenePath = "res://scenes/ui/player_debug_stats_window.tscn";
     private const string CountdownHudScenePath = "res://scenes/ui/countdown_hud.tscn";
     private const string InteractionPromptGlyphPath = "res://assets/glyphs/letter_g.png";
     private const string SpellBookActionName = "spell_book";
@@ -88,6 +90,7 @@ public partial class Main : Node2D
         {
             _debugTrayRoot.Visible = false;
             _debugTrayRoot.ProcessMode = ProcessModeEnum.Always;
+            _debugTrayRoot.Connect(DebugTray.SignalName.PlayerStatsRequested, new Callable(this, nameof(OnDebugTrayPlayerStatsRequested)));
         }
 
         var playerPath = _world != null && !_world.PlayerPath.IsEmpty ? _world.PlayerPath : new NodePath("Player");
@@ -99,6 +102,7 @@ public partial class Main : Node2D
             player.BindCastBar(_castBar);
             _spellBar?.Bind(player);
             _spellBindingWindow?.Bind(player);
+            _playerDebugStatsWindow?.Bind(player);
             UpdateInteractionPrompt(player.HasInteractionTarget);
         }
         else
@@ -106,6 +110,7 @@ public partial class Main : Node2D
             _castBar?.HideCast();
             _spellBar?.Bind(null);
             _spellBindingWindow?.Bind(null);
+            _playerDebugStatsWindow?.Bind(null);
             UpdateInteractionPrompt(false);
         }
 
@@ -137,6 +142,10 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
             _pauseMenuRoot.IsConnected(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested))))
             _pauseMenuRoot.Disconnect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
+
+        if (GodotObject.IsInstanceValid(_debugTrayRoot) &&
+            _debugTrayRoot.IsConnected(DebugTray.SignalName.PlayerStatsRequested, new Callable(this, nameof(OnDebugTrayPlayerStatsRequested))))
+            _debugTrayRoot.Disconnect(DebugTray.SignalName.PlayerStatsRequested, new Callable(this, nameof(OnDebugTrayPlayerStatsRequested)));
     }
 
     public override void _Input(InputEvent @event)
@@ -180,6 +189,7 @@ public partial class Main : Node2D
         _gameOverActive = true;
         _spellBindingWindow?.CloseWindow();
         _inventoryWindow?.CloseWindow();
+        _playerDebugStatsWindow?.CloseWindow();
         GetTree().Paused = true;
 
         if (_gameOverRoot == null)
@@ -209,6 +219,11 @@ public partial class Main : Node2D
     {
         ClosePauseMenu();
         OpenDebugTray();
+    }
+
+    private void OnDebugTrayPlayerStatsRequested()
+    {
+        _playerDebugStatsWindow?.ToggleWindow();
     }
 
     private void UpdateInteractionPrompt(bool available)
@@ -256,6 +271,13 @@ public partial class Main : Node2D
             _inventoryWindow = inventoryWindow;
             _inventoryWindow.Connect(InventoryWindow.SignalName.ItemDroppedToWorld, new Callable(this, nameof(OnInventoryItemDroppedToWorld)));
             hudCanvas.AddChild(_inventoryWindow);
+        }
+
+        var playerDebugStatsWindowScene = ResourceLoader.Load<PackedScene>(PlayerDebugStatsWindowScenePath);
+        if (playerDebugStatsWindowScene?.Instantiate<PlayerDebugStatsWindow>() is PlayerDebugStatsWindow playerDebugStatsWindow)
+        {
+            _playerDebugStatsWindow = playerDebugStatsWindow;
+            hudCanvas.AddChild(_playerDebugStatsWindow);
         }
 
         var countdownHudScene = ResourceLoader.Load<PackedScene>(CountdownHudScenePath);

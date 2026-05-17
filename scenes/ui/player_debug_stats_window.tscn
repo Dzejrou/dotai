@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/PlayerDebugStatsWindow.cs" id="1_player_debug_stats_window"]
+
+[node name="PlayerDebugStatsWindow" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+process_mode = 3
+script = ExtResource("1_player_debug_stats_window")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+mouse_filter = 1
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(520, 640)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Center/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Player Debug Stats"
+theme_override_font_sizes/font_size = 22
+
+[node name="RefreshButton" type="Button" parent="Center/Panel/Margin/VBox/Header"]
+layout_mode = 2
+text = "Refresh"
+
+[node name="CloseButton" type="Button" parent="Center/Panel/Margin/VBox/Header"]
+layout_mode = 2
+text = "Close"
+
+[node name="RequiredXpLabel" type="Label" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+text = "Required XP for level 1: -"
+
+[node name="Scroll" type="ScrollContainer" parent="Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 540)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Rows" type="VBoxContainer" parent="Center/Panel/Margin/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4

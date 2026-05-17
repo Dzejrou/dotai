@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 public partial class DebugTray : Control
 {
+    [Signal]
+    public delegate void PlayerStatsRequestedEventHandler();
+
     [Export]
     public NodePath TrayPanelPath { get; set; } = new NodePath("Bottom/Panel");
 
@@ -21,6 +24,9 @@ public partial class DebugTray : Control
     public NodePath ModeSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/ModeSelector");
 
     [Export]
+    public NodePath StatsButtonPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/StatsButton");
+
+    [Export]
     public NodePath DebugSpawnerPath { get; set; } = new NodePath("../../World/DebugSpawner");
 
     private const float DragThreshold = 12.0f;
@@ -32,6 +38,7 @@ public partial class DebugTray : Control
     private HBoxContainer _cardsContainer;
     private OptionButton _factionSelector;
     private OptionButton _modeSelector;
+    private Button _statsButton;
     private readonly Dictionary<string, Button> _cardsById = new();
     private readonly Dictionary<Button, Control.GuiInputEventHandler> _cardInputHandlers = new();
     private string _pressedCardId;
@@ -53,6 +60,9 @@ public partial class DebugTray : Control
         _cardsContainer = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
         _factionSelector = GetNodeOrNull<OptionButton>(FactionSelectorPath);
         _modeSelector = GetNodeOrNull<OptionButton>(ModeSelectorPath);
+        _statsButton = GetNodeOrNull<Button>(StatsButtonPath);
+        if (_statsButton != null)
+            _statsButton.Pressed += OnStatsButtonPressed;
         ConfigureControls();
         BuildCardsFromCatalog();
 
@@ -63,7 +73,15 @@ public partial class DebugTray : Control
 
     public override void _ExitTree()
     {
+        if (_statsButton != null && GodotObject.IsInstanceValid(_statsButton))
+            _statsButton.Pressed -= OnStatsButtonPressed;
+
         ClearCards();
+    }
+
+    private void OnStatsButtonPressed()
+    {
+        EmitSignal(SignalName.PlayerStatsRequested);
     }
 
     public override void _Input(InputEvent @event)
