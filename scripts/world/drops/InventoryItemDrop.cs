@@ -17,6 +17,11 @@ public partial class InventoryItemDrop : Drop
     [Export(PropertyHint.Range, "1,999,1")]
     public int Quantity { get; set; } = 1;
 
+    // Runtime-only: when an existing gear instance is being dropped from inventory back to
+    // the world, the caller assigns it here so pickup preserves identity instead of creating
+    // a fresh GearInstance from the definition.
+    public GearInstance GearInstance { get; set; }
+
     private InventoryItemDefinition _itemDefinition;
 
     public override void _Ready()
@@ -30,6 +35,15 @@ public partial class InventoryItemDrop : Drop
         var inventory = player?.InventoryController;
         if (inventory == null || ItemDefinition == null)
             return false;
+
+        if (ItemDefinition is GearDefinition gearDefinition)
+        {
+            var gear = GearInstance ?? new GearInstance(gearDefinition);
+            if (!inventory.CanAddGear(gear))
+                return false;
+
+            return inventory.AddGear(gear);
+        }
 
         var quantity = Mathf.Max(1, Quantity);
         if (!inventory.CanAddItem(ItemDefinition, quantity))

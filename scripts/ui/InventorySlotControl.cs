@@ -17,18 +17,18 @@ public partial class InventorySlotControl : PanelContainer
 
     public override Variant _GetDragData(Vector2 atPosition)
     {
-        if (Inventory == null || !Inventory.TryGetStack(SlotIndex, out var stack) || stack?.Item == null)
+        if (Inventory == null || !Inventory.TryGetEntry(SlotIndex, out var entry) || entry?.Definition == null)
             return default;
 
         DragStarted?.Invoke(SlotIndex);
 
         var preview = new Control { CustomMinimumSize = Size };
 
-        if (stack.Item.Icon != null)
+        if (entry.Icon != null)
         {
             var icon = new TextureRect
             {
-                Texture = stack.Item.Icon,
+                Texture = entry.Icon,
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepCentered,
                 TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
@@ -38,11 +38,11 @@ public partial class InventorySlotControl : PanelContainer
             preview.AddChild(icon);
         }
 
-        if (stack.Quantity > 1)
+        if (entry.ShowQuantity)
         {
             var qty = new Label
             {
-                Text = stack.Quantity.ToString(),
+                Text = entry.Quantity.ToString(),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Bottom,
                 MouseFilter = MouseFilterEnum.Ignore,

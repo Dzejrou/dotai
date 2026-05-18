@@ -234,23 +234,23 @@ public partial class InventoryWindow : Control
         for (var i = 0; i < _slotViews.Count; i++)
         {
             var slotView = _slotViews[i];
-            InventoryStack stack = null;
-            var hasStack = _inventory != null &&
+            InventoryEntry entry = null;
+            var hasEntry = _inventory != null &&
                 GodotObject.IsInstanceValid(_inventory) &&
-                _inventory.TryGetStack(i, out stack) &&
-                stack?.Item != null;
+                _inventory.TryGetEntry(i, out entry) &&
+                entry?.Definition != null;
 
             slotView.Root.TooltipText = "Empty";
-            slotView.Root.Modulate = hasStack ? Colors.White : new Color(0.68f, 0.68f, 0.68f, 1.0f);
-            slotView.IconRect.Texture = hasStack ? stack.Item.Icon : null;
-            slotView.IconRect.Visible = hasStack && stack.Item.Icon != null;
-            slotView.QuantityLabel.Visible = hasStack && stack.Quantity > 1;
-            slotView.QuantityLabel.Text = hasStack && stack.Quantity > 1 ? stack.Quantity.ToString() : string.Empty;
+            slotView.Root.Modulate = hasEntry ? Colors.White : new Color(0.68f, 0.68f, 0.68f, 1.0f);
+            slotView.IconRect.Texture = hasEntry ? entry.Icon : null;
+            slotView.IconRect.Visible = hasEntry && entry.Icon != null;
+            slotView.QuantityLabel.Visible = hasEntry && entry.ShowQuantity;
+            slotView.QuantityLabel.Text = hasEntry && entry.ShowQuantity ? entry.Quantity.ToString() : string.Empty;
 
-            if (hasStack)
+            if (hasEntry)
             {
                 occupiedSlotCount++;
-                slotView.Root.TooltipText = $"{stack.Item.DisplayName} x{stack.Quantity}";
+                slotView.Root.TooltipText = entry.TooltipText;
             }
         }
 

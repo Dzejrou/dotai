@@ -22,7 +22,7 @@ public partial class InventoryController : Node
     [Export]
     public Godot.Collections.Array<InventoryStartingStack> StartingStacks { get; set; } = new();
 
-    private readonly List<InventoryStack> _slots = new();
+    private readonly List<InventoryEntry> _slots = new();
     private int _slotCapacity = 50;
     private bool _startingStacksApplied;
 
@@ -38,16 +38,16 @@ public partial class InventoryController : Node
         return _slots.Count;
     }
 
-    public bool TryGetStack(int slotIndex, out InventoryStack stack)
+    public bool TryGetEntry(int slotIndex, out InventoryEntry entry)
     {
         if (slotIndex < 0 || slotIndex >= _slots.Count)
         {
-            stack = null;
+            entry = null;
             return false;
         }
 
-        stack = _slots[slotIndex];
-        return stack != null;
+        entry = _slots[slotIndex];
+        return entry != null;
     }
 
     public int AddItem(InventoryItemDefinition item, int quantity)
@@ -64,18 +64,54 @@ public partial class InventoryController : Node
         return GetRemainingQuantityAfterAdd(item, quantity) == 0;
     }
 
+    public bool CanAddGear(GearInstance gear)
+    {
+        if (gear?.Definition == null)
+            return false;
+
+        for (var i = 0; i < _slots.Count; i++)
+        {
+            if (_slots[i] == null)
+                return true;
+        }
+
+        return false;
+    }
+
+    public bool AddGear(GearInstance gear)
+    {
+        if (gear?.Definition == null)
+            return false;
+
+        for (var i = 0; i < _slots.Count; i++)
+        {
+            if (_slots[i] != null)
+                continue;
+
+            _slots[i] = new InventoryGearEntry(gear);
+            EmitInventoryChanged();
+            return true;
+        }
+
+        return false;
+    }
+
     public int GetQuantityByKeyKind(InventoryKeyKind keyKind)
     {
         if (keyKind == InventoryKeyKind.None)
             return 0;
 
         var total = 0;
-        foreach (var stack in _slots)
+        foreach (var entry in _slots)
         {
-            if (stack?.Item == null || stack.Item.KeyKind != keyKind)
+            if (entry is not InventoryStackEntry stackEntry)
                 continue;
 
-            total += stack.Quantity;
+            var item = stackEntry.Stack.Item;
+            if (item == null || item.KeyKind != keyKind)
+                continue;
+
+            total += stackEntry.Stack.Quantity;
         }
 
         return total;
@@ -94,12 +130,15 @@ public partial class InventoryController : Node
 
         for (var i = 0; i < _slots.Count && remaining > 0; i++)
         {
-            var stack = _slots[i];
-            if (stack?.Item == null || stack.Item.KeyKind != keyKind)
+            if (_slots[i] is not InventoryStackEntry stackEntry)
                 continue;
 
-            remaining -= stack.RemoveQuantity(remaining);
-            if (stack.IsEmpty)
+            var item = stackEntry.Stack.Item;
+            if (item == null || item.KeyKind != keyKind)
+                continue;
+
+            remaining -= stackEntry.Stack.RemoveQuantity(remaining);
+            if (stackEntry.Stack.IsEmpty)
                 _slots[i] = null;
         }
 
@@ -129,41 +168,45 @@ public partial class InventoryController : Node
         if (fromSlot < 0 || fromSlot >= _slots.Count) return false;
         if (toSlot < 0 || toSlot >= _slots.Count) return false;
 
-        var fromStack = _slots[fromSlot];
-        if (fromStack == null) return false;
+        var fromEntry = _slots[fromSlot];
+        if (fromEntry == null) return false;
 
-        var toStack = _slots[toSlot];
+        var toEntry = _slots[toSlot];
 
-        if (toStack == null)
+        if (toEntry == null)
         {
-            _slots[toSlot] = fromStack;
+            _slots[toSlot] = fromEntry;
             _slots[fromSlot] = null;
         }
-        else if (CanMerge(toStack, fromStack.Item))
+        else if (toEntry is InventoryStackEntry toStackEntry &&
+                 fromEntry is InventoryStackEntry fromStackEntry &&
+                 toStackEntry.CanAcceptMergeFrom(fromStackEntry))
         {
-            var remaining = toStack.AddQuantity(fromStack.Quantity);
-            _slots[fromSlot] = remaining > 0 ? new InventoryStack(fromStack.Item, remaining) : null;
+            var remaining = toStackEntry.Stack.AddQuantity(fromStackEntry.Stack.Quantity);
+            _slots[fromSlot] = remaining > 0
+                ? new InventoryStackEntry(new InventoryStack(fromStackEntry.Stack.Item, remaining))
+                : null;
         }
         else
         {
-            _slots[fromSlot] = toStack;
-            _slots[toSlot] = fromStack;
+            _slots[fromSlot] = toEntry;
+            _slots[toSlot] = fromEntry;
         }
 
         EmitInventoryChanged();
         return true;
     }
 
-    public InventoryStack TakeStack(int slotIndex)
+    public InventoryEntry TakeEntry(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= _slots.Count) return null;
 
-        var stack = _slots[slotIndex];
-        if (stack == null) return null;
+        var entry = _slots[slotIndex];
+        if (entry == null) return null;
 
         _slots[slotIndex] = null;
         EmitInventoryChanged();
-        return stack;
+        return entry;
     }
 
     private void ApplyStartingStacks()
@@ -198,11 +241,10 @@ public partial class InventoryController : Node
 
         for (var i = 0; i < _slots.Count && remaining > 0; i++)
         {
-            var stack = _slots[i];
-            if (stack == null || !CanMerge(stack, item))
+            if (_slots[i] is not InventoryStackEntry stackEntry || !CanMergeDefinitionIntoStack(stackEntry.Stack, item))
                 continue;
 
-            remaining = stack.AddQuantity(remaining);
+            remaining = stackEntry.Stack.AddQuantity(remaining);
         }
 
         for (var i = 0; i < _slots.Count && remaining > 0; i++)
@@ -211,7 +253,7 @@ public partial class InventoryController : Node
                 continue;
 
             var stackAmount = Math.Min(item.MaxStackSize, remaining);
-            _slots[i] = new InventoryStack(item, stackAmount);
+            _slots[i] = new InventoryStackEntry(new InventoryStack(item, stackAmount));
             remaining -= stackAmount;
         }
 
@@ -227,19 +269,19 @@ public partial class InventoryController : Node
         if (remaining == 0)
             return 0;
 
-        foreach (var stack in _slots)
+        foreach (var entry in _slots)
         {
-            if (stack == null || !CanMerge(stack, item))
+            if (entry is not InventoryStackEntry stackEntry || !CanMergeDefinitionIntoStack(stackEntry.Stack, item))
                 continue;
 
-            remaining -= Math.Min(stack.AvailableSpace, remaining);
+            remaining -= Math.Min(stackEntry.Stack.AvailableSpace, remaining);
             if (remaining == 0)
                 return 0;
         }
 
-        foreach (var stack in _slots)
+        foreach (var entry in _slots)
         {
-            if (stack != null)
+            if (entry != null)
                 continue;
 
             remaining -= Math.Min(item.MaxStackSize, remaining);
@@ -250,19 +292,12 @@ public partial class InventoryController : Node
         return remaining;
     }
 
-    private bool CanMerge(InventoryStack stack, InventoryItemDefinition item)
+    private static bool CanMergeDefinitionIntoStack(InventoryStack stack, InventoryItemDefinition item)
     {
         if (stack?.Item == null || item == null || stack.AvailableSpace <= 0)
             return false;
 
-        if (ReferenceEquals(stack.Item, item))
-            return true;
-
-        if (!string.IsNullOrEmpty(stack.Item.Id) && stack.Item.Id == item.Id)
-            return true;
-
-        return !string.IsNullOrEmpty(stack.Item.ResourcePath) &&
-            stack.Item.ResourcePath == item.ResourcePath;
+        return InventoryStackEntry.DefinitionsMatch(stack.Item, item);
     }
 
     private void ResizeSlots(int slotCapacity, bool emitChanged)

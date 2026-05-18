@@ -510,8 +510,8 @@ public partial class Main : Node2D
         if (_inventoryController == null || !GodotObject.IsInstanceValid(_inventoryController))
             return;
 
-        // Preflight: verify slot still has a stack before doing anything destructive.
-        if (!_inventoryController.TryGetStack(slotIndex, out var stack) || stack?.Item == null)
+        // Preflight: verify slot still has an entry before doing anything destructive.
+        if (!_inventoryController.TryGetEntry(slotIndex, out var entry) || entry?.Definition == null)
             return;
 
         // Preflight: require an active room and living player to receive the drop.
@@ -548,8 +548,17 @@ public partial class Main : Node2D
         }
 
         // Configure the drop node (still not in inventory at this point).
-        itemDrop.ItemDefinition = stack.Item;
-        itemDrop.Quantity = stack.Quantity;
+        itemDrop.ItemDefinition = entry.Definition;
+        if (entry is InventoryGearEntry gearEntry)
+        {
+            // Preserve gear identity across drop/pickup so future rolls survive a world toss.
+            itemDrop.GearInstance = gearEntry.Gear;
+            itemDrop.Quantity = 1;
+        }
+        else
+        {
+            itemDrop.Quantity = entry.Quantity;
+        }
         itemDrop.PickupMode = DropPickupMode.InteractOnly;
 
         // Compute spawn motion in the coordinate space of the ephemeral root's Node2D parent.
@@ -563,7 +572,7 @@ public partial class Main : Node2D
         }
 
         // All preflight checks passed — remove from inventory now.
-        var taken = _inventoryController.TakeStack(slotIndex);
+        var taken = _inventoryController.TakeEntry(slotIndex);
         if (taken == null)
         {
             // Slot was vacated between preflight and take; discard the pre-built drop node.
