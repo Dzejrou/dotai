@@ -14,7 +14,20 @@ public partial class EquipmentSlotControl : PanelContainer
     // Invoked when an inventory-origin drag is dropped onto this equipment slot.
     public Action<int, EquipmentSlot> InventoryDropReceived { get; set; }
 
+    // Invoked on any left mouse press over this slot so the owning window can move to front.
+    public Action FocusRequested { get; set; }
+
     private bool _dragActive;
+
+    public override void _GuiInput(InputEvent @event)
+    {
+        if (@event is InputEventMouseButton mouseButton &&
+            mouseButton.ButtonIndex == MouseButton.Left &&
+            mouseButton.Pressed)
+        {
+            FocusRequested?.Invoke();
+        }
+    }
 
     public override Variant _GetDragData(Vector2 atPosition)
     {

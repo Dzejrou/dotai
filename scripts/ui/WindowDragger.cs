@@ -1,5 +1,7 @@
 using Godot;
 
+using System;
+
 // Lets the user drag a window panel around its parent viewport. Clicks on child controls
 // with MouseFilter.Stop (slot frames etc.) consume input before reaching the panel, so the
 // drag only fires on panel background regions.
@@ -12,6 +14,9 @@ public sealed class WindowDragger
     private Vector2 _dragOffset;
 
     private const float MinVisible = 60.0f;
+
+    // Invoked on left mouse press in the panel background, before drag setup.
+    public Action BringToFront { get; set; }
 
     public WindowDragger(Control window, Control panel)
     {
@@ -42,6 +47,7 @@ public sealed class WindowDragger
             case InputEventMouseButton mouseButton when mouseButton.ButtonIndex == MouseButton.Left:
                 if (mouseButton.Pressed)
                 {
+                    BringToFront?.Invoke();
                     _dragging = true;
                     _dragOffset = _panel.GetGlobalMousePosition() - _panel.GlobalPosition;
                     _panel.AcceptEvent();

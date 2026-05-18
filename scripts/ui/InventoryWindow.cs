@@ -59,7 +59,12 @@ public partial class InventoryWindow : Control
         _slotGrid = GetNodeOrNull<GridContainer>(SlotGridPath);
 
         if (_windowPanel != null)
-            _windowDragger = new WindowDragger(this, _windowPanel);
+        {
+            _windowDragger = new WindowDragger(this, _windowPanel)
+            {
+                BringToFront = FocusWindow,
+            };
+        }
 
         ApplyLayout();
         Refresh();
@@ -136,8 +141,14 @@ public partial class InventoryWindow : Control
         {
             CenterPanelOnce();
             _windowDragger?.ClampToViewport();
+            FocusWindow();
             Refresh();
         }
+    }
+
+    public void FocusWindow()
+    {
+        MoveToFront();
     }
 
     private void OnInventoryChanged()
@@ -219,6 +230,7 @@ public partial class InventoryWindow : Control
             slotControl.DropReceived = (from, to) => OnSlotDropReceived(from, to);
             slotControl.DragEnded = (slot) => OnSlotDragEnded(slot);
             slotControl.EquipmentDropReceived = (equipmentSlot, to) => OnEquipmentDropReceived(equipmentSlot, to);
+            slotControl.FocusRequested = FocusWindow;
 
             var margin = new MarginContainer
             {

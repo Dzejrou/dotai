@@ -56,7 +56,12 @@ public partial class CharacterWindow : Control
         _slotsContainer = GetNodeOrNull<Control>(SlotsContainerPath);
 
         if (_windowPanel != null)
-            _windowDragger = new WindowDragger(this, _windowPanel);
+        {
+            _windowDragger = new WindowDragger(this, _windowPanel)
+            {
+                BringToFront = FocusWindow,
+            };
+        }
 
         BuildSlots();
         Refresh();
@@ -128,8 +133,14 @@ public partial class CharacterWindow : Control
         {
             CenterPanelOnce();
             _windowDragger?.ClampToViewport();
+            FocusWindow();
             Refresh();
         }
+    }
+
+    public void FocusWindow()
+    {
+        MoveToFront();
     }
 
     private void OnEquipmentChanged()
@@ -167,6 +178,7 @@ public partial class CharacterWindow : Control
             MouseFilter = MouseFilterEnum.Stop,
         };
         slotControl.InventoryDropReceived = OnInventoryDropOnEquipmentSlot;
+        slotControl.FocusRequested = FocusWindow;
 
         slotControl.SetAnchorsAndOffsetsPreset(LayoutPreset.TopLeft);
         slotControl.OffsetLeft = position.X;
