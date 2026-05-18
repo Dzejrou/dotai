@@ -38,6 +38,7 @@ public partial class InventoryWindow : Control
 
     private readonly List<InventorySlotView> _slotViews = new();
     private InventoryController _inventory;
+    private EquipmentController _equipment;
     private Control _windowPanel;
     private Label _titleLabel;
     private Label _summaryLabel;
@@ -64,25 +65,36 @@ public partial class InventoryWindow : Control
         UnbindCurrentInventory();
     }
 
-    public void Bind(InventoryController inventory)
+    public void Bind(InventoryController inventory, EquipmentController equipment = null)
     {
-        if (ReferenceEquals(_inventory, inventory))
+        var inventoryChanged = !ReferenceEquals(_inventory, inventory);
+
+        if (inventoryChanged)
         {
-            Refresh();
-            return;
+            UnbindCurrentInventory();
+            _inventory = inventory;
+
+            if (_inventory != null &&
+                GodotObject.IsInstanceValid(_inventory) &&
+                !_inventory.IsConnected(InventoryController.SignalName.InventoryChanged, new Callable(this, nameof(OnInventoryChanged))))
+            {
+                _inventory.Connect(InventoryController.SignalName.InventoryChanged, new Callable(this, nameof(OnInventoryChanged)));
+            }
         }
 
-        UnbindCurrentInventory();
-        _inventory = inventory;
+        _equipment = equipment;
 
-        if (_inventory != null &&
-            GodotObject.IsInstanceValid(_inventory) &&
-            !_inventory.IsConnected(InventoryController.SignalName.InventoryChanged, new Callable(this, nameof(OnInventoryChanged))))
+        if (inventoryChanged)
         {
-            _inventory.Connect(InventoryController.SignalName.InventoryChanged, new Callable(this, nameof(OnInventoryChanged)));
+            ApplyLayout();
+        }
+        else
+        {
+            // Slot views already exist; just refresh their EquipmentController reference.
+            foreach (var slotView in _slotViews)
+                slotView.Root.Inventory = _inventory;
         }
 
-        ApplyLayout();
         Refresh();
     }
 
@@ -181,6 +193,7 @@ public partial class InventoryWindow : Control
             slotControl.DragStarted = (slot) => OnSlotDragStarted(slot);
             slotControl.DropReceived = (from, to) => OnSlotDropReceived(from, to);
             slotControl.DragEnded = (slot) => OnSlotDragEnded(slot);
+            slotControl.EquipmentDropReceived = (equipmentSlot, to) => OnEquipmentDropReceived(equipmentSlot, to);
 
             var margin = new MarginContainer
             {
@@ -268,6 +281,26 @@ public partial class InventoryWindow : Control
     {
         _dragConsumed = true;
         _inventory?.TryInteractSlots(fromSlot, toSlot);
+    }
+
+    private void OnEquipmentDropReceived(int equipmentSlotInt, int inventorySlot)
+    {
+        _dragConsumed = true;
+        if (_inventory == null || _equipment == null || !GodotObject.IsInstanceValid(_equipment))
+            return;
+
+        if (!_inventory.IsSlotEmpty(inventorySlot))
+            return;
+
+        var equipmentSlot = (EquipmentSlot)equipmentSlotInt;
+        if (!_equipment.TryUnequip(equipmentSlot, out var gear))
+            return;
+
+        if (!_inventory.TryPlaceGear(inventorySlot, gear))
+        {
+            // Rollback: target slot vanished between can-drop and drop. Put the gear back.
+            _equipment.TryEquip(gear, equipmentSlot, out _);
+        }
     }
 
     private void OnSlotDragEnded(int slotIndex)

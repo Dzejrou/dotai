@@ -34,7 +34,6 @@ public abstract partial class Actor : CombatCharacter
     public Vector2 LastNavigationPathPosition { get; private set; }
     public float MovementSpeed { get; private set; } = 1.0f;
     public Vector2 HomePosition { get; private set; }
-    public int ResolvedMaxHealth => MaxHealthValue;
     public ICombatActionController PrimaryActionController { get; private set; }
 
     [Export]

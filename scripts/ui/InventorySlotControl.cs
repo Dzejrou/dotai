@@ -15,6 +15,9 @@ public partial class InventorySlotControl : PanelContainer
 
     public Action<int> DragEnded { get; set; }
 
+    // Invoked when an equipment-origin drag is dropped onto this inventory slot.
+    public Action<int, int> EquipmentDropReceived { get; set; }
+
     private bool _dragActive;
 
     public override Variant _GetDragData(Vector2 atPosition)
@@ -60,12 +63,42 @@ public partial class InventorySlotControl : PanelContainer
 
     public override bool _CanDropData(Vector2 atPosition, Variant data)
     {
-        return data.VariantType == Variant.Type.Int && data.AsInt32() != SlotIndex;
+        if (data.VariantType == Variant.Type.Int)
+            return data.AsInt32() != SlotIndex;
+
+        if (TryReadEquipmentPayload(data, out _))
+            return Inventory != null && Inventory.IsSlotEmpty(SlotIndex);
+
+        return false;
     }
 
     public override void _DropData(Vector2 atPosition, Variant data)
     {
-        DropReceived?.Invoke(data.AsInt32(), SlotIndex);
+        if (data.VariantType == Variant.Type.Int)
+        {
+            DropReceived?.Invoke(data.AsInt32(), SlotIndex);
+            return;
+        }
+
+        if (TryReadEquipmentPayload(data, out var equipmentSlot))
+            EquipmentDropReceived?.Invoke(equipmentSlot, SlotIndex);
+    }
+
+    private static bool TryReadEquipmentPayload(Variant data, out int equipmentSlot)
+    {
+        equipmentSlot = -1;
+        if (data.VariantType != Variant.Type.Dictionary)
+            return false;
+
+        var dict = data.AsGodotDictionary();
+        if (!dict.TryGetValue("source", out var source) || source.AsString() != "equipment")
+            return false;
+
+        if (!dict.TryGetValue("slot", out var slotValue))
+            return false;
+
+        equipmentSlot = slotValue.AsInt32();
+        return true;
     }
 
     public override void _Notification(int what)

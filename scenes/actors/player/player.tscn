@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://b84ktu5cuj172" path="res://scripts/stats/Stats.cs" id="14_stats"]
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="15_status_effect_controller"]
 [ext_resource type="Resource" uid="uid://b4hwpk7natshy" path="res://resources/progression/player_experience_table.tres" id="16_experience_table"]
+[ext_resource type="Script" path="res://scripts/gear/EquipmentController.cs" id="17_equipment_controller"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8r2s6"]
 size = Vector2(16, 12)
@@ -77,6 +78,9 @@ FactionKey = "allies"
 
 [node name="StatusEffectController" type="Node" parent="." unique_id=1723914050]
 script = ExtResource("15_status_effect_controller")
+
+[node name="EquipmentController" type="Node" parent="." unique_id=1745120017]
+script = ExtResource("17_equipment_controller")
 
 [node name="SpellBook" parent="." unique_id=1018490496 instance=ExtResource("1_spell_book_scene")]
 

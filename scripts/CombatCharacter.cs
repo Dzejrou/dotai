@@ -8,16 +8,35 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     [Signal]
     public delegate void DiedEventHandler();
 
-    public float ResolvedCritRate => StatsNode != null ? Math.Clamp(StatsNode.ResolvedCritRate, 0.0f, 1.0f) : 0.0f;
-    public float ResolvedCritDamage => StatsNode?.ResolvedCritDamage ?? 0.0f;
-    public float ResolvedPower => StatsNode?.ResolvedPower ?? 0.0f;
-    public int ResolvedMP5 => StatsNode?.ResolvedMP5 ?? 0;
-    public int ResolvedHaste => StatsNode?.ResolvedHaste ?? 0;
-    public float ResolvedHastePercent => StatsNode?.ResolvedHastePercent ?? 0.0f;
-    public float ApplyHasteToDuration(float baseSeconds) =>
-        StatsNode?.ApplyHasteToDuration(baseSeconds) ?? Math.Max(0.0f, baseSeconds);
-    public float ResolveDamageBonus(DamageSchool school) => StatsNode?.ResolveDamageBonus(school) ?? 0.0f;
-    public float ResolveResistance(DamageSchool school) => StatsNode?.ResolveResistance(school) ?? 0.0f;
+    public float ResolvedCritRate =>
+        StatsNode != null
+            ? Math.Clamp(StatsNode.ResolvedCritRate + GetEquipmentBonus(EquipmentStatIds.CritRate), 0.0f, 1.0f)
+            : 0.0f;
+    public float ResolvedCritDamage =>
+        Math.Max(0.0f, (StatsNode?.ResolvedCritDamage ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.CritDamage));
+    public float ResolvedPower =>
+        Math.Max(0.0f, (StatsNode?.ResolvedPower ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.Power));
+    public int ResolvedMP5 =>
+        Math.Max(0, (StatsNode?.ResolvedMP5 ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.MP5));
+    public int ResolvedHaste =>
+        Math.Max(0, (StatsNode?.ResolvedHaste ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.Haste));
+    public float ResolvedHastePercent => ResolvedHaste / 2000.0f;
+    public float ApplyHasteToDuration(float baseSeconds)
+    {
+        var clamped = Math.Max(0.0f, baseSeconds);
+        if (clamped <= 0.0f)
+            return 0.0f;
+
+        return clamped / (1.0f + ResolvedHastePercent);
+    }
+    public float ResolveDamageBonus(DamageSchool school) =>
+        (StatsNode?.ResolveDamageBonus(school) ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.DamageBonusFor(school));
+    public float ResolveResistance(DamageSchool school) =>
+        (StatsNode?.ResolveResistance(school) ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.ResistanceFor(school));
+    public int ResolvedMaxHealth =>
+        Math.Max(1, (StatsNode?.ResolvedMaxHealth ?? 1) + GetEquipmentIntBonus(EquipmentStatIds.MaxHealth));
+    public int ResolvedMaxMana =>
+        Math.Max(0, (StatsNode?.ResolvedMaxMana ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.MaxMana));
 
     private bool _healthStateChangedBound;
     private bool _statusEffectsChangedBound;
@@ -29,6 +48,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     protected ManaState ManaStateNode { get; private set; }
     protected StatusEffectController StatusEffectControllerNode { get; private set; }
     protected Stats StatsNode { get; private set; }
+    public EquipmentController EquipmentControllerNode { get; private set; }
 
     public CombatState Combat => CombatStateNode;
     public bool InCombat => CombatStateNode?.InCombat ?? false;
@@ -48,8 +68,9 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         get
         {
             var statsMultiplier = StatsNode?.ResolvedMovementSpeedMultiplier ?? 1.0f;
+            var equipmentBonus = GetEquipmentBonus(EquipmentStatIds.MovementSpeedMultiplier);
             var statusMultiplier = StatusEffectControllerNode?.GetMovementSpeedMultiplier() ?? 1.0f;
-            return Math.Max(0.0f, statsMultiplier * statusMultiplier);
+            return Math.Max(0.0f, (statsMultiplier + equipmentBonus) * statusMultiplier);
         }
     }
     public virtual float AttackSpeedMultiplier => StatusEffectControllerNode?.GetAttackSpeedMultiplier() ?? 1.0f;
@@ -72,15 +93,27 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         if (StatsNode == null)
             GD.PushWarning($"{GetPath()}: missing Stats child; falling back to defaults (MaxHealth=1, Power=0).");
 
+        EquipmentControllerNode = GetNodeOrNull<EquipmentController>("EquipmentController");
+
         HealthStateNode = GetNode<HealthState>("HealthState");
-        HealthStateNode.Initialize(StatsNode?.ResolvedMaxHealth ?? 1);
+        HealthStateNode.Initialize(ResolvedMaxHealth);
         FactionStateNode = GetNode<FactionState>("FactionState");
         ManaStateNode = requireManaState
             ? GetNode<ManaState>("ManaState")
             : GetNodeOrNull<ManaState>("ManaState");
-        ManaStateNode?.Initialize(StatsNode?.ResolvedMaxMana ?? 0);
+        ManaStateNode?.Initialize(ResolvedMaxMana);
         _lastKnownIsDead = IsDead;
         EnsureModelChangeSubscriptions();
+    }
+
+    private float GetEquipmentBonus(string statId)
+    {
+        return EquipmentControllerNode?.ResolveStatBonus(statId) ?? 0.0f;
+    }
+
+    private int GetEquipmentIntBonus(string statId)
+    {
+        return EquipmentControllerNode?.ResolveIntBonus(statId) ?? 0;
     }
 
     protected void ResetCombatState()

@@ -96,6 +96,30 @@ public partial class InventoryController : Node
         return false;
     }
 
+    public bool IsSlotEmpty(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= _slots.Count)
+            return false;
+
+        return _slots[slotIndex] == null;
+    }
+
+    public bool TryPlaceGear(int slotIndex, GearInstance gear)
+    {
+        if (gear?.Definition == null)
+            return false;
+
+        if (slotIndex < 0 || slotIndex >= _slots.Count)
+            return false;
+
+        if (_slots[slotIndex] != null)
+            return false;
+
+        _slots[slotIndex] = new InventoryGearEntry(gear);
+        EmitInventoryChanged();
+        return true;
+    }
+
     public int GetQuantityByKeyKind(InventoryKeyKind keyKind)
     {
         if (keyKind == InventoryKeyKind.None)

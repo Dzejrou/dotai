@@ -153,11 +153,14 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         RefreshCastBar();
     }
 
+    private bool _equipmentChangedBound;
+
     public override void _Ready()
     {
         SetOmniSprite(GetNode<OmniSprite>("OmniSprite"));
         EnsureAnimationFinishedConnected();
         InitializeCombatCharacter(requireManaState: true);
+        BindEquipmentController();
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         _lootMagnetArea = GetNodeOrNull<Area2D>("LootMagnetArea");
         _lootMagnetCollisionShape = GetNodeOrNull<CollisionShape2D>("LootMagnetArea/CollisionShape2D");
@@ -197,10 +200,52 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             _lootMagnetArea.Disconnect(Area2D.SignalName.AreaEntered, new Callable(this, nameof(OnLootMagnetAreaEntered)));
         }
 
+        UnbindEquipmentController();
         CancelPendingCast();
         DisconnectAnimationFinished();
         UnbindStatusEffects();
         base._ExitTree();
+    }
+
+    private void BindEquipmentController()
+    {
+        if (_equipmentChangedBound || EquipmentControllerNode == null)
+            return;
+
+        EquipmentControllerNode.Connect(
+            EquipmentController.SignalName.Changed,
+            new Callable(this, nameof(OnEquipmentChanged)));
+        _equipmentChangedBound = true;
+    }
+
+    private void UnbindEquipmentController()
+    {
+        if (!_equipmentChangedBound ||
+            EquipmentControllerNode == null ||
+            !GodotObject.IsInstanceValid(EquipmentControllerNode))
+        {
+            _equipmentChangedBound = false;
+            return;
+        }
+
+        var callable = new Callable(this, nameof(OnEquipmentChanged));
+        if (EquipmentControllerNode.IsConnected(EquipmentController.SignalName.Changed, callable))
+            EquipmentControllerNode.Disconnect(EquipmentController.SignalName.Changed, callable);
+
+        _equipmentChangedBound = false;
+    }
+
+    private void OnEquipmentChanged()
+    {
+        // SetMax clamps current values; equipping never refills HP/mana.
+        HealthStateNode?.SetMax(ResolvedMaxHealth);
+        if (ManaStateNode != null)
+        {
+            ManaStateNode.SetMax(ResolvedMaxMana);
+            NotifyManaChanged();
+        }
+
+        RefreshActorHud();
     }
 
     public override void _PhysicsProcess(double delta)

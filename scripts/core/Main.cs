@@ -39,17 +39,20 @@ public partial class Main : Node2D
     private PlayerSpellBar _spellBar;
     private PlayerSpellBindingWindow _spellBindingWindow;
     private InventoryWindow _inventoryWindow;
+    private CharacterWindow _characterWindow;
     private PlayerDebugStatsWindow _playerDebugStatsWindow;
     private Sprite2D _interactionPrompt;
     private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
     private const string InventoryWindowScenePath = "res://scenes/ui/inventory_window.tscn";
+    private const string CharacterWindowScenePath = "res://scenes/ui/character_window.tscn";
     private const string PlayerDebugStatsWindowScenePath = "res://scenes/ui/player_debug_stats_window.tscn";
     private const string CountdownHudScenePath = "res://scenes/ui/countdown_hud.tscn";
     private const string InteractionPromptGlyphPath = "res://assets/glyphs/letter_g.png";
     private const string SpellBookActionName = "spell_book";
     private const string ToggleInventoryActionName = "toggle_inventory";
+    private const string ToggleCharacterWindowActionName = "toggle_character_window";
     private int _windowPresetIndex;
     private CountdownHUD _countdownHud;
 
@@ -117,7 +120,9 @@ public partial class Main : Node2D
         _inventoryController = _world != null && !_world.InventoryPath.IsEmpty
             ? _world.ResolveInventoryController()
             : null;
-        _inventoryWindow?.Bind(_inventoryController);
+        var equipmentController = _player?.EquipmentControllerNode;
+        _inventoryWindow?.Bind(_inventoryController, equipmentController);
+        _characterWindow?.Bind(_inventoryController, equipmentController);
 
         InitializeWindowPreset();
     }
@@ -170,6 +175,9 @@ public partial class Main : Node2D
         if (TryHandleInventoryInput(@event))
             return;
 
+        if (TryHandleCharacterWindowInput(@event))
+            return;
+
         TryHandlePauseMenuInput(@event);
     }
 
@@ -189,6 +197,7 @@ public partial class Main : Node2D
         _gameOverActive = true;
         _spellBindingWindow?.CloseWindow();
         _inventoryWindow?.CloseWindow();
+        _characterWindow?.CloseWindow();
         _playerDebugStatsWindow?.CloseWindow();
         GetTree().Paused = true;
 
@@ -271,6 +280,13 @@ public partial class Main : Node2D
             _inventoryWindow = inventoryWindow;
             _inventoryWindow.Connect(InventoryWindow.SignalName.ItemDroppedToWorld, new Callable(this, nameof(OnInventoryItemDroppedToWorld)));
             hudCanvas.AddChild(_inventoryWindow);
+        }
+
+        var characterWindowScene = ResourceLoader.Load<PackedScene>(CharacterWindowScenePath);
+        if (characterWindowScene?.Instantiate<CharacterWindow>() is CharacterWindow characterWindow)
+        {
+            _characterWindow = characterWindow;
+            hudCanvas.AddChild(_characterWindow);
         }
 
         var playerDebugStatsWindowScene = ResourceLoader.Load<PackedScene>(PlayerDebugStatsWindowScenePath);
@@ -433,6 +449,7 @@ public partial class Main : Node2D
             return true;
 
         _inventoryWindow?.CloseWindow();
+        _characterWindow?.CloseWindow();
         _spellBindingWindow?.ToggleWindow();
         return true;
     }
@@ -450,6 +467,25 @@ public partial class Main : Node2D
 
         _spellBindingWindow?.CloseWindow();
         _inventoryWindow?.ToggleWindow();
+        return true;
+    }
+
+    private bool TryHandleCharacterWindowInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+            return false;
+
+        if (!InputMap.HasAction(ToggleCharacterWindowActionName) ||
+            !@event.IsActionPressed(ToggleCharacterWindowActionName))
+        {
+            return false;
+        }
+
+        if (_pauseMenuOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
+            return true;
+
+        _spellBindingWindow?.CloseWindow();
+        _characterWindow?.ToggleWindow();
         return true;
     }
 
@@ -471,6 +507,7 @@ public partial class Main : Node2D
         CloseDebugTray();
         _spellBindingWindow?.CloseWindow();
         _inventoryWindow?.CloseWindow();
+        _characterWindow?.CloseWindow();
         _pauseMenuOpen = true;
         if (_pauseMenuRoot != null)
             _pauseMenuRoot.Visible = true;
@@ -491,6 +528,7 @@ public partial class Main : Node2D
     private void OpenDebugTray()
     {
         _inventoryWindow?.CloseWindow();
+        _characterWindow?.CloseWindow();
 
         if (_debugTrayRoot != null)
             _debugTrayRoot.Open();
