@@ -14,20 +14,11 @@ mouse_filter = 2
 process_mode = 3
 script = ExtResource("1_character_window_script")
 
-[node name="Center" type="CenterContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 0
+mouse_filter = 0
 
-[node name="Panel" type="PanelContainer" parent="Center"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+[node name="Margin" type="MarginContainer" parent="Panel"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 16
@@ -35,7 +26,7 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="Slots" type="Control" parent="Center/Panel/Margin"]
+[node name="Slots" type="Control" parent="Panel/Margin"]
 custom_minimum_size = Vector2(340, 170)
 layout_mode = 2
 mouse_filter = 2

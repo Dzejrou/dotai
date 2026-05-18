@@ -9,7 +9,10 @@ public partial class CharacterWindow : Control
     public int SlotSize { get; set; } = 70;
 
     [Export]
-    public NodePath SlotsContainerPath { get; set; } = new("Center/Panel/Margin/Slots");
+    public NodePath WindowPanelPath { get; set; } = new("Panel");
+
+    [Export]
+    public NodePath SlotsContainerPath { get; set; } = new("Panel/Margin/Slots");
 
     private static readonly EquipmentSlot[] SlotOrder =
     {
@@ -38,7 +41,10 @@ public partial class CharacterWindow : Control
     private readonly Dictionary<EquipmentSlot, EquipmentSlotView> _slotViews = new();
     private InventoryController _inventory;
     private EquipmentController _equipment;
+    private Control _windowPanel;
     private Control _slotsContainer;
+    private WindowDragger _windowDragger;
+    private bool _panelPositioned;
     private bool _equipmentChangedBound;
 
     public override void _Ready()
@@ -46,15 +52,35 @@ public partial class CharacterWindow : Control
         ProcessMode = ProcessModeEnum.Always;
         Visible = false;
 
+        _windowPanel = GetNodeOrNull<Control>(WindowPanelPath);
         _slotsContainer = GetNodeOrNull<Control>(SlotsContainerPath);
+
+        if (_windowPanel != null)
+            _windowDragger = new WindowDragger(this, _windowPanel);
 
         BuildSlots();
         Refresh();
+        CallDeferred(MethodName.CenterPanelOnce);
     }
 
     public override void _ExitTree()
     {
+        _windowDragger?.Detach();
         UnbindCurrentEquipment();
+    }
+
+    private void CenterPanelOnce()
+    {
+        if (_panelPositioned || _windowPanel == null || !GodotObject.IsInstanceValid(_windowPanel))
+            return;
+
+        var size = _windowPanel.Size;
+        if (size == Vector2.Zero)
+            size = _windowPanel.GetCombinedMinimumSize();
+
+        var viewportSize = GetViewportRect().Size;
+        _windowPanel.GlobalPosition = (viewportSize - size) * 0.5f;
+        _panelPositioned = true;
     }
 
     public void Bind(InventoryController inventory, EquipmentController equipment)
@@ -99,7 +125,11 @@ public partial class CharacterWindow : Control
     {
         Visible = visible;
         if (visible)
+        {
+            CenterPanelOnce();
+            _windowDragger?.ClampToViewport();
             Refresh();
+        }
     }
 
     private void OnEquipmentChanged()

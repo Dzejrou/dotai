@@ -25,16 +25,16 @@ public partial class InventoryWindow : Control
     public int SlotSpacing { get; set; } = 6;
 
     [Export]
-    public NodePath WindowPanelPath { get; set; } = new("Center/Panel");
+    public NodePath WindowPanelPath { get; set; } = new("Panel");
 
     [Export]
-    public NodePath TitleLabelPath { get; set; } = new("Center/Panel/Margin/VBox/Header/Title");
+    public NodePath TitleLabelPath { get; set; } = new("Panel/Margin/VBox/Header/Title");
 
     [Export]
-    public NodePath SummaryLabelPath { get; set; } = new("Center/Panel/Margin/VBox/Summary");
+    public NodePath SummaryLabelPath { get; set; } = new("Panel/Margin/VBox/Summary");
 
     [Export]
-    public NodePath SlotGridPath { get; set; } = new("Center/Panel/Margin/VBox/SlotGrid");
+    public NodePath SlotGridPath { get; set; } = new("Panel/Margin/VBox/SlotGrid");
 
     private readonly List<InventorySlotView> _slotViews = new();
     private InventoryController _inventory;
@@ -45,6 +45,8 @@ public partial class InventoryWindow : Control
     private GridContainer _slotGrid;
     private int _activeDragSlot = -1;
     private bool _dragConsumed;
+    private WindowDragger _windowDragger;
+    private bool _panelPositioned;
 
     public override void _Ready()
     {
@@ -56,13 +58,32 @@ public partial class InventoryWindow : Control
         _summaryLabel = GetNodeOrNull<Label>(SummaryLabelPath);
         _slotGrid = GetNodeOrNull<GridContainer>(SlotGridPath);
 
+        if (_windowPanel != null)
+            _windowDragger = new WindowDragger(this, _windowPanel);
+
         ApplyLayout();
         Refresh();
+        CallDeferred(MethodName.CenterPanelOnce);
     }
 
     public override void _ExitTree()
     {
+        _windowDragger?.Detach();
         UnbindCurrentInventory();
+    }
+
+    private void CenterPanelOnce()
+    {
+        if (_panelPositioned || _windowPanel == null || !GodotObject.IsInstanceValid(_windowPanel))
+            return;
+
+        var size = _windowPanel.Size;
+        if (size == Vector2.Zero)
+            size = _windowPanel.GetCombinedMinimumSize();
+
+        var viewportSize = GetViewportRect().Size;
+        _windowPanel.GlobalPosition = (viewportSize - size) * 0.5f;
+        _panelPositioned = true;
     }
 
     public void Bind(InventoryController inventory, EquipmentController equipment = null)
@@ -112,7 +133,11 @@ public partial class InventoryWindow : Control
     {
         Visible = visible;
         if (visible)
+        {
+            CenterPanelOnce();
+            _windowDragger?.ClampToViewport();
             Refresh();
+        }
     }
 
     private void OnInventoryChanged()
