@@ -21,6 +21,9 @@ public partial class DebugTray : Control
     public NodePath FactionSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/FactionSelector");
 
     [Export]
+    public NodePath FactionLabelPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/FactionLabel");
+
+    [Export]
     public NodePath ModeSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/ModeSelector");
 
     [Export]
@@ -64,6 +67,7 @@ public partial class DebugTray : Control
     private Label _statusLabel;
     private HBoxContainer _cardsContainer;
     private OptionButton _factionSelector;
+    private Label _factionLabel;
     private OptionButton _modeSelector;
     private OptionButton _qualitySelector;
     private Label _qualityLabel;
@@ -90,6 +94,7 @@ public partial class DebugTray : Control
         _statusLabel = GetNodeOrNull<Label>(StatusLabelPath);
         _cardsContainer = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
         _factionSelector = GetNodeOrNull<OptionButton>(FactionSelectorPath);
+        _factionLabel = GetNodeOrNull<Label>(FactionLabelPath);
         _modeSelector = GetNodeOrNull<OptionButton>(ModeSelectorPath);
         _qualitySelector = GetNodeOrNull<OptionButton>(QualitySelectorPath);
         _qualityLabel = GetNodeOrNull<Label>(QualityLabelPath);
@@ -753,8 +758,11 @@ public partial class DebugTray : Control
         if (_factionSelector == null)
             return;
 
-        _factionSelector.Visible = _activeEntryKind == SpawnCatalogEntryKind.Character;
-        _factionSelector.Disabled = _activeEntryKind != SpawnCatalogEntryKind.Character;
+        var isCharacterMode = _activeEntryKind == SpawnCatalogEntryKind.Character;
+        _factionSelector.Visible = isCharacterMode;
+        _factionSelector.Disabled = !isCharacterMode;
+        if (_factionLabel != null)
+            _factionLabel.Visible = isCharacterMode;
 
         var selectedKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
         for (var index = 0; index < _factionSelector.ItemCount; index++)

@@ -31,7 +31,9 @@ public static class GearTooltipBuilder
         if (!string.IsNullOrEmpty(displayName))
             builder.AppendLine(displayName);
 
-        builder.AppendLine($"{gear.Quality} {gear.Slot}  Lv {gear.Level}");
+        builder.AppendLine($"Quality: {gear.Quality}");
+        builder.AppendLine($"Slot: {gear.Slot}");
+        builder.AppendLine($"Level: {gear.Level}");
 
         if (gear.MainStats.Count > 0)
         {

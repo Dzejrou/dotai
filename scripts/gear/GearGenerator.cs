@@ -53,8 +53,8 @@ public static class GearGenerator
         {
             Id = $"generated_{slot}_{quality}".ToLowerInvariant(),
             DisplayName = string.IsNullOrEmpty(slotRules.DisplayName)
-                ? $"{quality} {slot}"
-                : $"{quality} {slotRules.DisplayName}",
+                ? slot.ToString()
+                : slotRules.DisplayName,
             Icon = slotRules.Icon,
             MaxStackSize = 1,
             Slot = slot,

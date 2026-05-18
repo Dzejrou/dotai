@@ -232,9 +232,10 @@ public partial class CharacterWindow : Control
 
             view.IconRect.Texture = hasGear ? gear.Definition.Icon : null;
             view.IconRect.Visible = hasGear && gear.Definition.Icon != null;
+            view.IconRect.Modulate = hasGear ? GearQualityColors.GetColor(gear.Quality) : Colors.White;
             view.Placeholder.Visible = !hasGear;
             view.Root.TooltipText = hasGear ? GearTooltipBuilder.Build(gear) : slot.ToString();
-            view.Root.Modulate = hasGear ? Colors.White : new Color(1.0f, 1.0f, 1.0f, 1.0f);
+            view.Root.Modulate = Colors.White;
         }
     }
 
