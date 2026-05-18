@@ -15,12 +15,15 @@ public partial class InventorySlotControl : PanelContainer
 
     public Action<int> DragEnded { get; set; }
 
+    private bool _dragActive;
+
     public override Variant _GetDragData(Vector2 atPosition)
     {
         if (Inventory == null || !Inventory.TryGetEntry(SlotIndex, out var entry) || entry?.Definition == null)
             return default;
 
         DragStarted?.Invoke(SlotIndex);
+        _dragActive = true;
 
         var preview = new Control { CustomMinimumSize = Size };
 
@@ -68,7 +71,12 @@ public partial class InventorySlotControl : PanelContainer
     public override void _Notification(int what)
     {
         base._Notification(what);
-        if (what == NotificationDragEnd)
+        if (what != NotificationDragEnd)
+            return;
+
+        if (_dragActive)
             DragEnded?.Invoke(SlotIndex);
+
+        _dragActive = false;
     }
 }
