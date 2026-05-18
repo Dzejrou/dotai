@@ -1,31 +1,15 @@
 using Godot;
 
-using System;
 using System.Collections.Generic;
 
 [GlobalClass]
 public partial class CharacterWindow : Control
 {
-    [Export]
-    public string WindowTitle { get; set; } = "Character";
-
-    [Export(PropertyHint.Range, "16,128,1")]
-    public int CellSize { get; set; } = 40;
-
-    [Export(PropertyHint.Range, "0,32,1")]
-    public int SlotSpacing { get; set; } = 8;
+    [Export(PropertyHint.Range, "32,128,1")]
+    public int SlotSize { get; set; } = 70;
 
     [Export]
-    public NodePath WindowPanelPath { get; set; } = new("Center/Panel");
-
-    [Export]
-    public NodePath TitleLabelPath { get; set; } = new("Center/Panel/Margin/VBox/Header/Title");
-
-    [Export]
-    public NodePath SlotsContainerPath { get; set; } = new("Center/Panel/Margin/VBox/Slots");
-
-    [Export]
-    public NodePath SummaryLabelPath { get; set; } = new("Center/Panel/Margin/VBox/Summary");
+    public NodePath SlotsContainerPath { get; set; } = new("Center/Panel/Margin/Slots");
 
     private static readonly EquipmentSlot[] SlotOrder =
     {
@@ -38,12 +22,23 @@ public partial class CharacterWindow : Control
         EquipmentSlot.Artifact,
     };
 
+    // Absolute positions inside the Slots Control. Top row: Head/Torso/Gloves.
+    // Bottom row: Ring/Legs/Boots. Artifact sits to the right, centered between rows.
+    private static readonly Dictionary<EquipmentSlot, Vector2> SlotPositions = new()
+    {
+        { EquipmentSlot.Head,     new Vector2(0,   0) },
+        { EquipmentSlot.Torso,    new Vector2(90,  0) },
+        { EquipmentSlot.Gloves,   new Vector2(180, 0) },
+        { EquipmentSlot.Ring,     new Vector2(0,   90) },
+        { EquipmentSlot.Legs,     new Vector2(90,  90) },
+        { EquipmentSlot.Boots,    new Vector2(180, 90) },
+        { EquipmentSlot.Artifact, new Vector2(270, 45) },
+    };
+
     private readonly Dictionary<EquipmentSlot, EquipmentSlotView> _slotViews = new();
     private InventoryController _inventory;
     private EquipmentController _equipment;
-    private Label _titleLabel;
-    private Label _summaryLabel;
-    private VBoxContainer _slotsContainer;
+    private Control _slotsContainer;
     private bool _equipmentChangedBound;
 
     public override void _Ready()
@@ -51,11 +46,9 @@ public partial class CharacterWindow : Control
         ProcessMode = ProcessModeEnum.Always;
         Visible = false;
 
-        _titleLabel = GetNodeOrNull<Label>(TitleLabelPath);
-        _summaryLabel = GetNodeOrNull<Label>(SummaryLabelPath);
-        _slotsContainer = GetNodeOrNull<VBoxContainer>(SlotsContainerPath);
+        _slotsContainer = GetNodeOrNull<Control>(SlotsContainerPath);
 
-        ApplyLayout();
+        BuildSlots();
         Refresh();
     }
 
@@ -114,11 +107,8 @@ public partial class CharacterWindow : Control
         Refresh();
     }
 
-    private void ApplyLayout()
+    private void BuildSlots()
     {
-        if (_titleLabel != null)
-            _titleLabel.Text = WindowTitle;
-
         if (_slotsContainer == null)
             return;
 
@@ -129,89 +119,67 @@ public partial class CharacterWindow : Control
         }
 
         _slotViews.Clear();
-        _slotsContainer.AddThemeConstantOverride("separation", Math.Max(0, SlotSpacing));
 
         foreach (var slot in SlotOrder)
-            _slotViews[slot] = CreateSlotRow(slot);
+            _slotViews[slot] = CreateSlot(slot);
     }
 
-    private EquipmentSlotView CreateSlotRow(EquipmentSlot slot)
+    private EquipmentSlotView CreateSlot(EquipmentSlot slot)
     {
-        var row = new HBoxContainer
-        {
-            Name = $"{slot}_Row",
-        };
-        row.AddThemeConstantOverride("separation", 10);
-
-        var nameLabel = new Label
-        {
-            Name = "SlotName",
-            Text = slot.ToString(),
-            CustomMinimumSize = new Vector2(80.0f, 0.0f),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        row.AddChild(nameLabel);
+        var position = SlotPositions[slot];
 
         var slotControl = new EquipmentSlotControl
         {
+            Name = $"{slot}_Slot",
             Slot = slot,
             Inventory = _inventory,
             Equipment = _equipment,
-            CustomMinimumSize = new Vector2(CellSize + 10.0f, CellSize + 10.0f),
-            MouseFilter = Control.MouseFilterEnum.Stop,
-            SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
-            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Stop,
         };
         slotControl.InventoryDropReceived = OnInventoryDropOnEquipmentSlot;
 
-        var margin = new MarginContainer
-        {
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        margin.AddThemeConstantOverride("margin_left", 5);
-        margin.AddThemeConstantOverride("margin_top", 5);
-        margin.AddThemeConstantOverride("margin_right", 5);
-        margin.AddThemeConstantOverride("margin_bottom", 5);
-        slotControl.AddChild(margin);
-
-        var overlay = new Control
-        {
-            CustomMinimumSize = new Vector2(CellSize, CellSize),
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        margin.AddChild(overlay);
+        slotControl.SetAnchorsAndOffsetsPreset(LayoutPreset.TopLeft);
+        slotControl.OffsetLeft = position.X;
+        slotControl.OffsetTop = position.Y;
+        slotControl.OffsetRight = position.X + SlotSize;
+        slotControl.OffsetBottom = position.Y + SlotSize;
+        slotControl.CustomMinimumSize = new Vector2(SlotSize, SlotSize);
 
         var iconRect = new TextureRect
         {
-            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Name = "Icon",
+            MouseFilter = MouseFilterEnum.Ignore,
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepCentered,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
             Visible = false,
         };
-        iconRect.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        overlay.AddChild(iconRect);
+        iconRect.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        iconRect.OffsetLeft = 4;
+        iconRect.OffsetTop = 4;
+        iconRect.OffsetRight = -4;
+        iconRect.OffsetBottom = -4;
+        slotControl.AddChild(iconRect);
 
-        row.AddChild(slotControl);
-
-        var itemLabel = new Label
+        var placeholderLabel = new Label
         {
-            Name = "ItemName",
+            Name = "Placeholder",
+            Text = slot.ToString().ToLowerInvariant(),
+            HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            MouseFilter = MouseFilterEnum.Ignore,
+            Modulate = new Color(1.0f, 1.0f, 1.0f, 0.45f),
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
         };
-        row.AddChild(itemLabel);
+        placeholderLabel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        slotControl.AddChild(placeholderLabel);
 
-        _slotsContainer.AddChild(row);
-        return new EquipmentSlotView(slotControl, iconRect, itemLabel, nameLabel);
+        _slotsContainer.AddChild(slotControl);
+        return new EquipmentSlotView(slotControl, iconRect, placeholderLabel);
     }
 
     private void Refresh()
     {
-        if (_titleLabel != null)
-            _titleLabel.Text = WindowTitle;
-
-        var equippedCount = 0;
         foreach (var slot in SlotOrder)
         {
             if (!_slotViews.TryGetValue(slot, out var view))
@@ -219,17 +187,13 @@ public partial class CharacterWindow : Control
 
             var gear = _equipment?.GetEquipped(slot);
             var hasGear = gear?.Definition != null;
+
             view.IconRect.Texture = hasGear ? gear.Definition.Icon : null;
             view.IconRect.Visible = hasGear && gear.Definition.Icon != null;
-            view.ItemName.Text = hasGear ? gear.Definition.DisplayName : "(empty)";
+            view.Placeholder.Visible = !hasGear;
             view.Root.TooltipText = hasGear ? BuildTooltip(gear.Definition) : slot.ToString();
-            view.Root.Modulate = hasGear ? Colors.White : new Color(0.68f, 0.68f, 0.68f, 1.0f);
-            if (hasGear)
-                equippedCount++;
+            view.Root.Modulate = hasGear ? Colors.White : new Color(1.0f, 1.0f, 1.0f, 1.0f);
         }
-
-        if (_summaryLabel != null)
-            _summaryLabel.Text = $"{equippedCount}/{SlotOrder.Length} slots equipped";
     }
 
     private static string BuildTooltip(GearDefinition definition)
@@ -305,17 +269,15 @@ public partial class CharacterWindow : Control
 
     private sealed class EquipmentSlotView
     {
-        public EquipmentSlotView(EquipmentSlotControl root, TextureRect iconRect, Label itemName, Label slotName)
+        public EquipmentSlotView(EquipmentSlotControl root, TextureRect iconRect, Label placeholder)
         {
             Root = root;
             IconRect = iconRect;
-            ItemName = itemName;
-            SlotName = slotName;
+            Placeholder = placeholder;
         }
 
         public EquipmentSlotControl Root { get; }
         public TextureRect IconRect { get; }
-        public Label ItemName { get; }
-        public Label SlotName { get; }
+        public Label Placeholder { get; }
     }
 }
