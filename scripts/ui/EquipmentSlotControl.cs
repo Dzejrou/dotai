@@ -95,4 +95,10 @@ public partial class EquipmentSlotControl : PanelContainer
         if (what == NotificationDragEnd)
             _dragActive = false;
     }
+
+    public override Control _MakeCustomTooltip(string forText)
+    {
+        var gear = Equipment?.GetEquipped(Slot);
+        return gear?.Definition == null ? null : GearTooltipFactory.Build(gear);
+    }
 }

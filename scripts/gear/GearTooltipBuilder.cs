@@ -52,18 +52,43 @@ public static class GearTooltipBuilder
         return builder.ToString().TrimEnd();
     }
 
-    private static string FormatModifier(GearStatModifier modifier)
+    public static string FormatModifier(GearStatModifier modifier)
     {
         if (modifier == null || string.IsNullOrEmpty(modifier.StatId))
             return string.Empty;
 
         var sign = modifier.Value >= 0 ? "+" : "";
+        var name = GetDisplayName(modifier.StatId);
         if (PercentStats.Contains(modifier.StatId))
         {
             var percent = modifier.Value * 100.0f;
-            return $"{sign}{percent:0.##}% {modifier.StatId}";
+            return $"{sign}{percent:0.##}% {name}";
         }
 
-        return $"{sign}{modifier.Value:0.##} {modifier.StatId}";
+        return $"{sign}{modifier.Value:0.##} {name}";
     }
+
+    public static string GetDisplayName(string statId) => statId switch
+    {
+        EquipmentStatIds.MaxHealth => "Health",
+        EquipmentStatIds.MaxMana => "Mana",
+        EquipmentStatIds.MP5 => "MP5",
+        EquipmentStatIds.Power => "Power",
+        EquipmentStatIds.Haste => "Haste",
+        EquipmentStatIds.MovementSpeedMultiplier => "Speed",
+        EquipmentStatIds.CritRate => "Crit Rate",
+        EquipmentStatIds.CritDamage => "Crit DMG",
+        EquipmentStatIds.DamageBonus => "DMG",
+        EquipmentStatIds.PhysicalDamageBonus => "Physical DMG",
+        EquipmentStatIds.FireDamageBonus => "Fire DMG",
+        EquipmentStatIds.IceDamageBonus => "Ice DMG",
+        EquipmentStatIds.PoisonDamageBonus => "Poison DMG",
+        EquipmentStatIds.ArcaneDamageBonus => "Arcane DMG",
+        EquipmentStatIds.PhysicalResistance => "Physical Resist",
+        EquipmentStatIds.FireResistance => "Fire Resist",
+        EquipmentStatIds.IceResistance => "Ice Resist",
+        EquipmentStatIds.PoisonResistance => "Poison Resist",
+        EquipmentStatIds.ArcaneResistance => "Arcane Resist",
+        _ => statId,
+    };
 }

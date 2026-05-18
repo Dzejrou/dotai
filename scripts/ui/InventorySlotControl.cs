@@ -125,4 +125,15 @@ public partial class InventorySlotControl : PanelContainer
 
         _dragActive = false;
     }
+
+    public override Control _MakeCustomTooltip(string forText)
+    {
+        if (Inventory == null || !Inventory.TryGetEntry(SlotIndex, out var entry))
+            return null;
+
+        if (entry is not InventoryGearEntry gearEntry || gearEntry.Gear?.Definition == null)
+            return null;
+
+        return GearTooltipFactory.Build(gearEntry.Gear);
+    }
 }
