@@ -26,7 +26,27 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="Slots" type="Control" parent="Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Slots" type="Control" parent="Panel/Margin/VBox"]
 custom_minimum_size = Vector2(340, 170)
 layout_mode = 2
 mouse_filter = 2
+
+[node name="ToggleRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="StatsToggle" type="Button" parent="Panel/Margin/VBox/ToggleRow"]
+layout_mode = 2
+toggle_mode = true
+text = "Stats"
+
+[node name="StatsContainer" type="VBoxContainer" parent="Panel/Margin/VBox"]
+visible = false
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_constants/separation = 2

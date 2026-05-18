@@ -123,6 +123,7 @@ public partial class Main : Node2D
         var equipmentController = _player?.EquipmentControllerNode;
         _inventoryWindow?.Bind(_inventoryController, equipmentController);
         _characterWindow?.Bind(_inventoryController, equipmentController);
+        _characterWindow?.BindStatsOwner(_player);
 
         InitializeWindowPreset();
     }

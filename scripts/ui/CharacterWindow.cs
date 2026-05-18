@@ -1,6 +1,7 @@
 using Godot;
 
 using System.Collections.Generic;
+using System.Globalization;
 
 [GlobalClass]
 public partial class CharacterWindow : Control
@@ -12,7 +13,13 @@ public partial class CharacterWindow : Control
     public NodePath WindowPanelPath { get; set; } = new("Panel");
 
     [Export]
-    public NodePath SlotsContainerPath { get; set; } = new("Panel/Margin/Slots");
+    public NodePath SlotsContainerPath { get; set; } = new("Panel/Margin/VBox/Slots");
+
+    [Export]
+    public NodePath StatsTogglePath { get; set; } = new("Panel/Margin/VBox/ToggleRow/StatsToggle");
+
+    [Export]
+    public NodePath StatsContainerPath { get; set; } = new("Panel/Margin/VBox/StatsContainer");
 
     private static readonly EquipmentSlot[] SlotOrder =
     {
@@ -41,11 +48,27 @@ public partial class CharacterWindow : Control
     private readonly Dictionary<EquipmentSlot, EquipmentSlotView> _slotViews = new();
     private InventoryController _inventory;
     private EquipmentController _equipment;
+    private CombatCharacter _statsOwner;
     private Control _windowPanel;
     private Control _slotsContainer;
+    private Button _statsToggle;
+    private VBoxContainer _statsContainer;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
     private bool _equipmentChangedBound;
+    private bool _statsExpanded;
+
+    private Label _statMaxHealth;
+    private Label _statMaxMana;
+    private Label _statPower;
+    private Label _statMP5;
+    private Label _statCritRate;
+    private Label _statCritDamage;
+    private Label _statHaste;
+    private Label _statMoveSpeed;
+    private Label _statDamageBonus;
+    private Label _statElementalDmg;
+    private Label _statElementalResist;
 
     public override void _Ready()
     {
@@ -54,6 +77,8 @@ public partial class CharacterWindow : Control
 
         _windowPanel = GetNodeOrNull<Control>(WindowPanelPath);
         _slotsContainer = GetNodeOrNull<Control>(SlotsContainerPath);
+        _statsToggle = GetNodeOrNull<Button>(StatsTogglePath);
+        _statsContainer = GetNodeOrNull<VBoxContainer>(StatsContainerPath);
 
         if (_windowPanel != null)
         {
@@ -64,6 +89,15 @@ public partial class CharacterWindow : Control
         }
 
         BuildSlots();
+        BuildStatsRows();
+
+        if (_statsToggle != null)
+        {
+            _statsToggle.ButtonPressed = _statsExpanded;
+            _statsToggle.Toggled += OnStatsToggled;
+        }
+
+        ApplyStatsExpansion();
         Refresh();
         CallDeferred(MethodName.CenterPanelOnce);
     }
@@ -72,6 +106,9 @@ public partial class CharacterWindow : Control
     {
         _windowDragger?.Detach();
         UnbindCurrentEquipment();
+
+        if (_statsToggle != null)
+            _statsToggle.Toggled -= OnStatsToggled;
     }
 
     private void CenterPanelOnce()
@@ -116,6 +153,12 @@ public partial class CharacterWindow : Control
         Refresh();
     }
 
+    public void BindStatsOwner(CombatCharacter character)
+    {
+        _statsOwner = character;
+        RefreshStats();
+    }
+
     public void ToggleWindow()
     {
         SetWindowVisible(!Visible);
@@ -146,6 +189,27 @@ public partial class CharacterWindow : Control
     private void OnEquipmentChanged()
     {
         Refresh();
+    }
+
+    private void OnStatsToggled(bool pressed)
+    {
+        _statsExpanded = pressed;
+        ApplyStatsExpansion();
+        RefreshStats();
+    }
+
+    private void ApplyStatsExpansion()
+    {
+        if (_statsContainer != null)
+            _statsContainer.Visible = _statsExpanded;
+
+        if (_windowPanel == null)
+            return;
+
+        // Force the panel to shrink to its content's minimum when collapsing.
+        _windowPanel.Size = _windowPanel.GetCombinedMinimumSize();
+        if (_panelPositioned && Visible)
+            _windowDragger?.ClampToViewport();
     }
 
     private void BuildSlots()
@@ -222,6 +286,12 @@ public partial class CharacterWindow : Control
 
     private void Refresh()
     {
+        RefreshSlots();
+        RefreshStats();
+    }
+
+    private void RefreshSlots()
+    {
         foreach (var slot in SlotOrder)
         {
             if (!_slotViews.TryGetValue(slot, out var view))
@@ -237,6 +307,166 @@ public partial class CharacterWindow : Control
             view.Root.TooltipText = hasGear ? GearTooltipBuilder.Build(gear) : slot.ToString();
             view.Root.Modulate = Colors.White;
         }
+    }
+
+    private void BuildStatsRows()
+    {
+        if (_statsContainer == null)
+            return;
+
+        foreach (var child in _statsContainer.GetChildren())
+        {
+            _statsContainer.RemoveChild(child);
+            child.QueueFree();
+        }
+
+        _statMaxHealth = CreateStatLabel();
+        _statMaxMana = CreateStatLabel();
+        AddStatRow(_statMaxHealth, _statMaxMana);
+
+        _statPower = CreateStatLabel();
+        _statMP5 = CreateStatLabel();
+        AddStatRow(_statPower, _statMP5);
+
+        _statCritRate = CreateStatLabel();
+        _statCritDamage = CreateStatLabel();
+        AddStatRow(_statCritRate, _statCritDamage);
+
+        _statHaste = CreateStatLabel();
+        _statMoveSpeed = CreateStatLabel();
+        AddStatRow(_statHaste, _statMoveSpeed);
+
+        _statDamageBonus = CreateStatLabel();
+        AddStatRow(_statDamageBonus, null);
+
+        _statElementalDmg = CreateStatLabel();
+        _statsContainer.AddChild(_statElementalDmg);
+
+        _statElementalResist = CreateStatLabel();
+        _statsContainer.AddChild(_statElementalResist);
+    }
+
+    private Label CreateStatLabel()
+    {
+        return new Label
+        {
+            Text = "-",
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+    }
+
+    private void AddStatRow(Label left, Label right)
+    {
+        var row = new HBoxContainer
+        {
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+        row.AddThemeConstantOverride("separation", 12);
+        row.AddChild(left);
+
+        if (right != null)
+            row.AddChild(right);
+
+        _statsContainer.AddChild(row);
+    }
+
+    private void RefreshStats()
+    {
+        if (_statsContainer == null || !_statsExpanded)
+            return;
+
+        if (_statsOwner == null || !GodotObject.IsInstanceValid(_statsOwner))
+        {
+            SetMissingStats();
+            return;
+        }
+
+        SetTripleInt(_statMaxHealth, "Max Health", _statsOwner.ResolvedMaxHealth, _statsOwner.BaseMaxHealth);
+        SetTripleInt(_statMaxMana, "Max Mana", _statsOwner.ResolvedMaxMana, _statsOwner.BaseMaxMana);
+        SetTripleInt(_statPower, "Power", (int)System.Math.Round(_statsOwner.ResolvedPower), (int)System.Math.Round(_statsOwner.BasePower));
+        SetTotalInt(_statMP5, "MP5", _statsOwner.ResolvedMP5);
+        SetTriplePercent(_statCritRate, "Crit Rate", _statsOwner.ResolvedCritRate, _statsOwner.BaseCritRate);
+        SetTriplePercent(_statCritDamage, "Crit Dmg", _statsOwner.ResolvedCritDamage, _statsOwner.BaseCritDamage);
+        SetTotalInt(_statHaste, "Haste", _statsOwner.ResolvedHaste);
+        SetTriplePercent(_statMoveSpeed, "Move Spd", _statsOwner.MovementSpeedMultiplier, _statsOwner.BaseMovementSpeedMultiplier);
+        SetTotalPercent(_statDamageBonus, "Damage Bonus", _statsOwner.ResolvedGenericDamageBonus);
+
+        _statElementalDmg.Text = "DMG Ph/F/I/Po/A " + FormatElementalLine(
+            _statsOwner.ResolveDamageBonus(DamageSchool.Physical),
+            _statsOwner.ResolveDamageBonus(DamageSchool.Fire),
+            _statsOwner.ResolveDamageBonus(DamageSchool.Ice),
+            _statsOwner.ResolveDamageBonus(DamageSchool.Poison),
+            _statsOwner.ResolveDamageBonus(DamageSchool.Arcane));
+
+        _statElementalResist.Text = "Resist Ph/F/I/Po/A " + FormatElementalLine(
+            _statsOwner.ResolveResistance(DamageSchool.Physical),
+            _statsOwner.ResolveResistance(DamageSchool.Fire),
+            _statsOwner.ResolveResistance(DamageSchool.Ice),
+            _statsOwner.ResolveResistance(DamageSchool.Poison),
+            _statsOwner.ResolveResistance(DamageSchool.Arcane));
+    }
+
+    private void SetMissingStats()
+    {
+        foreach (var label in new[]
+        {
+            _statMaxHealth, _statMaxMana, _statPower, _statMP5,
+            _statCritRate, _statCritDamage, _statHaste, _statMoveSpeed,
+            _statDamageBonus, _statElementalDmg, _statElementalResist,
+        })
+        {
+            if (label != null)
+                label.Text = "-";
+        }
+    }
+
+    private static void SetTripleInt(Label label, string name, int total, int baseValue)
+    {
+        if (label == null)
+            return;
+        var bonus = total - baseValue;
+        label.Text = $"{name} {total} ({baseValue} + {bonus})";
+    }
+
+    private static void SetTotalInt(Label label, string name, int total)
+    {
+        if (label == null)
+            return;
+        label.Text = $"{name} {total}";
+    }
+
+    private static void SetTriplePercent(Label label, string name, float total, float baseValue)
+    {
+        if (label == null)
+            return;
+        var bonus = total - baseValue;
+        label.Text = $"{name} {FormatPercent(total)} ({FormatPercent(baseValue)} + {FormatPercent(bonus)})";
+    }
+
+    private static void SetTotalPercent(Label label, string name, float total)
+    {
+        if (label == null)
+            return;
+        label.Text = $"{name} {FormatPercent(total)}";
+    }
+
+    private static string FormatPercent(float value)
+    {
+        return ((int)System.Math.Round(value * 100.0f)).ToString(CultureInfo.InvariantCulture) + "%";
+    }
+
+    private static string FormatElementalLine(float physical, float fire, float ice, float poison, float arcane)
+    {
+        return string.Concat(
+            FormatPercent(physical), "/",
+            FormatPercent(fire), "/",
+            FormatPercent(ice), "/",
+            FormatPercent(poison), "/",
+            FormatPercent(arcane));
     }
 
     private void OnInventoryDropOnEquipmentSlot(int inventorySlotIndex, EquipmentSlot equipmentSlot)

@@ -40,6 +40,18 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public int ResolvedMaxMana =>
         Math.Max(0, (StatsNode?.ResolvedMaxMana ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.MaxMana));
 
+    public int BaseMaxHealth => StatsNode?.ResolvedMaxHealth ?? 1;
+    public int BaseMaxMana => StatsNode?.ResolvedMaxMana ?? 0;
+    public int BaseMP5 => StatsNode?.ResolvedMP5 ?? 0;
+    public float BasePower => StatsNode?.ResolvedPower ?? 0.0f;
+    public float BaseCritRate => StatsNode?.ResolvedCritRate ?? 0.0f;
+    public float BaseCritDamage => StatsNode?.ResolvedCritDamage ?? 0.0f;
+    public int BaseHaste => StatsNode?.ResolvedHaste ?? 0;
+    public float BaseMovementSpeedMultiplier => StatsNode?.ResolvedMovementSpeedMultiplier ?? 1.0f;
+
+    public float ResolvedGenericDamageBonus =>
+        EquipmentControllerNode?.ResolveStatBonus(EquipmentStatIds.DamageBonus) ?? 0.0f;
+
     private bool _healthStateChangedBound;
     private bool _statusEffectsChangedBound;
     private bool _lastKnownIsDead;
