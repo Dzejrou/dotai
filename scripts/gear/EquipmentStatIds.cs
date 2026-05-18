@@ -9,6 +9,8 @@ public static class EquipmentStatIds
     public const string Haste = "Haste";
     public const string MovementSpeedMultiplier = "MovementSpeedMultiplier";
 
+    public const string DamageBonus = "DamageBonus";
+
     public const string PhysicalDamageBonus = "PhysicalDamageBonus";
     public const string FireDamageBonus = "FireDamageBonus";
     public const string IceDamageBonus = "IceDamageBonus";

@@ -24,6 +24,12 @@ public partial class DebugTray : Control
     public NodePath ModeSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/ModeSelector");
 
     [Export]
+    public NodePath QualitySelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/QualitySelector");
+
+    [Export]
+    public NodePath QualityLabelPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/QualityLabel");
+
+    [Export]
     public NodePath StatsButtonPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/StatsButton");
 
     [Export]
@@ -32,19 +38,44 @@ public partial class DebugTray : Control
     private const float DragThreshold = 12.0f;
     private static readonly Vector2 PreviewCenter = new(48.0f, 52.0f);
 
+    private static readonly EquipmentSlot[] GearSlotOrder =
+    {
+        EquipmentSlot.Head,
+        EquipmentSlot.Torso,
+        EquipmentSlot.Gloves,
+        EquipmentSlot.Legs,
+        EquipmentSlot.Boots,
+        EquipmentSlot.Ring,
+        EquipmentSlot.Artifact,
+    };
+
+    private static readonly GearQuality[] QualityOrder =
+    {
+        GearQuality.Trash,
+        GearQuality.Common,
+        GearQuality.Uncommon,
+        GearQuality.Rare,
+        GearQuality.Epic,
+        GearQuality.Legendary,
+    };
+
     private DebugSpawner _debugSpawner;
     private Control _trayPanel;
     private Label _statusLabel;
     private HBoxContainer _cardsContainer;
     private OptionButton _factionSelector;
     private OptionButton _modeSelector;
+    private OptionButton _qualitySelector;
+    private Label _qualityLabel;
     private Button _statsButton;
     private readonly Dictionary<string, Button> _cardsById = new();
+    private readonly Dictionary<string, EquipmentSlot> _gearCardSlots = new();
     private readonly Dictionary<Button, Control.GuiInputEventHandler> _cardInputHandlers = new();
     private string _pressedCardId;
     private Vector2 _pressStartScreenPosition;
     private bool _draggingFromCard;
     private SpawnCatalogEntryKind _activeEntryKind = SpawnCatalogEntryKind.Character;
+    private GearQuality _selectedGearQuality = GearQuality.Common;
 
     public bool TrayVisible => Visible;
 
@@ -60,6 +91,8 @@ public partial class DebugTray : Control
         _cardsContainer = GetNodeOrNull<HBoxContainer>(CardsContainerPath);
         _factionSelector = GetNodeOrNull<OptionButton>(FactionSelectorPath);
         _modeSelector = GetNodeOrNull<OptionButton>(ModeSelectorPath);
+        _qualitySelector = GetNodeOrNull<OptionButton>(QualitySelectorPath);
+        _qualityLabel = GetNodeOrNull<Label>(QualityLabelPath);
         _statsButton = GetNodeOrNull<Button>(StatsButtonPath);
         if (_statsButton != null)
             _statsButton.Pressed += OnStatsButtonPressed;
@@ -145,6 +178,13 @@ public partial class DebugTray : Control
             return;
 
         ClearCards();
+
+        if (_activeEntryKind == SpawnCatalogEntryKind.Gear)
+        {
+            BuildGearCards();
+            return;
+        }
+
         var rowsByCategory = new Dictionary<string, HBoxContainer>();
 
         foreach (var entry in _debugSpawner.GetCatalogEntries())
@@ -170,6 +210,85 @@ public partial class DebugTray : Control
         }
     }
 
+    private void BuildGearCards()
+    {
+        var rowsByCategory = new Dictionary<string, HBoxContainer>();
+        var categoryRow = GetOrCreateCategoryRow("Gear Slots", rowsByCategory);
+        if (categoryRow == null)
+            return;
+
+        foreach (var slot in GearSlotOrder)
+        {
+            var cardId = $"gear_{slot}";
+            var card = CreateGearCard(slot);
+            if (card == null)
+                continue;
+
+            categoryRow.AddChild(card);
+            _cardsById[cardId] = card;
+            _gearCardSlots[cardId] = slot;
+
+            Control.GuiInputEventHandler inputHandler = @event => BeginCardPress(cardId, @event);
+            card.GuiInput += inputHandler;
+            _cardInputHandlers[card] = inputHandler;
+        }
+    }
+
+    private Button CreateGearCard(EquipmentSlot slot)
+    {
+        var card = new Button
+        {
+            Name = $"gear_{slot}_Card",
+            CustomMinimumSize = new Vector2(124.0f, 120.0f),
+            ToggleMode = true,
+            Text = string.Empty,
+        };
+
+        var margin = new MarginContainer
+        {
+            Name = "Margin",
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        margin.OffsetLeft = 8.0f;
+        margin.OffsetTop = 8.0f;
+        margin.OffsetRight = -8.0f;
+        margin.OffsetBottom = -8.0f;
+        card.AddChild(margin);
+
+        var vBox = new VBoxContainer
+        {
+            Name = "VBox",
+            Alignment = BoxContainer.AlignmentMode.Center,
+        };
+        vBox.AddThemeConstantOverride("separation", 6);
+        margin.AddChild(vBox);
+
+        var iconRect = new TextureRect
+        {
+            Name = "Icon",
+            CustomMinimumSize = new Vector2(64.0f, 64.0f),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+        };
+        var slotRules = _debugSpawner?.GetGearSlotRules(slot);
+        iconRect.Texture = slotRules?.Icon;
+        vBox.AddChild(iconRect);
+
+        var label = new Label
+        {
+            Name = "Label",
+            Text = slot.ToString(),
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        vBox.AddChild(label);
+
+        return card;
+    }
+
     private void ConfigureControls()
     {
         if (_modeSelector != null)
@@ -177,6 +296,7 @@ public partial class DebugTray : Control
             _modeSelector.Clear();
             AddModeOption("Characters", SpawnCatalogEntryKind.Character);
             AddModeOption("Drops", SpawnCatalogEntryKind.Drop);
+            AddModeOption("Gear", SpawnCatalogEntryKind.Gear);
             _modeSelector.ItemSelected += OnModeSelected;
             SyncModeSelector();
         }
@@ -191,6 +311,19 @@ public partial class DebugTray : Control
             SyncFactionSelector();
         }
 
+        if (_qualitySelector != null)
+        {
+            _qualitySelector.Clear();
+            foreach (var quality in QualityOrder)
+            {
+                _qualitySelector.AddItem(quality.ToString());
+                _qualitySelector.SetItemMetadata(_qualitySelector.ItemCount - 1, (int)quality);
+            }
+            _qualitySelector.ItemSelected += OnQualitySelected;
+            SyncQualitySelector();
+        }
+
+        UpdateQualitySelectorVisibility();
     }
 
     private void AddModeOption(string label, SpawnCatalogEntryKind entryKind)
@@ -379,11 +512,26 @@ public partial class DebugTray : Control
             return;
 
         _draggingFromCard = true;
-        _debugSpawner?.BeginPlacement(_pressedCardId);
+        BeginPlacementForPressedCard();
         SyncFactionSelector();
         UpdateCardSelection();
         UpdateStatusLabel();
         GetViewport().SetInputAsHandled();
+    }
+
+    private void BeginPlacementForPressedCard()
+    {
+        if (_debugSpawner == null || string.IsNullOrEmpty(_pressedCardId))
+            return;
+
+        if (_activeEntryKind == SpawnCatalogEntryKind.Gear &&
+            _gearCardSlots.TryGetValue(_pressedCardId, out var slot))
+        {
+            _debugSpawner.BeginGearPlacement(slot, _selectedGearQuality);
+            return;
+        }
+
+        _debugSpawner.BeginPlacement(_pressedCardId);
     }
 
     private void HandleMouseButton(InputEventMouseButton mouseButton)
@@ -447,7 +595,7 @@ public partial class DebugTray : Control
         }
         else if (IsMouseOverCard(_pressedCardId, screenPosition))
         {
-            _debugSpawner?.BeginPlacement(_pressedCardId);
+            BeginPlacementForPressedCard();
             SyncFactionSelector();
         }
 
@@ -465,12 +613,27 @@ public partial class DebugTray : Control
 
     private void UpdateCardSelection()
     {
-        foreach (var (spawnId, card) in _cardsById)
+        foreach (var (cardId, card) in _cardsById)
         {
             if (card == null)
                 continue;
 
-            card.ButtonPressed = HasPendingPlacement && _debugSpawner?.PendingSpawnId == spawnId;
+            var selected = false;
+            if (_debugSpawner != null && HasPendingPlacement)
+            {
+                if (_debugSpawner.HasPendingGear &&
+                    _gearCardSlots.TryGetValue(cardId, out var slot) &&
+                    _debugSpawner.PendingGearSlot == slot)
+                {
+                    selected = true;
+                }
+                else if (_debugSpawner.PendingSpawnId == cardId)
+                {
+                    selected = true;
+                }
+            }
+
+            card.ButtonPressed = selected;
         }
     }
 
@@ -499,6 +662,9 @@ public partial class DebugTray : Control
     {
         if (_activeEntryKind == SpawnCatalogEntryKind.Drop)
             return "Mode: Drops.";
+
+        if (_activeEntryKind == SpawnCatalogEntryKind.Gear)
+            return $"Mode: Gear. Quality: {_selectedGearQuality}.";
 
         var factionKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
         return $"Mode: Characters. Faction: {Capitalize(factionKey)}.";
@@ -544,8 +710,42 @@ public partial class DebugTray : Control
         BuildCardsFromCatalog();
         SyncModeSelector();
         SyncFactionSelector();
+        UpdateQualitySelectorVisibility();
         UpdateCardSelection();
         UpdateStatusLabel();
+    }
+
+    private void OnQualitySelected(long index)
+    {
+        if (_qualitySelector == null)
+            return;
+
+        _selectedGearQuality = (GearQuality)_qualitySelector.GetItemMetadata((int)index).AsInt32();
+        UpdateStatusLabel();
+    }
+
+    private void UpdateQualitySelectorVisibility()
+    {
+        var isGearMode = _activeEntryKind == SpawnCatalogEntryKind.Gear;
+        if (_qualitySelector != null)
+            _qualitySelector.Visible = isGearMode;
+        if (_qualityLabel != null)
+            _qualityLabel.Visible = isGearMode;
+    }
+
+    private void SyncQualitySelector()
+    {
+        if (_qualitySelector == null)
+            return;
+
+        for (var index = 0; index < _qualitySelector.ItemCount; index++)
+        {
+            if ((GearQuality)_qualitySelector.GetItemMetadata(index).AsInt32() != _selectedGearQuality)
+                continue;
+
+            _qualitySelector.Select(index);
+            break;
+        }
     }
 
     private void SyncFactionSelector()
@@ -553,6 +753,7 @@ public partial class DebugTray : Control
         if (_factionSelector == null)
             return;
 
+        _factionSelector.Visible = _activeEntryKind == SpawnCatalogEntryKind.Character;
         _factionSelector.Disabled = _activeEntryKind != SpawnCatalogEntryKind.Character;
 
         var selectedKey = _debugSpawner?.SelectedFaction?.Key ?? Factions.Enemies.Key;
@@ -585,6 +786,7 @@ public partial class DebugTray : Control
     {
         _cardInputHandlers.Clear();
         _cardsById.Clear();
+        _gearCardSlots.Clear();
 
         if (_cardsContainer == null)
             return;

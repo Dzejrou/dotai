@@ -36,13 +36,21 @@ public partial class InventoryItemDrop : Drop
         if (inventory == null || ItemDefinition == null)
             return false;
 
-        if (ItemDefinition is GearDefinition gearDefinition)
+        if (ItemDefinition is GearDefinition)
         {
-            var gear = GearInstance ?? new GearInstance(gearDefinition);
-            if (!inventory.CanAddGear(gear))
+            // All gear must arrive with a rolled GearInstance preassigned (debug spawn
+            // or inventory-to-world toss). A bare GearDefinition without a runtime
+            // instance is unsupported now that random rolls are the only gear path.
+            if (GearInstance == null)
+            {
+                GD.PushWarning($"{nameof(InventoryItemDrop)}: refusing pickup — gear drop missing runtime GearInstance.");
+                return false;
+            }
+
+            if (!inventory.CanAddGear(GearInstance))
                 return false;
 
-            return inventory.AddGear(gear);
+            return inventory.AddGear(GearInstance);
         }
 
         var quantity = Mathf.Max(1, Quantity);

@@ -4,6 +4,7 @@ public enum SpawnCatalogEntryKind
 {
     Character = 0,
     Drop = 1,
+    Gear = 2,
 }
 
 [GlobalClass]

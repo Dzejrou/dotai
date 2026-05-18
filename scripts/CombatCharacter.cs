@@ -30,7 +30,9 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         return clamped / (1.0f + ResolvedHastePercent);
     }
     public float ResolveDamageBonus(DamageSchool school) =>
-        (StatsNode?.ResolveDamageBonus(school) ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.DamageBonusFor(school));
+        (StatsNode?.ResolveDamageBonus(school) ?? 0.0f)
+        + GetEquipmentBonus(EquipmentStatIds.DamageBonusFor(school))
+        + GetEquipmentBonus(EquipmentStatIds.DamageBonus);
     public float ResolveResistance(DamageSchool school) =>
         (StatsNode?.ResolveResistance(school) ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.ResistanceFor(school));
     public int ResolvedMaxHealth =>

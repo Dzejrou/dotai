@@ -63,15 +63,11 @@ public partial class EquipmentController : Node
         var total = 0.0f;
         foreach (var gear in _equipped.Values)
         {
-            var modifiers = gear?.Definition?.StatModifiers;
-            if (modifiers == null)
+            if (gear == null)
                 continue;
 
-            foreach (var modifier in modifiers)
+            foreach (var modifier in gear.AllModifiers)
             {
-                if (modifier == null)
-                    continue;
-
                 if (string.Equals(modifier.StatId, statId, StringComparison.Ordinal))
                     total += modifier.Value;
             }

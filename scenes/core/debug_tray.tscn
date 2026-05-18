@@ -74,6 +74,14 @@ text = "Faction"
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 
+[node name="QualityLabel" type="Label" parent="Root/Bottom/Panel/VBox/Controls"]
+layout_mode = 2
+text = "Quality"
+
+[node name="QualitySelector" type="OptionButton" parent="Root/Bottom/Panel/VBox/Controls"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+
 [node name="StatsButton" type="Button" parent="Root/Bottom/Panel/VBox/Controls"]
 layout_mode = 2
 text = "Player Stats"

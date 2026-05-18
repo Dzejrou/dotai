@@ -1,0 +1,143 @@
+using Godot;
+
+using System;
+using System.Collections.Generic;
+
+public static class GearGenerator
+{
+    // Stats that are conceptually integer-valued. Their rolled main-stat value
+    // is clamped to at least 1.0 so a single roll never resolves to 0 after rounding.
+    private static readonly HashSet<string> IntegerStats = new(StringComparer.Ordinal)
+    {
+        EquipmentStatIds.MaxHealth,
+        EquipmentStatIds.MaxMana,
+        EquipmentStatIds.MP5,
+        EquipmentStatIds.Power,
+        EquipmentStatIds.Haste,
+    };
+
+    public static GearInstance Generate(EquipmentSlot slot, GearQuality quality, GearGenerationRules rules)
+    {
+        if (rules == null)
+        {
+            GD.PushError($"{nameof(GearGenerator)}: rules resource is null; cannot generate gear.");
+            return null;
+        }
+
+        var slotRules = rules.GetSlotRules(slot);
+        if (slotRules == null)
+        {
+            GD.PushError($"{nameof(GearGenerator)}: missing slot rules for {slot}.");
+            return null;
+        }
+
+        var qualityRules = rules.GetQualityRules(quality);
+        if (qualityRules == null)
+        {
+            GD.PushError($"{nameof(GearGenerator)}: missing quality rules for {quality}.");
+            return null;
+        }
+
+        var mainStatIds = PickMainStats(slotRules);
+        var mainStats = new List<GearStatModifier>(mainStatIds.Count);
+        foreach (var statId in mainStatIds)
+        {
+            var maxValue = rules.GetMainStatMaxValue(statId, quality);
+            var value = ComputeLevelOneMainValue(statId, maxValue);
+            mainStats.Add(new GearStatModifier { StatId = statId, Value = value });
+        }
+
+        var substats = RollSubstats(rules, qualityRules, mainStatIds);
+
+        var definition = new GearDefinition
+        {
+            Id = $"generated_{slot}_{quality}".ToLowerInvariant(),
+            DisplayName = string.IsNullOrEmpty(slotRules.DisplayName)
+                ? $"{quality} {slot}"
+                : $"{quality} {slotRules.DisplayName}",
+            Icon = slotRules.Icon,
+            MaxStackSize = 1,
+            Slot = slot,
+            Quality = quality,
+        };
+
+        return new GearInstance(definition, slot, quality, level: 1, mainStats, substats);
+    }
+
+    private static List<string> PickMainStats(GearSlotRules slotRules)
+    {
+        var picks = new List<string>(2);
+        var first = PickRandom(slotRules.MainStat1Pool);
+        if (!string.IsNullOrEmpty(first))
+            picks.Add(first);
+
+        // Pull from pool 2 while avoiding the exact stat already chosen for slot 1.
+        var pool2 = new List<string>(slotRules.MainStat2Pool.Count);
+        foreach (var statId in slotRules.MainStat2Pool)
+        {
+            if (!string.IsNullOrEmpty(statId) && !picks.Contains(statId))
+                pool2.Add(statId);
+        }
+
+        var second = PickRandom(pool2);
+        if (!string.IsNullOrEmpty(second))
+            picks.Add(second);
+
+        return picks;
+    }
+
+    private static List<GearStatModifier> RollSubstats(
+        GearGenerationRules rules,
+        GearQualityRules qualityRules,
+        IList<string> mainStatIds)
+    {
+        var available = new List<string>(rules.SubstatPool.Count);
+        foreach (var statId in rules.SubstatPool)
+        {
+            if (string.IsNullOrEmpty(statId))
+                continue;
+            if (mainStatIds.Contains(statId))
+                continue;
+            available.Add(statId);
+        }
+
+        Shuffle(available);
+
+        var count = Math.Min(qualityRules.SubstatCount, available.Count);
+        var result = new List<GearStatModifier>(count);
+        for (var i = 0; i < count; i++)
+        {
+            var statId = available[i];
+            if (!rules.TryGetSubstatValue(qualityRules.Quality, statId, out var value))
+                continue;
+
+            result.Add(new GearStatModifier { StatId = statId, Value = value });
+        }
+
+        return result;
+    }
+
+    private static float ComputeLevelOneMainValue(string statId, float maxValueForQualityAndStat)
+    {
+        var value = maxValueForQualityAndStat / 20.0f;
+        if (IntegerStats.Contains(statId))
+            return Math.Max(1.0f, value);
+        return value;
+    }
+
+    private static string PickRandom(IList<string> source)
+    {
+        if (source == null || source.Count == 0)
+            return string.Empty;
+        return source[(int)(GD.Randi() % (uint)source.Count)];
+    }
+
+    private static void Shuffle(IList<string> list)
+    {
+        for (var i = list.Count - 1; i > 0; i--)
+        {
+            var j = (int)(GD.Randi() % (uint)(i + 1));
+            (list[i], list[j]) = (list[j], list[i]);
+        }
+    }
+}

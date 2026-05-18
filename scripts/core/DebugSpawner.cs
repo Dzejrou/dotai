@@ -20,17 +20,34 @@ public partial class DebugSpawner : Node2D
     [Export]
     public SpawnCatalog SpawnCatalog { get; set; }
 
+    [Export]
+    public GearGenerationRules GearGenerationRules { get; set; }
+
+    [Export]
+    public PackedScene GearDropScene { get; set; }
+
     private readonly Dictionary<string, SpawnCatalogEntry> _entriesById = new();
     private readonly List<SpawnCatalogEntry> _orderedEntries = new();
     private readonly Dictionary<string, PreviewData> _previewById = new();
     private string _pendingSpawnId;
+    private bool _pendingGear;
+    private EquipmentSlot _pendingGearSlot;
+    private GearQuality _pendingGearQuality;
     private Sprite2D _placementGhost;
     private Faction _selectedFaction = Factions.Enemies;
 
-    public bool HasPendingPlacement => !string.IsNullOrEmpty(_pendingSpawnId);
+    public bool HasPendingPlacement => !string.IsNullOrEmpty(_pendingSpawnId) || _pendingGear;
 
     public string PendingSpawnId => _pendingSpawnId;
+    public bool HasPendingGear => _pendingGear;
+    public EquipmentSlot PendingGearSlot => _pendingGearSlot;
+    public GearQuality PendingGearQuality => _pendingGearQuality;
     public Faction SelectedFaction => _selectedFaction;
+
+    public GearSlotRules GetGearSlotRules(EquipmentSlot slot)
+    {
+        return GearGenerationRules?.GetSlotRules(slot);
+    }
 
     public override void _Ready()
     {
@@ -73,13 +90,30 @@ public partial class DebugSpawner : Node2D
         {
             _selectedFaction = previewData.DefaultFaction;
         }
+        _pendingGear = false;
         _pendingSpawnId = spawnId;
         UpdatePlacementGhost(spawnId);
+    }
+
+    public void BeginGearPlacement(EquipmentSlot slot, GearQuality quality)
+    {
+        if (GearGenerationRules == null)
+        {
+            GD.PushWarning($"{nameof(DebugSpawner)}: cannot begin gear placement — GearGenerationRules is unset.");
+            return;
+        }
+
+        _pendingSpawnId = null;
+        _pendingGear = true;
+        _pendingGearSlot = slot;
+        _pendingGearQuality = quality;
+        UpdateGearPlacementGhost(slot);
     }
 
     public void CancelPlacement()
     {
         _pendingSpawnId = null;
+        _pendingGear = false;
         HidePlacementGhost();
     }
 
@@ -119,8 +153,21 @@ public partial class DebugSpawner : Node2D
         if (!HasPendingPlacement)
             return false;
 
-        var spawnId = _pendingSpawnId;
         var spawnPosition = GetMouseWorldPosition();
+
+        if (_pendingGear)
+        {
+            var spawnedDrop = SpawnGeneratedGear(_pendingGearSlot, _pendingGearQuality, spawnPosition);
+            if (spawnedDrop == null)
+                return false;
+
+            if (!preservePlacement)
+                CancelPlacement();
+
+            return true;
+        }
+
+        var spawnId = _pendingSpawnId;
         var spawnedNode = SpawnNode(spawnId, spawnPosition);
         if (spawnedNode == null)
             return false;
@@ -129,6 +176,44 @@ public partial class DebugSpawner : Node2D
             CancelPlacement();
 
         return true;
+    }
+
+    private Node2D SpawnGeneratedGear(EquipmentSlot slot, GearQuality quality, Vector2 spawnPosition)
+    {
+        if (GearDropScene == null)
+        {
+            GD.PushError($"{nameof(DebugSpawner)}: GearDropScene is unset — cannot spawn generated gear.");
+            return null;
+        }
+
+        var gear = GearGenerator.Generate(slot, quality, GearGenerationRules);
+        if (gear == null)
+            return null;
+
+        var instance = GearDropScene.Instantiate();
+        if (instance is not InventoryItemDrop drop)
+        {
+            instance?.Free();
+            GD.PushError($"{nameof(DebugSpawner)}: GearDropScene did not produce an InventoryItemDrop.");
+            return null;
+        }
+
+        drop.ItemDefinition = gear.Definition;
+        drop.GearInstance = gear;
+        drop.Quantity = 1;
+        drop.PickupMode = DropPickupMode.InteractOnly;
+
+        var parent = ResolveSpawnParent();
+        if (parent == null)
+        {
+            GD.PushWarning($"{nameof(DebugSpawner)} could not resolve a spawn parent for generated gear.");
+            drop.QueueFree();
+            return null;
+        }
+
+        parent.AddChild(drop);
+        drop.GlobalPosition = spawnPosition;
+        return drop;
     }
 
     public SpriteFrames GetPreviewFrames(string spawnId)
@@ -416,6 +501,24 @@ public partial class DebugSpawner : Node2D
         _placementGhost.Texture = previewData.Texture;
         _placementGhost.Scale = previewData.Scale;
         _placementGhost.Offset = previewData.Offset;
+        _placementGhost.GlobalPosition = GetMouseWorldPosition();
+        _placementGhost.Visible = true;
+    }
+
+    private void UpdateGearPlacementGhost(EquipmentSlot slot)
+    {
+        EnsurePlacementGhost();
+
+        var slotRules = GearGenerationRules?.GetSlotRules(slot);
+        if (slotRules?.Icon == null)
+        {
+            HidePlacementGhost();
+            return;
+        }
+
+        _placementGhost.Texture = slotRules.Icon;
+        _placementGhost.Scale = Vector2.One;
+        _placementGhost.Offset = Vector2.Zero;
         _placementGhost.GlobalPosition = GetMouseWorldPosition();
         _placementGhost.Visible = true;
     }

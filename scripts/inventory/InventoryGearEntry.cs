@@ -16,4 +16,6 @@ public sealed class InventoryGearEntry : InventoryEntry
     public override bool ShowQuantity => false;
 
     public override bool CanAcceptMergeFrom(InventoryEntry other) => false;
+
+    public override string TooltipText => GearTooltipBuilder.Build(Gear);
 }

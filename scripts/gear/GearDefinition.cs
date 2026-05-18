@@ -1,7 +1,8 @@
 using Godot;
 
-using System;
-
+// In-memory display shell for a gear pickup: icon, name, slot, quality.
+// Rolled stats live on GearInstance, not here. No .tres files exist for generated gear;
+// instances of this resource are synthesized at runtime by GearGenerator.
 [GlobalClass]
 public partial class GearDefinition : InventoryItemDefinition
 {
@@ -10,16 +11,4 @@ public partial class GearDefinition : InventoryItemDefinition
 
     [Export]
     public GearQuality Quality { get; set; } = GearQuality.Common;
-
-    [Export(PropertyHint.Range, "1,20,1")]
-    public int Level
-    {
-        get => _level;
-        set => _level = Math.Clamp(value, 1, 20);
-    }
-
-    [Export]
-    public Godot.Collections.Array<GearStatModifier> StatModifiers { get; set; } = new();
-
-    private int _level = 1;
 }

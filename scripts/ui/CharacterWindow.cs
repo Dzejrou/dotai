@@ -233,30 +233,9 @@ public partial class CharacterWindow : Control
             view.IconRect.Texture = hasGear ? gear.Definition.Icon : null;
             view.IconRect.Visible = hasGear && gear.Definition.Icon != null;
             view.Placeholder.Visible = !hasGear;
-            view.Root.TooltipText = hasGear ? BuildTooltip(gear.Definition) : slot.ToString();
+            view.Root.TooltipText = hasGear ? GearTooltipBuilder.Build(gear) : slot.ToString();
             view.Root.Modulate = hasGear ? Colors.White : new Color(1.0f, 1.0f, 1.0f, 1.0f);
         }
-    }
-
-    private static string BuildTooltip(GearDefinition definition)
-    {
-        if (definition == null)
-            return string.Empty;
-
-        var parts = new List<string> { definition.DisplayName };
-        if (definition.StatModifiers != null)
-        {
-            foreach (var modifier in definition.StatModifiers)
-            {
-                if (modifier == null || string.IsNullOrEmpty(modifier.StatId))
-                    continue;
-
-                var sign = modifier.Value >= 0 ? "+" : "";
-                parts.Add($"{sign}{modifier.Value:0.##} {modifier.StatId}");
-            }
-        }
-
-        return string.Join("\n", parts);
     }
 
     private void OnInventoryDropOnEquipmentSlot(int inventorySlotIndex, EquipmentSlot equipmentSlot)
