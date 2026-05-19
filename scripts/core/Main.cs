@@ -89,6 +89,7 @@ public partial class Main : Node2D
             _pauseMenuRoot.Connect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
             _pauseMenuRoot.Connect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
             _pauseMenuRoot.Connect(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested)));
+            _pauseMenuRoot.Connect(PauseMenu.SignalName.LoadRequested, new Callable(this, nameof(OnPauseMenuLoadRequested)));
         }
 
         if (_debugTrayRoot != null)
@@ -156,6 +157,10 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
             _pauseMenuRoot.IsConnected(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested))))
             _pauseMenuRoot.Disconnect(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested)));
+
+        if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
+            _pauseMenuRoot.IsConnected(PauseMenu.SignalName.LoadRequested, new Callable(this, nameof(OnPauseMenuLoadRequested))))
+            _pauseMenuRoot.Disconnect(PauseMenu.SignalName.LoadRequested, new Callable(this, nameof(OnPauseMenuLoadRequested)));
 
         if (GodotObject.IsInstanceValid(_debugTrayRoot) &&
             _debugTrayRoot.IsConnected(DebugTray.SignalName.PlayerStatsRequested, new Callable(this, nameof(OnDebugTrayPlayerStatsRequested))))
@@ -243,26 +248,26 @@ public partial class Main : Node2D
     {
         if (_player == null || !GodotObject.IsInstanceValid(_player))
         {
-            GD.PushWarning("Save refused: no player available.");
+            GD.Print("Save refused: no player available.");
             return;
         }
 
         if (_player.IsDead)
         {
-            GD.PushWarning("Save refused: player is dead.");
+            GD.Print("Save refused: player is dead.");
             return;
         }
 
         if (_player.InCombat)
         {
-            GD.PushWarning("Save refused: player is in combat.");
+            GD.Print("Save refused: player is in combat.");
             return;
         }
 
         var equipmentController = _player.EquipmentControllerNode;
         if (_inventoryController == null || equipmentController == null)
         {
-            GD.PushWarning("Save refused: inventory or equipment controller unavailable.");
+            GD.Print("Save refused: inventory or equipment controller unavailable.");
             return;
         }
 
@@ -279,21 +284,48 @@ public partial class Main : Node2D
             GD.PushWarning(message);
     }
 
+    private void OnPauseMenuLoadRequested()
+    {
+        switch (TryApplySaveFromDisk())
+        {
+            case LoadAttemptResult.Applied:
+                return;
+            case LoadAttemptResult.NoSave:
+                GD.Print($"Load skipped: no valid save at {SaveGameStore.SaveFilePath}.");
+                return;
+            case LoadAttemptResult.RuntimeUnavailable:
+                GD.Print("Load refused: required runtime nodes are unavailable.");
+                return;
+        }
+    }
+
     private void TryLoadFromSave()
     {
+        TryApplySaveFromDisk();
+    }
+
+    private enum LoadAttemptResult
+    {
+        Applied,
+        NoSave,
+        RuntimeUnavailable,
+    }
+
+    private LoadAttemptResult TryApplySaveFromDisk()
+    {
         if (!_saveGameStore.TryLoad(out var data) || data == null)
-            return;
+            return LoadAttemptResult.NoSave;
 
         if (_inventoryController == null ||
             _player == null ||
             !GodotObject.IsInstanceValid(_player))
         {
-            return;
+            return LoadAttemptResult.RuntimeUnavailable;
         }
 
         var equipmentController = _player.EquipmentControllerNode;
         if (equipmentController == null)
-            return;
+            return LoadAttemptResult.RuntimeUnavailable;
 
         // Apply order: inventory -> equipment -> player level/XP -> current HP/mana.
         // Equipment must land before HP/mana so the resolved Max values are correct
@@ -308,6 +340,7 @@ public partial class Main : Node2D
         }
 
         GD.Print($"Loaded save from {SaveGameStore.SaveFilePath}.");
+        return LoadAttemptResult.Applied;
     }
 
     private void OnDebugTrayPlayerStatsRequested()

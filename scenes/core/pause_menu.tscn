@@ -61,6 +61,10 @@ text = "Resume"
 layout_mode = 2
 text = "Save Game"
 
+[node name="LoadButton" type="Button" parent="Root/Center/Panel/VBox"]
+layout_mode = 2
+text = "Load Game"
+
 [node name="DebugButton" type="Button" parent="Root/Center/Panel/VBox"]
 layout_mode = 2
 text = "Debug"
