@@ -66,6 +66,8 @@ public partial class InventoryWindow : Control
             };
         }
 
+        InventorySlotControl.DragConsumed += OnExternalDragConsumed;
+
         ApplyLayout();
         Refresh();
         CallDeferred(MethodName.CenterPanelOnce);
@@ -73,8 +75,15 @@ public partial class InventoryWindow : Control
 
     public override void _ExitTree()
     {
+        InventorySlotControl.DragConsumed -= OnExternalDragConsumed;
         _windowDragger?.Detach();
         UnbindCurrentInventory();
+    }
+
+    private void OnExternalDragConsumed(int sourceSlotIndex)
+    {
+        if (_activeDragSlot == sourceSlotIndex)
+            _dragConsumed = true;
     }
 
     private void CenterPanelOnce()

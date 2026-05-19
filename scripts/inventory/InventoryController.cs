@@ -212,6 +212,35 @@ public partial class InventoryController : Node
         return true;
     }
 
+    // Consumes up to `quantity` from a specific stack slot, but only if its item id matches
+    // the expected id. Returns the actual amount consumed (0 if mismatched, empty, or out of range).
+    // Empties the slot when the stack hits zero. Emits InventoryChanged on any change.
+    public int TryConsumeFromStackSlot(int slotIndex, string expectedItemId, int quantity)
+    {
+        if (quantity <= 0)
+            return 0;
+        if (slotIndex < 0 || slotIndex >= _slots.Count)
+            return 0;
+        if (_slots[slotIndex] is not InventoryStackEntry stackEntry)
+            return 0;
+
+        var item = stackEntry.Stack.Item;
+        if (item == null)
+            return 0;
+        if (!string.IsNullOrEmpty(expectedItemId) &&
+            !string.Equals(item.Id, expectedItemId, StringComparison.Ordinal))
+            return 0;
+
+        var consumed = stackEntry.Stack.RemoveQuantity(quantity);
+        if (consumed > 0)
+        {
+            if (stackEntry.Stack.IsEmpty)
+                _slots[slotIndex] = null;
+            EmitInventoryChanged();
+        }
+        return consumed;
+    }
+
     public void Clear()
     {
         var changed = false;

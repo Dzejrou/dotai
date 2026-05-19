@@ -55,8 +55,19 @@ layout_mode = 2
 toggle_mode = true
 text = "Stats"
 
+[node name="LevelingToggle" type="Button" parent="Panel/Margin/VBox/ToggleRow"]
+layout_mode = 2
+toggle_mode = true
+text = "Leveling"
+
 [node name="StatsContainer" type="VBoxContainer" parent="Panel/Margin/VBox"]
 visible = false
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 theme_override_constants/separation = 2
+
+[node name="LevelingContainer" type="VBoxContainer" parent="Panel/Margin/VBox"]
+visible = false
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_constants/separation = 6

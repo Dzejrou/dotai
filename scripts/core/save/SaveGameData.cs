@@ -42,6 +42,7 @@ public sealed class GearInstanceSaveData
     public string Slot { get; set; }
     public string Quality { get; set; }
     public int Level { get; set; } = 1;
+    public int CurrentXp { get; set; }
     public List<GearStatModifierSaveData> MainStats { get; set; } = new();
     public List<GearStatModifierSaveData> Substats { get; set; } = new();
 }

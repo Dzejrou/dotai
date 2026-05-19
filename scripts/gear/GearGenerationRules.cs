@@ -15,6 +15,9 @@ public partial class GearGenerationRules : Resource
     [Export]
     public Godot.Collections.Array<string> SubstatPool { get; set; } = new();
 
+    [Export(PropertyHint.Range, "1,10000,1")]
+    public int ArcaneCrystalXp { get; set; } = 25;
+
     public GearQualityRules GetQualityRules(GearQuality quality)
     {
         foreach (var entry in Qualities)

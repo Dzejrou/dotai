@@ -12,6 +12,9 @@ public partial class GearQualityRules : Resource
     [Export(PropertyHint.Range, "0,8,1")]
     public int SubstatCount { get; set; } = 2;
 
+    [Export(PropertyHint.Range, "1,10000,1")]
+    public int XpPerLevel { get; set; } = 100;
+
     // Fixed substat values per stat id. Designers edit one row per substat in the inspector.
     [Export]
     public Godot.Collections.Array<GearStatValueEntry> SubstatValues { get; set; } = new();

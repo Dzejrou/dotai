@@ -15,6 +15,7 @@ public static class GearSaveSerializer
             Slot = gear.Slot.ToString(),
             Quality = gear.Quality.ToString(),
             Level = gear.Level,
+            CurrentXp = gear.CurrentXp,
         };
 
         foreach (var modifier in gear.MainStats)
@@ -50,8 +51,9 @@ public static class GearSaveSerializer
         var mainStats = RehydrateModifiers(data.MainStats);
         var substats = RehydrateModifiers(data.Substats);
         var level = Math.Max(1, data.Level);
+        var currentXp = Math.Max(0, data.CurrentXp);
 
-        return new GearInstance(definition, slot, quality, level, mainStats, substats);
+        return new GearInstance(definition, slot, quality, level, mainStats, substats, currentXp);
     }
 
     private static GearStatModifierSaveData SerializeModifier(GearStatModifier modifier)

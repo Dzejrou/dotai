@@ -5,17 +5,6 @@ using System.Collections.Generic;
 
 public static class GearGenerator
 {
-    // Stats that are conceptually integer-valued. Their rolled main-stat value
-    // is clamped to at least 1.0 so a single roll never resolves to 0 after rounding.
-    private static readonly HashSet<string> IntegerStats = new(StringComparer.Ordinal)
-    {
-        EquipmentStatIds.MaxHealth,
-        EquipmentStatIds.MaxMana,
-        EquipmentStatIds.MP5,
-        EquipmentStatIds.Power,
-        EquipmentStatIds.Haste,
-    };
-
     public static GearInstance Generate(EquipmentSlot slot, GearQuality quality, GearGenerationRules rules)
     {
         if (rules == null)
@@ -43,7 +32,7 @@ public static class GearGenerator
         foreach (var statId in mainStatIds)
         {
             var maxValue = rules.GetMainStatMaxValue(statId, quality);
-            var value = ComputeLevelOneMainValue(statId, maxValue);
+            var value = GearStatScaling.ComputeMainStatValue(statId, maxValue, level: 1);
             mainStats.Add(new GearStatModifier { StatId = statId, Value = value });
         }
 
@@ -138,14 +127,6 @@ public static class GearGenerator
         }
 
         return result;
-    }
-
-    private static float ComputeLevelOneMainValue(string statId, float maxValueForQualityAndStat)
-    {
-        var value = maxValueForQualityAndStat / 20.0f;
-        if (IntegerStats.Contains(statId))
-            return Math.Max(1.0f, value);
-        return value;
     }
 
     private static string PickRandom(IList<string> source)

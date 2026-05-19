@@ -12,7 +12,8 @@ public sealed class GearInstance
         GearQuality quality,
         int level,
         IReadOnlyList<GearStatModifier> mainStats,
-        IReadOnlyList<GearStatModifier> substats)
+        IReadOnlyList<GearStatModifier> substats,
+        int currentXp = 0)
     {
         Definition = definition ?? throw new ArgumentNullException(nameof(definition));
         Slot = slot;
@@ -20,12 +21,14 @@ public sealed class GearInstance
         Level = level;
         MainStats = mainStats ?? Array.Empty<GearStatModifier>();
         Substats = substats ?? Array.Empty<GearStatModifier>();
+        CurrentXp = Math.Max(0, currentXp);
     }
 
     public GearDefinition Definition { get; }
     public EquipmentSlot Slot { get; }
     public GearQuality Quality { get; }
     public int Level { get; set; }
+    public int CurrentXp { get; set; }
     public IReadOnlyList<GearStatModifier> MainStats { get; }
     public IReadOnlyList<GearStatModifier> Substats { get; }
 
@@ -44,5 +47,26 @@ public sealed class GearInstance
                     yield return modifier;
             }
         }
+    }
+
+    // Recomputes each main stat's Value from the rules: maxValue * level / 20, with the
+    // integer-stat floor of 1 preserved (same rule GearGenerator applies at generation time).
+    public void RecalculateMainStatsForLevel(GearGenerationRules rules)
+    {
+        if (rules == null)
+            return;
+
+        foreach (var modifier in MainStats)
+        {
+            if (modifier == null || string.IsNullOrEmpty(modifier.StatId))
+                continue;
+
+            var maxValue = rules.GetMainStatMaxValue(modifier.StatId, Quality);
+            modifier.Value = GearStatScaling.ComputeMainStatValue(modifier.StatId, maxValue, Level);
+        }
+
+        // TODO: future "substat roll every 4 levels" hook should fire here, e.g.
+        //   GearSubstatProgression.OnLevelChanged(this, previousLevel, rules);
+        // It can add or upgrade entries in Substats based on level milestones.
     }
 }

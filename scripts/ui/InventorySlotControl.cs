@@ -5,6 +5,17 @@ using System;
 [GlobalClass]
 public partial class InventorySlotControl : PanelContainer
 {
+    // Raised by custom drop targets (e.g. the gear leveling reference slot) that
+    // accept an inventory-origin drag without going through InventoryWindow's
+    // OnSlotDropReceived / OnEquipmentDropReceived paths. The owning InventoryWindow
+    // listens so it can flip _dragConsumed and avoid spawning a world drop.
+    public static event Action<int> DragConsumed;
+
+    public static void NotifyDragConsumed(int sourceSlotIndex)
+    {
+        DragConsumed?.Invoke(sourceSlotIndex);
+    }
+
     public int SlotIndex { get; set; }
 
     public InventoryController Inventory { get; set; }
