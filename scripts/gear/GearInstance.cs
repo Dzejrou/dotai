@@ -20,9 +20,13 @@ public sealed class GearInstance
         Quality = quality;
         Level = level;
         MainStats = mainStats ?? Array.Empty<GearStatModifier>();
-        Substats = substats ?? Array.Empty<GearStatModifier>();
+        _substats = substats != null
+            ? new List<GearStatModifier>(substats)
+            : new List<GearStatModifier>();
         CurrentXp = Math.Max(0, currentXp);
     }
+
+    private readonly List<GearStatModifier> _substats;
 
     public GearDefinition Definition { get; }
     public EquipmentSlot Slot { get; }
@@ -30,7 +34,16 @@ public sealed class GearInstance
     public int Level { get; set; }
     public int CurrentXp { get; set; }
     public IReadOnlyList<GearStatModifier> MainStats { get; }
-    public IReadOnlyList<GearStatModifier> Substats { get; }
+    public IReadOnlyList<GearStatModifier> Substats => _substats;
+
+    // Used by GearSubstatProgression when a milestone roll adds a brand-new substat
+    // (i.e. the gear had fewer substats than its quality's intended count).
+    public void AddSubstat(GearStatModifier modifier)
+    {
+        if (modifier == null || string.IsNullOrEmpty(modifier.StatId))
+            return;
+        _substats.Add(modifier);
+    }
 
     public IEnumerable<GearStatModifier> AllModifiers
     {
@@ -65,8 +78,5 @@ public sealed class GearInstance
             modifier.Value = GearStatScaling.ComputeMainStatValue(modifier.StatId, maxValue, Level);
         }
 
-        // TODO: future "substat roll every 4 levels" hook should fire here, e.g.
-        //   GearSubstatProgression.OnLevelChanged(this, previousLevel, rules);
-        // It can add or upgrade entries in Substats based on level milestones.
     }
 }

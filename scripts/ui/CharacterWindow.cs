@@ -77,6 +77,8 @@ public partial class CharacterWindow : Control
     private bool _statsExpanded;
     private bool _levelingExpanded;
 
+    private string _lastEnhanceSubstatMessage = string.Empty;
+
     private GearLevelingReferenceSlot _levelingTargetSlot;
     private TextureRect _levelingTargetIcon;
     private Label _levelingTargetPlaceholder;
@@ -87,6 +89,7 @@ public partial class CharacterWindow : Control
     private Label _levelingLevelLabel;
     private Label _levelingXpLabel;
     private Label _levelingMessageLabel;
+    private Label _levelingSubstatLabel;
     private Button _levelingEnhanceButton;
 
     private Label _statMaxHealth;
@@ -496,6 +499,16 @@ public partial class CharacterWindow : Control
         };
         _levelingContainer.AddChild(_levelingMessageLabel);
 
+        _levelingSubstatLabel = new Label
+        {
+            Text = string.Empty,
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        };
+        _levelingSubstatLabel.AddThemeColorOverride("font_color", new Color(0.6f, 1.0f, 0.6f));
+        _levelingContainer.AddChild(_levelingSubstatLabel);
+
         _levelingEnhanceButton = new Button
         {
             Text = "Enhance",
@@ -517,7 +530,7 @@ public partial class CharacterWindow : Control
             CustomMinimumSize = new Vector2(LevelingSlotSize, LevelingSlotSize),
             MouseFilter = MouseFilterEnum.Stop,
         };
-        _levelingTargetSlot.ReferenceChanged = RefreshLeveling;
+        _levelingTargetSlot.ReferenceChanged = OnLevelingReferenceChanged;
         _levelingTargetSlot.FocusRequested = FocusWindow;
 
         _levelingTargetIcon = new TextureRect
@@ -559,7 +572,7 @@ public partial class CharacterWindow : Control
             CustomMinimumSize = new Vector2(LevelingSlotSize, LevelingSlotSize),
             MouseFilter = MouseFilterEnum.Stop,
         };
-        _levelingMaterialSlot.ReferenceChanged = RefreshLeveling;
+        _levelingMaterialSlot.ReferenceChanged = OnLevelingReferenceChanged;
         _levelingMaterialSlot.FocusRequested = FocusWindow;
 
         _levelingMaterialIcon = new TextureRect
@@ -610,11 +623,16 @@ public partial class CharacterWindow : Control
             ? _inventory.GearGenerationRules
             : null;
 
-        // Target slot: validate and render.
+        // Target slot: validate and render. If the source vanished or no longer
+        // matches, the previous Enhance's roll summary is no longer about gear
+        // the user can still see, so drop it.
         GearInstance targetGear = null;
         var hasTarget = _levelingTargetSlot != null && _levelingTargetSlot.ResolveTargetGear(out targetGear);
         if (!hasTarget)
+        {
             _levelingTargetSlot?.ClearReference();
+            _lastEnhanceSubstatMessage = string.Empty;
+        }
 
         if (_levelingTargetIcon != null && _levelingTargetPlaceholder != null)
         {
@@ -693,6 +711,20 @@ public partial class CharacterWindow : Control
             if (_levelingMessageLabel != null)
                 _levelingMessageLabel.Text = "Drop gear into the target slot.";
         }
+
+        if (_levelingSubstatLabel != null)
+        {
+            _levelingSubstatLabel.Text = _lastEnhanceSubstatMessage ?? string.Empty;
+            _levelingSubstatLabel.Visible = !string.IsNullOrEmpty(_levelingSubstatLabel.Text);
+        }
+    }
+
+    private void OnLevelingReferenceChanged()
+    {
+        // The user pointed the panel at a different gear / crystal stack, so the previous
+        // Enhance's roll summary is no longer meaningful.
+        _lastEnhanceSubstatMessage = string.Empty;
+        RefreshLeveling();
     }
 
     private void OnEnhancePressed()
@@ -734,12 +766,48 @@ public partial class CharacterWindow : Control
             return;
         }
 
+        _lastEnhanceSubstatMessage = FormatSubstatRolls(result.SubstatRolls);
+
         // Equipment doesn't actually swap, but stat resolution depends on equipped gear's
         // modifier values, so re-emit so listeners can pick up the new totals.
         if (_equipment != null && GodotObject.IsInstanceValid(_equipment))
             _equipment.EmitSignal(EquipmentController.SignalName.Changed);
 
         Refresh();
+    }
+
+    private static string FormatSubstatRolls(IReadOnlyList<GearStatModifier> rolls)
+    {
+        if (rolls == null || rolls.Count == 0)
+            return string.Empty;
+
+        // Aggregate deltas by stat id, preserving the order each stat first rolled.
+        var order = new List<string>();
+        var totals = new Dictionary<string, float>(System.StringComparer.Ordinal);
+        foreach (var roll in rolls)
+        {
+            if (roll == null || string.IsNullOrEmpty(roll.StatId))
+                continue;
+            if (!totals.ContainsKey(roll.StatId))
+            {
+                order.Add(roll.StatId);
+                totals[roll.StatId] = 0.0f;
+            }
+            totals[roll.StatId] += roll.Value;
+        }
+
+        if (order.Count == 0)
+            return string.Empty;
+
+        var parts = new List<string>(order.Count);
+        foreach (var statId in order)
+            parts.Add(GearTooltipBuilder.FormatModifier(new GearStatModifier
+            {
+                StatId = statId,
+                Value = totals[statId],
+            }));
+
+        return "Substats: " + string.Join(", ", parts);
     }
 
     private void RefreshSlots()

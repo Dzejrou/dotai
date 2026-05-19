@@ -1,6 +1,7 @@
 using Godot;
 
 using System;
+using System.Collections.Generic;
 
 // Item id of the crystal stack accepted by the leveling material slot.
 public static class GearLevelingMaterials
@@ -10,13 +11,20 @@ public static class GearLevelingMaterials
 
 public readonly struct GearEnhanceResult
 {
-    public GearEnhanceResult(bool changed, int crystalsConsumed, int xpApplied, int levelsGained, bool reachedMaxLevel)
+    public GearEnhanceResult(
+        bool changed,
+        int crystalsConsumed,
+        int xpApplied,
+        int levelsGained,
+        bool reachedMaxLevel,
+        IReadOnlyList<GearStatModifier> substatRolls)
     {
         Changed = changed;
         CrystalsConsumed = crystalsConsumed;
         XpApplied = xpApplied;
         LevelsGained = levelsGained;
         ReachedMaxLevel = reachedMaxLevel;
+        SubstatRolls = substatRolls ?? Array.Empty<GearStatModifier>();
     }
 
     public bool Changed { get; }
@@ -24,6 +32,10 @@ public readonly struct GearEnhanceResult
     public int XpApplied { get; }
     public int LevelsGained { get; }
     public bool ReachedMaxLevel { get; }
+
+    // Per-roll deltas reported by the milestone substat progression, in the order rolled.
+    // Empty when no milestone was crossed (and always empty for Trash, whose max level is 1).
+    public IReadOnlyList<GearStatModifier> SubstatRolls { get; }
 }
 
 // Applies Arcane Crystal XP to a target GearInstance.
@@ -59,7 +71,7 @@ public static class GearLevelingService
         var maxLevel = Math.Max(1, qualityRules.MaxLevel);
 
         if (target.Level >= maxLevel)
-            return new GearEnhanceResult(changed: false, 0, 0, 0, reachedMaxLevel: true);
+            return new GearEnhanceResult(false, 0, 0, 0, true, Array.Empty<GearStatModifier>());
 
         if (!inventory.TryGetEntry(materialInventorySlot, out var entry) ||
             entry is not InventoryStackEntry stackEntry)
@@ -80,7 +92,7 @@ public static class GearLevelingService
         if (xpNeededToMax <= 0)
         {
             target.CurrentXp = 0;
-            return new GearEnhanceResult(changed: false, 0, 0, 0, reachedMaxLevel: true);
+            return new GearEnhanceResult(false, 0, 0, 0, true, Array.Empty<GearStatModifier>());
         }
 
         // Ceil-divide so the last crystal that crosses the threshold is still spent.
@@ -114,15 +126,21 @@ public static class GearLevelingService
             target.CurrentXp = (int)totalXp;
         }
 
+        IReadOnlyList<GearStatModifier> rolls = Array.Empty<GearStatModifier>();
         if (gainedLevels > 0)
+        {
+            // Roll substats first so RecalculateMainStatsForLevel only has to walk MainStats.
+            rolls = GearSubstatProgression.ApplyMilestoneRolls(target, startLevel, target.Level, rules);
             target.RecalculateMainStatsForLevel(rules);
+        }
 
         return new GearEnhanceResult(
             changed: true,
             crystalsConsumed: consumed,
             xpApplied: (int)Math.Min(int.MaxValue, xpToApply),
             levelsGained: gainedLevels,
-            reachedMaxLevel: target.Level >= maxLevel);
+            reachedMaxLevel: target.Level >= maxLevel,
+            substatRolls: rolls);
     }
 
     public static int GetMaxLevel(GearInstance gear, GearGenerationRules rules)
