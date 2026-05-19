@@ -288,7 +288,8 @@ script = ExtResource("g_quality_script")
 Quality = 0
 MaxLevel = 1
 SubstatCount = 2
-XpPerLevel = 100
+ExperienceToNextLevel = Array[int]([])
+BaseFodderXp = 5
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Trash_MaxHealth"), SubResource("sv_Trash_MaxMana"), SubResource("sv_Trash_MP5"), SubResource("sv_Trash_Power"), SubResource("sv_Trash_Haste"), SubResource("sv_Trash_MovementSpeedMultiplier"), SubResource("sv_Trash_CritRate"), SubResource("sv_Trash_CritDamage"), SubResource("sv_Trash_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Common"]
@@ -296,7 +297,8 @@ script = ExtResource("g_quality_script")
 Quality = 1
 MaxLevel = 8
 SubstatCount = 2
-XpPerLevel = 100
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381])
+BaseFodderXp = 20
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Common_MaxHealth"), SubResource("sv_Common_MaxMana"), SubResource("sv_Common_MP5"), SubResource("sv_Common_Power"), SubResource("sv_Common_Haste"), SubResource("sv_Common_MovementSpeedMultiplier"), SubResource("sv_Common_CritRate"), SubResource("sv_Common_CritDamage"), SubResource("sv_Common_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Uncommon"]
@@ -304,7 +306,8 @@ script = ExtResource("g_quality_script")
 Quality = 2
 MaxLevel = 12
 SubstatCount = 3
-XpPerLevel = 100
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930])
+BaseFodderXp = 50
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Uncommon_MaxHealth"), SubResource("sv_Uncommon_MaxMana"), SubResource("sv_Uncommon_MP5"), SubResource("sv_Uncommon_Power"), SubResource("sv_Uncommon_Haste"), SubResource("sv_Uncommon_MovementSpeedMultiplier"), SubResource("sv_Uncommon_CritRate"), SubResource("sv_Uncommon_CritDamage"), SubResource("sv_Uncommon_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Rare"]
@@ -312,7 +315,8 @@ script = ExtResource("g_quality_script")
 Quality = 3
 MaxLevel = 16
 SubstatCount = 3
-XpPerLevel = 100
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271])
+BaseFodderXp = 120
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Rare_MaxHealth"), SubResource("sv_Rare_MaxMana"), SubResource("sv_Rare_MP5"), SubResource("sv_Rare_Power"), SubResource("sv_Rare_Haste"), SubResource("sv_Rare_MovementSpeedMultiplier"), SubResource("sv_Rare_CritRate"), SubResource("sv_Rare_CritDamage"), SubResource("sv_Rare_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Epic"]
@@ -320,7 +324,8 @@ script = ExtResource("g_quality_script")
 Quality = 4
 MaxLevel = 20
 SubstatCount = 4
-XpPerLevel = 100
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271, 2839, 3549, 4436, 5545])
+BaseFodderXp = 250
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Epic_MaxHealth"), SubResource("sv_Epic_MaxMana"), SubResource("sv_Epic_MP5"), SubResource("sv_Epic_Power"), SubResource("sv_Epic_Haste"), SubResource("sv_Epic_MovementSpeedMultiplier"), SubResource("sv_Epic_CritRate"), SubResource("sv_Epic_CritDamage"), SubResource("sv_Epic_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Legendary"]
@@ -328,7 +333,8 @@ script = ExtResource("g_quality_script")
 Quality = 5
 MaxLevel = 20
 SubstatCount = 4
-XpPerLevel = 100
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271, 2839, 3549, 4436, 5545])
+BaseFodderXp = 500
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Legendary_MaxHealth"), SubResource("sv_Legendary_MaxMana"), SubResource("sv_Legendary_MP5"), SubResource("sv_Legendary_Power"), SubResource("sv_Legendary_Haste"), SubResource("sv_Legendary_MovementSpeedMultiplier"), SubResource("sv_Legendary_CritRate"), SubResource("sv_Legendary_CritDamage"), SubResource("sv_Legendary_DamageBonus")])
 
 [sub_resource type="Resource" id="sr_Head"]
@@ -1042,3 +1048,4 @@ Slots = Array[ExtResource("g_slot_script")]([SubResource("sr_Head"), SubResource
 MainStatScales = Array[ExtResource("g_scale_entry_script")]([SubResource("ms_MaxHealth_Trash"), SubResource("ms_MaxHealth_Common"), SubResource("ms_MaxHealth_Uncommon"), SubResource("ms_MaxHealth_Rare"), SubResource("ms_MaxHealth_Epic"), SubResource("ms_MaxHealth_Legendary"), SubResource("ms_MaxMana_Trash"), SubResource("ms_MaxMana_Common"), SubResource("ms_MaxMana_Uncommon"), SubResource("ms_MaxMana_Rare"), SubResource("ms_MaxMana_Epic"), SubResource("ms_MaxMana_Legendary"), SubResource("ms_MP5_Trash"), SubResource("ms_MP5_Common"), SubResource("ms_MP5_Uncommon"), SubResource("ms_MP5_Rare"), SubResource("ms_MP5_Epic"), SubResource("ms_MP5_Legendary"), SubResource("ms_Power_Trash"), SubResource("ms_Power_Common"), SubResource("ms_Power_Uncommon"), SubResource("ms_Power_Rare"), SubResource("ms_Power_Epic"), SubResource("ms_Power_Legendary"), SubResource("ms_Haste_Trash"), SubResource("ms_Haste_Common"), SubResource("ms_Haste_Uncommon"), SubResource("ms_Haste_Rare"), SubResource("ms_Haste_Epic"), SubResource("ms_Haste_Legendary"), SubResource("ms_MovementSpeedMultiplier_Trash"), SubResource("ms_MovementSpeedMultiplier_Common"), SubResource("ms_MovementSpeedMultiplier_Uncommon"), SubResource("ms_MovementSpeedMultiplier_Rare"), SubResource("ms_MovementSpeedMultiplier_Epic"), SubResource("ms_MovementSpeedMultiplier_Legendary"), SubResource("ms_CritRate_Trash"), SubResource("ms_CritRate_Common"), SubResource("ms_CritRate_Uncommon"), SubResource("ms_CritRate_Rare"), SubResource("ms_CritRate_Epic"), SubResource("ms_CritRate_Legendary"), SubResource("ms_CritDamage_Trash"), SubResource("ms_CritDamage_Common"), SubResource("ms_CritDamage_Uncommon"), SubResource("ms_CritDamage_Rare"), SubResource("ms_CritDamage_Epic"), SubResource("ms_CritDamage_Legendary"), SubResource("ms_PhysicalDamageBonus_Trash"), SubResource("ms_PhysicalDamageBonus_Common"), SubResource("ms_PhysicalDamageBonus_Uncommon"), SubResource("ms_PhysicalDamageBonus_Rare"), SubResource("ms_PhysicalDamageBonus_Epic"), SubResource("ms_PhysicalDamageBonus_Legendary"), SubResource("ms_FireDamageBonus_Trash"), SubResource("ms_FireDamageBonus_Common"), SubResource("ms_FireDamageBonus_Uncommon"), SubResource("ms_FireDamageBonus_Rare"), SubResource("ms_FireDamageBonus_Epic"), SubResource("ms_FireDamageBonus_Legendary"), SubResource("ms_IceDamageBonus_Trash"), SubResource("ms_IceDamageBonus_Common"), SubResource("ms_IceDamageBonus_Uncommon"), SubResource("ms_IceDamageBonus_Rare"), SubResource("ms_IceDamageBonus_Epic"), SubResource("ms_IceDamageBonus_Legendary"), SubResource("ms_PoisonDamageBonus_Trash"), SubResource("ms_PoisonDamageBonus_Common"), SubResource("ms_PoisonDamageBonus_Uncommon"), SubResource("ms_PoisonDamageBonus_Rare"), SubResource("ms_PoisonDamageBonus_Epic"), SubResource("ms_PoisonDamageBonus_Legendary"), SubResource("ms_ArcaneDamageBonus_Trash"), SubResource("ms_ArcaneDamageBonus_Common"), SubResource("ms_ArcaneDamageBonus_Uncommon"), SubResource("ms_ArcaneDamageBonus_Rare"), SubResource("ms_ArcaneDamageBonus_Epic"), SubResource("ms_ArcaneDamageBonus_Legendary"), SubResource("ms_PhysicalResistance_Trash"), SubResource("ms_PhysicalResistance_Common"), SubResource("ms_PhysicalResistance_Uncommon"), SubResource("ms_PhysicalResistance_Rare"), SubResource("ms_PhysicalResistance_Epic"), SubResource("ms_PhysicalResistance_Legendary"), SubResource("ms_FireResistance_Trash"), SubResource("ms_FireResistance_Common"), SubResource("ms_FireResistance_Uncommon"), SubResource("ms_FireResistance_Rare"), SubResource("ms_FireResistance_Epic"), SubResource("ms_FireResistance_Legendary"), SubResource("ms_IceResistance_Trash"), SubResource("ms_IceResistance_Common"), SubResource("ms_IceResistance_Uncommon"), SubResource("ms_IceResistance_Rare"), SubResource("ms_IceResistance_Epic"), SubResource("ms_IceResistance_Legendary"), SubResource("ms_PoisonResistance_Trash"), SubResource("ms_PoisonResistance_Common"), SubResource("ms_PoisonResistance_Uncommon"), SubResource("ms_PoisonResistance_Rare"), SubResource("ms_PoisonResistance_Epic"), SubResource("ms_PoisonResistance_Legendary"), SubResource("ms_ArcaneResistance_Trash"), SubResource("ms_ArcaneResistance_Common"), SubResource("ms_ArcaneResistance_Uncommon"), SubResource("ms_ArcaneResistance_Rare"), SubResource("ms_ArcaneResistance_Epic"), SubResource("ms_ArcaneResistance_Legendary")])
 SubstatPool = Array[String](["MaxHealth", "MaxMana", "MP5", "Power", "Haste", "MovementSpeedMultiplier", "CritRate", "CritDamage", "DamageBonus"])
 ArcaneCrystalXp = 25
+FodderInvestedXpRefundRate = 0.8

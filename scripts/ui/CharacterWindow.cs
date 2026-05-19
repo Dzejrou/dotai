@@ -590,7 +590,7 @@ public partial class CharacterWindow : Control
         _levelingMaterialPlaceholder = new Label
         {
             Name = "Placeholder",
-            Text = "crystal",
+            Text = "XP",
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = MouseFilterEnum.Ignore,
@@ -650,54 +650,100 @@ public partial class CharacterWindow : Control
             _levelingTargetSlot.TooltipText = hasTarget ? GearTooltipBuilder.Build(targetGear) : "Target gear";
         }
 
-        // Material slot: validate and render.
-        InventoryStackEntry materialEntry = null;
-        var hasMaterial = _levelingMaterialSlot != null && _levelingMaterialSlot.ResolveMaterialStack(out materialEntry);
-        if (!hasMaterial)
+        // Material slot: validate and render. Material can be either an arcane_crystal
+        // stack or an inventory gear entry (fodder).
+        InventoryStackEntry crystalEntry = null;
+        InventoryGearEntry fodderEntry = null;
+        var materialKind = _levelingMaterialSlot != null
+            ? _levelingMaterialSlot.ResolveMaterial(out crystalEntry, out fodderEntry)
+            : GearLevelingMaterialKind.None;
+        if (materialKind == GearLevelingMaterialKind.None)
             _levelingMaterialSlot?.ClearReference();
+
+        var fodderIsSelf = materialKind == GearLevelingMaterialKind.GearFodder &&
+                           hasTarget &&
+                           fodderEntry?.Gear != null &&
+                           ReferenceEquals(fodderEntry.Gear, targetGear);
 
         if (_levelingMaterialIcon != null && _levelingMaterialPlaceholder != null && _levelingMaterialQuantity != null)
         {
-            var icon = hasMaterial ? materialEntry.Stack.Item.Icon : null;
+            Texture2D icon = null;
+            var iconColor = Colors.White;
+            var showQuantity = false;
+            var quantityText = string.Empty;
+
+            switch (materialKind)
+            {
+                case GearLevelingMaterialKind.Crystal:
+                    icon = crystalEntry.Stack.Item.Icon;
+                    showQuantity = true;
+                    quantityText = crystalEntry.Stack.Quantity.ToString();
+                    break;
+                case GearLevelingMaterialKind.GearFodder:
+                    icon = fodderEntry.Gear.Definition?.Icon;
+                    iconColor = GearQualityColors.GetColor(fodderEntry.Gear.Quality);
+                    break;
+            }
+
             _levelingMaterialIcon.Texture = icon;
             _levelingMaterialIcon.Visible = icon != null;
-            _levelingMaterialPlaceholder.Visible = !hasMaterial;
-            _levelingMaterialQuantity.Visible = hasMaterial;
-            _levelingMaterialQuantity.Text = hasMaterial ? materialEntry.Stack.Quantity.ToString() : string.Empty;
+            _levelingMaterialIcon.Modulate = iconColor;
+            _levelingMaterialPlaceholder.Visible = materialKind == GearLevelingMaterialKind.None;
+            _levelingMaterialQuantity.Visible = showQuantity;
+            _levelingMaterialQuantity.Text = quantityText;
         }
 
         if (_levelingMaterialSlot != null)
         {
-            _levelingMaterialSlot.TooltipText = hasMaterial
-                ? $"{materialEntry.Stack.Item.DisplayName} x{materialEntry.Stack.Quantity}"
-                : "Arcane Crystal";
+            switch (materialKind)
+            {
+                case GearLevelingMaterialKind.Crystal:
+                    _levelingMaterialSlot.TooltipText =
+                        $"{crystalEntry.Stack.Item.DisplayName} x{crystalEntry.Stack.Quantity}";
+                    break;
+                case GearLevelingMaterialKind.GearFodder:
+                    _levelingMaterialSlot.TooltipText = GearTooltipBuilder.Build(fodderEntry.Gear);
+                    break;
+                default:
+                    _levelingMaterialSlot.TooltipText = "Arcane Crystal or fodder gear";
+                    break;
+            }
         }
 
         // Level / XP labels and Enhance button enable state.
         if (hasTarget && rules != null)
         {
             var maxLevel = GearLevelingService.GetMaxLevel(targetGear, rules);
-            var xpPerLevel = GearLevelingService.GetXpPerLevel(targetGear, rules);
+            var requiredXp = GearLevelingService.GetRequiredExperienceForCurrentLevel(targetGear, rules);
             if (_levelingLevelLabel != null)
                 _levelingLevelLabel.Text = $"Level: {targetGear.Level} / {maxLevel}";
             if (_levelingXpLabel != null)
             {
                 _levelingXpLabel.Text = targetGear.Level >= maxLevel
                     ? "XP: max"
-                    : $"XP: {targetGear.CurrentXp} / {xpPerLevel}";
+                    : $"XP: {targetGear.CurrentXp} / {requiredXp}";
             }
 
+            var atMax = targetGear.Level >= maxLevel;
+            var hasUsableMaterial =
+                materialKind == GearLevelingMaterialKind.Crystal ||
+                (materialKind == GearLevelingMaterialKind.GearFodder && !fodderIsSelf);
+
             if (_levelingEnhanceButton != null)
-                _levelingEnhanceButton.Disabled = !hasMaterial || targetGear.Level >= maxLevel;
+                _levelingEnhanceButton.Disabled = atMax || !hasUsableMaterial;
 
             if (_levelingMessageLabel != null)
             {
-                if (targetGear.Level >= maxLevel)
+                if (atMax)
                     _levelingMessageLabel.Text = "Already at max level.";
-                else if (!hasMaterial)
-                    _levelingMessageLabel.Text = "Drop Arcane Crystals into the material slot.";
-                else
-                    _levelingMessageLabel.Text = string.Empty;
+                else if (fodderIsSelf)
+                    _levelingMessageLabel.Text = "Can't use the target itself as fodder.";
+                else if (materialKind == GearLevelingMaterialKind.None)
+                    _levelingMessageLabel.Text = "Drop crystals or fodder gear into the material slot.";
+                else if (materialKind == GearLevelingMaterialKind.Crystal)
+                    _levelingMessageLabel.Text = $"Crystals: {crystalEntry.Stack.Quantity}";
+                else // GearFodder, not self
+                    _levelingMessageLabel.Text = $"Fodder XP: {GearLevelingService.ComputeFodderXp(fodderEntry.Gear, rules)}";
             }
         }
         else
@@ -747,10 +793,26 @@ public partial class CharacterWindow : Control
             return;
         }
 
-        if (_levelingMaterialSlot == null || !_levelingMaterialSlot.ResolveMaterialStack(out _))
+        if (_levelingMaterialSlot == null)
         {
-            _levelingMaterialSlot?.ClearReference();
             RefreshLeveling();
+            return;
+        }
+
+        var materialKind = _levelingMaterialSlot.ResolveMaterial(out _, out var fodderEntry);
+        if (materialKind == GearLevelingMaterialKind.None)
+        {
+            _levelingMaterialSlot.ClearReference();
+            RefreshLeveling();
+            return;
+        }
+
+        if (materialKind == GearLevelingMaterialKind.GearFodder &&
+            fodderEntry?.Gear != null &&
+            ReferenceEquals(fodderEntry.Gear, targetGear))
+        {
+            if (_levelingMessageLabel != null)
+                _levelingMessageLabel.Text = "Can't use the target itself as fodder.";
             return;
         }
 

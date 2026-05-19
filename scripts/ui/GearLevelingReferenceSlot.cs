@@ -15,6 +15,13 @@ public enum GearLevelingSourceKind
     Equipment,
 }
 
+public enum GearLevelingMaterialKind
+{
+    None,
+    Crystal,
+    GearFodder,
+}
+
 // Reference-only drop target used by the character window's leveling panel.
 // Stores a pointer (inventory slot index or equipment slot enum) to where the
 // referenced item actually lives; it never owns the item.
@@ -80,25 +87,43 @@ public partial class GearLevelingReferenceSlot : PanelContainer
         }
     }
 
-    public bool ResolveMaterialStack(out InventoryStackEntry stack)
+    // Resolves what's currently in the referenced inventory slot. Returns Crystal for
+    // an arcane_crystal stack, GearFodder for any gear entry, and None if the source
+    // vanished, isn't an inventory slot, or the entry no longer matches a supported
+    // material kind. The matching out-parameter is populated; the other stays null.
+    public GearLevelingMaterialKind ResolveMaterial(
+        out InventoryStackEntry crystalStack,
+        out InventoryGearEntry fodderEntry)
     {
-        stack = null;
+        crystalStack = null;
+        fodderEntry = null;
+
         if (Kind != GearLevelingReferenceKind.Material)
-            return false;
+            return GearLevelingMaterialKind.None;
         if (SourceKind != GearLevelingSourceKind.Inventory)
-            return false;
+            return GearLevelingMaterialKind.None;
         if (Inventory == null || !Inventory.TryGetEntry(InventorySlotIndex, out var entry))
-            return false;
-        if (entry is not InventoryStackEntry stackEntry)
-            return false;
+            return GearLevelingMaterialKind.None;
 
-        var item = stackEntry.Stack?.Item;
-        if (item == null ||
-            !string.Equals(item.Id, GearLevelingMaterials.ArcaneCrystalId, StringComparison.Ordinal))
-            return false;
+        if (entry is InventoryStackEntry stackEntry)
+        {
+            var item = stackEntry.Stack?.Item;
+            if (item != null &&
+                string.Equals(item.Id, GearLevelingMaterials.ArcaneCrystalId, StringComparison.Ordinal))
+            {
+                crystalStack = stackEntry;
+                return GearLevelingMaterialKind.Crystal;
+            }
+            return GearLevelingMaterialKind.None;
+        }
 
-        stack = stackEntry;
-        return true;
+        if (entry is InventoryGearEntry gearEntry && gearEntry.Gear != null)
+        {
+            fodderEntry = gearEntry;
+            return GearLevelingMaterialKind.GearFodder;
+        }
+
+        return GearLevelingMaterialKind.None;
     }
 
     public override bool _CanDropData(Vector2 atPosition, Variant data)
@@ -169,15 +194,23 @@ public partial class GearLevelingReferenceSlot : PanelContainer
 
     private bool CanAcceptMaterial(Variant data)
     {
+        // Only inventory-origin drags. Equipment-origin gear is explicitly disallowed
+        // as fodder (the user has to unequip it first).
         if (data.VariantType != Variant.Type.Int)
             return false;
         if (Inventory == null || !Inventory.TryGetEntry(data.AsInt32(), out var entry))
             return false;
-        if (entry is not InventoryStackEntry stackEntry)
-            return false;
-        var item = stackEntry.Stack?.Item;
-        return item != null &&
-               string.Equals(item.Id, GearLevelingMaterials.ArcaneCrystalId, StringComparison.Ordinal);
+
+        if (entry is InventoryStackEntry stackEntry)
+        {
+            var item = stackEntry.Stack?.Item;
+            return item != null &&
+                   string.Equals(item.Id, GearLevelingMaterials.ArcaneCrystalId, StringComparison.Ordinal);
+        }
+
+        // Any inventory gear is acceptable as fodder; the self-fodder check happens
+        // at Enhance time against the target reference (this slot doesn't know the target).
+        return entry is InventoryGearEntry;
     }
 
     private bool AcceptMaterial(Variant data)
@@ -208,6 +241,14 @@ public partial class GearLevelingReferenceSlot : PanelContainer
     {
         if (Kind == GearLevelingReferenceKind.Target && ResolveTargetGear(out var gear))
             return GearTooltipFactory.Build(gear);
+
+        if (Kind == GearLevelingReferenceKind.Material)
+        {
+            var matKind = ResolveMaterial(out _, out var fodderEntry);
+            if (matKind == GearLevelingMaterialKind.GearFodder && fodderEntry?.Gear != null)
+                return GearTooltipFactory.Build(fodderEntry.Gear);
+        }
+
         return null;
     }
 }

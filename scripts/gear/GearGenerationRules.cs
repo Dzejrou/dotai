@@ -18,6 +18,9 @@ public partial class GearGenerationRules : Resource
     [Export(PropertyHint.Range, "1,10000,1")]
     public int ArcaneCrystalXp { get; set; } = 25;
 
+    [Export(PropertyHint.Range, "0,1,0.01")]
+    public float FodderInvestedXpRefundRate { get; set; } = 0.80f;
+
     public GearQualityRules GetQualityRules(GearQuality quality)
     {
         foreach (var entry in Qualities)
