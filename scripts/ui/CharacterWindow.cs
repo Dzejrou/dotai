@@ -19,6 +19,9 @@ public partial class CharacterWindow : Control
     public NodePath StatsTogglePath { get; set; } = new("Panel/Margin/VBox/ToggleRow/StatsToggle");
 
     [Export]
+    public NodePath LevelLabelPath { get; set; } = new("Panel/Margin/VBox/ToggleRow/LevelLabel");
+
+    [Export]
     public NodePath StatsContainerPath { get; set; } = new("Panel/Margin/VBox/StatsContainer");
 
     private static readonly EquipmentSlot[] SlotOrder =
@@ -49,13 +52,16 @@ public partial class CharacterWindow : Control
     private InventoryController _inventory;
     private EquipmentController _equipment;
     private CombatCharacter _statsOwner;
+    private Player _playerOwner;
     private Control _windowPanel;
     private Control _slotsContainer;
     private Button _statsToggle;
+    private Label _levelLabel;
     private VBoxContainer _statsContainer;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
     private bool _equipmentChangedBound;
+    private bool _playerLevelBound;
     private bool _statsExpanded;
 
     private Label _statMaxHealth;
@@ -78,6 +84,7 @@ public partial class CharacterWindow : Control
         _windowPanel = GetNodeOrNull<Control>(WindowPanelPath);
         _slotsContainer = GetNodeOrNull<Control>(SlotsContainerPath);
         _statsToggle = GetNodeOrNull<Button>(StatsTogglePath);
+        _levelLabel = GetNodeOrNull<Label>(LevelLabelPath);
         _statsContainer = GetNodeOrNull<VBoxContainer>(StatsContainerPath);
 
         if (_windowPanel != null)
@@ -99,6 +106,7 @@ public partial class CharacterWindow : Control
 
         ApplyStatsExpansion();
         Refresh();
+        RefreshLevelLabel();
         CallDeferred(MethodName.CenterPanelOnce);
     }
 
@@ -106,6 +114,7 @@ public partial class CharacterWindow : Control
     {
         _windowDragger?.Detach();
         UnbindCurrentEquipment();
+        UnbindCurrentPlayer();
 
         if (_statsToggle != null)
             _statsToggle.Toggled -= OnStatsToggled;
@@ -156,7 +165,62 @@ public partial class CharacterWindow : Control
     public void BindStatsOwner(CombatCharacter character)
     {
         _statsOwner = character;
+        BindPlayer(character as Player);
         RefreshStats();
+    }
+
+    private void BindPlayer(Player player)
+    {
+        if (ReferenceEquals(_playerOwner, player))
+        {
+            RefreshLevelLabel();
+            return;
+        }
+
+        UnbindCurrentPlayer();
+        _playerOwner = player;
+
+        if (_playerOwner != null && GodotObject.IsInstanceValid(_playerOwner))
+        {
+            var callable = new Callable(this, nameof(OnPlayerLevelChanged));
+            if (!_playerOwner.IsConnected(Player.SignalName.LevelChanged, callable))
+                _playerOwner.Connect(Player.SignalName.LevelChanged, callable);
+
+            _playerLevelBound = true;
+        }
+
+        RefreshLevelLabel();
+    }
+
+    private void OnPlayerLevelChanged(int newLevel)
+    {
+        RefreshLevelLabel();
+    }
+
+    private void RefreshLevelLabel()
+    {
+        if (_levelLabel == null)
+            return;
+
+        var level = _playerOwner != null && GodotObject.IsInstanceValid(_playerOwner) ? _playerOwner.Level : 1;
+        _levelLabel.Text = $"Lv {level}";
+    }
+
+    private void UnbindCurrentPlayer()
+    {
+        if (!_playerLevelBound || _playerOwner == null || !GodotObject.IsInstanceValid(_playerOwner))
+        {
+            _playerLevelBound = false;
+            _playerOwner = null;
+            return;
+        }
+
+        var callable = new Callable(this, nameof(OnPlayerLevelChanged));
+        if (_playerOwner.IsConnected(Player.SignalName.LevelChanged, callable))
+            _playerOwner.Disconnect(Player.SignalName.LevelChanged, callable);
+
+        _playerLevelBound = false;
+        _playerOwner = null;
     }
 
     public void ToggleWindow()
@@ -178,6 +242,7 @@ public partial class CharacterWindow : Control
             _windowDragger?.ClampToViewport();
             FocusWindow();
             Refresh();
+            RefreshLevelLabel();
         }
     }
 

@@ -107,7 +107,6 @@ public partial class ActorHUD : Node2D
     private Control _xpBar;
     private ColorRect _xpBackground;
     private ColorRect _xpFill;
-    private Label _levelLabel;
     private Node2D _targetBracket;
     private Line2D _leftBracket;
     private Line2D _rightBracket;
@@ -139,7 +138,6 @@ public partial class ActorHUD : Node2D
         _xpBar = GetNodeOrNull<Control>("ContentRoot/UnitFrame/XpBar");
         _xpBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/XpBar/XpBackground");
         _xpFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/XpBar/XpFill");
-        _levelLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/XpBar/LevelLabel");
         _targetBracket = GetNodeOrNull<Node2D>("ContentRoot/TargetBracket");
         _leftBracket = GetNodeOrNull<Line2D>("ContentRoot/TargetBracket/LeftBracket");
         _rightBracket = GetNodeOrNull<Line2D>("ContentRoot/TargetBracket/RightBracket");
@@ -270,7 +268,6 @@ public partial class ActorHUD : Node2D
         ApplyBarSize(_healthBar, _healthBackground, _healthLabel, HealthBarWidth, HealthBarHeight);
         ApplyBarSize(_manaBar, _manaBackground, _manaLabel, ManaBarWidth, ManaBarHeight);
         ApplyBarSize(_xpBar, _xpBackground, null, XpBarWidth, XpBarHeight);
-        ApplyLevelLabelLayout();
     }
 
     private void RefreshName()
@@ -405,20 +402,6 @@ public partial class ActorHUD : Node2D
 
         if (_xpBackground != null)
             _xpBackground.Color = XpBackgroundColor;
-
-        if (_levelLabel != null)
-            _levelLabel.Text = $"Lv {_playerLevel}";
-    }
-
-    private void ApplyLevelLabelLayout()
-    {
-        if (_levelLabel == null)
-            return;
-
-        var xpLabelX = Math.Max(0.0f, XpBarWidth) + 5.0f;
-        _levelLabel.Position = new Vector2(xpLabelX, 0.0f);
-        _levelLabel.CustomMinimumSize = new Vector2(44.0f, Math.Max(XpBarHeight, 8.0f));
-        _levelLabel.Size = _levelLabel.CustomMinimumSize;
     }
 
     private void BindPlayerXp()
