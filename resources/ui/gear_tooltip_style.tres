@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="GearTooltipStyle" format=3 uid="uid://rxrg076u4gu8"]
+
+[ext_resource type="Script" uid="uid://cq3mndx2xqbna" path="res://scripts/ui/GearTooltipStyle.cs" id="1_style"]
+
+[resource]
+script = ExtResource("1_style")
+PanelBackground = Color(0.05882353, 0.05882353, 0.078431375, 0.92156863)
