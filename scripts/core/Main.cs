@@ -55,6 +55,7 @@ public partial class Main : Node2D
     private const string ToggleCharacterWindowActionName = "toggle_character_window";
     private int _windowPresetIndex;
     private CountdownHUD _countdownHud;
+    private readonly SaveGameStore _saveGameStore = new();
 
     public CountdownHUD ResolveCountdownHud()
     {
@@ -87,6 +88,7 @@ public partial class Main : Node2D
             _pauseMenuRoot.ProcessMode = ProcessModeEnum.Always;
             _pauseMenuRoot.Connect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
             _pauseMenuRoot.Connect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
+            _pauseMenuRoot.Connect(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested)));
         }
 
         if (_debugTrayRoot != null)
@@ -126,6 +128,8 @@ public partial class Main : Node2D
         _characterWindow?.BindStatsOwner(_player);
 
         InitializeWindowPreset();
+
+        TryLoadFromSave();
     }
 
     public override void _ExitTree()
@@ -148,6 +152,10 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
             _pauseMenuRoot.IsConnected(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested))))
             _pauseMenuRoot.Disconnect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
+
+        if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
+            _pauseMenuRoot.IsConnected(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested))))
+            _pauseMenuRoot.Disconnect(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested)));
 
         if (GodotObject.IsInstanceValid(_debugTrayRoot) &&
             _debugTrayRoot.IsConnected(DebugTray.SignalName.PlayerStatsRequested, new Callable(this, nameof(OnDebugTrayPlayerStatsRequested))))
@@ -229,6 +237,77 @@ public partial class Main : Node2D
     {
         ClosePauseMenu();
         OpenDebugTray();
+    }
+
+    private void OnPauseMenuSaveRequested()
+    {
+        if (_player == null || !GodotObject.IsInstanceValid(_player))
+        {
+            GD.PushWarning("Save refused: no player available.");
+            return;
+        }
+
+        if (_player.IsDead)
+        {
+            GD.PushWarning("Save refused: player is dead.");
+            return;
+        }
+
+        if (_player.InCombat)
+        {
+            GD.PushWarning("Save refused: player is in combat.");
+            return;
+        }
+
+        var equipmentController = _player.EquipmentControllerNode;
+        if (_inventoryController == null || equipmentController == null)
+        {
+            GD.PushWarning("Save refused: inventory or equipment controller unavailable.");
+            return;
+        }
+
+        var data = new SaveGameData
+        {
+            Player = _player.CreateSaveSnapshot(),
+            Inventory = _inventoryController.CreateSaveSnapshot(),
+            Equipment = equipmentController.CreateSaveSnapshot(),
+        };
+
+        if (_saveGameStore.TrySave(data, out var message))
+            GD.Print(message);
+        else
+            GD.PushWarning(message);
+    }
+
+    private void TryLoadFromSave()
+    {
+        if (!_saveGameStore.TryLoad(out var data) || data == null)
+            return;
+
+        if (_inventoryController == null ||
+            _player == null ||
+            !GodotObject.IsInstanceValid(_player))
+        {
+            return;
+        }
+
+        var equipmentController = _player.EquipmentControllerNode;
+        if (equipmentController == null)
+            return;
+
+        // Apply order: inventory -> equipment -> player level/XP -> current HP/mana.
+        // Equipment must land before HP/mana so the resolved Max values are correct
+        // when we set Current.
+        _inventoryController.LoadFromSnapshot(data.Inventory);
+        equipmentController.LoadFromSnapshot(data.Equipment, _inventoryController.GearGenerationRules);
+
+        if (data.Player != null)
+        {
+            _player.ApplyLoadedLevelAndExperience(data.Player.Level, data.Player.CurrentExperience);
+            _player.ApplyLoadedHealthAndMana(data.Player.CurrentHealth, data.Player.CurrentMana);
+        }
+
+        GD.Print($"Loaded save from {SaveGameStore.SaveFilePath}.");
     }
 
     private void OnDebugTrayPlayerStatsRequested()

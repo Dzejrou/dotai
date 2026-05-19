@@ -57,6 +57,10 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "Resume"
 
+[node name="SaveButton" type="Button" parent="Root/Center/Panel/VBox"]
+layout_mode = 2
+text = "Save Game"
+
 [node name="DebugButton" type="Button" parent="Root/Center/Panel/VBox"]
 layout_mode = 2
 text = "Debug"

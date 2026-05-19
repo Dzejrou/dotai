@@ -80,4 +80,56 @@ public partial class EquipmentController : Node
     {
         return (int)Math.Round(ResolveStatBonus(statId));
     }
+
+    public Dictionary<string, GearInstanceSaveData> CreateSaveSnapshot()
+    {
+        var snapshot = new Dictionary<string, GearInstanceSaveData>();
+        foreach (var pair in _equipped)
+        {
+            if (pair.Value == null)
+                continue;
+
+            snapshot[pair.Key.ToString()] = GearSaveSerializer.Serialize(pair.Value);
+        }
+        return snapshot;
+    }
+
+    public void LoadFromSnapshot(Dictionary<string, GearInstanceSaveData> snapshot, GearGenerationRules rules)
+    {
+        _equipped.Clear();
+
+        if (snapshot != null)
+        {
+            foreach (var pair in snapshot)
+            {
+                if (pair.Value == null)
+                    continue;
+
+                if (!Enum.TryParse<EquipmentSlot>(pair.Key, out var slot))
+                {
+                    GD.PushWarning($"{nameof(EquipmentController)}: dropping unknown equipment slot '{pair.Key}'.");
+                    continue;
+                }
+
+                var gear = GearSaveSerializer.Rehydrate(pair.Value, rules);
+                if (gear == null)
+                {
+                    GD.PushWarning(
+                        $"{nameof(EquipmentController)}: dropping equipment slot '{pair.Key}'; could not rehydrate gear.");
+                    continue;
+                }
+
+                if (gear.Definition.Slot != slot)
+                {
+                    GD.PushWarning(
+                        $"{nameof(EquipmentController)}: equipped slot '{slot}' but gear is for '{gear.Definition.Slot}'; skipping.");
+                    continue;
+                }
+
+                _equipped[slot] = gear;
+            }
+        }
+
+        EmitSignal(SignalName.Changed);
+    }
 }

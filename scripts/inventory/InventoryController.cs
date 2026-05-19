@@ -25,6 +25,12 @@ public partial class InventoryController : Node
     [Export]
     public Godot.Collections.Array<InventoryStartingStack> StartingStacks { get; set; } = new();
 
+    [Export]
+    public InventoryItemCatalog ItemCatalog { get; set; }
+
+    [Export]
+    public GearGenerationRules GearGenerationRules { get; set; }
+
     private readonly List<InventoryEntry> _slots = new();
     private int _slotCapacity = 50;
     private bool _startingStacksApplied;
@@ -267,6 +273,120 @@ public partial class InventoryController : Node
         _slots[slotIndex] = null;
         EmitInventoryChanged();
         return entry;
+    }
+
+    public InventorySaveData CreateSaveSnapshot()
+    {
+        var data = new InventorySaveData
+        {
+            Gold = _gold,
+            SlotCapacity = _slots.Count,
+        };
+
+        foreach (var slot in _slots)
+            data.Slots.Add(SnapshotEntry(slot));
+
+        return data;
+    }
+
+    public void LoadFromSnapshot(InventorySaveData data)
+    {
+        if (data == null)
+            return;
+
+        var capacityFromData = data.SlotCapacity > 0
+            ? data.SlotCapacity
+            : data.Slots?.Count ?? _slots.Count;
+        var capacity = Math.Max(1, capacityFromData);
+
+        _slots.Clear();
+        while (_slots.Count < capacity)
+            _slots.Add(null);
+        _slotCapacity = _slots.Count;
+
+        if (data.Slots != null)
+        {
+            for (var i = 0; i < data.Slots.Count && i < _slots.Count; i++)
+                _slots[i] = RehydrateEntry(data.Slots[i], i);
+        }
+
+        // Suppress later starting-stack application; the save defines the inventory now.
+        _startingStacksApplied = true;
+
+        SetGoldForDebugOrLoad(data.Gold);
+        EmitInventoryChanged();
+    }
+
+    private static InventorySlotSaveData SnapshotEntry(InventoryEntry entry)
+    {
+        if (entry == null)
+            return null;
+
+        if (entry is InventoryStackEntry stackEntry && stackEntry.Stack?.Item != null)
+        {
+            return new InventorySlotSaveData
+            {
+                Type = "stack",
+                ItemId = stackEntry.Stack.Item.Id ?? string.Empty,
+                ItemResourcePath = stackEntry.Stack.Item.ResourcePath ?? string.Empty,
+                Quantity = stackEntry.Stack.Quantity,
+            };
+        }
+
+        if (entry is InventoryGearEntry gearEntry && gearEntry.Gear != null)
+        {
+            return new InventorySlotSaveData
+            {
+                Type = "gear",
+                Gear = GearSaveSerializer.Serialize(gearEntry.Gear),
+            };
+        }
+
+        return null;
+    }
+
+    private InventoryEntry RehydrateEntry(InventorySlotSaveData slotData, int slotIndex)
+    {
+        if (slotData == null || string.IsNullOrEmpty(slotData.Type))
+            return null;
+
+        if (string.Equals(slotData.Type, "stack", StringComparison.Ordinal))
+        {
+            var item = ItemCatalog?.Resolve(slotData.ItemId, slotData.ItemResourcePath);
+            if (item == null)
+            {
+                GD.PushWarning(
+                    $"{nameof(InventoryController)}: dropping slot {slotIndex}; unknown stack item id='{slotData.ItemId}' path='{slotData.ItemResourcePath}'.");
+                return null;
+            }
+
+            var quantity = Math.Max(1, slotData.Quantity);
+            return new InventoryStackEntry(new InventoryStack(item, quantity));
+        }
+
+        if (string.Equals(slotData.Type, "gear", StringComparison.Ordinal))
+        {
+            if (slotData.Gear == null)
+            {
+                GD.PushWarning(
+                    $"{nameof(InventoryController)}: dropping slot {slotIndex}; gear entry has no data.");
+                return null;
+            }
+
+            var gear = GearSaveSerializer.Rehydrate(slotData.Gear, GearGenerationRules);
+            if (gear == null)
+            {
+                GD.PushWarning(
+                    $"{nameof(InventoryController)}: dropping slot {slotIndex}; could not rehydrate gear.");
+                return null;
+            }
+
+            return new InventoryGearEntry(gear);
+        }
+
+        GD.PushWarning(
+            $"{nameof(InventoryController)}: dropping slot {slotIndex}; unknown entry type '{slotData.Type}'.");
+        return null;
     }
 
     private void ApplyStartingStacks()

@@ -49,7 +49,32 @@ public static class GearGenerator
 
         var substats = RollSubstats(rules, qualityRules, mainStatIds);
 
-        var definition = new GearDefinition
+        var definition = SynthesizeDefinition(slot, quality, rules);
+        if (definition == null)
+            return null;
+
+        return new GearInstance(definition, slot, quality, level: 1, mainStats, substats);
+    }
+
+    // Build a display-only GearDefinition for a (slot, quality) pair. Used by save/load
+    // rehydration and by Generate(). Returns null if the rules resource is missing
+    // entries for the requested slot.
+    public static GearDefinition SynthesizeDefinition(EquipmentSlot slot, GearQuality quality, GearGenerationRules rules)
+    {
+        if (rules == null)
+        {
+            GD.PushWarning($"{nameof(GearGenerator)}: rules resource is null; cannot synthesize gear definition.");
+            return null;
+        }
+
+        var slotRules = rules.GetSlotRules(slot);
+        if (slotRules == null)
+        {
+            GD.PushWarning($"{nameof(GearGenerator)}: missing slot rules for {slot}.");
+            return null;
+        }
+
+        return new GearDefinition
         {
             Id = $"generated_{slot}_{quality}".ToLowerInvariant(),
             DisplayName = string.IsNullOrEmpty(slotRules.DisplayName)
@@ -60,8 +85,6 @@ public static class GearGenerator
             Slot = slot,
             Quality = quality,
         };
-
-        return new GearInstance(definition, slot, quality, level: 1, mainStats, substats);
     }
 
     private static List<string> PickMainStats(GearSlotRules slotRules)

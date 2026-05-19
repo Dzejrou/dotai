@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="InventoryItemCatalog" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/inventory/InventoryItemCatalog.cs" id="1_catalog_script"]
+[ext_resource type="Resource" path="res://resources/inventory/items/chest_key.tres" id="2_chest_key_item"]
+
+[resource]
+script = ExtResource("1_catalog_script")
+Items = Array[InventoryItemDefinition]([ExtResource("2_chest_key_item")])

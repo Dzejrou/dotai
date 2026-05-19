@@ -440,6 +440,41 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         EmitSignal(SignalName.ExperienceChanged, _currentExperience, GetRequiredExperienceForCurrentLevel(), _level);
     }
 
+    public PlayerSaveData CreateSaveSnapshot()
+    {
+        return new PlayerSaveData
+        {
+            Level = _level,
+            CurrentExperience = _currentExperience,
+            CurrentHealth = CurrentHealth,
+            CurrentMana = CurrentMana,
+        };
+    }
+
+    public void ApplyLoadedLevelAndExperience(int level, int currentExperience)
+    {
+        var maxLevel = Math.Max(1, MaxLevel);
+        _level = Math.Clamp(level, 1, maxLevel);
+
+        var required = GetRequiredExperienceForCurrentLevel();
+        _currentExperience = _level >= maxLevel
+            ? 0
+            : Math.Clamp(currentExperience, 0, Math.Max(0, required - 1));
+
+        EmitSignal(SignalName.LevelChanged, _level);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, _level);
+    }
+
+    public void ApplyLoadedHealthAndMana(int currentHealth, int currentMana)
+    {
+        HealthStateNode?.SetCurrent(currentHealth);
+        if (ManaStateNode != null)
+        {
+            ManaStateNode.SetCurrent(currentMana);
+            NotifyManaChanged();
+        }
+    }
+
     public bool TryAdjustLevelForTesting(int delta)
     {
         if (_isDead || delta == 0)

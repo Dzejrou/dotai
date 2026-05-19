@@ -9,8 +9,14 @@ public partial class PauseMenu : Control
     [Signal]
     public delegate void DebugRequestedEventHandler();
 
+    [Signal]
+    public delegate void SaveRequestedEventHandler();
+
     [Export]
     public NodePath ResumeButtonPath { get; set; } = new NodePath("Center/Panel/VBox/ResumeButton");
+
+    [Export]
+    public NodePath SaveButtonPath { get; set; } = new NodePath("Center/Panel/VBox/SaveButton");
 
     [Export]
     public NodePath DebugButtonPath { get; set; } = new NodePath("Center/Panel/VBox/DebugButton");
@@ -19,6 +25,7 @@ public partial class PauseMenu : Control
     public NodePath ShowNamesTogglePath { get; set; } = new NodePath("Center/Panel/VBox/Options/ShowNamesToggle");
 
     private Button _resumeButton;
+    private Button _saveButton;
     private Button _debugButton;
     private BaseButton _showNamesToggle;
 
@@ -27,11 +34,15 @@ public partial class PauseMenu : Control
         ProcessMode = ProcessModeEnum.Always;
 
         _resumeButton = GetNodeOrNull<Button>(ResumeButtonPath);
+        _saveButton = GetNodeOrNull<Button>(SaveButtonPath);
         _debugButton = GetNodeOrNull<Button>(DebugButtonPath);
         _showNamesToggle = GetNodeOrNull<BaseButton>(ShowNamesTogglePath);
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
+
+        if (_saveButton != null)
+            _saveButton.Pressed += OnSavePressed;
 
         if (_debugButton != null)
             _debugButton.Pressed += OnDebugPressed;
@@ -48,6 +59,9 @@ public partial class PauseMenu : Control
         if (_resumeButton != null)
             _resumeButton.Pressed -= OnResumePressed;
 
+        if (_saveButton != null)
+            _saveButton.Pressed -= OnSavePressed;
+
         if (_debugButton != null)
             _debugButton.Pressed -= OnDebugPressed;
 
@@ -58,6 +72,11 @@ public partial class PauseMenu : Control
     private void OnResumePressed()
     {
         EmitSignal(SignalName.ResumeRequested);
+    }
+
+    private void OnSavePressed()
+    {
+        EmitSignal(SignalName.SaveRequested);
     }
 
     private void OnDebugPressed()
