@@ -9,6 +9,9 @@ public partial class InventoryController : Node
     [Signal]
     public delegate void InventoryChangedEventHandler();
 
+    [Signal]
+    public delegate void GoldChangedEventHandler(int totalGold);
+
     [Export(PropertyHint.Range, "1,500,1")]
     public int SlotCapacity
     {
@@ -25,6 +28,39 @@ public partial class InventoryController : Node
     private readonly List<InventoryEntry> _slots = new();
     private int _slotCapacity = 50;
     private bool _startingStacksApplied;
+    private int _gold;
+
+    public int Gold => _gold;
+
+    public int AddGold(int amount)
+    {
+        if (amount <= 0)
+            return 0;
+
+        _gold += amount;
+        EmitSignal(SignalName.GoldChanged, _gold);
+        return amount;
+    }
+
+    public bool TrySpendGold(int amount)
+    {
+        if (amount <= 0 || _gold < amount)
+            return false;
+
+        _gold -= amount;
+        EmitSignal(SignalName.GoldChanged, _gold);
+        return true;
+    }
+
+    public void SetGoldForDebugOrLoad(int amount)
+    {
+        var clamped = Math.Max(0, amount);
+        if (clamped == _gold)
+            return;
+
+        _gold = clamped;
+        EmitSignal(SignalName.GoldChanged, _gold);
+    }
 
     public override void _Ready()
     {

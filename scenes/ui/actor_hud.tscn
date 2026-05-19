@@ -68,18 +68,6 @@ theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GoldLabel" type="Label" parent="ContentRoot/UnitFrame/HealthBar"]
-visible = false
-offset_left = 70.0
-offset_right = 166.0
-offset_bottom = 14.0
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.88, 0.32, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 1
-theme_override_font_sizes/font_size = 11
-vertical_alignment = 1
-
 [node name="ManaBar" type="Control" parent="ContentRoot/UnitFrame"]
 custom_minimum_size = Vector2(60, 10)
 layout_mode = 2

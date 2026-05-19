@@ -35,9 +35,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public delegate void SpellLoadoutChangedEventHandler();
 
     [Signal]
-    public delegate void GoldChangedEventHandler(int totalGold);
-
-    [Signal]
     public delegate void ExperienceGainedEventHandler(int amount, int totalExperience);
 
     [Signal]
@@ -123,7 +120,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public bool CanCastSpells => !_isDead;
     public bool HasInteractionTarget => _activeInteractable != null;
     public Node2D CurrentInteractionTarget => _activeInteractableNode;
-    public int Gold { get; private set; }
     public InventoryController InventoryController => (GetParent() as World)?.ResolveInventoryController();
     [Export]
     public float SpellCastPushbackPercent
@@ -379,10 +375,15 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (_isDead || amount <= 0)
             return 0;
 
-        Gold += amount;
-        FloatingText.ShowCustom($"+{amount} gold", this, new Color(1.0f, 0.88f, 0.32f, 1.0f));
-        EmitSignal(SignalName.GoldChanged, Gold);
-        return amount;
+        var inventory = InventoryController;
+        if (inventory == null || !GodotObject.IsInstanceValid(inventory))
+            return 0;
+
+        var added = inventory.AddGold(amount);
+        if (added > 0)
+            FloatingText.ShowCustom($"+{added} gold", this, new Color(1.0f, 0.88f, 0.32f, 1.0f));
+
+        return added;
     }
 
     public int GetRequiredExperienceForCurrentLevel()

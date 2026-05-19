@@ -101,10 +101,13 @@ public partial class InventoryWindow : Control
             _inventory = inventory;
 
             if (_inventory != null &&
-                GodotObject.IsInstanceValid(_inventory) &&
-                !_inventory.IsConnected(InventoryController.SignalName.InventoryChanged, new Callable(this, nameof(OnInventoryChanged))))
+                GodotObject.IsInstanceValid(_inventory))
             {
-                _inventory.Connect(InventoryController.SignalName.InventoryChanged, new Callable(this, nameof(OnInventoryChanged)));
+                if (!_inventory.IsConnected(InventoryController.SignalName.InventoryChanged, new Callable(this, nameof(OnInventoryChanged))))
+                    _inventory.Connect(InventoryController.SignalName.InventoryChanged, new Callable(this, nameof(OnInventoryChanged)));
+
+                if (!_inventory.IsConnected(InventoryController.SignalName.GoldChanged, new Callable(this, nameof(OnGoldChanged))))
+                    _inventory.Connect(InventoryController.SignalName.GoldChanged, new Callable(this, nameof(OnGoldChanged)));
             }
         }
 
@@ -154,6 +157,11 @@ public partial class InventoryWindow : Control
     private void OnInventoryChanged()
     {
         Refresh();
+    }
+
+    private void OnGoldChanged(int totalGold)
+    {
+        RefreshSummary();
     }
 
     private void ApplyLayout()
@@ -307,8 +315,33 @@ public partial class InventoryWindow : Control
             }
         }
 
-        if (_summaryLabel != null)
-            _summaryLabel.Text = $"{occupiedSlotCount}/{GetExpectedSlotCount()} slots occupied";
+        RefreshSummary(occupiedSlotCount);
+    }
+
+    private void RefreshSummary()
+    {
+        var occupiedSlotCount = 0;
+        for (var i = 0; i < _slotViews.Count; i++)
+        {
+            if (_inventory != null &&
+                GodotObject.IsInstanceValid(_inventory) &&
+                _inventory.TryGetEntry(i, out var entry) &&
+                entry?.Definition != null)
+            {
+                occupiedSlotCount++;
+            }
+        }
+
+        RefreshSummary(occupiedSlotCount);
+    }
+
+    private void RefreshSummary(int occupiedSlotCount)
+    {
+        if (_summaryLabel == null)
+            return;
+
+        var gold = _inventory != null && GodotObject.IsInstanceValid(_inventory) ? _inventory.Gold : 0;
+        _summaryLabel.Text = $"Gold: {gold}    {occupiedSlotCount}/{GetExpectedSlotCount()} slots occupied";
     }
 
     private void OnSlotDragStarted(int slotIndex)
@@ -368,6 +401,10 @@ public partial class InventoryWindow : Control
         var changedCallable = new Callable(this, nameof(OnInventoryChanged));
         if (_inventory.IsConnected(InventoryController.SignalName.InventoryChanged, changedCallable))
             _inventory.Disconnect(InventoryController.SignalName.InventoryChanged, changedCallable);
+
+        var goldChangedCallable = new Callable(this, nameof(OnGoldChanged));
+        if (_inventory.IsConnected(InventoryController.SignalName.GoldChanged, goldChangedCallable))
+            _inventory.Disconnect(InventoryController.SignalName.GoldChanged, goldChangedCallable);
 
         _inventory = null;
     }

@@ -100,7 +100,6 @@ public partial class ActorHUD : Node2D
     private ColorRect _healthBackground;
     private ColorRect _healthFill;
     private Label _healthLabel;
-    private Label _goldLabel;
     private Control _manaBar;
     private ColorRect _manaBackground;
     private ColorRect _manaFill;
@@ -118,7 +117,6 @@ public partial class ActorHUD : Node2D
     private Faction _faction;
     private int _currentHealth;
     private int _maxHealth = 1;
-    private int _currentGold;
     private int _currentXp;
     private int _requiredXp = 1;
     private int _playerLevel = 1;
@@ -134,7 +132,6 @@ public partial class ActorHUD : Node2D
         _healthBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/HealthBar/HealthBackground");
         _healthFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/HealthBar/HealthFill");
         _healthLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/HealthBar/HealthLabel");
-        _goldLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/HealthBar/GoldLabel");
         _manaBar = GetNodeOrNull<Control>("ContentRoot/UnitFrame/ManaBar");
         _manaBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/ManaBar/ManaBackground");
         _manaFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/ManaBar/ManaFill");
@@ -154,7 +151,6 @@ public partial class ActorHUD : Node2D
         RefreshManaVisibility();
         RefreshManaColors();
         RefreshHealthBar();
-        RefreshGoldDisplay();
         RefreshXpVisibility();
         RefreshXpBar();
         SetUnitFrameVisible(false);
@@ -163,28 +159,23 @@ public partial class ActorHUD : Node2D
 
     public override void _ExitTree()
     {
-        UnbindPlayerGold();
         UnbindPlayerXp();
         ActorHudSettings.Changed -= OnActorHudSettingsChanged;
     }
 
     public void Bind(Node2D owner)
     {
-        UnbindPlayerGold();
         UnbindPlayerXp();
         _owner = owner;
         _playerOwner = owner as Player;
         _manaState = owner?.GetNodeOrNull<ManaState>("ManaState");
-        _currentGold = Math.Max(0, _playerOwner?.Gold ?? 0);
         _currentXp = Math.Max(0, _playerOwner?.CurrentExperience ?? 0);
         _requiredXp = Math.Max(1, _playerOwner?.GetRequiredExperienceForCurrentLevel() ?? 1);
         _playerLevel = _playerOwner?.Level ?? 1;
-        BindPlayerGold();
         BindPlayerXp();
         RefreshName();
         RefreshManaVisibility();
         RefreshManaBar();
-        RefreshGoldDisplay();
         RefreshXpVisibility();
         RefreshXpBar();
     }
@@ -243,7 +234,6 @@ public partial class ActorHUD : Node2D
             _unitFrame.Visible = visible;
 
         RefreshName();
-        RefreshGoldDisplay();
     }
 
     public override void _Process(double delta)
@@ -280,7 +270,6 @@ public partial class ActorHUD : Node2D
         ApplyBarSize(_healthBar, _healthBackground, _healthLabel, HealthBarWidth, HealthBarHeight);
         ApplyBarSize(_manaBar, _manaBackground, _manaLabel, ManaBarWidth, ManaBarHeight);
         ApplyBarSize(_xpBar, _xpBackground, null, XpBarWidth, XpBarHeight);
-        ApplyGoldLabelLayout();
         ApplyLevelLabelLayout();
     }
 
@@ -311,20 +300,6 @@ public partial class ActorHUD : Node2D
         SetBarFill(_healthFill, _healthBackground, (float)_currentHealth / _maxHealth);
         RefreshTextColors();
         RefreshHealthColors();
-    }
-
-    private void RefreshGoldDisplay()
-    {
-        if (_goldLabel == null)
-            return;
-
-        var shouldShowGold = _playerOwner != null &&
-                             (_unitFrame == null || _unitFrame.Visible);
-        _goldLabel.Visible = shouldShowGold;
-        if (!_goldLabel.Visible)
-            return;
-
-        _goldLabel.Text = $"Gold: {_currentGold}";
     }
 
     private void RefreshManaVisibility()
@@ -406,41 +381,6 @@ public partial class ActorHUD : Node2D
 
         if (_manaLabel != null)
             _manaLabel.AddThemeColorOverride("font_color", ManaTextColor);
-    }
-
-    private void ApplyGoldLabelLayout()
-    {
-        if (_goldLabel == null)
-            return;
-
-        var goldLabelHeight = Math.Max(HealthBarHeight, 14.0f);
-        _goldLabel.Position = new Vector2(Math.Max(0.0f, HealthBarWidth) + 10.0f, 0.0f);
-        _goldLabel.CustomMinimumSize = new Vector2(96.0f, goldLabelHeight);
-        _goldLabel.Size = _goldLabel.CustomMinimumSize;
-    }
-
-    private void BindPlayerGold()
-    {
-        if (_playerOwner == null)
-            return;
-
-        _playerOwner.Connect(Player.SignalName.GoldChanged, new Callable(this, nameof(OnPlayerGoldChanged)));
-    }
-
-    private void UnbindPlayerGold()
-    {
-        if (_playerOwner == null || !GodotObject.IsInstanceValid(_playerOwner))
-            return;
-
-        var goldChangedCallable = new Callable(this, nameof(OnPlayerGoldChanged));
-        if (_playerOwner.IsConnected(Player.SignalName.GoldChanged, goldChangedCallable))
-            _playerOwner.Disconnect(Player.SignalName.GoldChanged, goldChangedCallable);
-    }
-
-    private void OnPlayerGoldChanged(int totalGold)
-    {
-        _currentGold = Math.Max(0, totalGold);
-        RefreshGoldDisplay();
     }
 
     private void RefreshXpVisibility()
