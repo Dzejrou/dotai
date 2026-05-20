@@ -12,6 +12,9 @@ public partial class InventoryController : Node
     [Signal]
     public delegate void GoldChangedEventHandler(int totalGold);
 
+    [Signal]
+    public delegate void GearXpChangedEventHandler(int totalGearXp);
+
     [Export(PropertyHint.Range, "1,500,1")]
     public int SlotCapacity
     {
@@ -35,8 +38,11 @@ public partial class InventoryController : Node
     private int _slotCapacity = 50;
     private bool _startingStacksApplied;
     private int _gold;
+    private int _gearXp;
 
     public int Gold => _gold;
+
+    public int GearXp => _gearXp;
 
     public int AddGold(int amount)
     {
@@ -66,6 +72,34 @@ public partial class InventoryController : Node
 
         _gold = clamped;
         EmitSignal(SignalName.GoldChanged, _gold);
+    }
+
+    public int AddGearXp(int amount)
+    {
+        if (amount <= 0)
+            return 0;
+
+        _gearXp += amount;
+        EmitSignal(SignalName.GearXpChanged, _gearXp);
+        return amount;
+    }
+
+    public bool TrySpendGearXp(int amount)
+    {
+        if (amount <= 0 || _gearXp < amount)
+            return false;
+
+        _gearXp -= amount;
+        EmitSignal(SignalName.GearXpChanged, _gearXp);
+        return true;
+    }
+
+    public void SetGearXpForDebugOrLoad(int amount)
+    {
+        var clamped = Math.Max(0, amount);
+        // Always emit on bulk load so listeners refresh, even when the value didn't change.
+        _gearXp = clamped;
+        EmitSignal(SignalName.GearXpChanged, _gearXp);
     }
 
     public override void _Ready()
@@ -309,6 +343,7 @@ public partial class InventoryController : Node
         var data = new InventorySaveData
         {
             Gold = _gold,
+            GearXp = _gearXp,
             SlotCapacity = _slots.Count,
         };
 
@@ -343,6 +378,7 @@ public partial class InventoryController : Node
         _startingStacksApplied = true;
 
         SetGoldForDebugOrLoad(data.Gold);
+        SetGearXpForDebugOrLoad(data.GearXp);
         EmitInventoryChanged();
     }
 

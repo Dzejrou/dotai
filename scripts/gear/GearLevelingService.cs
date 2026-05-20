@@ -25,7 +25,9 @@ public readonly struct GearEnhanceResult
         int xpApplied,
         int levelsGained,
         bool reachedMaxLevel,
-        IReadOnlyList<GearStatModifier> substatRolls)
+        IReadOnlyList<GearStatModifier> substatRolls,
+        int gearXpSpent,
+        int gearXpGained)
     {
         Changed = changed;
         MaterialKind = materialKind;
@@ -34,11 +36,16 @@ public readonly struct GearEnhanceResult
         LevelsGained = levelsGained;
         ReachedMaxLevel = reachedMaxLevel;
         SubstatRolls = substatRolls ?? Array.Empty<GearStatModifier>();
+        GearXpSpent = gearXpSpent;
+        GearXpGained = gearXpGained;
     }
 
     public bool Changed { get; }
     public GearEnhanceMaterialKind MaterialKind { get; }
     public int CrystalsConsumed { get; }
+
+    // XP actually used to advance the target gear (from bank + material). Excludes
+    // crystal partials lost to the level cap and excludes fodder overflow banked back.
     public int XpApplied { get; }
     public int LevelsGained { get; }
     public bool ReachedMaxLevel { get; }
@@ -46,20 +53,27 @@ public readonly struct GearEnhanceResult
     // Per-roll deltas reported by the milestone substat progression, in the order rolled.
     // Empty when no milestone was crossed (and always empty for Trash, whose max level is 1).
     public IReadOnlyList<GearStatModifier> SubstatRolls { get; }
+
+    // XP drained from InventoryController.GearXp before any material was consumed.
+    public int GearXpSpent { get; }
+
+    // XP added back into InventoryController.GearXp (fodder overflow into bank).
+    public int GearXpGained { get; }
 }
 
-// Applies XP to a target GearInstance from one of two material sources:
+// Applies XP to a target GearInstance from three potential sources, in order:
 //
-//   - Arcane Crystal stack: XP per crystal = rules.ArcaneCrystalXp.
-//   - Gear fodder (inventory gear, never equipped): XP = baseFodderXp +
-//     floor(totalInvestedXp * FodderInvestedXpRefundRate), where invested XP is the
-//     fodder gear's completed-level total from its own quality table plus its CurrentXp.
+//   1. Stored InventoryController.GearXp (drained first; never consumes a material if
+//      the bank alone hits max level).
+//   2. Arcane Crystal stack (XP per crystal = rules.ArcaneCrystalXp). Crystals never
+//      overflow into the bank; consumption is capped at what's needed to reach max.
+//   3. Gear fodder (an inventory gear entry). XP = baseFodderXp +
+//      floor(totalInvestedXp * FodderInvestedXpRefundRate). Overflow past max is
+//      added back into InventoryController.GearXp.
 //
 // Per-level XP requirement is read from the target quality's ExperienceToNextLevel
-// table; a missing/zero entry falls back to GearQualityRules.FallbackXpPerLevel (100).
-// On level-up:
-//   - Substat milestone rolls fire if a milestone level was crossed.
-//   - Main stats are rescaled with the new level (see GearStatScaling).
+// table; missing/zero entries fall back to GearQualityRules.FallbackXpPerLevel.
+// On level-up substat milestone rolls fire and main stats are rescaled.
 public static class GearLevelingService
 {
     public static GearEnhanceResult Enhance(
@@ -77,33 +91,177 @@ public static class GearLevelingService
 
         var maxLevel = Math.Max(1, qualityRules.MaxLevel);
         if (target.Level >= maxLevel)
-            return new GearEnhanceResult(false, GearEnhanceMaterialKind.None, 0, 0, 0, true, Array.Empty<GearStatModifier>());
+            return EmptyResult(reachedMax: true);
 
+        var startLevel = target.Level;
+        var allRolls = new List<GearStatModifier>();
+        var gearXpSpent = 0;
+        var gearXpGained = 0;
+        var xpAppliedTotal = 0;
+        var crystalsConsumed = 0;
+        var consumedKind = GearEnhanceMaterialKind.None;
+
+        // 1) Spend stored GearXp first, capped at the XP needed to reach max.
+        var bank = inventory.GearXp;
+        if (bank > 0)
+        {
+            var needed = ComputeXpNeededToMax(target, qualityRules);
+            var spend = (int)Math.Min(bank, needed);
+            if (spend > 0 && inventory.TrySpendGearXp(spend))
+            {
+                gearXpSpent = spend;
+                var pre = target.Level;
+                var (_, leftover, rolls) = ApplyXpAndRollMilestones(target, rules, qualityRules, spend, pre);
+                allRolls.AddRange(rolls);
+                // Capped at needed, so leftover is 0 here; nothing to bank.
+                xpAppliedTotal += (int)Math.Clamp(spend - leftover, 0L, int.MaxValue);
+            }
+        }
+
+        // 2) Bank alone reached max — don't touch the material slot.
+        if (target.Level >= maxLevel)
+        {
+            return new GearEnhanceResult(
+                changed: gearXpSpent > 0,
+                materialKind: GearEnhanceMaterialKind.None,
+                crystalsConsumed: 0,
+                xpApplied: xpAppliedTotal,
+                levelsGained: target.Level - startLevel,
+                reachedMaxLevel: true,
+                substatRolls: allRolls,
+                gearXpSpent: gearXpSpent,
+                gearXpGained: 0);
+        }
+
+        // 3) Consume material.
         if (!inventory.TryGetEntry(materialInventorySlot, out var entry))
-            return default;
+            return PartialResult();
 
         if (entry is InventoryStackEntry stackEntry)
         {
             var item = stackEntry.Stack?.Item;
             if (item == null ||
                 !string.Equals(item.Id, GearLevelingMaterials.ArcaneCrystalId, StringComparison.Ordinal))
-                return default;
+                return PartialResult();
 
-            return EnhanceWithCrystals(target, inventory, materialInventorySlot, rules, qualityRules, stackEntry);
+            var xpPerCrystal = Math.Max(1, rules.ArcaneCrystalXp);
+            var available = stackEntry.Stack.Quantity;
+            if (available <= 0)
+                return PartialResult();
+
+            var needed = ComputeXpNeededToMax(target, qualityRules);
+            if (needed <= 0)
+                return PartialResult();
+
+            var crystalsForMax = (int)Math.Min(int.MaxValue, (needed + xpPerCrystal - 1) / xpPerCrystal);
+            var crystalsToConsume = Math.Min(available, crystalsForMax);
+
+            var consumed = inventory.TryConsumeFromStackSlot(
+                materialInventorySlot, GearLevelingMaterials.ArcaneCrystalId, crystalsToConsume);
+            if (consumed <= 0)
+                return PartialResult();
+
+            consumedKind = GearEnhanceMaterialKind.Crystal;
+            crystalsConsumed = consumed;
+            var xp = (long)consumed * xpPerCrystal;
+            var pre = target.Level;
+            var (_, leftover, rolls) = ApplyXpAndRollMilestones(target, rules, qualityRules, xp, pre);
+            allRolls.AddRange(rolls);
+            xpAppliedTotal += (int)Math.Clamp(xp - leftover, 0L, int.MaxValue);
+            // Crystals don't bank overflow by design: at most one crystal of partial XP
+            // is lost to the level cap.
+            return FinalResult();
         }
 
         if (entry is InventoryGearEntry gearEntry)
         {
             if (gearEntry.Gear == null)
-                return default;
-            // Refuse self-fodder: target and fodder must not be the same GearInstance.
+                return PartialResult();
             if (ReferenceEquals(gearEntry.Gear, target))
-                return default;
+                return PartialResult();
 
-            return EnhanceWithGearFodder(target, inventory, materialInventorySlot, rules, qualityRules, gearEntry.Gear);
+            var fodderGear = gearEntry.Gear;
+            var fodderXp = ComputeFodderXp(fodderGear, rules);
+
+            var taken = inventory.TakeEntry(materialInventorySlot);
+            if (taken is not InventoryGearEntry takenGear || !ReferenceEquals(takenGear.Gear, fodderGear))
+            {
+                if (taken is InventoryGearEntry returnedGear)
+                    inventory.TryPlaceGear(materialInventorySlot, returnedGear.Gear);
+                return PartialResult();
+            }
+
+            consumedKind = GearEnhanceMaterialKind.GearFodder;
+            var pre = target.Level;
+            var (_, leftover, rolls) = ApplyXpAndRollMilestones(target, rules, qualityRules, fodderXp, pre);
+            allRolls.AddRange(rolls);
+            xpAppliedTotal += (int)Math.Clamp(fodderXp - leftover, 0L, int.MaxValue);
+
+            // Fodder overflow past the level cap is banked back into the inventory.
+            if (leftover > 0 && target.Level >= maxLevel)
+            {
+                inventory.AddGearXp(leftover);
+                gearXpGained = leftover;
+            }
+            return FinalResult();
         }
 
-        return default;
+        return PartialResult();
+
+        GearEnhanceResult FinalResult() => new(
+            changed: true,
+            materialKind: consumedKind,
+            crystalsConsumed: crystalsConsumed,
+            xpApplied: xpAppliedTotal,
+            levelsGained: target.Level - startLevel,
+            reachedMaxLevel: target.Level >= maxLevel,
+            substatRolls: allRolls,
+            gearXpSpent: gearXpSpent,
+            gearXpGained: gearXpGained);
+
+        // Material couldn't be consumed (or none was referenced) but bank XP may have already
+        // been spent and applied. Report whatever happened.
+        GearEnhanceResult PartialResult() => new(
+            changed: gearXpSpent > 0,
+            materialKind: GearEnhanceMaterialKind.None,
+            crystalsConsumed: 0,
+            xpApplied: xpAppliedTotal,
+            levelsGained: target.Level - startLevel,
+            reachedMaxLevel: target.Level >= maxLevel,
+            substatRolls: allRolls,
+            gearXpSpent: gearXpSpent,
+            gearXpGained: 0);
+    }
+
+    // Store mode: with no target selected, send a fodder gear's full computed XP straight
+    // into InventoryController.GearXp. Returns the XP banked (0 if the slot doesn't
+    // resolve to a usable inventory gear entry).
+    public static int StoreFodder(
+        InventoryController inventory,
+        int materialInventorySlot,
+        GearGenerationRules rules)
+    {
+        if (inventory == null || rules == null)
+            return 0;
+        if (!inventory.TryGetEntry(materialInventorySlot, out var entry))
+            return 0;
+        if (entry is not InventoryGearEntry gearEntry || gearEntry.Gear == null)
+            return 0;
+
+        var fodderGear = gearEntry.Gear;
+        var xp = ComputeFodderXp(fodderGear, rules);
+
+        var taken = inventory.TakeEntry(materialInventorySlot);
+        if (taken is not InventoryGearEntry takenGear || !ReferenceEquals(takenGear.Gear, fodderGear))
+        {
+            if (taken is InventoryGearEntry returnedGear)
+                inventory.TryPlaceGear(materialInventorySlot, returnedGear.Gear);
+            return 0;
+        }
+
+        if (xp > 0)
+            inventory.AddGearXp(xp);
+        return xp;
     }
 
     public static int GetMaxLevel(GearInstance gear, GearGenerationRules rules)
@@ -114,7 +272,6 @@ public static class GearLevelingService
         return q != null ? Math.Max(1, q.MaxLevel) : 1;
     }
 
-    // XP needed to advance from the gear's current level to the next level (table lookup).
     public static int GetRequiredExperienceForCurrentLevel(GearInstance gear, GearGenerationRules rules)
     {
         if (gear == null || rules == null)
@@ -123,7 +280,6 @@ public static class GearLevelingService
         return q != null ? q.GetRequiredExperienceForLevel(gear.Level) : GearQualityRules.FallbackXpPerLevel;
     }
 
-    // Completed-level XP total + CurrentXp.
     public static long GetTotalAccumulatedExperience(GearInstance gear, GearGenerationRules rules)
     {
         if (gear == null || rules == null)
@@ -134,8 +290,6 @@ public static class GearLevelingService
         return (long)q.GetTotalExperienceAtLevel(gear.Level) + Math.Max(0, gear.CurrentXp);
     }
 
-    // Fodder XP yield: baseFodderXp + floor(invested * refundRate). Returns 0 if the
-    // fodder gear's quality rules are missing.
     public static int ComputeFodderXp(GearInstance fodderGear, GearGenerationRules rules)
     {
         if (fodderGear == null || rules == null)
@@ -151,96 +305,6 @@ public static class GearLevelingService
         return (int)Math.Clamp(total, 0L, int.MaxValue);
     }
 
-    private static GearEnhanceResult EnhanceWithCrystals(
-        GearInstance target,
-        InventoryController inventory,
-        int materialInventorySlot,
-        GearGenerationRules rules,
-        GearQualityRules qualityRules,
-        InventoryStackEntry stackEntry)
-    {
-        var xpPerCrystal = Math.Max(1, rules.ArcaneCrystalXp);
-        var available = stackEntry.Stack.Quantity;
-        if (available <= 0)
-            return default;
-
-        var xpNeededToMax = ComputeXpNeededToMax(target, qualityRules);
-        if (xpNeededToMax <= 0)
-        {
-            target.CurrentXp = 0;
-            return new GearEnhanceResult(false, GearEnhanceMaterialKind.Crystal, 0, 0, 0, true, Array.Empty<GearStatModifier>());
-        }
-
-        // Ceil-divide so the last crystal that crosses the threshold is still spent.
-        var crystalsForMax = (int)Math.Min(int.MaxValue, (xpNeededToMax + xpPerCrystal - 1) / xpPerCrystal);
-        var crystalsToConsume = Math.Min(available, crystalsForMax);
-
-        var consumed = inventory.TryConsumeFromStackSlot(
-            materialInventorySlot, GearLevelingMaterials.ArcaneCrystalId, crystalsToConsume);
-        if (consumed <= 0)
-            return default;
-
-        // TODO: future overflow XP -> Arcane Crystal refund. When fodder/crystals exceed
-        // the XP needed to reach max level, convert the overflow back to crystals
-        // (rounded down) and add them to inventory; drop in world if full.
-        // Currently bounded by crystalsForMax so this path can't overshoot for crystals.
-
-        var startLevel = target.Level;
-        var xpAmount = (long)consumed * xpPerCrystal;
-        var rolls = ApplyXpAndRollMilestones(target, rules, qualityRules, xpAmount, startLevel);
-
-        return new GearEnhanceResult(
-            changed: true,
-            materialKind: GearEnhanceMaterialKind.Crystal,
-            crystalsConsumed: consumed,
-            xpApplied: (int)Math.Min(int.MaxValue, xpAmount),
-            levelsGained: target.Level - startLevel,
-            reachedMaxLevel: target.Level >= Math.Max(1, qualityRules.MaxLevel),
-            substatRolls: rolls);
-    }
-
-    private static GearEnhanceResult EnhanceWithGearFodder(
-        GearInstance target,
-        InventoryController inventory,
-        int materialInventorySlot,
-        GearGenerationRules rules,
-        GearQualityRules targetQualityRules,
-        GearInstance fodderGear)
-    {
-        var fodderXp = ComputeFodderXp(fodderGear, rules);
-
-        // Remove the fodder gear from inventory before applying XP — the inventory entry
-        // is what authorises the spend, and the target levels up in place either way.
-        // TODO: future overflow XP -> Arcane Crystal refund. If fodderXp exceeds the XP
-        // needed to reach max level, convert the overflow back to crystals (rounded down)
-        // and add them to inventory; drop in world if full.
-        var taken = inventory.TakeEntry(materialInventorySlot);
-        if (taken is not InventoryGearEntry takenGear || !ReferenceEquals(takenGear.Gear, fodderGear))
-        {
-            // Race: the inventory slot vanished or changed between Enhance dispatch and now.
-            // Put it back if we accidentally took something else; otherwise just bail.
-            if (taken != null)
-            {
-                if (taken is InventoryGearEntry returnedGear)
-                    inventory.TryPlaceGear(materialInventorySlot, returnedGear.Gear);
-                // No clean rollback for stacks — TakeEntry already emitted a change signal.
-            }
-            return default;
-        }
-
-        var startLevel = target.Level;
-        var rolls = ApplyXpAndRollMilestones(target, rules, targetQualityRules, fodderXp, startLevel);
-
-        return new GearEnhanceResult(
-            changed: true,
-            materialKind: GearEnhanceMaterialKind.GearFodder,
-            crystalsConsumed: 0,
-            xpApplied: fodderXp,
-            levelsGained: target.Level - startLevel,
-            reachedMaxLevel: target.Level >= Math.Max(1, targetQualityRules.MaxLevel),
-            substatRolls: rolls);
-    }
-
     private static long ComputeXpNeededToMax(GearInstance target, GearQualityRules qualityRules)
     {
         var maxLevel = Math.Max(1, qualityRules.MaxLevel);
@@ -254,12 +318,16 @@ public static class GearLevelingService
         return Math.Max(0, needed);
     }
 
-    private static IReadOnlyList<GearStatModifier> ApplyXpAndRollMilestones(
-        GearInstance target,
-        GearGenerationRules rules,
-        GearQualityRules qualityRules,
-        long xpAmount,
-        int startLevel)
+    // Returns (levelsGained, leftoverXpAtCap, substatRolls). leftoverXpAtCap is the XP
+    // that couldn't be applied because the target hit max level — callers decide whether
+    // to bank or discard it. CurrentXp keeps in-level progress when max wasn't reached.
+    private static (int levelsGained, int leftoverXpAtCap, IReadOnlyList<GearStatModifier> rolls)
+        ApplyXpAndRollMilestones(
+            GearInstance target,
+            GearGenerationRules rules,
+            GearQualityRules qualityRules,
+            long xpAmount,
+            int startLevel)
     {
         var maxLevel = Math.Max(1, qualityRules.MaxLevel);
         var remaining = (long)Math.Max(0, target.CurrentXp) + Math.Max(0, xpAmount);
@@ -275,9 +343,11 @@ public static class GearLevelingService
             target.Level++;
         }
 
+        var leftover = 0;
         if (target.Level >= maxLevel)
         {
             target.Level = maxLevel;
+            leftover = (int)Math.Clamp(remaining, 0L, int.MaxValue);
             target.CurrentXp = 0;
         }
         else
@@ -291,6 +361,21 @@ public static class GearLevelingService
             rolls = GearSubstatProgression.ApplyMilestoneRolls(target, startLevel, target.Level, rules);
             target.RecalculateMainStatsForLevel(rules);
         }
-        return rolls;
+
+        return (target.Level - startLevel, leftover, rolls);
+    }
+
+    private static GearEnhanceResult EmptyResult(bool reachedMax)
+    {
+        return new GearEnhanceResult(
+            changed: false,
+            materialKind: GearEnhanceMaterialKind.None,
+            crystalsConsumed: 0,
+            xpApplied: 0,
+            levelsGained: 0,
+            reachedMaxLevel: reachedMax,
+            substatRolls: Array.Empty<GearStatModifier>(),
+            gearXpSpent: 0,
+            gearXpGained: 0);
     }
 }

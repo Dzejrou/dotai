@@ -78,6 +78,7 @@ public partial class CharacterWindow : Control
     private bool _levelingExpanded;
 
     private string _lastEnhanceSubstatMessage = string.Empty;
+    private string _lastEnhanceBankMessage = string.Empty;
 
     private GearLevelingReferenceSlot _levelingTargetSlot;
     private TextureRect _levelingTargetIcon;
@@ -90,6 +91,7 @@ public partial class CharacterWindow : Control
     private Label _levelingXpLabel;
     private Label _levelingMessageLabel;
     private Label _levelingSubstatLabel;
+    private Label _levelingBankLabel;
     private Button _levelingEnhanceButton;
 
     private Label _statMaxHealth;
@@ -191,6 +193,10 @@ public partial class CharacterWindow : Control
                 var callable = new Callable(this, nameof(OnInventoryChanged));
                 if (!_inventory.IsConnected(InventoryController.SignalName.InventoryChanged, callable))
                     _inventory.Connect(InventoryController.SignalName.InventoryChanged, callable);
+
+                var gearXpCallable = new Callable(this, nameof(OnGearXpChanged));
+                if (!_inventory.IsConnected(InventoryController.SignalName.GearXpChanged, gearXpCallable))
+                    _inventory.Connect(InventoryController.SignalName.GearXpChanged, gearXpCallable);
 
                 _inventoryChangedBound = true;
             }
@@ -329,6 +335,11 @@ public partial class CharacterWindow : Control
     {
         // Inventory changes can invalidate leveling references (item moved/consumed
         // from the referenced slot). Re-resolve the panel state.
+        RefreshLeveling();
+    }
+
+    private void OnGearXpChanged(int totalGearXp)
+    {
         RefreshLeveling();
     }
 
@@ -489,6 +500,14 @@ public partial class CharacterWindow : Control
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
         _levelingContainer.AddChild(_levelingXpLabel);
+
+        _levelingBankLabel = new Label
+        {
+            Text = "GearXP: 0",
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+        _levelingContainer.AddChild(_levelingBankLabel);
 
         _levelingMessageLabel = new Label
         {
@@ -710,7 +729,7 @@ public partial class CharacterWindow : Control
             }
         }
 
-        // Level / XP labels and Enhance button enable state.
+        // Level / XP labels and button enable state.
         if (hasTarget && rules != null)
         {
             var maxLevel = GearLevelingService.GetMaxLevel(targetGear, rules);
@@ -728,9 +747,15 @@ public partial class CharacterWindow : Control
             var hasUsableMaterial =
                 materialKind == GearLevelingMaterialKind.Crystal ||
                 (materialKind == GearLevelingMaterialKind.GearFodder && !fodderIsSelf);
+            var hasBank = _inventory != null && _inventory.GearXp > 0;
+            // Enhance can fire on bank-only too (no material) so long as target is below max.
+            var canEnhance = !atMax && (hasUsableMaterial || hasBank);
 
             if (_levelingEnhanceButton != null)
-                _levelingEnhanceButton.Disabled = atMax || !hasUsableMaterial;
+            {
+                _levelingEnhanceButton.Text = "Enhance";
+                _levelingEnhanceButton.Disabled = !canEnhance;
+            }
 
             if (_levelingMessageLabel != null)
             {
@@ -739,7 +764,9 @@ public partial class CharacterWindow : Control
                 else if (fodderIsSelf)
                     _levelingMessageLabel.Text = "Can't use the target itself as fodder.";
                 else if (materialKind == GearLevelingMaterialKind.None)
-                    _levelingMessageLabel.Text = "Drop crystals or fodder gear into the material slot.";
+                    _levelingMessageLabel.Text = hasBank
+                        ? "Bank XP will be spent. Drop crystals or fodder gear for more."
+                        : "Drop crystals or fodder gear into the material slot.";
                 else if (materialKind == GearLevelingMaterialKind.Crystal)
                     _levelingMessageLabel.Text = $"Crystals: {crystalEntry.Stack.Quantity}";
                 else // GearFodder, not self
@@ -748,21 +775,50 @@ public partial class CharacterWindow : Control
         }
         else
         {
+            // No target. Allow Store mode when valid inventory gear fodder is referenced.
             if (_levelingLevelLabel != null)
                 _levelingLevelLabel.Text = "Level: -";
             if (_levelingXpLabel != null)
                 _levelingXpLabel.Text = "XP: -";
+
+            var canStore = rules != null && materialKind == GearLevelingMaterialKind.GearFodder && fodderEntry?.Gear != null;
+
             if (_levelingEnhanceButton != null)
-                _levelingEnhanceButton.Disabled = true;
+            {
+                _levelingEnhanceButton.Text = canStore ? "Store" : "Enhance";
+                _levelingEnhanceButton.Disabled = !canStore;
+            }
+
             if (_levelingMessageLabel != null)
-                _levelingMessageLabel.Text = "Drop gear into the target slot.";
+            {
+                if (canStore)
+                    _levelingMessageLabel.Text = $"Store XP: {GearLevelingService.ComputeFodderXp(fodderEntry.Gear, rules)}";
+                else if (materialKind == GearLevelingMaterialKind.Crystal)
+                    _levelingMessageLabel.Text = "Drop gear into the target slot to spend crystals.";
+                else
+                    _levelingMessageLabel.Text = "Drop gear into the target slot.";
+            }
+        }
+
+        if (_levelingBankLabel != null)
+        {
+            var bank = _inventory != null && GodotObject.IsInstanceValid(_inventory) ? _inventory.GearXp : 0;
+            _levelingBankLabel.Text = $"GearXP: {bank}";
         }
 
         if (_levelingSubstatLabel != null)
         {
-            _levelingSubstatLabel.Text = _lastEnhanceSubstatMessage ?? string.Empty;
-            _levelingSubstatLabel.Visible = !string.IsNullOrEmpty(_levelingSubstatLabel.Text);
+            var combined = JoinMessages(_lastEnhanceSubstatMessage, _lastEnhanceBankMessage);
+            _levelingSubstatLabel.Text = combined;
+            _levelingSubstatLabel.Visible = !string.IsNullOrEmpty(combined);
         }
+    }
+
+    private static string JoinMessages(string a, string b)
+    {
+        if (string.IsNullOrEmpty(a)) return b ?? string.Empty;
+        if (string.IsNullOrEmpty(b)) return a;
+        return a + "\n" + b;
     }
 
     private void OnLevelingReferenceChanged()
@@ -770,6 +826,7 @@ public partial class CharacterWindow : Control
         // The user pointed the panel at a different gear / crystal stack, so the previous
         // Enhance's roll summary is no longer meaningful.
         _lastEnhanceSubstatMessage = string.Empty;
+        _lastEnhanceBankMessage = string.Empty;
         RefreshLeveling();
     }
 
@@ -786,27 +843,37 @@ public partial class CharacterWindow : Control
             return;
         }
 
-        if (_levelingTargetSlot == null || !_levelingTargetSlot.ResolveTargetGear(out var targetGear))
+        GearInstance targetGear = null;
+        var hasTarget = _levelingTargetSlot != null && _levelingTargetSlot.ResolveTargetGear(out targetGear);
+
+        InventoryGearEntry fodderEntry = null;
+        var materialKind = GearLevelingMaterialKind.None;
+        if (_levelingMaterialSlot != null)
+            materialKind = _levelingMaterialSlot.ResolveMaterial(out _, out fodderEntry);
+
+        // Store mode: no target, valid fodder gear → bank its full XP yield.
+        if (!hasTarget)
         {
-            _levelingTargetSlot?.ClearReference();
+            if (materialKind != GearLevelingMaterialKind.GearFodder || _levelingMaterialSlot == null || fodderEntry?.Gear == null)
+            {
+                RefreshLeveling();
+                return;
+            }
+
+            var stored = GearLevelingService.StoreFodder(_inventory, _levelingMaterialSlot.InventorySlotIndex, rules);
+            if (stored <= 0)
+            {
+                RefreshLeveling();
+                return;
+            }
+
+            _lastEnhanceSubstatMessage = string.Empty;
+            _lastEnhanceBankMessage = $"Stored GearXP: +{stored}";
             RefreshLeveling();
             return;
         }
 
-        if (_levelingMaterialSlot == null)
-        {
-            RefreshLeveling();
-            return;
-        }
-
-        var materialKind = _levelingMaterialSlot.ResolveMaterial(out _, out var fodderEntry);
-        if (materialKind == GearLevelingMaterialKind.None)
-        {
-            _levelingMaterialSlot.ClearReference();
-            RefreshLeveling();
-            return;
-        }
-
+        // Enhance mode: target present. Refuse self-fodder up front.
         if (materialKind == GearLevelingMaterialKind.GearFodder &&
             fodderEntry?.Gear != null &&
             ReferenceEquals(fodderEntry.Gear, targetGear))
@@ -816,11 +883,11 @@ public partial class CharacterWindow : Control
             return;
         }
 
-        var result = GearLevelingService.Enhance(
-            targetGear,
-            _inventory,
-            _levelingMaterialSlot.InventorySlotIndex,
-            rules);
+        // Pass the material slot index even when no material is referenced; the service
+        // tolerates a missing entry and may still spend stored bank XP on the target.
+        var materialSlotIndex = _levelingMaterialSlot != null ? _levelingMaterialSlot.InventorySlotIndex : -1;
+
+        var result = GearLevelingService.Enhance(targetGear, _inventory, materialSlotIndex, rules);
 
         if (!result.Changed)
         {
@@ -829,6 +896,9 @@ public partial class CharacterWindow : Control
         }
 
         _lastEnhanceSubstatMessage = FormatSubstatRolls(result.SubstatRolls);
+        _lastEnhanceBankMessage = result.GearXpGained > 0
+            ? $"Stored GearXP: +{result.GearXpGained}"
+            : string.Empty;
 
         // Equipment doesn't actually swap, but stat resolution depends on equipped gear's
         // modifier values, so re-emit so listeners can pick up the new totals.
@@ -1095,6 +1165,10 @@ public partial class CharacterWindow : Control
         var callable = new Callable(this, nameof(OnInventoryChanged));
         if (_inventory.IsConnected(InventoryController.SignalName.InventoryChanged, callable))
             _inventory.Disconnect(InventoryController.SignalName.InventoryChanged, callable);
+
+        var gearXpCallable = new Callable(this, nameof(OnGearXpChanged));
+        if (_inventory.IsConnected(InventoryController.SignalName.GearXpChanged, gearXpCallable))
+            _inventory.Disconnect(InventoryController.SignalName.GearXpChanged, gearXpCallable);
 
         _inventoryChangedBound = false;
     }

@@ -21,6 +21,7 @@ public sealed class PlayerSaveData
 public sealed class InventorySaveData
 {
     public int Gold { get; set; }
+    public int GearXp { get; set; }
     public int SlotCapacity { get; set; }
     public List<InventorySlotSaveData> Slots { get; set; } = new();
 }
