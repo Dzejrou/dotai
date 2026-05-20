@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/CharacterWindow.cs" id="1_character_window_script"]
+[ext_resource type="Script" path="res://scripts/ui/GearLevelingPanel.cs" id="2_gear_leveling_panel_script"]
 
 [node name="CharacterWindow" type="Control"]
 visible = false
@@ -71,3 +72,4 @@ visible = false
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 theme_override_constants/separation = 6
+script = ExtResource("2_gear_leveling_panel_script")
