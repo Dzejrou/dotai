@@ -152,7 +152,7 @@ public partial class PlayerDebugStatsWindow : Control
         AddRow(FieldKind.CritRate, "Crit Rate", min: 0.0, max: 1.0, step: 0.01);
         AddRow(FieldKind.CritDamage, "Crit Damage", min: 0.0, max: 10.0, step: 0.05);
         AddRow(FieldKind.Haste, "Haste", min: 0, max: 100_000, step: 10, isInteger: true);
-        AddRow(FieldKind.MovementSpeedMultiplier, "Move Speed x", min: 0.0, max: 10.0, step: 0.05);
+        AddRow(FieldKind.MovementSpeedMultiplier, "Speed", min: 0.0, max: 10.0, step: 0.05);
 
         AddSection("Damage Bonuses");
         AddRow(FieldKind.PhysicalDamageBonus, "Physical", min: -1.0, max: 10.0, step: 0.05);

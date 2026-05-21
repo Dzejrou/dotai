@@ -507,7 +507,7 @@ public partial class CharacterWindow : Control
         SetTriplePercent(_statCritRate, "Crit Rate", _statsOwner.ResolvedCritRate, _statsOwner.BaseCritRate);
         SetTriplePercent(_statCritDamage, "Crit Dmg", _statsOwner.ResolvedCritDamage, _statsOwner.BaseCritDamage);
         SetTotalInt(_statHaste, "Haste", _statsOwner.ResolvedHaste);
-        SetTriplePercent(_statMoveSpeed, "Move Spd", _statsOwner.MovementSpeedMultiplier, _statsOwner.BaseMovementSpeedMultiplier);
+        SetTriplePercent(_statMoveSpeed, "Speed", _statsOwner.MovementSpeedMultiplier, _statsOwner.BaseMovementSpeedMultiplier);
         SetTotalPercent(_statDamageBonus, "Damage Bonus", _statsOwner.ResolvedGenericDamageBonus);
 
         _statElementalDmg.Text = "DMG Ph/F/I/Po/A " + FormatElementalLine(
