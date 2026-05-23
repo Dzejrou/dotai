@@ -1,5 +1,6 @@
 using Godot;
 
+using System;
 using System.Collections.Generic;
 
 [GlobalClass]
@@ -8,7 +9,7 @@ public partial class MerchantStock : Node
     [Signal]
     public delegate void StockChangedEventHandler();
 
-    private static readonly RandomNumberGenerator AppearanceRng = CreateAppearanceRng();
+    private static readonly RandomNumberGenerator OfferRng = CreateOfferRng();
 
     [Export]
     public MerchantDefinition Definition { get; set; }
@@ -187,7 +188,9 @@ public partial class MerchantStock : Node
                     return null;
                 }
 
-                var gear = GearGenerator.Generate(rule.GearSlot, rule.GearQuality, rules);
+                var slot = ResolveOfferSlot(rule);
+                var quality = ResolveOfferQuality(rule);
+                var gear = GearGenerator.Generate(slot, quality, rules);
                 if (gear == null)
                     return null;
 
@@ -203,16 +206,58 @@ public partial class MerchantStock : Node
         return null;
     }
 
+    // Resolves the equipment slot for a generated-gear rule. Centralized so future
+    // weighted distributions can plug in without touching BuildOffer.
+    private static EquipmentSlot ResolveOfferSlot(MerchantOfferRule rule)
+    {
+        return rule.SlotMode switch
+        {
+            MerchantOfferSlotMode.RandomSlot => PickUniformSlot(),
+            _ => rule.GearSlot,
+        };
+    }
+
+    // Resolves the gear quality for a generated-gear rule. MinimumQuality treats Trash
+    // as Common since Trash gear is not worth surfacing in merchant stock.
+    private static GearQuality ResolveOfferQuality(MerchantOfferRule rule)
+    {
+        return rule.QualityMode switch
+        {
+            MerchantOfferQualityMode.RandomQuality =>
+                PickUniformQuality(GearQuality.Common, GearQuality.Legendary),
+            MerchantOfferQualityMode.MinimumQuality =>
+                PickUniformQuality(
+                    rule.GearQuality == GearQuality.Trash ? GearQuality.Common : rule.GearQuality,
+                    GearQuality.Legendary),
+            _ => rule.GearQuality,
+        };
+    }
+
+    private static EquipmentSlot PickUniformSlot()
+    {
+        var values = Enum.GetValues<EquipmentSlot>();
+        return values[OfferRng.RandiRange(0, values.Length - 1)];
+    }
+
+    private static GearQuality PickUniformQuality(GearQuality min, GearQuality max)
+    {
+        var lo = (int)min;
+        var hi = (int)max;
+        if (hi < lo)
+            (lo, hi) = (hi, lo);
+        return (GearQuality)OfferRng.RandiRange(lo, hi);
+    }
+
     private static bool RollAppearance(float chance)
     {
         if (chance >= 1.0f)
             return true;
         if (chance <= 0.0f)
             return false;
-        return AppearanceRng.Randf() < chance;
+        return OfferRng.Randf() < chance;
     }
 
-    private static RandomNumberGenerator CreateAppearanceRng()
+    private static RandomNumberGenerator CreateOfferRng()
     {
         var rng = new RandomNumberGenerator();
         rng.Randomize();

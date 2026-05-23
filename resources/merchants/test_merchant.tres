@@ -25,6 +25,23 @@ GearQuality = 3
 Price = 300
 AppearanceChance = 0.5
 
+[sub_resource type="Resource" id="Resource_jv073"]
+script = ExtResource("2_merchant_offer_rule_script")
+Kind = 1
+SlotMode = 1
+QualityMode = 1
+Price = 11
+metadata/_custom_type_script = "uid://dwv88tg75medu"
+
+[sub_resource type="Resource" id="Resource_a83an"]
+script = ExtResource("2_merchant_offer_rule_script")
+Kind = 1
+SlotMode = 1
+QualityMode = 2
+GearQuality = 3
+Price = 12
+metadata/_custom_type_script = "uid://dwv88tg75medu"
+
 [sub_resource type="Resource" id="Resource_offer_static_arcane_crystal"]
 script = ExtResource("2_merchant_offer_rule_script")
 StackItem = ExtResource("3_arcane_crystal_item")
@@ -36,4 +53,4 @@ script = ExtResource("1_merchant_definition_script")
 DisplayName = "Wandering Merchant"
 RefreshCost = 5
 StaticOffers = Array[ExtResource("2_merchant_offer_rule_script")]([SubResource("Resource_offer_static_arcane_crystal")])
-DynamicOffers = Array[ExtResource("2_merchant_offer_rule_script")]([SubResource("Resource_offer_dynamic_boots_common"), SubResource("Resource_offer_dynamic_ring_uncommon"), SubResource("Resource_offer_dynamic_torso_rare")])
+DynamicOffers = Array[ExtResource("2_merchant_offer_rule_script")]([SubResource("Resource_offer_dynamic_boots_common"), SubResource("Resource_offer_dynamic_ring_uncommon"), SubResource("Resource_offer_dynamic_torso_rare"), SubResource("Resource_jv073"), SubResource("Resource_a83an")])
