@@ -270,6 +270,8 @@ public partial class MerchantWindow : Control
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Text = BuildOfferLabel(offer),
         };
+        if (isGear)
+            label.SelfModulate = GearQualityColors.GetColor(offer.Gear.Quality);
         group.AddChild(label);
 
         root.AddChild(group);
@@ -290,7 +292,7 @@ public partial class MerchantWindow : Control
                 ? $"{offer.DisplayName} x{offer.StackQuantity}"
                 : offer.DisplayName,
             MerchantOfferKind.GeneratedGear when offer.Gear != null =>
-                $"{offer.Gear.Quality} {offer.Gear.Slot}",
+                offer.Gear.Slot.ToString(),
             _ => offer.DisplayName,
         };
     }
