@@ -200,6 +200,7 @@ public partial class MerchantStock : Node
                     Origin = origin,
                     Price = rule.Price,
                     Gear = gear,
+                    RevealedSubstatCount = rule.RevealedSubstatCount,
                 };
         }
 
