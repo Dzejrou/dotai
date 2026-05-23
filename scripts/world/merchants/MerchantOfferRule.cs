@@ -31,6 +31,14 @@ public partial class MerchantOfferRule : Resource
         set => _price = Math.Max(0, value);
     }
 
+    [Export(PropertyHint.Range, "0,1,0.01")]
+    public float AppearanceChance
+    {
+        get => _appearanceChance;
+        set => _appearanceChance = Math.Clamp(value, 0.0f, 1.0f);
+    }
+
     private int _stackQuantity = 1;
     private int _price;
+    private float _appearanceChance = 1.0f;
 }

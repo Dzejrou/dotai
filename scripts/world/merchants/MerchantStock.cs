@@ -8,6 +8,8 @@ public partial class MerchantStock : Node
     [Signal]
     public delegate void StockChangedEventHandler();
 
+    private static readonly RandomNumberGenerator AppearanceRng = CreateAppearanceRng();
+
     [Export]
     public MerchantDefinition Definition { get; set; }
 
@@ -58,6 +60,11 @@ public partial class MerchantStock : Node
 
         foreach (var rule in Definition.DynamicOffers)
         {
+            if (rule == null)
+                continue;
+            if (!RollAppearance(rule.AppearanceChance))
+                continue;
+
             var offer = BuildOffer(rule, MerchantOfferOrigin.Dynamic);
             if (offer != null)
                 _offers.Add(offer);
@@ -194,6 +201,22 @@ public partial class MerchantStock : Node
         }
 
         return null;
+    }
+
+    private static bool RollAppearance(float chance)
+    {
+        if (chance >= 1.0f)
+            return true;
+        if (chance <= 0.0f)
+            return false;
+        return AppearanceRng.Randf() < chance;
+    }
+
+    private static RandomNumberGenerator CreateAppearanceRng()
+    {
+        var rng = new RandomNumberGenerator();
+        rng.Randomize();
+        return rng;
     }
 
     private GearGenerationRules ResolveGearRules()
