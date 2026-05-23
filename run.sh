@@ -13,6 +13,7 @@ for arg in "$@"; do
         --build-godot) MODE="build-godot" ;;
         --build)       MODE="build" ;;
         --editor)      MODE="editor" ;;
+        --import)      MODE="import" ;;
         --sprite-sync) MODE="sprite-sync" ;;
         --assets)      MODE="assets" ;;
         -v|--verbose)  VERBOSE=true ;;
@@ -29,7 +30,8 @@ if [[ "$MODE" == "help" ]]; then
     echo "  --build-godot   Build Godot solutions (headless)"
     echo "  --build         Build .NET project (dotnet build)"
     echo "  --editor        Open Godot editor"
-    echo "  --sprite-sync   Import assets and run asset manager sync"
+    echo "  --import        Re-import all assets (generates .import and .uid files)
+  --sprite-sync   Import assets and run asset manager sync"
     echo "  --assets        Open the asset manager scene"
     echo ""
     echo "Flags:"
@@ -59,6 +61,9 @@ case "$MODE" in
         ;;
     editor)
         open -a /Applications/Godot_mono.app --args $PROJECT --editor
+        ;;
+    import)
+        "$GODOT" --headless $PROJECT --import --quiet
         ;;
     sprite-sync)
         "$GODOT" --headless $PROJECT --import
