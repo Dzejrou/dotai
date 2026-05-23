@@ -39,6 +39,19 @@ public partial class World : Node2D
     [Signal]
     public delegate void PlayerDiedEventHandler();
 
+    [Signal]
+    public delegate void MerchantInteractionRequestedEventHandler(MerchantStock stock, Player player);
+
+    public void RequestMerchantInteraction(MerchantStock stock, Player player)
+    {
+        if (stock == null || !GodotObject.IsInstanceValid(stock))
+            return;
+        if (player == null || !GodotObject.IsInstanceValid(player))
+            return;
+
+        EmitSignal(SignalName.MerchantInteractionRequested, stock, player);
+    }
+
     private Player _player;
     private Camera2D _playerCamera;
     private Node _roomContainer;

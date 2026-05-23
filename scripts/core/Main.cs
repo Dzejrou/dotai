@@ -41,6 +41,7 @@ public partial class Main : Node2D
     private InventoryWindow _inventoryWindow;
     private CharacterWindow _characterWindow;
     private PlayerDebugStatsWindow _playerDebugStatsWindow;
+    private MerchantWindow _merchantWindow;
     private Sprite2D _interactionPrompt;
     private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
@@ -48,6 +49,7 @@ public partial class Main : Node2D
     private const string InventoryWindowScenePath = "res://scenes/ui/inventory_window.tscn";
     private const string CharacterWindowScenePath = "res://scenes/ui/character_window.tscn";
     private const string PlayerDebugStatsWindowScenePath = "res://scenes/ui/player_debug_stats_window.tscn";
+    private const string MerchantWindowScenePath = "res://scenes/ui/merchant_window.tscn";
     private const string CountdownHudScenePath = "res://scenes/ui/countdown_hud.tscn";
     private const string InteractionPromptGlyphPath = "res://assets/glyphs/letter_g.png";
     private const string SpellBookActionName = "spell_book";
@@ -69,7 +71,10 @@ public partial class Main : Node2D
         ProcessMode = ProcessModeEnum.Always;
         _world = GetNodeOrNull<World>(WorldPath);
         if (_world != null)
+        {
             _world.Connect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
+            _world.Connect(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested)));
+        }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
         _pauseMenuRoot = GetNodeOrNull<PauseMenu>(PauseMenuPath);
@@ -142,6 +147,10 @@ public partial class Main : Node2D
             _world.IsConnected(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
             _world.Disconnect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
 
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested))))
+            _world.Disconnect(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested)));
+
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
             _player.Disconnect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
@@ -213,6 +222,7 @@ public partial class Main : Node2D
         _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
         _playerDebugStatsWindow?.CloseWindow();
+        _merchantWindow?.CloseWindow();
         GetTree().Paused = true;
 
         if (_gameOverRoot == null)
@@ -224,6 +234,25 @@ public partial class Main : Node2D
     private void OnPlayerInteractionAvailabilityChanged(bool available)
     {
         UpdateInteractionPrompt(available);
+    }
+
+    private void OnMerchantInteractionRequested(MerchantStock stock, Player player)
+    {
+        if (_merchantWindow == null || !GodotObject.IsInstanceValid(_merchantWindow))
+            return;
+        if (stock == null || !GodotObject.IsInstanceValid(stock))
+            return;
+        if (player == null || !GodotObject.IsInstanceValid(player))
+            return;
+        if (_inventoryController == null || !GodotObject.IsInstanceValid(_inventoryController))
+            return;
+
+        // Match the convention used by other window openers: close adjacent windows first.
+        _inventoryWindow?.CloseWindow();
+        _characterWindow?.CloseWindow();
+        _spellBindingWindow?.CloseWindow();
+
+        _merchantWindow.Open(_inventoryController, stock);
     }
 
     private void RestartFromGameOver()
@@ -407,6 +436,13 @@ public partial class Main : Node2D
         {
             _playerDebugStatsWindow = playerDebugStatsWindow;
             hudCanvas.AddChild(_playerDebugStatsWindow);
+        }
+
+        var merchantWindowScene = ResourceLoader.Load<PackedScene>(MerchantWindowScenePath);
+        if (merchantWindowScene?.Instantiate<MerchantWindow>() is MerchantWindow merchantWindow)
+        {
+            _merchantWindow = merchantWindow;
+            hudCanvas.AddChild(_merchantWindow);
         }
 
         var countdownHudScene = ResourceLoader.Load<PackedScene>(CountdownHudScenePath);
@@ -621,6 +657,7 @@ public partial class Main : Node2D
         _spellBindingWindow?.CloseWindow();
         _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
+        _merchantWindow?.CloseWindow();
         _pauseMenuOpen = true;
         if (_pauseMenuRoot != null)
             _pauseMenuRoot.Visible = true;
@@ -642,6 +679,7 @@ public partial class Main : Node2D
     {
         _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
+        _merchantWindow?.CloseWindow();
 
         if (_debugTrayRoot != null)
             _debugTrayRoot.Open();

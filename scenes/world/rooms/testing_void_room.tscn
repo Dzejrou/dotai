@@ -17,10 +17,9 @@
 [ext_resource type="Script" uid="uid://ywm8vsf0vf1f" path="res://scripts/world/rooms/contents/ActorSpawner.cs" id="11_xnhs6"]
 [ext_resource type="Script" uid="uid://b7sn68drsf3oj" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="12_78isi"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="12_cvsg0"]
-[ext_resource type="Script" uid="uid://yjidxd7cu4fw" path="res://scripts/world/interactions/UnlockChestInteraction.cs" id="12_l151d"]
-[ext_resource type="Script" path="res://scripts/world/interactions/LevelUnlockInteraction.cs" id="14_lvlul"]
 [ext_resource type="Script" uid="uid://cuga3ps75v2bf" path="res://scripts/world/interactions/DropLootInteraction.cs" id="13_8w8xx"]
 [ext_resource type="PackedScene" uid="uid://cr43ylglq08m5" path="res://scenes/actors/enemies/skeleton.tscn" id="13_ci7sf"]
+[ext_resource type="Script" uid="uid://by68ickcdy8vn" path="res://scripts/world/interactions/LevelUnlockInteraction.cs" id="14_lvlul"]
 [ext_resource type="Script" uid="uid://bh7q0agjpycv1" path="res://scripts/actors/enemies/Skeleton.cs" id="16_p80c7"]
 [ext_resource type="Resource" uid="uid://b5wk7g8o25aw1" path="res://resources/loot_tables/skeleton_loot_table.tres" id="17_4qoff"]
 [ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="18_qxkaf"]
@@ -32,12 +31,15 @@
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="24_bohya"]
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="25_l151d"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="26_8w8xx"]
-[ext_resource type="Script" path="res://scripts/stats/Stats.cs" id="32_stats"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="27_c83su"]
 [ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="28_ynmw1"]
 [ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="29_pt43o"]
 [ext_resource type="Script" uid="uid://birryig8e7hfp" path="res://scripts/ai/behaviors/PatrolBehavior.cs" id="30_jdy5i"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="31_fari3"]
+[ext_resource type="Script" uid="uid://b84ktu5cuj172" path="res://scripts/stats/Stats.cs" id="32_stats"]
+[ext_resource type="Script" uid="uid://dmrwobc7vj7j" path="res://scripts/world/merchants/MerchantStock.cs" id="33_merchant_stock_script"]
+[ext_resource type="Script" uid="uid://devchgd2kfcxy" path="res://scripts/world/interactions/MerchantInteraction.cs" id="34_merchant_interaction_script"]
+[ext_resource type="Resource" path="res://resources/merchants/test_merchant.tres" id="35_test_merchant_definition"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -122,6 +124,17 @@ EffectLifetime = 0.0
 position = Vector2(276, 894)
 scale = Vector2(0.6, 0.6)
 
+[node name="MerchantAltar" parent="Unscaled" unique_id=911000001 instance=ExtResource("6_67bni")]
+position = Vector2(335, 1062)
+scale = Vector2(0.6, 0.6)
+
+[node name="MerchantStock" type="Node" parent="Unscaled/MerchantAltar" unique_id=911000002]
+script = ExtResource("33_merchant_stock_script")
+Definition = ExtResource("35_test_merchant_definition")
+
+[node name="MerchantInteraction" type="Node" parent="Unscaled/MerchantAltar" unique_id=911000003]
+script = ExtResource("34_merchant_interaction_script")
+
 [node name="ChestContent" parent="Unscaled" unique_id=288433992 instance=ExtResource("7_content")]
 
 [node name="LockedChest" parent="Unscaled/ChestContent/Objects" index="0" unique_id=1675497592]
@@ -146,7 +159,6 @@ shape = SubResource("RectangleShape2D_locked_chest")
 
 [node name="LevelUnlockInteraction" type="Node" parent="Unscaled/ChestContent/Objects/LevelLockedChest" unique_id=2060361463]
 script = ExtResource("14_lvlul")
-RequiredLevel = 2
 
 [node name="DropLootInteraction" type="Node" parent="Unscaled/ChestContent/Objects/LevelLockedChest" unique_id=702824193]
 script = ExtResource("13_8w8xx")
@@ -264,7 +276,7 @@ FactionKey = "allies"
 [node name="StatusEffectController" type="Node" parent="Skeleton" unique_id=175232441]
 script = ExtResource("24_bohya")
 
-[node name="Stats" type="Node" parent="Skeleton"]
+[node name="Stats" type="Node" parent="Skeleton" unique_id=1513811441]
 script = ExtResource("32_stats")
 MaxHealth = 10
 MaxMana = 0
@@ -277,8 +289,6 @@ AttackCooldown = 1.1
 
 [node name="Damage" type="Node" parent="Skeleton/PrimaryActionController" unique_id=2001900021]
 script = ExtResource("26_8w8xx")
-PowerScale = 1.0
-FlatDamage = 0
 
 [node name="Behaviors" type="Node" parent="Skeleton" unique_id=298671112]
 
@@ -339,5 +349,6 @@ position = Vector2(1298.8608, 334.64896)
 [node name="PatrolNode7" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=164955460]
 position = Vector2(1439.5033, 291.0013)
 
+[editable path="Unscaled/MerchantAltar"]
 [editable path="Unscaled/ChestContent"]
 [editable path="Unscaled/ChestContent/Actors/Skeleton"]

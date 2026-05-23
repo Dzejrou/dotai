@@ -1,0 +1,36 @@
+using Godot;
+
+using System;
+
+[GlobalClass]
+public partial class MerchantOfferRule : Resource
+{
+    [Export]
+    public MerchantOfferKind Kind { get; set; } = MerchantOfferKind.StackItem;
+
+    [Export]
+    public InventoryItemDefinition StackItem { get; set; }
+
+    [Export]
+    public int StackQuantity
+    {
+        get => _stackQuantity;
+        set => _stackQuantity = Math.Max(1, value);
+    }
+
+    [Export]
+    public EquipmentSlot GearSlot { get; set; } = EquipmentSlot.Head;
+
+    [Export]
+    public GearQuality GearQuality { get; set; } = GearQuality.Common;
+
+    [Export]
+    public int Price
+    {
+        get => _price;
+        set => _price = Math.Max(0, value);
+    }
+
+    private int _stackQuantity = 1;
+    private int _price;
+}

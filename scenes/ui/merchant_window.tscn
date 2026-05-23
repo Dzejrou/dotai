@@ -1,0 +1,76 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/MerchantWindow.cs" id="1_merchant_window_script"]
+
+[node name="MerchantWindow" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+process_mode = 3
+script = ExtResource("1_merchant_window_script")
+
+[node name="Panel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(440, 360)
+layout_mode = 0
+offset_right = 440.0
+offset_bottom = 360.0
+mouse_filter = 0
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "Merchant"
+theme_override_font_sizes/font_size = 24
+
+[node name="CloseButton" type="Button" parent="Panel/Margin/VBox/Header"]
+layout_mode = 2
+text = "X"
+
+[node name="Summary" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="GoldLabel" type="Label" parent="Panel/Margin/VBox/Summary"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "Gold: 0"
+
+[node name="Offers" type="VBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="Footer" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 2
+
+[node name="RefreshButton" type="Button" parent="Panel/Margin/VBox/Footer"]
+layout_mode = 2
+text = "Refresh"

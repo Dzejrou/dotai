@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="MerchantDefinition" format=3 uid="uid://kslooljeu2ma"]
+
+[ext_resource type="Script" uid="uid://mkei3m50g1tr" path="res://scripts/world/merchants/MerchantDefinition.cs" id="1_merchant_definition_script"]
+[ext_resource type="Script" uid="uid://dwv88tg75medu" path="res://scripts/world/merchants/MerchantOfferRule.cs" id="2_merchant_offer_rule_script"]
+[ext_resource type="Resource" path="res://resources/inventory/items/arcane_crystal.tres" id="3_arcane_crystal_item"]
+
+[sub_resource type="Resource" id="Resource_offer_dynamic_boots_common"]
+script = ExtResource("2_merchant_offer_rule_script")
+Kind = 1
+GearSlot = 4
+Price = 50
+
+[sub_resource type="Resource" id="Resource_offer_dynamic_ring_uncommon"]
+script = ExtResource("2_merchant_offer_rule_script")
+Kind = 1
+GearSlot = 5
+GearQuality = 2
+Price = 120
+
+[sub_resource type="Resource" id="Resource_offer_dynamic_torso_rare"]
+script = ExtResource("2_merchant_offer_rule_script")
+Kind = 1
+GearSlot = 1
+GearQuality = 3
+Price = 300
+
+[sub_resource type="Resource" id="Resource_offer_static_arcane_crystal"]
+script = ExtResource("2_merchant_offer_rule_script")
+StackItem = ExtResource("3_arcane_crystal_item")
+StackQuantity = 5
+Price = 30
+
+[resource]
+script = ExtResource("1_merchant_definition_script")
+DisplayName = "Wandering Merchant"
+RefreshCost = 40
+StaticOffers = Array[ExtResource("2_merchant_offer_rule_script")]([SubResource("Resource_offer_static_arcane_crystal")])
+DynamicOffers = Array[ExtResource("2_merchant_offer_rule_script")]([SubResource("Resource_offer_dynamic_boots_common"), SubResource("Resource_offer_dynamic_ring_uncommon"), SubResource("Resource_offer_dynamic_torso_rare")])
