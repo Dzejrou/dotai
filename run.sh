@@ -16,6 +16,7 @@ for arg in "$@"; do
         --import)      MODE="import" ;;
         --sprite-sync) MODE="sprite-sync" ;;
         --assets)      MODE="assets" ;;
+        --git)         MODE="git" ;;
         -v|--verbose)  VERBOSE=true ;;
         -h|--help)     MODE="help" ;;
         *) echo "Unknown argument: $arg" >&2; exit 1 ;;
@@ -33,6 +34,7 @@ if [[ "$MODE" == "help" ]]; then
     echo "  --import        Re-import all assets (generates .import and .uid files)
   --sprite-sync   Import assets and run asset manager sync"
     echo "  --assets        Open the asset manager scene"
+    echo "  --git           Return to default state: switch to main and pull --ff-only"
     echo ""
     echo "Flags:"
     echo "  -v, --verbose   Enable verbose output (applies to --run)"
@@ -40,7 +42,7 @@ if [[ "$MODE" == "help" ]]; then
     exit 0
 fi
 
-if [[ "$MODE" != "build" ]] && [[ ! -x "$GODOT" ]]; then
+if [[ "$MODE" != "build" ]] && [[ "$MODE" != "git" ]] && [[ ! -x "$GODOT" ]]; then
     echo "Godot not found or not executable: $GODOT" >&2
     exit 1
 fi
@@ -71,5 +73,15 @@ case "$MODE" in
         ;;
     assets)
         "$GODOT" $PROJECT --scene res://scenes/tools/asset_manager.tscn
+        ;;
+    git)
+        if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Working tree is not clean. Commit, stash, or discard changes before resetting state." >&2
+            git status --short >&2
+            exit 1
+        fi
+        git switch main
+        git pull --ff-only origin main
+        git fetch --prune
         ;;
 esac
