@@ -44,7 +44,19 @@ public partial class MerchantOfferRule : Resource
         set => _appearanceChance = Math.Clamp(value, 0.0f, 1.0f);
     }
 
+    // Number of substats visible in the merchant tooltip. Default 4 preserves the
+    // pre-existing "reveal everything" behavior since current gear caps at 4 substats.
+    // Values above the actual substat count just reveal all available substats; the
+    // remainder render as "???" placeholders. Only used by GeneratedGear offers.
+    [Export]
+    public int RevealedSubstatCount
+    {
+        get => _revealedSubstatCount;
+        set => _revealedSubstatCount = Math.Max(0, value);
+    }
+
     private int _stackQuantity = 1;
     private int _price;
     private float _appearanceChance = 1.0f;
+    private int _revealedSubstatCount = 4;
 }

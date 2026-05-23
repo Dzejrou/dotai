@@ -20,6 +20,11 @@ public sealed class MerchantOffer
     // purchase.
     public GearInstance Gear { get; init; }
 
+    // How many substats the merchant tooltip should reveal for this offer. Captured at
+    // build time so future rules (per-offer reveal) keep working even if the underlying
+    // MerchantOfferRule is mutated later. Defaults high enough to show every substat.
+    public int RevealedSubstatCount { get; init; } = int.MaxValue;
+
     public bool Purchased { get; set; }
 
     public string DisplayName

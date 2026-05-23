@@ -3,11 +3,18 @@ using Godot;
 public static class GearTooltipFactory
 {
     private const string StylePath = "res://resources/ui/gear_tooltip_style.tres";
+    private const string PlaceholderText = "  ???";
+    private static readonly Color PlaceholderColor = new(0.85f, 0.25f, 0.25f);
 
     private static GearTooltipStyle _cachedStyle;
     private static bool _styleLookupAttempted;
 
-    public static Control Build(GearInstance gear)
+    public static Control Build(GearInstance gear) => Build(gear, int.MaxValue);
+
+    // revealedSubstatCount: how many substats to show with their real values; the
+    // remainder render as red "???" placeholder lines. Pass int.MaxValue to reveal all.
+    // Used by merchant tooltips to support hidden substats before purchase.
+    public static Control Build(GearInstance gear, int revealedSubstatCount)
     {
         if (gear == null)
             return null;
@@ -58,8 +65,11 @@ public static class GearTooltipFactory
         if (gear.Substats.Count > 0)
         {
             AddLine(vbox, "Substats:", style);
-            foreach (var modifier in gear.Substats)
-                AddLine(vbox, "  " + GearTooltipBuilder.FormatModifier(modifier), style);
+            var revealed = System.Math.Clamp(revealedSubstatCount, 0, gear.Substats.Count);
+            for (var i = 0; i < revealed; i++)
+                AddLine(vbox, "  " + GearTooltipBuilder.FormatModifier(gear.Substats[i]), style);
+            for (var i = revealed; i < gear.Substats.Count; i++)
+                AddLine(vbox, PlaceholderText, style, PlaceholderColor);
         }
 
         return panel;
@@ -103,6 +113,11 @@ public static class GearTooltipFactory
 
     private static void AddLine(VBoxContainer parent, string text, GearTooltipStyle style)
     {
+        AddLine(parent, text, style, null);
+    }
+
+    private static void AddLine(VBoxContainer parent, string text, GearTooltipStyle style, Color? color)
+    {
         var label = new Label
         {
             Text = text,
@@ -110,6 +125,8 @@ public static class GearTooltipFactory
         };
         if (style.BodyFontSize > 0)
             label.AddThemeFontSizeOverride("font_size", style.BodyFontSize);
+        if (color.HasValue)
+            label.AddThemeColorOverride("font_color", color.Value);
         parent.AddChild(label);
     }
 }

@@ -238,7 +238,11 @@ public partial class MerchantWindow : Control
         HBoxContainer group;
         if (isGear)
         {
-            group = new MerchantGearOfferRow { Gear = offer.Gear };
+            group = new MerchantGearOfferRow
+            {
+                Gear = offer.Gear,
+                RevealedSubstatCount = offer.RevealedSubstatCount,
+            };
         }
         else
         {
