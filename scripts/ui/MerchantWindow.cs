@@ -97,6 +97,13 @@ public partial class MerchantWindow : Control
     public void CloseWindow()
     {
         Visible = false;
+
+        // Release room-local references so the HUD-level window does not keep
+        // a stale pointer at a MerchantStock that may be freed with the room.
+        // Reopening goes through Open() which rebinds via the idempotent
+        // Bind* helpers.
+        UnbindInventory();
+        UnbindStock();
     }
 
     public void FocusWindow()
