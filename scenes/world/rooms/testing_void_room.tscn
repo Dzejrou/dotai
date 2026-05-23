@@ -39,7 +39,7 @@
 [ext_resource type="Script" uid="uid://b84ktu5cuj172" path="res://scripts/stats/Stats.cs" id="32_stats"]
 [ext_resource type="Script" uid="uid://dmrwobc7vj7j" path="res://scripts/world/merchants/MerchantStock.cs" id="33_merchant_stock_script"]
 [ext_resource type="Script" uid="uid://devchgd2kfcxy" path="res://scripts/world/interactions/MerchantInteraction.cs" id="34_merchant_interaction_script"]
-[ext_resource type="Resource" path="res://resources/merchants/test_merchant.tres" id="35_test_merchant_definition"]
+[ext_resource type="Resource" uid="uid://kslooljeu2ma" path="res://resources/merchants/test_merchant.tres" id="35_test_merchant_definition"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
