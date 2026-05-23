@@ -19,7 +19,13 @@ public partial class MerchantOfferRule : Resource
     }
 
     [Export]
+    public MerchantOfferSlotMode SlotMode { get; set; } = MerchantOfferSlotMode.SpecificSlot;
+
+    [Export]
     public EquipmentSlot GearSlot { get; set; } = EquipmentSlot.Head;
+
+    [Export]
+    public MerchantOfferQualityMode QualityMode { get; set; } = MerchantOfferQualityMode.SpecificQuality;
 
     [Export]
     public GearQuality GearQuality { get; set; } = GearQuality.Common;
