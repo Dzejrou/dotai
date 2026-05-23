@@ -56,7 +56,13 @@ public partial class InventoryController : Node
 
     public bool TrySpendGold(int amount)
     {
-        if (amount <= 0 || _gold < amount)
+        if (amount < 0)
+            return false;
+
+        if (amount == 0)
+            return true;
+
+        if (_gold < amount)
             return false;
 
         _gold -= amount;
