@@ -192,28 +192,7 @@ public partial class MerchantWindow : Control
         };
         root.AddThemeConstantOverride("separation", 8);
 
-        var icon = new TextureRect
-        {
-            CustomMinimumSize = new Vector2(32, 32),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            Texture = offer.Icon,
-        };
-        if (offer.Kind == MerchantOfferKind.GeneratedGear && offer.Gear != null)
-            icon.Modulate = GearQualityColors.GetColor(offer.Gear.Quality);
-        root.AddChild(icon);
-
-        var label = new Label
-        {
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Pass,
-            Text = BuildOfferLabel(offer),
-            TooltipText = BuildOfferTooltip(offer),
-        };
-        root.AddChild(label);
+        AddIconAndNameGroup(root, offer);
 
         var priceLabel = new Label
         {
@@ -246,6 +225,54 @@ public partial class MerchantWindow : Control
         buyButton.Pressed += row.OnPressed;
 
         return row;
+    }
+
+    // Builds the icon + name portion of an offer row. For generated gear we wrap both
+    // controls in a MerchantGearOfferRow so hovering either one surfaces the same custom
+    // GearTooltipFactory tooltip used by inventory and equipped gear. Other offers keep
+    // a plain default tooltip on the name label.
+    private static void AddIconAndNameGroup(HBoxContainer root, MerchantOffer offer)
+    {
+        var isGear = offer.Kind == MerchantOfferKind.GeneratedGear && offer.Gear != null;
+
+        HBoxContainer group;
+        if (isGear)
+        {
+            group = new MerchantGearOfferRow { Gear = offer.Gear };
+        }
+        else
+        {
+            group = new HBoxContainer { TooltipText = BuildOfferTooltip(offer) };
+        }
+        group.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        // Stop so the group owns the hover area and receives tooltip events even when
+        // its children (icon, label) use MouseFilter.Ignore.
+        group.MouseFilter = Control.MouseFilterEnum.Stop;
+        group.AddThemeConstantOverride("separation", 8);
+
+        var icon = new TextureRect
+        {
+            CustomMinimumSize = new Vector2(32, 32),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Texture = offer.Icon,
+        };
+        if (isGear)
+            icon.Modulate = GearQualityColors.GetColor(offer.Gear.Quality);
+        group.AddChild(icon);
+
+        var label = new Label
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Text = BuildOfferLabel(offer),
+        };
+        group.AddChild(label);
+
+        root.AddChild(group);
     }
 
     private void OnBuyPressed(OfferRow row)
