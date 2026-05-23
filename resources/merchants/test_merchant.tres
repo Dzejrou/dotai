@@ -35,6 +35,7 @@ metadata/_custom_type_script = "uid://dwv88tg75medu"
 
 [sub_resource type="Resource" id="Resource_a83an"]
 script = ExtResource("2_merchant_offer_rule_script")
+Kind = 1
 SlotMode = 1
 QualityMode = 2
 GearQuality = 3
