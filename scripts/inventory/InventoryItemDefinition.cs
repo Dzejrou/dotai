@@ -24,5 +24,8 @@ public partial class InventoryItemDefinition : Resource
     [Export]
     public InventoryKeyKind KeyKind { get; set; } = InventoryKeyKind.None;
 
+    [Export]
+    public ItemQuality Quality { get; set; } = ItemQuality.Common;
+
     private int _maxStackSize = 99;
 }

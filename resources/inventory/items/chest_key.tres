@@ -10,3 +10,4 @@ DisplayName = "Chest Key"
 Icon = ExtResource("2_chest_key_texture")
 MaxStackSize = 99
 KeyKind = 1
+Quality = 1
