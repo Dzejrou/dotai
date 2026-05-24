@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="InventoryItemDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://crob7w31xg2we"]
 
-[ext_resource type="Script" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
-[ext_resource type="Texture2D" path="res://assets/drops/crystal.png" id="2_arcane_crystal_texture"]
+[ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
+[ext_resource type="Texture2D" uid="uid://dpsrnfqyyne6n" path="res://assets/drops/crystal.png" id="2_arcane_crystal_texture"]
 
 [resource]
 script = ExtResource("1_inventory_item_definition_script")
@@ -9,6 +9,4 @@ Id = "arcane_crystal"
 DisplayName = "Arcane Crystal"
 Icon = ExtResource("2_arcane_crystal_texture")
 MaxStackSize = 999
-KeyKind = 0
-Quality = 1
 SellPrice = 5

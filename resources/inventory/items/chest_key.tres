@@ -1,13 +1,11 @@
-[gd_resource type="Resource" script_class="InventoryItemDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://ccoijw6myf2lm"]
 
-[ext_resource type="Script" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
-[ext_resource type="Texture2D" path="res://assets/drops/chest_key.png" id="2_chest_key_texture"]
+[ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
+[ext_resource type="Texture2D" uid="uid://dpiw87kdfrlsb" path="res://assets/drops/chest_key.png" id="2_chest_key_texture"]
 
 [resource]
 script = ExtResource("1_inventory_item_definition_script")
 Id = "chest_key"
 DisplayName = "Chest Key"
 Icon = ExtResource("2_chest_key_texture")
-MaxStackSize = 99
 KeyKind = 1
-Quality = 1
