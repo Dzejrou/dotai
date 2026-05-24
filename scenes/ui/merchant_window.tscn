@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/MerchantWindow.cs" id="1_merchant_window_script"]
 [ext_resource type="Script" path="res://scripts/ui/MerchantBuyListPanel.cs" id="2_merchant_buy_list_panel_script"]
 [ext_resource type="Script" path="res://scripts/ui/MerchantSellListPanel.cs" id="3_merchant_sell_list_panel_script"]
+[ext_resource type="Script" path="res://scripts/ui/MerchantBuybackListPanel.cs" id="4_merchant_buyback_list_panel_script"]
 
 [node name="MerchantWindow" type="Control"]
 visible = false
@@ -79,6 +80,12 @@ size_flags_horizontal = 3
 toggle_mode = true
 text = "Sell"
 
+[node name="BuybackTabButton" type="Button" parent="Panel/Margin/VBox/ModeBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "Buyback"
+
 [node name="Offers" type="VBoxContainer" parent="Panel/Margin/VBox"]
 layout_mode = 2
 mouse_filter = 2
@@ -95,6 +102,15 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 6
 script = ExtResource("3_merchant_sell_list_panel_script")
+
+[node name="BuybackList" type="VBoxContainer" parent="Panel/Margin/VBox"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+script = ExtResource("4_merchant_buyback_list_panel_script")
 
 [node name="Footer" type="HBoxContainer" parent="Panel/Margin/VBox"]
 layout_mode = 2

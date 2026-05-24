@@ -9,6 +9,10 @@ public partial class MerchantSellListPanel : VBoxContainer
     private MerchantSellQuantityMode _sellQuantityMode = MerchantSellQuantityMode.One;
     private readonly List<SellRow> _rows = new();
 
+    // Owner (e.g. MerchantWindow) sets this to receive sold items for session-local buyback.
+    // Fired after gold has been paid out, on successful sale only.
+    public System.Action<MerchantBuybackEntry> OnItemSold { get; set; }
+
     public override void _ExitTree()
     {
         Unbind();
@@ -269,7 +273,7 @@ public partial class MerchantSellListPanel : VBoxContainer
             return;
 
         var taken = _inventory.TakeEntry(row.SlotIndex);
-        if (taken is not InventoryGearEntry)
+        if (taken is not InventoryGearEntry takenGearEntry)
         {
             // Defensive: if something else was at this slot, drop it back in to keep state sane.
             if (taken != null)
@@ -278,6 +282,7 @@ public partial class MerchantSellListPanel : VBoxContainer
         }
 
         _inventory.AddGold(price);
+        OnItemSold?.Invoke(MerchantBuybackEntry.ForGear(takenGearEntry.Gear, price));
     }
 
     private void OnStackSellPressed(SellRow row)
@@ -310,7 +315,9 @@ public partial class MerchantSellListPanel : VBoxContainer
             return;
 
         // Only pay for what was actually consumed in case the live stack shrank under us.
-        _inventory.AddGold(item.SellPrice * consumed);
+        var totalPrice = item.SellPrice * consumed;
+        _inventory.AddGold(totalPrice);
+        OnItemSold?.Invoke(MerchantBuybackEntry.ForStack(item, consumed, totalPrice));
     }
 
     private enum SellRowKind

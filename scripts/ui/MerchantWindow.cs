@@ -1,5 +1,7 @@
 using Godot;
 
+using System.Collections.Generic;
+
 [GlobalClass]
 public partial class MerchantWindow : Control
 {
@@ -7,6 +9,7 @@ public partial class MerchantWindow : Control
     {
         Buy,
         Sell,
+        Buyback,
     }
 
     [Export]
@@ -28,10 +31,16 @@ public partial class MerchantWindow : Control
     public NodePath SellTabButtonPath { get; set; } = new("Panel/Margin/VBox/ModeBar/SellTabButton");
 
     [Export]
+    public NodePath BuybackTabButtonPath { get; set; } = new("Panel/Margin/VBox/ModeBar/BuybackTabButton");
+
+    [Export]
     public NodePath BuyListPanelPath { get; set; } = new("Panel/Margin/VBox/Offers");
 
     [Export]
     public NodePath SellListPanelPath { get; set; } = new("Panel/Margin/VBox/SellList");
+
+    [Export]
+    public NodePath BuybackListPanelPath { get; set; } = new("Panel/Margin/VBox/BuybackList");
 
     [Export]
     public NodePath RefreshButtonPath { get; set; } = new("Panel/Margin/VBox/Footer/RefreshButton");
@@ -47,14 +56,17 @@ public partial class MerchantWindow : Control
     private Label _goldLabel;
     private Button _buyTabButton;
     private Button _sellTabButton;
+    private Button _buybackTabButton;
     private MerchantBuyListPanel _buyListPanel;
     private MerchantSellListPanel _sellListPanel;
+    private MerchantBuybackListPanel _buybackListPanel;
     private Button _refreshButton;
     private Button _sellModeButton;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
     private Mode _mode = Mode.Buy;
     private MerchantSellQuantityMode _sellQuantityMode = MerchantSellQuantityMode.One;
+    private readonly List<MerchantBuybackEntry> _buybackEntries = new();
 
     public override void _Ready()
     {
@@ -67,10 +79,15 @@ public partial class MerchantWindow : Control
         _goldLabel = GetNodeOrNull<Label>(GoldLabelPath);
         _buyTabButton = GetNodeOrNull<Button>(BuyTabButtonPath);
         _sellTabButton = GetNodeOrNull<Button>(SellTabButtonPath);
+        _buybackTabButton = GetNodeOrNull<Button>(BuybackTabButtonPath);
         _buyListPanel = GetNodeOrNull<MerchantBuyListPanel>(BuyListPanelPath);
         _sellListPanel = GetNodeOrNull<MerchantSellListPanel>(SellListPanelPath);
+        _buybackListPanel = GetNodeOrNull<MerchantBuybackListPanel>(BuybackListPanelPath);
         _refreshButton = GetNodeOrNull<Button>(RefreshButtonPath);
         _sellModeButton = GetNodeOrNull<Button>(SellModeButtonPath);
+
+        if (_sellListPanel != null)
+            _sellListPanel.OnItemSold = OnItemSold;
 
         if (_windowPanel != null)
         {
@@ -95,6 +112,9 @@ public partial class MerchantWindow : Control
         if (_sellTabButton != null)
             _sellTabButton.Pressed += OnSellTabPressed;
 
+        if (_buybackTabButton != null)
+            _buybackTabButton.Pressed += OnBuybackTabPressed;
+
         ApplyModeVisibility();
     }
 
@@ -115,9 +135,17 @@ public partial class MerchantWindow : Control
         if (_sellTabButton != null)
             _sellTabButton.Pressed -= OnSellTabPressed;
 
+        if (_buybackTabButton != null)
+            _buybackTabButton.Pressed -= OnBuybackTabPressed;
+
+        if (_sellListPanel != null)
+            _sellListPanel.OnItemSold = null;
+
         _windowDragger?.Detach();
         _buyListPanel?.Unbind();
         _sellListPanel?.Unbind();
+        _buybackListPanel?.Unbind();
+        _buybackEntries.Clear();
         UnbindInventory();
         UnbindStock();
     }
@@ -152,6 +180,12 @@ public partial class MerchantWindow : Control
         // the idempotent Bind* helpers and Refresh() re-pushes into the panels.
         _buyListPanel?.Unbind();
         _sellListPanel?.Unbind();
+        _buybackListPanel?.Unbind();
+        // Buyback is session-local to one merchant interaction. Wipe so that reopening
+        // (the same or a different merchant) starts with an empty buyback list.
+        _buybackEntries.Clear();
+        _mode = Mode.Buy;
+        ApplyModeVisibility();
         UnbindInventory();
         UnbindStock();
     }
@@ -200,6 +234,85 @@ public partial class MerchantWindow : Control
         SetMode(Mode.Sell);
     }
 
+    private void OnBuybackTabPressed()
+    {
+        SetMode(Mode.Buyback);
+    }
+
+    private void OnItemSold(MerchantBuybackEntry entry)
+    {
+        if (entry == null)
+            return;
+
+        // Newest sales at the top so the most-recent mistake is the easiest to undo.
+        _buybackEntries.Insert(0, entry);
+        Refresh();
+    }
+
+    private void OnBuybackPressed(int entryIndex)
+    {
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return;
+        if (entryIndex < 0 || entryIndex >= _buybackEntries.Count)
+            return;
+
+        var entry = _buybackEntries[entryIndex];
+        if (entry == null)
+            return;
+
+        // Re-check capacity and gold against live state so a stale row cannot trigger
+        // a partial transaction. The list panel disables the button when it can, but
+        // the inventory may have filled up between the panel's last refresh and the
+        // click landing here.
+        if (!CanInventoryAcceptBuyback(entry))
+            return;
+        if (_inventory.Gold < entry.Price)
+            return;
+
+        if (!_inventory.TrySpendGold(entry.Price))
+            return;
+
+        var added = AddBuybackToInventory(entry);
+        if (!added)
+        {
+            // Capacity check passed but add failed (e.g. slot vacated between check and add).
+            // Refund defensively so the player isn't out of gold for nothing.
+            _inventory.AddGold(entry.Price);
+            return;
+        }
+
+        _buybackEntries.RemoveAt(entryIndex);
+        Refresh();
+    }
+
+    private bool CanInventoryAcceptBuyback(MerchantBuybackEntry entry)
+    {
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return false;
+
+        return entry.Kind switch
+        {
+            MerchantBuybackEntryKind.Gear => entry.Gear != null && _inventory.CanAddGear(entry.Gear),
+            MerchantBuybackEntryKind.Stack => entry.StackItem != null &&
+                _inventory.CanAddItem(entry.StackItem, entry.StackQuantity),
+            _ => false,
+        };
+    }
+
+    private bool AddBuybackToInventory(MerchantBuybackEntry entry)
+    {
+        switch (entry.Kind)
+        {
+            case MerchantBuybackEntryKind.Gear:
+                return _inventory.AddGear(entry.Gear);
+            case MerchantBuybackEntryKind.Stack:
+                var remaining = _inventory.AddItem(entry.StackItem, entry.StackQuantity);
+                return remaining == 0;
+        }
+
+        return false;
+    }
+
     private void SetMode(Mode mode)
     {
         if (_mode == mode)
@@ -220,11 +333,15 @@ public partial class MerchantWindow : Control
             _buyTabButton.ButtonPressed = _mode == Mode.Buy;
         if (_sellTabButton != null)
             _sellTabButton.ButtonPressed = _mode == Mode.Sell;
+        if (_buybackTabButton != null)
+            _buybackTabButton.ButtonPressed = _mode == Mode.Buyback;
 
         if (_buyListPanel != null)
             _buyListPanel.Visible = _mode == Mode.Buy;
         if (_sellListPanel != null)
             _sellListPanel.Visible = _mode == Mode.Sell;
+        if (_buybackListPanel != null)
+            _buybackListPanel.Visible = _mode == Mode.Buyback;
         if (_refreshButton != null)
             _refreshButton.Visible = _mode == Mode.Buy;
         if (_sellModeButton != null)
@@ -261,6 +378,12 @@ public partial class MerchantWindow : Control
             _sellListPanel.Bind(_inventory);
             _sellListPanel.SetSellQuantityMode(_sellQuantityMode);
             _sellListPanel.Refresh();
+        }
+
+        if (_buybackListPanel != null)
+        {
+            _buybackListPanel.Bind(_inventory, _buybackEntries, OnBuybackPressed);
+            _buybackListPanel.Refresh();
         }
     }
 
@@ -321,6 +444,9 @@ public partial class MerchantWindow : Control
             return;
 
         UnbindStock();
+        // Buyback is local to one merchant interaction. Switching to a different
+        // stock counts as a new interaction even if the window stays open.
+        _buybackEntries.Clear();
         _stock = stock;
 
         if (_stock == null || !GodotObject.IsInstanceValid(_stock))
