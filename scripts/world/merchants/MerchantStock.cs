@@ -228,9 +228,9 @@ public partial class MerchantStock : Node
                 PickUniformQuality(ItemQuality.Common, ItemQuality.Legendary),
             MerchantOfferQualityMode.MinimumQuality =>
                 PickUniformQuality(
-                    rule.GearQuality == ItemQuality.Trash ? ItemQuality.Common : rule.GearQuality,
+                    rule.Quality == ItemQuality.Trash ? ItemQuality.Common : rule.Quality,
                     ItemQuality.Legendary),
-            _ => rule.GearQuality,
+            _ => rule.Quality,
         };
     }
 
