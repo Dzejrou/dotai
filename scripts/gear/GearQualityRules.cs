@@ -22,6 +22,12 @@ public partial class GearQualityRules : Resource
     [Export(PropertyHint.Range, "0,100000,1")]
     public int BaseFodderXp { get; set; } = 25;
 
+    // Base gold paid when selling a level-1 gear of this quality. The merchant
+    // applies a level-progress multiplier on top via GearSellPricing. Set to 0
+    // to disable selling for this quality.
+    [Export(PropertyHint.Range, "0,100000,1")]
+    public int BaseSellPrice { get; set; } = 0;
+
     // Fixed substat values per stat id. Designers edit one row per substat in the inspector.
     [Export]
     public Godot.Collections.Array<GearStatValueEntry> SubstatValues { get; set; } = new();
