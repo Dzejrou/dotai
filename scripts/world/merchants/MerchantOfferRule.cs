@@ -28,7 +28,7 @@ public partial class MerchantOfferRule : Resource
     public MerchantOfferQualityMode QualityMode { get; set; } = MerchantOfferQualityMode.SpecificQuality;
 
     [Export]
-    public GearQuality GearQuality { get; set; } = GearQuality.Common;
+    public ItemQuality GearQuality { get; set; } = ItemQuality.Common;
 
     [Export]
     public int Price

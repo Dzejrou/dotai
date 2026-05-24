@@ -21,7 +21,7 @@ public partial class GearGenerationRules : Resource
     [Export(PropertyHint.Range, "0,1,0.01")]
     public float FodderInvestedXpRefundRate { get; set; } = 0.80f;
 
-    public GearQualityRules GetQualityRules(GearQuality quality)
+    public GearQualityRules GetQualityRules(ItemQuality quality)
     {
         foreach (var entry in Qualities)
         {
@@ -41,7 +41,7 @@ public partial class GearGenerationRules : Resource
         return null;
     }
 
-    public float GetMainStatMaxValue(string statId, GearQuality quality)
+    public float GetMainStatMaxValue(string statId, ItemQuality quality)
     {
         foreach (var entry in MainStatScales)
         {
@@ -55,7 +55,7 @@ public partial class GearGenerationRules : Resource
         return 0.0f;
     }
 
-    public bool TryGetSubstatValue(GearQuality quality, string statId, out float value)
+    public bool TryGetSubstatValue(ItemQuality quality, string statId, out float value)
     {
         var qualityRules = GetQualityRules(quality);
         if (qualityRules != null)

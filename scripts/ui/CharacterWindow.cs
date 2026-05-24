@@ -417,7 +417,7 @@ public partial class CharacterWindow : Control
 
             view.IconRect.Texture = hasGear ? gear.Definition.Icon : null;
             view.IconRect.Visible = hasGear && gear.Definition.Icon != null;
-            view.IconRect.Modulate = hasGear ? GearQualityColors.GetColor(gear.Quality) : Colors.White;
+            view.IconRect.Modulate = hasGear ? ItemQualityColors.GetColor(gear.Quality) : Colors.White;
             view.Placeholder.Visible = !hasGear;
             view.Root.TooltipText = hasGear ? GearTooltipBuilder.Build(gear) : slot.ToString();
             view.Root.Modulate = Colors.White;

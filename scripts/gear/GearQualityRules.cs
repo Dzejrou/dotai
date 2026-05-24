@@ -4,7 +4,7 @@ using Godot;
 public partial class GearQualityRules : Resource
 {
     [Export]
-    public GearQuality Quality { get; set; } = GearQuality.Common;
+    public ItemQuality Quality { get; set; } = ItemQuality.Common;
 
     [Export(PropertyHint.Range, "1,40,1")]
     public int MaxLevel { get; set; } = 1;

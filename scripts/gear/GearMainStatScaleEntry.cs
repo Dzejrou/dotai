@@ -7,7 +7,7 @@ public partial class GearMainStatScaleEntry : Resource
     public string StatId { get; set; } = string.Empty;
 
     [Export]
-    public GearQuality Quality { get; set; } = GearQuality.Common;
+    public ItemQuality Quality { get; set; } = ItemQuality.Common;
 
     [Export]
     public float MaxValue { get; set; }

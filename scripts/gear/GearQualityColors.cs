@@ -1,6 +1,6 @@
 using Godot;
 
-public static class GearQualityColors
+public static class ItemQualityColors
 {
     private static readonly Color TrashColor = new(0.62f, 0.62f, 0.62f);
     private static readonly Color CommonColor = new(1.0f, 1.0f, 1.0f);
@@ -9,14 +9,14 @@ public static class GearQualityColors
     private static readonly Color EpicColor = new(0.70f, 0.40f, 1.00f);
     private static readonly Color LegendaryColor = new(1.00f, 0.60f, 0.20f);
 
-    public static Color GetColor(GearQuality quality) => quality switch
+    public static Color GetColor(ItemQuality quality) => quality switch
     {
-        GearQuality.Trash => TrashColor,
-        GearQuality.Common => CommonColor,
-        GearQuality.Uncommon => UncommonColor,
-        GearQuality.Rare => RareColor,
-        GearQuality.Epic => EpicColor,
-        GearQuality.Legendary => LegendaryColor,
+        ItemQuality.Trash => TrashColor,
+        ItemQuality.Common => CommonColor,
+        ItemQuality.Uncommon => UncommonColor,
+        ItemQuality.Rare => RareColor,
+        ItemQuality.Epic => EpicColor,
+        ItemQuality.Legendary => LegendaryColor,
         _ => CommonColor,
     };
 }

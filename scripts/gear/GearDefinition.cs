@@ -10,5 +10,5 @@ public partial class GearDefinition : InventoryItemDefinition
     public EquipmentSlot Slot { get; set; } = EquipmentSlot.Head;
 
     [Export]
-    public GearQuality Quality { get; set; } = GearQuality.Common;
+    public ItemQuality Quality { get; set; } = ItemQuality.Common;
 }

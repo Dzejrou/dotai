@@ -46,7 +46,7 @@ public static class GearTooltipFactory
             Text = displayName,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
-        nameLabel.AddThemeColorOverride("font_color", GearQualityColors.GetColor(gear.Quality));
+        nameLabel.AddThemeColorOverride("font_color", ItemQualityColors.GetColor(gear.Quality));
         if (style.NameFontSize > 0)
             nameLabel.AddThemeFontSizeOverride("font_size", style.NameFontSize);
         vbox.AddChild(nameLabel);

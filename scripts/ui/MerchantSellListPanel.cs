@@ -132,7 +132,7 @@ public partial class MerchantSellListPanel : VBoxContainer
             TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Texture = gear.Definition?.Icon,
-            Modulate = GearQualityColors.GetColor(gear.Quality),
+            Modulate = ItemQualityColors.GetColor(gear.Quality),
         };
         group.AddChild(icon);
 
@@ -142,7 +142,7 @@ public partial class MerchantSellListPanel : VBoxContainer
             VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Text = gear.Slot.ToString(),
-            SelfModulate = GearQualityColors.GetColor(gear.Quality),
+            SelfModulate = ItemQualityColors.GetColor(gear.Quality),
         };
         group.AddChild(label);
 
