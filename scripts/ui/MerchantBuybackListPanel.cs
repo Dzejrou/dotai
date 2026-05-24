@@ -183,8 +183,6 @@ public partial class MerchantBuybackListPanel : VBoxContainer
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Texture = isGear ? entry.Gear?.Definition?.Icon : entry.StackItem?.Icon,
         };
-        if (isGear)
-            icon.Modulate = ItemQualityColors.GetColor(entry.Gear.Quality);
         group.AddChild(icon);
 
         var label = new Label
