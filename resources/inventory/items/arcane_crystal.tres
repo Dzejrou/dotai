@@ -11,3 +11,4 @@ Icon = ExtResource("2_arcane_crystal_texture")
 MaxStackSize = 999
 KeyKind = 0
 Quality = 1
+SellPrice = 5
