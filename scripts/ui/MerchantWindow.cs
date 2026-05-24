@@ -36,6 +36,9 @@ public partial class MerchantWindow : Control
     [Export]
     public NodePath RefreshButtonPath { get; set; } = new("Panel/Margin/VBox/Footer/RefreshButton");
 
+    [Export]
+    public NodePath SellModeButtonPath { get; set; } = new("Panel/Margin/VBox/Footer/SellModeButton");
+
     private InventoryController _inventory;
     private MerchantStock _stock;
     private Control _windowPanel;
@@ -47,9 +50,11 @@ public partial class MerchantWindow : Control
     private MerchantBuyListPanel _buyListPanel;
     private MerchantSellListPanel _sellListPanel;
     private Button _refreshButton;
+    private Button _sellModeButton;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
     private Mode _mode = Mode.Buy;
+    private MerchantSellQuantityMode _sellQuantityMode = MerchantSellQuantityMode.One;
 
     public override void _Ready()
     {
@@ -65,6 +70,7 @@ public partial class MerchantWindow : Control
         _buyListPanel = GetNodeOrNull<MerchantBuyListPanel>(BuyListPanelPath);
         _sellListPanel = GetNodeOrNull<MerchantSellListPanel>(SellListPanelPath);
         _refreshButton = GetNodeOrNull<Button>(RefreshButtonPath);
+        _sellModeButton = GetNodeOrNull<Button>(SellModeButtonPath);
 
         if (_windowPanel != null)
         {
@@ -79,6 +85,9 @@ public partial class MerchantWindow : Control
 
         if (_refreshButton != null)
             _refreshButton.Pressed += OnRefreshPressed;
+
+        if (_sellModeButton != null)
+            _sellModeButton.Pressed += OnSellModePressed;
 
         if (_buyTabButton != null)
             _buyTabButton.Pressed += OnBuyTabPressed;
@@ -96,6 +105,9 @@ public partial class MerchantWindow : Control
 
         if (_refreshButton != null)
             _refreshButton.Pressed -= OnRefreshPressed;
+
+        if (_sellModeButton != null)
+            _sellModeButton.Pressed -= OnSellModePressed;
 
         if (_buyTabButton != null)
             _buyTabButton.Pressed -= OnBuyTabPressed;
@@ -172,6 +184,12 @@ public partial class MerchantWindow : Control
         _stock.TryRefresh(_inventory);
     }
 
+    private void OnSellModePressed()
+    {
+        _sellQuantityMode = _sellQuantityMode.Next();
+        Refresh();
+    }
+
     private void OnBuyTabPressed()
     {
         SetMode(Mode.Buy);
@@ -209,6 +227,8 @@ public partial class MerchantWindow : Control
             _sellListPanel.Visible = _mode == Mode.Sell;
         if (_refreshButton != null)
             _refreshButton.Visible = _mode == Mode.Buy;
+        if (_sellModeButton != null)
+            _sellModeButton.Visible = _mode == Mode.Sell;
     }
 
     private void Refresh()
@@ -227,6 +247,9 @@ public partial class MerchantWindow : Control
             _refreshButton.Disabled = _stock == null || _inventory == null || gold < cost;
         }
 
+        if (_sellModeButton != null)
+            _sellModeButton.Text = _sellQuantityMode.GetButtonLabel();
+
         if (_buyListPanel != null)
         {
             _buyListPanel.Bind(_inventory, _stock);
@@ -236,6 +259,7 @@ public partial class MerchantWindow : Control
         if (_sellListPanel != null)
         {
             _sellListPanel.Bind(_inventory);
+            _sellListPanel.SetSellQuantityMode(_sellQuantityMode);
             _sellListPanel.Refresh();
         }
     }
