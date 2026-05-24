@@ -27,5 +27,14 @@ public partial class InventoryItemDefinition : Resource
     [Export]
     public ItemQuality Quality { get; set; } = ItemQuality.Common;
 
+    // Per-unit merchant sell price. 0 means the item is unsellable.
+    [Export(PropertyHint.Range, "0,99999,1")]
+    public int SellPrice
+    {
+        get => _sellPrice;
+        set => _sellPrice = Math.Max(0, value);
+    }
+
     private int _maxStackSize = 99;
+    private int _sellPrice;
 }

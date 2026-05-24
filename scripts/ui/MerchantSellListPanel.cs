@@ -40,16 +40,29 @@ public partial class MerchantSellListPanel : VBoxContainer
         {
             if (!_inventory.TryGetEntry(slotIndex, out var entry))
                 continue;
-            if (entry is not InventoryGearEntry gearEntry)
-                continue;
 
-            var price = GearSellPricing.GetSellPrice(gearEntry.Gear, rules);
-            if (price <= 0)
-                continue;
+            if (entry is InventoryGearEntry gearEntry)
+            {
+                var price = GearSellPricing.GetSellPrice(gearEntry.Gear, rules);
+                if (price <= 0)
+                    continue;
 
-            var row = BuildSellRow(gearEntry.Gear, slotIndex, price);
-            AddChild(row.Root);
-            _rows.Add(row);
+                var row = BuildGearSellRow(gearEntry.Gear, slotIndex, price);
+                AddChild(row.Root);
+                _rows.Add(row);
+                continue;
+            }
+
+            if (entry is InventoryStackEntry stackEntry)
+            {
+                var item = stackEntry.Stack.Item;
+                if (item == null || item.SellPrice <= 0)
+                    continue;
+
+                var row = BuildStackSellRow(stackEntry, slotIndex);
+                AddChild(row.Root);
+                _rows.Add(row);
+            }
         }
     }
 
@@ -65,7 +78,7 @@ public partial class MerchantSellListPanel : VBoxContainer
         _rows.Clear();
     }
 
-    private SellRow BuildSellRow(GearInstance gear, int slotIndex, int price)
+    private SellRow BuildGearSellRow(GearInstance gear, int slotIndex, int price)
     {
         var root = new HBoxContainer
         {
@@ -101,12 +114,92 @@ public partial class MerchantSellListPanel : VBoxContainer
 
         var row = new SellRow
         {
+            Kind = SellRowKind.Gear,
             Root = root,
             SellButton = sellButton,
             SlotIndex = slotIndex,
             Price = price,
         };
-        row.OnPressed = () => OnSellPressed(row);
+        row.OnPressed = () => OnGearSellPressed(row);
+        sellButton.Pressed += row.OnPressed;
+
+        return row;
+    }
+
+    private SellRow BuildStackSellRow(InventoryStackEntry stackEntry, int slotIndex)
+    {
+        var item = stackEntry.Stack.Item;
+        var price = item.SellPrice;
+
+        var root = new HBoxContainer
+        {
+            MouseFilter = Control.MouseFilterEnum.Pass,
+        };
+        root.AddThemeConstantOverride("separation", 8);
+
+        var iconAndName = new HBoxContainer
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        iconAndName.AddThemeConstantOverride("separation", 8);
+
+        var icon = new TextureRect
+        {
+            CustomMinimumSize = new Vector2(32, 32),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Texture = item.Icon,
+        };
+        iconAndName.AddChild(icon);
+
+        var nameLabel = new Label
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Text = item.DisplayName,
+        };
+        iconAndName.AddChild(nameLabel);
+
+        root.AddChild(iconAndName);
+
+        var quantityLabel = new Label
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Text = $"x{stackEntry.Stack.Quantity}",
+            CustomMinimumSize = new Vector2(48, 0),
+        };
+        root.AddChild(quantityLabel);
+
+        var priceLabel = new Label
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Text = $"{price}g ea",
+        };
+        root.AddChild(priceLabel);
+
+        var sellButton = new Button
+        {
+            Text = "Sell",
+            CustomMinimumSize = new Vector2(72, 0),
+        };
+        root.AddChild(sellButton);
+
+        var row = new SellRow
+        {
+            Kind = SellRowKind.Stack,
+            Root = root,
+            SellButton = sellButton,
+            SlotIndex = slotIndex,
+            Price = price,
+            StackItemId = item.Id,
+        };
+        row.OnPressed = () => OnStackSellPressed(row);
         sellButton.Pressed += row.OnPressed;
 
         return row;
@@ -149,7 +242,7 @@ public partial class MerchantSellListPanel : VBoxContainer
         root.AddChild(group);
     }
 
-    private void OnSellPressed(SellRow row)
+    private void OnGearSellPressed(SellRow row)
     {
         if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
             return;
@@ -179,12 +272,46 @@ public partial class MerchantSellListPanel : VBoxContainer
         _inventory.AddGold(price);
     }
 
+    private void OnStackSellPressed(SellRow row)
+    {
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return;
+        if (row == null)
+            return;
+
+        // Re-validate the live slot so a stale row cannot pay gold for a changed entry.
+        if (!_inventory.TryGetEntry(row.SlotIndex, out var entry))
+            return;
+        if (entry is not InventoryStackEntry stackEntry)
+            return;
+
+        var item = stackEntry.Stack.Item;
+        if (item == null || item.SellPrice <= 0)
+            return;
+        if (!string.Equals(item.Id, row.StackItemId, System.StringComparison.Ordinal))
+            return;
+
+        var consumed = _inventory.TryConsumeFromStackSlot(row.SlotIndex, item.Id, 1);
+        if (consumed <= 0)
+            return;
+
+        _inventory.AddGold(item.SellPrice * consumed);
+    }
+
+    private enum SellRowKind
+    {
+        Gear,
+        Stack,
+    }
+
     private sealed class SellRow
     {
+        public SellRowKind Kind;
         public Control Root;
         public Button SellButton;
         public int SlotIndex;
         public int Price;
+        public string StackItemId;
         public System.Action OnPressed;
     }
 }
