@@ -290,6 +290,7 @@ MaxLevel = 1
 SubstatCount = 2
 ExperienceToNextLevel = Array[int]([])
 BaseFodderXp = 5
+BaseSellPrice = 1
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Trash_MaxHealth"), SubResource("sv_Trash_MaxMana"), SubResource("sv_Trash_MP5"), SubResource("sv_Trash_Power"), SubResource("sv_Trash_Haste"), SubResource("sv_Trash_MovementSpeedMultiplier"), SubResource("sv_Trash_CritRate"), SubResource("sv_Trash_CritDamage"), SubResource("sv_Trash_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Common"]
@@ -299,6 +300,7 @@ MaxLevel = 8
 SubstatCount = 2
 ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381])
 BaseFodderXp = 20
+BaseSellPrice = 5
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Common_MaxHealth"), SubResource("sv_Common_MaxMana"), SubResource("sv_Common_MP5"), SubResource("sv_Common_Power"), SubResource("sv_Common_Haste"), SubResource("sv_Common_MovementSpeedMultiplier"), SubResource("sv_Common_CritRate"), SubResource("sv_Common_CritDamage"), SubResource("sv_Common_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Uncommon"]
@@ -308,6 +310,7 @@ MaxLevel = 12
 SubstatCount = 3
 ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930])
 BaseFodderXp = 50
+BaseSellPrice = 15
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Uncommon_MaxHealth"), SubResource("sv_Uncommon_MaxMana"), SubResource("sv_Uncommon_MP5"), SubResource("sv_Uncommon_Power"), SubResource("sv_Uncommon_Haste"), SubResource("sv_Uncommon_MovementSpeedMultiplier"), SubResource("sv_Uncommon_CritRate"), SubResource("sv_Uncommon_CritDamage"), SubResource("sv_Uncommon_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Rare"]
@@ -317,6 +320,7 @@ MaxLevel = 16
 SubstatCount = 3
 ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271])
 BaseFodderXp = 120
+BaseSellPrice = 40
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Rare_MaxHealth"), SubResource("sv_Rare_MaxMana"), SubResource("sv_Rare_MP5"), SubResource("sv_Rare_Power"), SubResource("sv_Rare_Haste"), SubResource("sv_Rare_MovementSpeedMultiplier"), SubResource("sv_Rare_CritRate"), SubResource("sv_Rare_CritDamage"), SubResource("sv_Rare_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Epic"]
@@ -326,6 +330,7 @@ MaxLevel = 20
 SubstatCount = 4
 ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271, 2839, 3549, 4436, 5545])
 BaseFodderXp = 250
+BaseSellPrice = 100
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Epic_MaxHealth"), SubResource("sv_Epic_MaxMana"), SubResource("sv_Epic_MP5"), SubResource("sv_Epic_Power"), SubResource("sv_Epic_Haste"), SubResource("sv_Epic_MovementSpeedMultiplier"), SubResource("sv_Epic_CritRate"), SubResource("sv_Epic_CritDamage"), SubResource("sv_Epic_DamageBonus")])
 
 [sub_resource type="Resource" id="qr_Legendary"]
@@ -335,6 +340,7 @@ MaxLevel = 20
 SubstatCount = 4
 ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271, 2839, 3549, 4436, 5545])
 BaseFodderXp = 500
+BaseSellPrice = 250
 SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Legendary_MaxHealth"), SubResource("sv_Legendary_MaxMana"), SubResource("sv_Legendary_MP5"), SubResource("sv_Legendary_Power"), SubResource("sv_Legendary_Haste"), SubResource("sv_Legendary_MovementSpeedMultiplier"), SubResource("sv_Legendary_CritRate"), SubResource("sv_Legendary_CritDamage"), SubResource("sv_Legendary_DamageBonus")])
 
 [sub_resource type="Resource" id="sr_Head"]

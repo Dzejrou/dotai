@@ -5,6 +5,12 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class MerchantWindow : Control
 {
+    private enum Mode
+    {
+        Buy,
+        Sell,
+    }
+
     [Export]
     public NodePath WindowPanelPath { get; set; } = new("Panel");
 
@@ -18,7 +24,16 @@ public partial class MerchantWindow : Control
     public NodePath GoldLabelPath { get; set; } = new("Panel/Margin/VBox/Summary/GoldLabel");
 
     [Export]
+    public NodePath BuyTabButtonPath { get; set; } = new("Panel/Margin/VBox/ModeBar/BuyTabButton");
+
+    [Export]
+    public NodePath SellTabButtonPath { get; set; } = new("Panel/Margin/VBox/ModeBar/SellTabButton");
+
+    [Export]
     public NodePath OffersContainerPath { get; set; } = new("Panel/Margin/VBox/Offers");
+
+    [Export]
+    public NodePath SellListContainerPath { get; set; } = new("Panel/Margin/VBox/SellList");
 
     [Export]
     public NodePath RefreshButtonPath { get; set; } = new("Panel/Margin/VBox/Footer/RefreshButton");
@@ -29,11 +44,16 @@ public partial class MerchantWindow : Control
     private Label _titleLabel;
     private Button _closeButton;
     private Label _goldLabel;
+    private Button _buyTabButton;
+    private Button _sellTabButton;
     private VBoxContainer _offersContainer;
+    private VBoxContainer _sellListContainer;
     private Button _refreshButton;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
+    private Mode _mode = Mode.Buy;
     private readonly List<OfferRow> _rows = new();
+    private readonly List<SellRow> _sellRows = new();
 
     public override void _Ready()
     {
@@ -44,7 +64,10 @@ public partial class MerchantWindow : Control
         _titleLabel = GetNodeOrNull<Label>(TitleLabelPath);
         _closeButton = GetNodeOrNull<Button>(CloseButtonPath);
         _goldLabel = GetNodeOrNull<Label>(GoldLabelPath);
+        _buyTabButton = GetNodeOrNull<Button>(BuyTabButtonPath);
+        _sellTabButton = GetNodeOrNull<Button>(SellTabButtonPath);
         _offersContainer = GetNodeOrNull<VBoxContainer>(OffersContainerPath);
+        _sellListContainer = GetNodeOrNull<VBoxContainer>(SellListContainerPath);
         _refreshButton = GetNodeOrNull<Button>(RefreshButtonPath);
 
         if (_windowPanel != null)
@@ -60,6 +83,14 @@ public partial class MerchantWindow : Control
 
         if (_refreshButton != null)
             _refreshButton.Pressed += OnRefreshPressed;
+
+        if (_buyTabButton != null)
+            _buyTabButton.Pressed += OnBuyTabPressed;
+
+        if (_sellTabButton != null)
+            _sellTabButton.Pressed += OnSellTabPressed;
+
+        ApplyModeVisibility();
     }
 
     public override void _ExitTree()
@@ -69,6 +100,12 @@ public partial class MerchantWindow : Control
 
         if (_refreshButton != null)
             _refreshButton.Pressed -= OnRefreshPressed;
+
+        if (_buyTabButton != null)
+            _buyTabButton.Pressed -= OnBuyTabPressed;
+
+        if (_sellTabButton != null)
+            _sellTabButton.Pressed -= OnSellTabPressed;
 
         _windowDragger?.Detach();
         UnbindInventory();
@@ -134,6 +171,45 @@ public partial class MerchantWindow : Control
         _stock.TryRefresh(_inventory);
     }
 
+    private void OnBuyTabPressed()
+    {
+        SetMode(Mode.Buy);
+    }
+
+    private void OnSellTabPressed()
+    {
+        SetMode(Mode.Sell);
+    }
+
+    private void SetMode(Mode mode)
+    {
+        if (_mode == mode)
+        {
+            // Keep the active tab pinned even if the user re-clicks it.
+            ApplyModeVisibility();
+            return;
+        }
+
+        _mode = mode;
+        ApplyModeVisibility();
+        Refresh();
+    }
+
+    private void ApplyModeVisibility()
+    {
+        if (_buyTabButton != null)
+            _buyTabButton.ButtonPressed = _mode == Mode.Buy;
+        if (_sellTabButton != null)
+            _sellTabButton.ButtonPressed = _mode == Mode.Sell;
+
+        if (_offersContainer != null)
+            _offersContainer.Visible = _mode == Mode.Buy;
+        if (_sellListContainer != null)
+            _sellListContainer.Visible = _mode == Mode.Sell;
+        if (_refreshButton != null)
+            _refreshButton.Visible = _mode == Mode.Buy;
+    }
+
     private void Refresh()
     {
         if (_titleLabel != null)
@@ -151,6 +227,7 @@ public partial class MerchantWindow : Control
         }
 
         RebuildOfferRows();
+        RebuildSellRows();
     }
 
     private void RebuildOfferRows()
@@ -288,6 +365,156 @@ public partial class MerchantWindow : Control
         _stock.TryPurchase(row.OfferIndex, _inventory);
     }
 
+    private void RebuildSellRows()
+    {
+        if (_sellListContainer == null)
+            return;
+
+        foreach (var row in _sellRows)
+        {
+            if (GodotObject.IsInstanceValid(row.SellButton))
+                row.SellButton.Pressed -= row.OnPressed;
+            if (GodotObject.IsInstanceValid(row.Root))
+                row.Root.QueueFree();
+        }
+        _sellRows.Clear();
+
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return;
+
+        var rules = _inventory.GearGenerationRules;
+        var slotCount = _inventory.GetSlotCount();
+        for (var slotIndex = 0; slotIndex < slotCount; slotIndex++)
+        {
+            if (!_inventory.TryGetEntry(slotIndex, out var entry))
+                continue;
+            if (entry is not InventoryGearEntry gearEntry)
+                continue;
+
+            var price = GearSellPricing.GetSellPrice(gearEntry.Gear, rules);
+            if (price <= 0)
+                continue;
+
+            var row = BuildSellRow(gearEntry.Gear, slotIndex, price);
+            _sellListContainer.AddChild(row.Root);
+            _sellRows.Add(row);
+        }
+    }
+
+    private SellRow BuildSellRow(GearInstance gear, int slotIndex, int price)
+    {
+        var root = new HBoxContainer
+        {
+            MouseFilter = Control.MouseFilterEnum.Pass,
+        };
+        root.AddThemeConstantOverride("separation", 8);
+
+        AddSellIconAndNameGroup(root, gear);
+
+        var levelLabel = new Label
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Text = $"Lv {gear.Level}",
+            CustomMinimumSize = new Vector2(48, 0),
+        };
+        root.AddChild(levelLabel);
+
+        var priceLabel = new Label
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Text = $"{price}g",
+        };
+        root.AddChild(priceLabel);
+
+        var sellButton = new Button
+        {
+            Text = "Sell",
+            CustomMinimumSize = new Vector2(72, 0),
+        };
+        root.AddChild(sellButton);
+
+        var row = new SellRow
+        {
+            Root = root,
+            SellButton = sellButton,
+            SlotIndex = slotIndex,
+            Price = price,
+        };
+        row.OnPressed = () => OnSellPressed(row);
+        sellButton.Pressed += row.OnPressed;
+
+        return row;
+    }
+
+    private static void AddSellIconAndNameGroup(HBoxContainer root, GearInstance gear)
+    {
+        // Owned gear: reveal all substats in the tooltip.
+        var group = new MerchantGearOfferRow
+        {
+            Gear = gear,
+            RevealedSubstatCount = int.MaxValue,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            MouseFilter = Control.MouseFilterEnum.Stop,
+        };
+        group.AddThemeConstantOverride("separation", 8);
+
+        var icon = new TextureRect
+        {
+            CustomMinimumSize = new Vector2(32, 32),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Texture = gear.Definition?.Icon,
+            Modulate = GearQualityColors.GetColor(gear.Quality),
+        };
+        group.AddChild(icon);
+
+        var label = new Label
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Text = gear.Slot.ToString(),
+            SelfModulate = GearQualityColors.GetColor(gear.Quality),
+        };
+        group.AddChild(label);
+
+        root.AddChild(group);
+    }
+
+    private void OnSellPressed(SellRow row)
+    {
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return;
+        if (row == null)
+            return;
+
+        // Re-validate price against the live entry so a stale row cannot pay an outdated amount.
+        if (!_inventory.TryGetEntry(row.SlotIndex, out var entry))
+            return;
+        if (entry is not InventoryGearEntry gearEntry)
+            return;
+
+        var rules = _inventory.GearGenerationRules;
+        var price = GearSellPricing.GetSellPrice(gearEntry.Gear, rules);
+        if (price <= 0)
+            return;
+
+        var taken = _inventory.TakeEntry(row.SlotIndex);
+        if (taken is not InventoryGearEntry)
+        {
+            // Defensive: if something else was at this slot, drop it back in to keep state sane.
+            if (taken != null)
+                GD.PushWarning($"{nameof(MerchantWindow)}: sell aborted; entry at slot {row.SlotIndex} was not a gear entry.");
+            return;
+        }
+
+        _inventory.AddGold(price);
+    }
+
     private static string BuildOfferLabel(MerchantOffer offer)
     {
         return offer.Kind switch
@@ -398,6 +625,15 @@ public partial class MerchantWindow : Control
         public Control Root;
         public Button BuyButton;
         public int OfferIndex;
+        public System.Action OnPressed;
+    }
+
+    private sealed class SellRow
+    {
+        public Control Root;
+        public Button SellButton;
+        public int SlotIndex;
+        public int Price;
         public System.Action OnPressed;
     }
 }
