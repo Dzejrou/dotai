@@ -104,6 +104,8 @@ public partial class MerchantWindow : Control
             _sellTabButton.Pressed -= OnSellTabPressed;
 
         _windowDragger?.Detach();
+        _buyListPanel?.Unbind();
+        _sellListPanel?.Unbind();
         UnbindInventory();
         UnbindStock();
     }
@@ -133,8 +135,11 @@ public partial class MerchantWindow : Control
 
         // Release room-local references so the HUD-level window does not keep
         // a stale pointer at a MerchantStock that may be freed with the room.
-        // Reopening goes through Open() which rebinds via the idempotent
-        // Bind* helpers.
+        // Child panels mirror this so they do not retain the same stale stock
+        // one layer deeper. Reopening goes through Open() which rebinds via
+        // the idempotent Bind* helpers and Refresh() re-pushes into the panels.
+        _buyListPanel?.Unbind();
+        _sellListPanel?.Unbind();
         UnbindInventory();
         UnbindStock();
     }

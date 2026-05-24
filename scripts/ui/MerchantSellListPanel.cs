@@ -10,12 +10,21 @@ public partial class MerchantSellListPanel : VBoxContainer
 
     public override void _ExitTree()
     {
-        ClearRows();
+        Unbind();
     }
 
     public void Bind(InventoryController inventory)
     {
         _inventory = inventory;
+    }
+
+    // Drops the inventory reference and tears down any rendered rows.
+    // MerchantWindow calls this on close so the panel mirrors the parent's
+    // unbind path and does not retain a stale inventory pointer.
+    public void Unbind()
+    {
+        ClearRows();
+        _inventory = null;
     }
 
     public void Refresh()

@@ -11,13 +11,24 @@ public partial class MerchantBuyListPanel : VBoxContainer
 
     public override void _ExitTree()
     {
-        ClearRows();
+        Unbind();
     }
 
     public void Bind(InventoryController inventory, MerchantStock stock)
     {
         _inventory = inventory;
         _stock = stock;
+    }
+
+    // Drops references to the inventory/stock and tears down any rendered rows.
+    // MerchantWindow calls this on close so that closing the HUD-level window
+    // does not keep a stale pointer at a room-local MerchantStock that may be
+    // freed with the room.
+    public void Unbind()
+    {
+        ClearRows();
+        _inventory = null;
+        _stock = null;
     }
 
     public void Refresh()
