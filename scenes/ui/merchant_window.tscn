@@ -104,3 +104,8 @@ alignment = 2
 [node name="RefreshButton" type="Button" parent="Panel/Margin/VBox/Footer"]
 layout_mode = 2
 text = "Refresh"
+
+[node name="SellModeButton" type="Button" parent="Panel/Margin/VBox/Footer"]
+visible = false
+layout_mode = 2
+text = "Sell: 1"

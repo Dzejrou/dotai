@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public partial class MerchantSellListPanel : VBoxContainer
 {
     private InventoryController _inventory;
+    private MerchantSellQuantityMode _sellQuantityMode = MerchantSellQuantityMode.One;
     private readonly List<SellRow> _rows = new();
 
     public override void _ExitTree()
@@ -16,6 +17,11 @@ public partial class MerchantSellListPanel : VBoxContainer
     public void Bind(InventoryController inventory)
     {
         _inventory = inventory;
+    }
+
+    public void SetSellQuantityMode(MerchantSellQuantityMode mode)
+    {
+        _sellQuantityMode = mode;
     }
 
     // Drops the inventory reference and tears down any rendered rows.
@@ -175,11 +181,12 @@ public partial class MerchantSellListPanel : VBoxContainer
         };
         root.AddChild(quantityLabel);
 
+        var projected = _sellQuantityMode.ResolveSellQuantity(stackEntry.Stack.Quantity);
         var priceLabel = new Label
         {
             VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = Control.MouseFilterEnum.Ignore,
-            Text = $"{price}g ea",
+            Text = $"{price}g ea / {price * projected}g",
         };
         root.AddChild(priceLabel);
 
@@ -187,6 +194,7 @@ public partial class MerchantSellListPanel : VBoxContainer
         {
             Text = "Sell",
             CustomMinimumSize = new Vector2(72, 0),
+            Disabled = projected <= 0,
         };
         root.AddChild(sellButton);
 
@@ -291,10 +299,17 @@ public partial class MerchantSellListPanel : VBoxContainer
         if (!string.Equals(item.Id, row.StackItemId, System.StringComparison.Ordinal))
             return;
 
-        var consumed = _inventory.TryConsumeFromStackSlot(row.SlotIndex, item.Id, 1);
+        // Compute the request from the live current quantity, not stale row text. The mode
+        // is a cap; partial stacks shorter than the cap sell whatever they have.
+        var requested = _sellQuantityMode.ResolveSellQuantity(stackEntry.Stack.Quantity);
+        if (requested <= 0)
+            return;
+
+        var consumed = _inventory.TryConsumeFromStackSlot(row.SlotIndex, item.Id, requested);
         if (consumed <= 0)
             return;
 
+        // Only pay for what was actually consumed in case the live stack shrank under us.
         _inventory.AddGold(item.SellPrice * consumed);
     }
 
