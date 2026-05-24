@@ -108,7 +108,7 @@ public partial class GearLevelingPanel : VBoxContainer
             _targetIcon.Texture = hasIcon ? targetGear.Definition.Icon : null;
             _targetIcon.Visible = hasIcon;
             _targetIcon.Modulate = hasTarget
-                ? GearQualityColors.GetColor(targetGear.Quality)
+                ? ItemQualityColors.GetColor(targetGear.Quality)
                 : Colors.White;
             _targetPlaceholder.Visible = !hasTarget;
         }
@@ -149,7 +149,7 @@ public partial class GearLevelingPanel : VBoxContainer
                     break;
                 case GearLevelingMaterialKind.GearFodder:
                     icon = fodderEntry.Gear.Definition?.Icon;
-                    iconColor = GearQualityColors.GetColor(fodderEntry.Gear.Quality);
+                    iconColor = ItemQualityColors.GetColor(fodderEntry.Gear.Quality);
                     break;
             }
 

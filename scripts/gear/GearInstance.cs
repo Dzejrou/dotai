@@ -9,7 +9,7 @@ public sealed class GearInstance
     public GearInstance(
         GearDefinition definition,
         EquipmentSlot slot,
-        GearQuality quality,
+        ItemQuality quality,
         int level,
         IReadOnlyList<GearStatModifier> mainStats,
         IReadOnlyList<GearStatModifier> substats,
@@ -30,7 +30,7 @@ public sealed class GearInstance
 
     public GearDefinition Definition { get; }
     public EquipmentSlot Slot { get; }
-    public GearQuality Quality { get; }
+    public ItemQuality Quality { get; }
     public int Level { get; set; }
     public int CurrentXp { get; set; }
     public IReadOnlyList<GearStatModifier> MainStats { get; }

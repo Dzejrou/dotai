@@ -52,14 +52,14 @@ public partial class DebugTray : Control
         EquipmentSlot.Artifact,
     };
 
-    private static readonly GearQuality[] QualityOrder =
+    private static readonly ItemQuality[] QualityOrder =
     {
-        GearQuality.Trash,
-        GearQuality.Common,
-        GearQuality.Uncommon,
-        GearQuality.Rare,
-        GearQuality.Epic,
-        GearQuality.Legendary,
+        ItemQuality.Trash,
+        ItemQuality.Common,
+        ItemQuality.Uncommon,
+        ItemQuality.Rare,
+        ItemQuality.Epic,
+        ItemQuality.Legendary,
     };
 
     private DebugSpawner _debugSpawner;
@@ -79,7 +79,7 @@ public partial class DebugTray : Control
     private Vector2 _pressStartScreenPosition;
     private bool _draggingFromCard;
     private SpawnCatalogEntryKind _activeEntryKind = SpawnCatalogEntryKind.Character;
-    private GearQuality _selectedGearQuality = GearQuality.Common;
+    private ItemQuality _selectedGearQuality = ItemQuality.Common;
 
     public bool TrayVisible => Visible;
 
@@ -725,7 +725,7 @@ public partial class DebugTray : Control
         if (_qualitySelector == null)
             return;
 
-        _selectedGearQuality = (GearQuality)_qualitySelector.GetItemMetadata((int)index).AsInt32();
+        _selectedGearQuality = (ItemQuality)_qualitySelector.GetItemMetadata((int)index).AsInt32();
         UpdateStatusLabel();
     }
 
@@ -745,7 +745,7 @@ public partial class DebugTray : Control
 
         for (var index = 0; index < _qualitySelector.ItemCount; index++)
         {
-            if ((GearQuality)_qualitySelector.GetItemMetadata(index).AsInt32() != _selectedGearQuality)
+            if ((ItemQuality)_qualitySelector.GetItemMetadata(index).AsInt32() != _selectedGearQuality)
                 continue;
 
             _qualitySelector.Select(index);

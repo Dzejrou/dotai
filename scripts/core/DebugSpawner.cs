@@ -32,7 +32,7 @@ public partial class DebugSpawner : Node2D
     private string _pendingSpawnId;
     private bool _pendingGear;
     private EquipmentSlot _pendingGearSlot;
-    private GearQuality _pendingGearQuality;
+    private ItemQuality _pendingGearQuality;
     private Sprite2D _placementGhost;
     private Faction _selectedFaction = Factions.Enemies;
 
@@ -41,7 +41,7 @@ public partial class DebugSpawner : Node2D
     public string PendingSpawnId => _pendingSpawnId;
     public bool HasPendingGear => _pendingGear;
     public EquipmentSlot PendingGearSlot => _pendingGearSlot;
-    public GearQuality PendingGearQuality => _pendingGearQuality;
+    public ItemQuality PendingGearQuality => _pendingGearQuality;
     public Faction SelectedFaction => _selectedFaction;
 
     public GearSlotRules GetGearSlotRules(EquipmentSlot slot)
@@ -95,7 +95,7 @@ public partial class DebugSpawner : Node2D
         UpdatePlacementGhost(spawnId);
     }
 
-    public void BeginGearPlacement(EquipmentSlot slot, GearQuality quality)
+    public void BeginGearPlacement(EquipmentSlot slot, ItemQuality quality)
     {
         if (GearGenerationRules == null)
         {
@@ -178,7 +178,7 @@ public partial class DebugSpawner : Node2D
         return true;
     }
 
-    private Node2D SpawnGeneratedGear(EquipmentSlot slot, GearQuality quality, Vector2 spawnPosition)
+    private Node2D SpawnGeneratedGear(EquipmentSlot slot, ItemQuality quality, Vector2 spawnPosition)
     {
         if (GearDropScene == null)
         {

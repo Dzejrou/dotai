@@ -38,9 +38,9 @@ public static class GearSaveSerializer
             return null;
         }
 
-        if (!Enum.TryParse<GearQuality>(data.Quality, out var quality))
+        if (!Enum.TryParse<ItemQuality>(data.Quality, out var quality))
         {
-            GD.PushWarning($"{nameof(GearSaveSerializer)}: unknown GearQuality '{data.Quality}'.");
+            GD.PushWarning($"{nameof(GearSaveSerializer)}: unknown ItemQuality '{data.Quality}'.");
             return null;
         }
 

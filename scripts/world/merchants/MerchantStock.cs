@@ -220,16 +220,16 @@ public partial class MerchantStock : Node
 
     // Resolves the gear quality for a generated-gear rule. MinimumQuality treats Trash
     // as Common since Trash gear is not worth surfacing in merchant stock.
-    private static GearQuality ResolveOfferQuality(MerchantOfferRule rule)
+    private static ItemQuality ResolveOfferQuality(MerchantOfferRule rule)
     {
         return rule.QualityMode switch
         {
             MerchantOfferQualityMode.RandomQuality =>
-                PickUniformQuality(GearQuality.Common, GearQuality.Legendary),
+                PickUniformQuality(ItemQuality.Common, ItemQuality.Legendary),
             MerchantOfferQualityMode.MinimumQuality =>
                 PickUniformQuality(
-                    rule.GearQuality == GearQuality.Trash ? GearQuality.Common : rule.GearQuality,
-                    GearQuality.Legendary),
+                    rule.GearQuality == ItemQuality.Trash ? ItemQuality.Common : rule.GearQuality,
+                    ItemQuality.Legendary),
             _ => rule.GearQuality,
         };
     }
@@ -240,13 +240,13 @@ public partial class MerchantStock : Node
         return values[OfferRng.RandiRange(0, values.Length - 1)];
     }
 
-    private static GearQuality PickUniformQuality(GearQuality min, GearQuality max)
+    private static ItemQuality PickUniformQuality(ItemQuality min, ItemQuality max)
     {
         var lo = (int)min;
         var hi = (int)max;
         if (hi < lo)
             (lo, hi) = (hi, lo);
-        return (GearQuality)OfferRng.RandiRange(lo, hi);
+        return (ItemQuality)OfferRng.RandiRange(lo, hi);
     }
 
     private static bool RollAppearance(float chance)

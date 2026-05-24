@@ -143,7 +143,7 @@ public partial class MerchantBuyListPanel : VBoxContainer
             Texture = offer.Icon,
         };
         if (isGear)
-            icon.Modulate = GearQualityColors.GetColor(offer.Gear.Quality);
+            icon.Modulate = ItemQualityColors.GetColor(offer.Gear.Quality);
         group.AddChild(icon);
 
         var label = new Label
@@ -154,7 +154,7 @@ public partial class MerchantBuyListPanel : VBoxContainer
             Text = BuildOfferLabel(offer),
         };
         if (isGear)
-            label.SelfModulate = GearQualityColors.GetColor(offer.Gear.Quality);
+            label.SelfModulate = ItemQualityColors.GetColor(offer.Gear.Quality);
         group.AddChild(label);
 
         root.AddChild(group);

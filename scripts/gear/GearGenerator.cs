@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public static class GearGenerator
 {
-    public static GearInstance Generate(EquipmentSlot slot, GearQuality quality, GearGenerationRules rules)
+    public static GearInstance Generate(EquipmentSlot slot, ItemQuality quality, GearGenerationRules rules)
     {
         if (rules == null)
         {
@@ -48,7 +48,7 @@ public static class GearGenerator
     // Build a display-only GearDefinition for a (slot, quality) pair. Used by save/load
     // rehydration and by Generate(). Returns null if the rules resource is missing
     // entries for the requested slot.
-    public static GearDefinition SynthesizeDefinition(EquipmentSlot slot, GearQuality quality, GearGenerationRules rules)
+    public static GearDefinition SynthesizeDefinition(EquipmentSlot slot, ItemQuality quality, GearGenerationRules rules)
     {
         if (rules == null)
         {

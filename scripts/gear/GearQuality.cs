@@ -1,4 +1,4 @@
-public enum GearQuality
+public enum ItemQuality
 {
     Trash = 0,
     Common = 1,
