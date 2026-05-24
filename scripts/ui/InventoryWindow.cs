@@ -311,9 +311,7 @@ public partial class InventoryWindow : Control
             slotView.Root.Modulate = hasEntry ? Colors.White : new Color(0.68f, 0.68f, 0.68f, 1.0f);
             slotView.IconRect.Texture = hasEntry ? entry.Icon : null;
             slotView.IconRect.Visible = hasEntry && entry.Icon != null;
-            slotView.IconRect.Modulate = entry is InventoryGearEntry gearEntry
-                ? ItemQualityColors.GetColor(gearEntry.Gear.Quality)
-                : Colors.White;
+            slotView.IconRect.Modulate = Colors.White;
             slotView.QuantityLabel.Visible = hasEntry && entry.ShowQuantity;
             slotView.QuantityLabel.Text = hasEntry && entry.ShowQuantity ? entry.Quantity.ToString() : string.Empty;
 

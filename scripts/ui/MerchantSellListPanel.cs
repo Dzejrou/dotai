@@ -237,7 +237,6 @@ public partial class MerchantSellListPanel : VBoxContainer
             TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Texture = gear.Definition?.Icon,
-            Modulate = ItemQualityColors.GetColor(gear.Quality),
         };
         group.AddChild(icon);
 

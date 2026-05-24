@@ -142,8 +142,6 @@ public partial class MerchantBuyListPanel : VBoxContainer
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Texture = offer.Icon,
         };
-        if (isGear)
-            icon.Modulate = ItemQualityColors.GetColor(offer.Gear.Quality);
         group.AddChild(icon);
 
         var label = new Label

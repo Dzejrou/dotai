@@ -107,9 +107,7 @@ public partial class GearLevelingPanel : VBoxContainer
             var hasIcon = hasTarget && targetGear?.Definition?.Icon != null;
             _targetIcon.Texture = hasIcon ? targetGear.Definition.Icon : null;
             _targetIcon.Visible = hasIcon;
-            _targetIcon.Modulate = hasTarget
-                ? ItemQualityColors.GetColor(targetGear.Quality)
-                : Colors.White;
+            _targetIcon.Modulate = Colors.White;
             _targetPlaceholder.Visible = !hasTarget;
         }
 
@@ -136,7 +134,6 @@ public partial class GearLevelingPanel : VBoxContainer
         if (_materialIcon != null && _materialPlaceholder != null && _materialQuantity != null)
         {
             Texture2D icon = null;
-            var iconColor = Colors.White;
             var showQuantity = false;
             var quantityText = string.Empty;
 
@@ -149,13 +146,12 @@ public partial class GearLevelingPanel : VBoxContainer
                     break;
                 case GearLevelingMaterialKind.GearFodder:
                     icon = fodderEntry.Gear.Definition?.Icon;
-                    iconColor = ItemQualityColors.GetColor(fodderEntry.Gear.Quality);
                     break;
             }
 
             _materialIcon.Texture = icon;
             _materialIcon.Visible = icon != null;
-            _materialIcon.Modulate = iconColor;
+            _materialIcon.Modulate = Colors.White;
             _materialPlaceholder.Visible = materialKind == GearLevelingMaterialKind.None;
             _materialQuantity.Visible = showQuantity;
             _materialQuantity.Text = quantityText;
