@@ -1,7 +1,5 @@
 using Godot;
 
-using System.Collections.Generic;
-
 [GlobalClass]
 public partial class MerchantWindow : Control
 {
@@ -30,10 +28,10 @@ public partial class MerchantWindow : Control
     public NodePath SellTabButtonPath { get; set; } = new("Panel/Margin/VBox/ModeBar/SellTabButton");
 
     [Export]
-    public NodePath OffersContainerPath { get; set; } = new("Panel/Margin/VBox/Offers");
+    public NodePath BuyListPanelPath { get; set; } = new("Panel/Margin/VBox/Offers");
 
     [Export]
-    public NodePath SellListContainerPath { get; set; } = new("Panel/Margin/VBox/SellList");
+    public NodePath SellListPanelPath { get; set; } = new("Panel/Margin/VBox/SellList");
 
     [Export]
     public NodePath RefreshButtonPath { get; set; } = new("Panel/Margin/VBox/Footer/RefreshButton");
@@ -46,14 +44,12 @@ public partial class MerchantWindow : Control
     private Label _goldLabel;
     private Button _buyTabButton;
     private Button _sellTabButton;
-    private VBoxContainer _offersContainer;
-    private VBoxContainer _sellListContainer;
+    private MerchantBuyListPanel _buyListPanel;
+    private MerchantSellListPanel _sellListPanel;
     private Button _refreshButton;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
     private Mode _mode = Mode.Buy;
-    private readonly List<OfferRow> _rows = new();
-    private readonly List<SellRow> _sellRows = new();
 
     public override void _Ready()
     {
@@ -66,8 +62,8 @@ public partial class MerchantWindow : Control
         _goldLabel = GetNodeOrNull<Label>(GoldLabelPath);
         _buyTabButton = GetNodeOrNull<Button>(BuyTabButtonPath);
         _sellTabButton = GetNodeOrNull<Button>(SellTabButtonPath);
-        _offersContainer = GetNodeOrNull<VBoxContainer>(OffersContainerPath);
-        _sellListContainer = GetNodeOrNull<VBoxContainer>(SellListContainerPath);
+        _buyListPanel = GetNodeOrNull<MerchantBuyListPanel>(BuyListPanelPath);
+        _sellListPanel = GetNodeOrNull<MerchantSellListPanel>(SellListPanelPath);
         _refreshButton = GetNodeOrNull<Button>(RefreshButtonPath);
 
         if (_windowPanel != null)
@@ -108,6 +104,8 @@ public partial class MerchantWindow : Control
             _sellTabButton.Pressed -= OnSellTabPressed;
 
         _windowDragger?.Detach();
+        _buyListPanel?.Unbind();
+        _sellListPanel?.Unbind();
         UnbindInventory();
         UnbindStock();
     }
@@ -137,8 +135,11 @@ public partial class MerchantWindow : Control
 
         // Release room-local references so the HUD-level window does not keep
         // a stale pointer at a MerchantStock that may be freed with the room.
-        // Reopening goes through Open() which rebinds via the idempotent
-        // Bind* helpers.
+        // Child panels mirror this so they do not retain the same stale stock
+        // one layer deeper. Reopening goes through Open() which rebinds via
+        // the idempotent Bind* helpers and Refresh() re-pushes into the panels.
+        _buyListPanel?.Unbind();
+        _sellListPanel?.Unbind();
         UnbindInventory();
         UnbindStock();
     }
@@ -202,10 +203,10 @@ public partial class MerchantWindow : Control
         if (_sellTabButton != null)
             _sellTabButton.ButtonPressed = _mode == Mode.Sell;
 
-        if (_offersContainer != null)
-            _offersContainer.Visible = _mode == Mode.Buy;
-        if (_sellListContainer != null)
-            _sellListContainer.Visible = _mode == Mode.Sell;
+        if (_buyListPanel != null)
+            _buyListPanel.Visible = _mode == Mode.Buy;
+        if (_sellListPanel != null)
+            _sellListPanel.Visible = _mode == Mode.Sell;
         if (_refreshButton != null)
             _refreshButton.Visible = _mode == Mode.Buy;
     }
@@ -226,317 +227,17 @@ public partial class MerchantWindow : Control
             _refreshButton.Disabled = _stock == null || _inventory == null || gold < cost;
         }
 
-        RebuildOfferRows();
-        RebuildSellRows();
-    }
-
-    private void RebuildOfferRows()
-    {
-        if (_offersContainer == null)
-            return;
-
-        // Tear down any stale rows.
-        foreach (var row in _rows)
+        if (_buyListPanel != null)
         {
-            if (GodotObject.IsInstanceValid(row.BuyButton))
-                row.BuyButton.Pressed -= row.OnPressed;
-            if (GodotObject.IsInstanceValid(row.Root))
-                row.Root.QueueFree();
-        }
-        _rows.Clear();
-
-        if (_stock == null)
-            return;
-
-        var offers = _stock.Offers;
-        for (var i = 0; i < offers.Count; i++)
-        {
-            var offer = offers[i];
-            if (offer == null)
-                continue;
-
-            var row = BuildOfferRow(offer, i);
-            _offersContainer.AddChild(row.Root);
-            _rows.Add(row);
-        }
-    }
-
-    private OfferRow BuildOfferRow(MerchantOffer offer, int offerIndex)
-    {
-        var root = new HBoxContainer
-        {
-            MouseFilter = Control.MouseFilterEnum.Pass,
-        };
-        root.AddThemeConstantOverride("separation", 8);
-
-        AddIconAndNameGroup(root, offer);
-
-        var priceLabel = new Label
-        {
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            Text = $"{offer.Price}g",
-        };
-        root.AddChild(priceLabel);
-
-        var buyButton = new Button
-        {
-            Text = offer.Purchased ? "Sold" : "Buy",
-            CustomMinimumSize = new Vector2(72, 0),
-        };
-        root.AddChild(buyButton);
-
-        var canAfford = _inventory != null &&
-            GodotObject.IsInstanceValid(_inventory) &&
-            _inventory.Gold >= offer.Price;
-        var canAccept = _stock != null && _stock.CanInventoryAccept(offer, _inventory);
-        buyButton.Disabled = offer.Purchased || !canAfford || !canAccept;
-
-        var row = new OfferRow
-        {
-            Root = root,
-            BuyButton = buyButton,
-            OfferIndex = offerIndex,
-        };
-        row.OnPressed = () => OnBuyPressed(row);
-        buyButton.Pressed += row.OnPressed;
-
-        return row;
-    }
-
-    // Builds the icon + name portion of an offer row. For generated gear we wrap both
-    // controls in a MerchantGearOfferRow so hovering either one surfaces the same custom
-    // GearTooltipFactory tooltip used by inventory and equipped gear. Other offers keep
-    // a plain default tooltip on the name label.
-    private static void AddIconAndNameGroup(HBoxContainer root, MerchantOffer offer)
-    {
-        var isGear = offer.Kind == MerchantOfferKind.GeneratedGear && offer.Gear != null;
-
-        HBoxContainer group;
-        if (isGear)
-        {
-            group = new MerchantGearOfferRow
-            {
-                Gear = offer.Gear,
-                RevealedSubstatCount = offer.RevealedSubstatCount,
-            };
-        }
-        else
-        {
-            group = new HBoxContainer { TooltipText = BuildOfferTooltip(offer) };
-        }
-        group.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        // Stop so the group owns the hover area and receives tooltip events even when
-        // its children (icon, label) use MouseFilter.Ignore.
-        group.MouseFilter = Control.MouseFilterEnum.Stop;
-        group.AddThemeConstantOverride("separation", 8);
-
-        var icon = new TextureRect
-        {
-            CustomMinimumSize = new Vector2(32, 32),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            Texture = offer.Icon,
-        };
-        if (isGear)
-            icon.Modulate = GearQualityColors.GetColor(offer.Gear.Quality);
-        group.AddChild(icon);
-
-        var label = new Label
-        {
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            Text = BuildOfferLabel(offer),
-        };
-        if (isGear)
-            label.SelfModulate = GearQualityColors.GetColor(offer.Gear.Quality);
-        group.AddChild(label);
-
-        root.AddChild(group);
-    }
-
-    private void OnBuyPressed(OfferRow row)
-    {
-        if (_stock == null || _inventory == null)
-            return;
-        _stock.TryPurchase(row.OfferIndex, _inventory);
-    }
-
-    private void RebuildSellRows()
-    {
-        if (_sellListContainer == null)
-            return;
-
-        foreach (var row in _sellRows)
-        {
-            if (GodotObject.IsInstanceValid(row.SellButton))
-                row.SellButton.Pressed -= row.OnPressed;
-            if (GodotObject.IsInstanceValid(row.Root))
-                row.Root.QueueFree();
-        }
-        _sellRows.Clear();
-
-        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
-            return;
-
-        var rules = _inventory.GearGenerationRules;
-        var slotCount = _inventory.GetSlotCount();
-        for (var slotIndex = 0; slotIndex < slotCount; slotIndex++)
-        {
-            if (!_inventory.TryGetEntry(slotIndex, out var entry))
-                continue;
-            if (entry is not InventoryGearEntry gearEntry)
-                continue;
-
-            var price = GearSellPricing.GetSellPrice(gearEntry.Gear, rules);
-            if (price <= 0)
-                continue;
-
-            var row = BuildSellRow(gearEntry.Gear, slotIndex, price);
-            _sellListContainer.AddChild(row.Root);
-            _sellRows.Add(row);
-        }
-    }
-
-    private SellRow BuildSellRow(GearInstance gear, int slotIndex, int price)
-    {
-        var root = new HBoxContainer
-        {
-            MouseFilter = Control.MouseFilterEnum.Pass,
-        };
-        root.AddThemeConstantOverride("separation", 8);
-
-        AddSellIconAndNameGroup(root, gear);
-
-        var levelLabel = new Label
-        {
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            Text = $"Lv {gear.Level}",
-            CustomMinimumSize = new Vector2(48, 0),
-        };
-        root.AddChild(levelLabel);
-
-        var priceLabel = new Label
-        {
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            Text = $"{price}g",
-        };
-        root.AddChild(priceLabel);
-
-        var sellButton = new Button
-        {
-            Text = "Sell",
-            CustomMinimumSize = new Vector2(72, 0),
-        };
-        root.AddChild(sellButton);
-
-        var row = new SellRow
-        {
-            Root = root,
-            SellButton = sellButton,
-            SlotIndex = slotIndex,
-            Price = price,
-        };
-        row.OnPressed = () => OnSellPressed(row);
-        sellButton.Pressed += row.OnPressed;
-
-        return row;
-    }
-
-    private static void AddSellIconAndNameGroup(HBoxContainer root, GearInstance gear)
-    {
-        // Owned gear: reveal all substats in the tooltip.
-        var group = new MerchantGearOfferRow
-        {
-            Gear = gear,
-            RevealedSubstatCount = int.MaxValue,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            MouseFilter = Control.MouseFilterEnum.Stop,
-        };
-        group.AddThemeConstantOverride("separation", 8);
-
-        var icon = new TextureRect
-        {
-            CustomMinimumSize = new Vector2(32, 32),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            Texture = gear.Definition?.Icon,
-            Modulate = GearQualityColors.GetColor(gear.Quality),
-        };
-        group.AddChild(icon);
-
-        var label = new Label
-        {
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            Text = gear.Slot.ToString(),
-            SelfModulate = GearQualityColors.GetColor(gear.Quality),
-        };
-        group.AddChild(label);
-
-        root.AddChild(group);
-    }
-
-    private void OnSellPressed(SellRow row)
-    {
-        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
-            return;
-        if (row == null)
-            return;
-
-        // Re-validate price against the live entry so a stale row cannot pay an outdated amount.
-        if (!_inventory.TryGetEntry(row.SlotIndex, out var entry))
-            return;
-        if (entry is not InventoryGearEntry gearEntry)
-            return;
-
-        var rules = _inventory.GearGenerationRules;
-        var price = GearSellPricing.GetSellPrice(gearEntry.Gear, rules);
-        if (price <= 0)
-            return;
-
-        var taken = _inventory.TakeEntry(row.SlotIndex);
-        if (taken is not InventoryGearEntry)
-        {
-            // Defensive: if something else was at this slot, drop it back in to keep state sane.
-            if (taken != null)
-                GD.PushWarning($"{nameof(MerchantWindow)}: sell aborted; entry at slot {row.SlotIndex} was not a gear entry.");
-            return;
+            _buyListPanel.Bind(_inventory, _stock);
+            _buyListPanel.Refresh();
         }
 
-        _inventory.AddGold(price);
-    }
-
-    private static string BuildOfferLabel(MerchantOffer offer)
-    {
-        return offer.Kind switch
+        if (_sellListPanel != null)
         {
-            MerchantOfferKind.StackItem => offer.StackQuantity > 1
-                ? $"{offer.DisplayName} x{offer.StackQuantity}"
-                : offer.DisplayName,
-            MerchantOfferKind.GeneratedGear when offer.Gear != null =>
-                offer.Gear.Slot.ToString(),
-            _ => offer.DisplayName,
-        };
-    }
-
-    private static string BuildOfferTooltip(MerchantOffer offer)
-    {
-        if (offer.Kind == MerchantOfferKind.GeneratedGear && offer.Gear != null)
-            return GearTooltipBuilder.Build(offer.Gear);
-
-        if (offer.Kind == MerchantOfferKind.StackItem && offer.StackItem != null)
-            return offer.StackItem.DisplayName;
-
-        return string.Empty;
+            _sellListPanel.Bind(_inventory);
+            _sellListPanel.Refresh();
+        }
     }
 
     private void CenterPanelOnce()
@@ -618,22 +319,5 @@ public partial class MerchantWindow : Control
             _stock.Disconnect(MerchantStock.SignalName.StockChanged, callable);
 
         _stock = null;
-    }
-
-    private sealed class OfferRow
-    {
-        public Control Root;
-        public Button BuyButton;
-        public int OfferIndex;
-        public System.Action OnPressed;
-    }
-
-    private sealed class SellRow
-    {
-        public Control Root;
-        public Button SellButton;
-        public int SlotIndex;
-        public int Price;
-        public System.Action OnPressed;
     }
 }
