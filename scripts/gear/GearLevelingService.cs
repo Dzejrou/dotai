@@ -3,10 +3,12 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-// Item id of the crystal stack accepted by the leveling material slot.
+// Stack items that grant gear XP qualify as gear leveling crystals; the per-unit
+// XP is read from InventoryItemDefinition.GearXpPerUnit.
 public static class GearLevelingMaterials
 {
-    public const string ArcaneCrystalId = "arcane_crystal";
+    public static bool IsCrystal(InventoryItemDefinition item)
+        => item != null && item.GearXpPerUnit > 0;
 }
 
 public enum GearEnhanceMaterialKind
@@ -65,8 +67,8 @@ public readonly struct GearEnhanceResult
 //
 //   1. Stored InventoryController.GearXp (drained first; never consumes a material if
 //      the bank alone hits max level).
-//   2. Arcane Crystal stack (XP per crystal = rules.ArcaneCrystalXp). Crystals never
-//      overflow into the bank; consumption is capped at what's needed to reach max.
+//   2. A crystal stack — any InventoryItemDefinition with GearXpPerUnit > 0. Crystals
+//      never overflow into the bank; consumption is capped at what's needed to reach max.
 //   3. Gear fodder (an inventory gear entry). XP = baseFodderXp +
 //      floor(totalInvestedXp * FodderInvestedXpRefundRate). Overflow past max is
 //      added back into InventoryController.GearXp.
@@ -140,11 +142,10 @@ public static class GearLevelingService
         if (entry is InventoryStackEntry stackEntry)
         {
             var item = stackEntry.Stack?.Item;
-            if (item == null ||
-                !string.Equals(item.Id, GearLevelingMaterials.ArcaneCrystalId, StringComparison.Ordinal))
+            if (!GearLevelingMaterials.IsCrystal(item))
                 return PartialResult();
 
-            var xpPerCrystal = Math.Max(1, rules.ArcaneCrystalXp);
+            var xpPerCrystal = Math.Max(1, item.GearXpPerUnit);
             var available = stackEntry.Stack.Quantity;
             if (available <= 0)
                 return PartialResult();
@@ -157,7 +158,7 @@ public static class GearLevelingService
             var crystalsToConsume = Math.Min(available, crystalsForMax);
 
             var consumed = inventory.TryConsumeFromStackSlot(
-                materialInventorySlot, GearLevelingMaterials.ArcaneCrystalId, crystalsToConsume);
+                materialInventorySlot, item.Id, crystalsToConsume);
             if (consumed <= 0)
                 return PartialResult();
 

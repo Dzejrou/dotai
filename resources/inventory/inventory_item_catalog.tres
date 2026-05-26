@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="InventoryItemCatalog" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="InventoryItemCatalog" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/inventory/InventoryItemCatalog.cs" id="1_catalog_script"]
 [ext_resource type="Resource" path="res://resources/inventory/items/chest_key.tres" id="2_chest_key_item"]
 [ext_resource type="Resource" path="res://resources/inventory/items/arcane_crystal.tres" id="3_arcane_crystal_item"]
+[ext_resource type="Resource" path="res://resources/inventory/items/mystic_crystal.tres" id="4_mystic_crystal_item"]
+[ext_resource type="Resource" path="res://resources/inventory/items/void_crystal.tres" id="5_void_crystal_item"]
 
 [resource]
 script = ExtResource("1_catalog_script")
-Items = Array[InventoryItemDefinition]([ExtResource("2_chest_key_item"), ExtResource("3_arcane_crystal_item")])
+Items = Array[InventoryItemDefinition]([ExtResource("2_chest_key_item"), ExtResource("3_arcane_crystal_item"), ExtResource("4_mystic_crystal_item"), ExtResource("5_void_crystal_item")])

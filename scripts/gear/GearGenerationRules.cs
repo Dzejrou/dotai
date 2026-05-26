@@ -15,9 +15,6 @@ public partial class GearGenerationRules : Resource
     [Export]
     public Godot.Collections.Array<string> SubstatPool { get; set; } = new();
 
-    [Export(PropertyHint.Range, "1,10000,1")]
-    public int ArcaneCrystalXp { get; set; } = 25;
-
     [Export(PropertyHint.Range, "0,1,0.01")]
     public float FodderInvestedXpRefundRate { get; set; } = 0.80f;
 

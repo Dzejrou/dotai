@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://b6mystcrystl001"]
+
+[ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
+[ext_resource type="Texture2D" uid="uid://dpsrnfqyyne6n" path="res://assets/drops/crystal.png" id="2_mystic_crystal_texture"]
+
+[resource]
+script = ExtResource("1_inventory_item_definition_script")
+Id = "mystic_crystal"
+DisplayName = "Mystic Crystal"
+Icon = ExtResource("2_mystic_crystal_texture")
+MaxStackSize = 999
+Quality = 3
+SellPrice = 25
+GearXpPerUnit = 125

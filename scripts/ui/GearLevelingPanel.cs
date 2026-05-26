@@ -116,8 +116,8 @@ public partial class GearLevelingPanel : VBoxContainer
             _targetSlot.TooltipText = hasTarget ? GearTooltipBuilder.Build(targetGear) : "Target gear";
         }
 
-        // Material slot: validate and render. Material can be either an arcane_crystal
-        // stack or an inventory gear entry (fodder).
+        // Material slot: validate and render. Material can be either a gear-XP crystal
+        // stack (any stack item with GearXpPerUnit > 0) or an inventory gear entry (fodder).
         InventoryStackEntry crystalEntry = null;
         InventoryGearEntry fodderEntry = null;
         var materialKind = _materialSlot != null
@@ -169,7 +169,7 @@ public partial class GearLevelingPanel : VBoxContainer
                     _materialSlot.TooltipText = GearTooltipBuilder.Build(fodderEntry.Gear);
                     break;
                 default:
-                    _materialSlot.TooltipText = "Arcane Crystal or fodder gear";
+                    _materialSlot.TooltipText = "Gear XP crystal or fodder gear";
                     break;
             }
         }
