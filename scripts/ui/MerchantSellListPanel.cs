@@ -171,6 +171,7 @@ public partial class MerchantSellListPanel : VBoxContainer
             VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Text = item.DisplayName,
+            SelfModulate = ItemQualityColors.GetColor(item.Quality),
         };
         iconAndName.AddChild(nameLabel);
 

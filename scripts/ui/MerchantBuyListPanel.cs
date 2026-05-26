@@ -153,6 +153,8 @@ public partial class MerchantBuyListPanel : VBoxContainer
         };
         if (isGear)
             label.SelfModulate = ItemQualityColors.GetColor(offer.Gear.Quality);
+        else if (offer.StackItem != null)
+            label.SelfModulate = ItemQualityColors.GetColor(offer.StackItem.Quality);
         group.AddChild(label);
 
         root.AddChild(group);
