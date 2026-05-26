@@ -99,6 +99,6 @@ public partial class EquipmentSlotControl : PanelContainer
     public override Control _MakeCustomTooltip(string forText)
     {
         var gear = Equipment?.GetEquipped(Slot);
-        return gear?.Definition == null ? null : GearTooltipFactory.Build(gear);
+        return gear?.Definition == null ? null : TooltipFactory.Build(gear);
     }
 }

@@ -147,10 +147,12 @@ public partial class MerchantSellListPanel : VBoxContainer
         };
         root.AddThemeConstantOverride("separation", 8);
 
-        var iconAndName = new HBoxContainer
+        var iconAndName = new TooltipRow
         {
+            StackItem = item,
+            StackQuantity = stackEntry.Stack.Quantity,
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
+            MouseFilter = Control.MouseFilterEnum.Stop,
         };
         iconAndName.AddThemeConstantOverride("separation", 8);
 
@@ -221,10 +223,9 @@ public partial class MerchantSellListPanel : VBoxContainer
     private static void AddSellIconAndNameGroup(HBoxContainer root, GearInstance gear)
     {
         // Owned gear: reveal all substats in the tooltip.
-        var group = new MerchantGearOfferRow
+        var group = new TooltipRow
         {
             Gear = gear,
-            RevealedSubstatCount = int.MaxValue,
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             MouseFilter = Control.MouseFilterEnum.Stop,
         };

@@ -142,9 +142,12 @@ public partial class InventorySlotControl : PanelContainer
         if (Inventory == null || !Inventory.TryGetEntry(SlotIndex, out var entry))
             return null;
 
-        if (entry is not InventoryGearEntry gearEntry || gearEntry.Gear?.Definition == null)
-            return null;
+        if (entry is InventoryGearEntry gearEntry && gearEntry.Gear?.Definition != null)
+            return TooltipFactory.Build(gearEntry.Gear);
 
-        return GearTooltipFactory.Build(gearEntry.Gear);
+        if (entry is InventoryStackEntry stackEntry && stackEntry.Stack.Item != null)
+            return TooltipFactory.Build(stackEntry.Stack.Item, stackEntry.Stack.Quantity);
+
+        return null;
     }
 }
