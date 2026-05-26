@@ -88,9 +88,9 @@ public partial class GearLevelingReferenceSlot : PanelContainer
     }
 
     // Resolves what's currently in the referenced inventory slot. Returns Crystal for
-    // an arcane_crystal stack, GearFodder for any gear entry, and None if the source
-    // vanished, isn't an inventory slot, or the entry no longer matches a supported
-    // material kind. The matching out-parameter is populated; the other stays null.
+    // any stack of an item that grants gear XP, GearFodder for any gear entry, and None
+    // if the source vanished, isn't an inventory slot, or the entry no longer matches a
+    // supported material kind. The matching out-parameter is populated; the other stays null.
     public GearLevelingMaterialKind ResolveMaterial(
         out InventoryStackEntry crystalStack,
         out InventoryGearEntry fodderEntry)
@@ -107,9 +107,7 @@ public partial class GearLevelingReferenceSlot : PanelContainer
 
         if (entry is InventoryStackEntry stackEntry)
         {
-            var item = stackEntry.Stack?.Item;
-            if (item != null &&
-                string.Equals(item.Id, GearLevelingMaterials.ArcaneCrystalId, StringComparison.Ordinal))
+            if (GearLevelingMaterials.IsCrystal(stackEntry.Stack?.Item))
             {
                 crystalStack = stackEntry;
                 return GearLevelingMaterialKind.Crystal;
@@ -202,11 +200,7 @@ public partial class GearLevelingReferenceSlot : PanelContainer
             return false;
 
         if (entry is InventoryStackEntry stackEntry)
-        {
-            var item = stackEntry.Stack?.Item;
-            return item != null &&
-                   string.Equals(item.Id, GearLevelingMaterials.ArcaneCrystalId, StringComparison.Ordinal);
-        }
+            return GearLevelingMaterials.IsCrystal(stackEntry.Stack?.Item);
 
         // Any inventory gear is acceptable as fodder; the self-fodder check happens
         // at Enhance time against the target reference (this slot doesn't know the target).

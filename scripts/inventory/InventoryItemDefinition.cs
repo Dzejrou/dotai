@@ -35,6 +35,16 @@ public partial class InventoryItemDefinition : Resource
         set => _sellPrice = Math.Max(0, value);
     }
 
+    // Per-unit gear XP this stack item grants when used as a gear leveling material.
+    // 0 means the item is not a gear leveling crystal.
+    [Export(PropertyHint.Range, "0,1000000,1")]
+    public int GearXpPerUnit
+    {
+        get => _gearXpPerUnit;
+        set => _gearXpPerUnit = Math.Max(0, value);
+    }
+
     private int _maxStackSize = 99;
     private int _sellPrice;
+    private int _gearXpPerUnit;
 }
