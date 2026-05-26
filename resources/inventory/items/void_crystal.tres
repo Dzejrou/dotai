@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://b7vdcrystl0002"]
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://6fjq06j0k442"]
 
 [ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
 [ext_resource type="Texture2D" uid="uid://dpsrnfqyyne6n" path="res://assets/drops/crystal.png" id="2_void_crystal_texture"]
