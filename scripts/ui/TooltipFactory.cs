@@ -1,6 +1,6 @@
 using Godot;
 
-public static class GearTooltipFactory
+public static class TooltipFactory
 {
     private const string StylePath = "res://resources/ui/gear_tooltip_style.tres";
     private const string PlaceholderText = "  ???";
@@ -20,36 +20,7 @@ public static class GearTooltipFactory
             return null;
 
         var style = ResolveStyle();
-
-        var panel = new PanelContainer
-        {
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
-        };
-        panel.AddThemeStyleboxOverride("panel", BuildStyleBox(style));
-
-        var vbox = new VBoxContainer
-        {
-            CustomMinimumSize = new Vector2(style.MinWidth, 0),
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
-        };
-        vbox.AddThemeConstantOverride("separation", style.LineSpacing);
-        panel.AddChild(vbox);
-
-        var displayName = gear.Definition?.DisplayName;
-        if (string.IsNullOrEmpty(displayName))
-            displayName = "Unknown";
-
-        var nameLabel = new Label
-        {
-            Text = displayName,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        nameLabel.AddThemeColorOverride("font_color", ItemQualityColors.GetColor(gear.Quality));
-        if (style.NameFontSize > 0)
-            nameLabel.AddThemeFontSizeOverride("font_size", style.NameFontSize);
-        vbox.AddChild(nameLabel);
+        var (panel, vbox) = BuildShell(style, gear.Definition?.DisplayName, gear.Quality);
 
         AddLine(vbox, $"Quality: {gear.Quality}", style);
         AddLine(vbox, $"Slot: {gear.Slot}", style);
@@ -73,6 +44,55 @@ public static class GearTooltipFactory
         }
 
         return panel;
+    }
+
+    public static Control Build(InventoryItemDefinition item, int quantity)
+    {
+        if (item == null)
+            return null;
+
+        var style = ResolveStyle();
+        var (panel, vbox) = BuildShell(style, item.DisplayName, item.Quality);
+
+        AddLine(vbox, $"Quality: {item.Quality}", style);
+        if (quantity > 1)
+            AddLine(vbox, $"x{quantity}", style);
+
+        return panel;
+    }
+
+    private static (PanelContainer Panel, VBoxContainer VBox) BuildShell(
+        GearTooltipStyle style,
+        string displayName,
+        ItemQuality quality)
+    {
+        var panel = new PanelContainer
+        {
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
+        };
+        panel.AddThemeStyleboxOverride("panel", BuildStyleBox(style));
+
+        var vbox = new VBoxContainer
+        {
+            CustomMinimumSize = new Vector2(style.MinWidth, 0),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
+        };
+        vbox.AddThemeConstantOverride("separation", style.LineSpacing);
+        panel.AddChild(vbox);
+
+        var nameLabel = new Label
+        {
+            Text = string.IsNullOrEmpty(displayName) ? "Unknown" : displayName,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        nameLabel.AddThemeColorOverride("font_color", ItemQualityColors.GetColor(quality));
+        if (style.NameFontSize > 0)
+            nameLabel.AddThemeFontSizeOverride("font_size", style.NameFontSize);
+        vbox.AddChild(nameLabel);
+
+        return (panel, vbox);
     }
 
     private static GearTooltipStyle ResolveStyle()

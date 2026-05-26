@@ -240,13 +240,15 @@ public partial class GearLevelingReferenceSlot : PanelContainer
     public override Control _MakeCustomTooltip(string forText)
     {
         if (Kind == GearLevelingReferenceKind.Target && ResolveTargetGear(out var gear))
-            return GearTooltipFactory.Build(gear);
+            return TooltipFactory.Build(gear);
 
         if (Kind == GearLevelingReferenceKind.Material)
         {
-            var matKind = ResolveMaterial(out _, out var fodderEntry);
+            var matKind = ResolveMaterial(out var crystalEntry, out var fodderEntry);
             if (matKind == GearLevelingMaterialKind.GearFodder && fodderEntry?.Gear != null)
-                return GearTooltipFactory.Build(fodderEntry.Gear);
+                return TooltipFactory.Build(fodderEntry.Gear);
+            if (matKind == GearLevelingMaterialKind.Crystal && crystalEntry?.Stack?.Item != null)
+                return TooltipFactory.Build(crystalEntry.Stack.Item, crystalEntry.Stack.Quantity);
         }
 
         return null;

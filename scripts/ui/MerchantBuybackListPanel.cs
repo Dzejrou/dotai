@@ -154,22 +154,12 @@ public partial class MerchantBuybackListPanel : VBoxContainer
     {
         var isGear = entry.Kind == MerchantBuybackEntryKind.Gear && entry.Gear != null;
 
-        HBoxContainer group;
-        if (isGear)
+        var group = new TooltipRow
         {
-            group = new MerchantGearOfferRow
-            {
-                Gear = entry.Gear,
-                RevealedSubstatCount = int.MaxValue,
-            };
-        }
-        else
-        {
-            group = new HBoxContainer
-            {
-                TooltipText = entry.StackItem?.DisplayName ?? string.Empty,
-            };
-        }
+            Gear = isGear ? entry.Gear : null,
+            StackItem = isGear ? null : entry.StackItem,
+            StackQuantity = entry.StackQuantity,
+        };
         group.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         group.MouseFilter = Control.MouseFilterEnum.Stop;
         group.AddThemeConstantOverride("separation", 8);
@@ -194,6 +184,8 @@ public partial class MerchantBuybackListPanel : VBoxContainer
         };
         if (isGear)
             label.SelfModulate = ItemQualityColors.GetColor(entry.Gear.Quality);
+        else if (entry.StackItem != null)
+            label.SelfModulate = ItemQualityColors.GetColor(entry.StackItem.Quality);
         group.AddChild(label);
 
         root.AddChild(group);

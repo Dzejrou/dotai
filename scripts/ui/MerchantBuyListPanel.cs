@@ -106,27 +106,20 @@ public partial class MerchantBuyListPanel : VBoxContainer
         return row;
     }
 
-    // Builds the icon + name portion of an offer row. For generated gear we wrap both
-    // controls in a MerchantGearOfferRow so hovering either one surfaces the same custom
-    // GearTooltipFactory tooltip used by inventory and equipped gear. Other offers keep
-    // a plain default tooltip on the name label.
+    // Builds the icon + name portion of an offer row. Wraps both controls in a TooltipRow
+    // so hovering either one surfaces the same custom TooltipFactory tooltip used by
+    // inventory and equipped gear, colored by item quality.
     private static void AddIconAndNameGroup(HBoxContainer root, MerchantOffer offer)
     {
         var isGear = offer.Kind == MerchantOfferKind.GeneratedGear && offer.Gear != null;
 
-        HBoxContainer group;
-        if (isGear)
+        var group = new TooltipRow
         {
-            group = new MerchantGearOfferRow
-            {
-                Gear = offer.Gear,
-                RevealedSubstatCount = offer.RevealedSubstatCount,
-            };
-        }
-        else
-        {
-            group = new HBoxContainer { TooltipText = BuildOfferTooltip(offer) };
-        }
+            Gear = isGear ? offer.Gear : null,
+            RevealedSubstatCount = offer.RevealedSubstatCount,
+            StackItem = isGear ? null : offer.StackItem,
+            StackQuantity = offer.StackQuantity,
+        };
         group.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         // Stop so the group owns the hover area and receives tooltip events even when
         // its children (icon, label) use MouseFilter.Ignore.
@@ -153,6 +146,8 @@ public partial class MerchantBuyListPanel : VBoxContainer
         };
         if (isGear)
             label.SelfModulate = ItemQualityColors.GetColor(offer.Gear.Quality);
+        else if (offer.StackItem != null)
+            label.SelfModulate = ItemQualityColors.GetColor(offer.StackItem.Quality);
         group.AddChild(label);
 
         root.AddChild(group);
@@ -176,17 +171,6 @@ public partial class MerchantBuyListPanel : VBoxContainer
                 offer.Gear.Slot.ToString(),
             _ => offer.DisplayName,
         };
-    }
-
-    private static string BuildOfferTooltip(MerchantOffer offer)
-    {
-        if (offer.Kind == MerchantOfferKind.GeneratedGear && offer.Gear != null)
-            return GearTooltipBuilder.Build(offer.Gear);
-
-        if (offer.Kind == MerchantOfferKind.StackItem && offer.StackItem != null)
-            return offer.StackItem.DisplayName;
-
-        return string.Empty;
     }
 
     private sealed class OfferRow
