@@ -1,5 +1,6 @@
 using Godot;
 
+using System;
 using System.Collections.Generic;
 
 public partial class DebugSpawner : Node2D
@@ -35,6 +36,7 @@ public partial class DebugSpawner : Node2D
     private ItemQuality _pendingGearQuality;
     private Sprite2D _placementGhost;
     private Faction _selectedFaction = Factions.Enemies;
+    private int _selectedCharacterLevel = 1;
 
     public bool HasPendingPlacement => !string.IsNullOrEmpty(_pendingSpawnId) || _pendingGear;
 
@@ -43,6 +45,7 @@ public partial class DebugSpawner : Node2D
     public EquipmentSlot PendingGearSlot => _pendingGearSlot;
     public ItemQuality PendingGearQuality => _pendingGearQuality;
     public Faction SelectedFaction => _selectedFaction;
+    public int SelectedCharacterLevel => _selectedCharacterLevel;
 
     public GearSlotRules GetGearSlotRules(EquipmentSlot slot)
     {
@@ -120,6 +123,11 @@ public partial class DebugSpawner : Node2D
     public void SetSelectedFaction(string factionKey)
     {
         _selectedFaction = Factions.Get(factionKey) ?? Factions.Enemies;
+    }
+
+    public void SetSelectedCharacterLevel(int level)
+    {
+        _selectedCharacterLevel = Math.Max(1, level);
     }
 
     public bool TryBeginPlacementFromActorAtScreenPosition(Vector2 screenPosition)
@@ -268,6 +276,9 @@ public partial class DebugSpawner : Node2D
         {
             var factionState = FactionState.ResolveFor(spawnedNode);
             factionState?.SetFaction(_selectedFaction);
+
+            if (spawnedNode is CombatCharacter combatCharacter)
+                combatCharacter.Level = _selectedCharacterLevel;
         }
 
         var parent = ResolveSpawnParent();
