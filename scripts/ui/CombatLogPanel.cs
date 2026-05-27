@@ -6,7 +6,6 @@ using Godot;
 [GlobalClass]
 public partial class CombatLogPanel : Control
 {
-    private const int MaxLines = 100;
     private const int DefaultLineFontSize = 13;
     private const float DefaultMarginRight = 16.0f;
     private const float DefaultMarginBottom = 96.0f;
@@ -22,13 +21,23 @@ public partial class CombatLogPanel : Control
     public NodePath PanelPath { get; set; } = new("Panel");
 
     [Export]
-    public NodePath RowsPath { get; set; } = new("Panel/Margin/Rows");
+    public NodePath ScrollPath { get; set; } = new("Panel/Margin/Scroll");
+
+    [Export]
+    public NodePath RowsPath { get; set; } = new("Panel/Margin/Scroll/Rows");
 
     [Export]
     public Vector2I PanelSize { get; set; } = new Vector2I(360, 180);
 
+    [Export(PropertyHint.Range, "1,1000,1")]
+    public int MaxLines { get; set; } = 100;
+
+    [Export]
+    public Vector2I InnerMargin { get; set; } = new Vector2I(20, 16);
+
     private readonly Queue<Label> _rows = new();
     private PanelContainer _panel;
+    private ScrollContainer _scroll;
     private VBoxContainer _rowsContainer;
     private Action<CombatLogEntry> _entryHandler;
     private Action<bool> _showChangedHandler;
@@ -50,6 +59,7 @@ public partial class CombatLogPanel : Control
         ProcessMode = ProcessModeEnum.Always;
 
         _panel = GetNodeOrNull<PanelContainer>(PanelPath);
+        _scroll = GetNodeOrNull<ScrollContainer>(ScrollPath);
         _rowsContainer = GetNodeOrNull<VBoxContainer>(RowsPath);
 
         if (_panel != null)
@@ -58,6 +68,14 @@ public partial class CombatLogPanel : Control
             _panel.GuiInput += OnPanelGuiInput;
             _panel.Resized += OnPanelResized;
             ApplyMouseFilterForLock(GameSettings.LockCombatLogPosition);
+        }
+
+        if (_scroll != null)
+        {
+            var innerWidth = Math.Max(0, PanelSize.X - InnerMargin.X);
+            var innerHeight = Math.Max(0, PanelSize.Y - InnerMargin.Y);
+            _scroll.CustomMinimumSize = new Vector2(innerWidth, innerHeight);
+            _scroll.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
         }
 
         Visible = GameSettings.ShowCombatLog;
@@ -148,9 +166,11 @@ public partial class CombatLogPanel : Control
         var viewport = GetViewportRect().Size;
         var panelSize = ResolvePanelSize();
         var minX = -panelSize.X + MinVisible;
-        var maxX = viewport.X - MinVisible;
+        // Guard against a viewport smaller than MinVisible (headless / tiny windows),
+        // where naive maxX would fall below minX and Mathf.Clamp would throw.
+        var maxX = Math.Max(minX, viewport.X - MinVisible);
         var minY = 0.0f;
-        var maxY = viewport.Y - MinVisible;
+        var maxY = Math.Max(minY, viewport.Y - MinVisible);
         return new Vector2(
             Mathf.Clamp(candidate.X, minX, maxX),
             Mathf.Clamp(candidate.Y, minY, maxY));
@@ -166,7 +186,8 @@ public partial class CombatLogPanel : Control
         if (_rowsContainer == null || !GodotObject.IsInstanceValid(_rowsContainer))
             return;
 
-        while (_rows.Count >= MaxLines)
+        var cap = Math.Max(1, MaxLines);
+        while (_rows.Count >= cap)
         {
             var oldest = _rows.Dequeue();
             if (oldest != null && GodotObject.IsInstanceValid(oldest))
@@ -182,6 +203,22 @@ public partial class CombatLogPanel : Control
         label.AddThemeColorOverride("font_color", ResolveColorFor(entry.Kind));
         _rowsContainer.AddChild(label);
         _rows.Enqueue(label);
+
+        // Defer the scroll-to-bottom: the new label must lay out before the
+        // ScrollContainer reports its updated max scroll value.
+        CallDeferred(nameof(ScrollToBottom));
+    }
+
+    private void ScrollToBottom()
+    {
+        if (_scroll == null || !GodotObject.IsInstanceValid(_scroll))
+            return;
+
+        var scrollbar = _scroll.GetVScrollBar();
+        if (scrollbar == null || !GodotObject.IsInstanceValid(scrollbar))
+            return;
+
+        _scroll.ScrollVertical = (int)scrollbar.MaxValue;
     }
 
     private static Color ResolveColorFor(CombatLogEntryKind kind)
