@@ -279,6 +279,9 @@ public partial class ActorHUD : Node2D
             ? DisplayName
             : _owner?.Name.ToString() ?? string.Empty;
 
+        if (_owner is CombatCharacter combatCharacter && !string.IsNullOrWhiteSpace(resolvedName))
+            resolvedName = $"[{combatCharacter.Level}] {resolvedName}";
+
         var shouldShowName = ShowName &&
                              ActorHudSettings.ShowNames &&
                              (_unitFrame == null || _unitFrame.Visible) &&

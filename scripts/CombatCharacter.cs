@@ -8,6 +8,25 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     [Signal]
     public delegate void DiedEventHandler();
 
+    private int _level = 1;
+
+    [Export]
+    public int Level
+    {
+        get => _level;
+        set
+        {
+            var clamped = Math.Max(1, value);
+            if (_level == clamped)
+                return;
+
+            _level = clamped;
+            OnLevelChanged(_level);
+        }
+    }
+
+    protected virtual void OnLevelChanged(int newLevel) { }
+
     public float ResolvedCritRate =>
         StatsNode != null
             ? Math.Clamp(StatsNode.ResolvedCritRate + GetEquipmentBonus(EquipmentStatIds.CritRate), 0.0f, 1.0f)
