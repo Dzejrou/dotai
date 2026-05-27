@@ -6,6 +6,7 @@
 [ext_resource type="Resource" uid="uid://dywxbx4vl0ax3" path="res://resources/debug/spawn_catalog.tres" id="4_spawn_catalog"]
 [ext_resource type="Resource" path="res://resources/gear/gear_generation_rules.tres" id="4b_gear_rules"]
 [ext_resource type="PackedScene" path="res://scenes/world/drops/inventory_item_drop.tscn" id="4c_gear_drop_scene"]
+[ext_resource type="Resource" path="res://resources/loot/global_gear_loot_rules.tres" id="4d_global_gear_loot_rules"]
 [ext_resource type="Script" uid="uid://dp732creo58kj" path="res://scripts/world/CorpseManager.cs" id="5_corpse_manager"]
 [ext_resource type="Resource" uid="uid://o81pu7wl78f6" path="res://resources/world/room_registry.tres" id="6_room_registry"]
 [ext_resource type="Script" uid="uid://ccjyylvlhcft2" path="res://scripts/world/dungeon/Dungeon.cs" id="7_dungeon"]
@@ -18,6 +19,9 @@
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
 RoomRegistry = ExtResource("6_room_registry")
+GlobalGearLootRules = ExtResource("4d_global_gear_loot_rules")
+GearGenerationRules = ExtResource("4b_gear_rules")
+GearDropScene = ExtResource("4c_gear_drop_scene")
 TransitionCooldownSeconds = 1.0
 
 [node name="RoomContainer" type="Node2D" parent="." unique_id=1250668101]

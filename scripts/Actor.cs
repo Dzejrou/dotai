@@ -55,6 +55,9 @@ public abstract partial class Actor : CombatCharacter
     public LootTable LootTable { get; set; }
 
     [Export]
+    public bool RollGlobalGearLoot { get; set; } = true;
+
+    [Export]
     public int ExperienceReward { get; set; } = 0;
 
     protected void InitializeActor(
@@ -629,18 +632,67 @@ public abstract partial class Actor : CombatCharacter
                 continue;
 
             var drop = entry.CreateDropInstance();
-            if (drop == null)
+            SpawnDrop(dropParent, drop);
+        }
+
+        if (RollGlobalGearLoot)
+            SpawnGlobalGearLootDrops(dropParent);
+    }
+
+    private void SpawnGlobalGearLootDrops(Node dropParent)
+    {
+        var world = FindWorld();
+        var rules = world?.GlobalGearLootRules;
+        var gearRules = world?.GearGenerationRules;
+        var dropScene = world?.GearDropScene;
+
+        if (rules == null || gearRules == null || dropScene == null)
+            return;
+
+        var rollCount = Math.Max(1, rules.RollCount);
+        for (var i = 0; i < rollCount; i++)
+        {
+            if (!rules.TryRollGear(Level, LootRandom, gearRules, out var gear) || gear == null)
                 continue;
 
-            if (dropParent is Node2D node2DParent)
-            {
-                var spawnStartPosition = node2DParent.ToLocal(GlobalPosition);
-                var spawnTargetPosition = node2DParent.ToLocal(GlobalPosition + ResolveDropSpawnOffset());
-                drop.ConfigureSpawnMotion(spawnStartPosition, spawnTargetPosition);
-            }
+            if (dropScene.Instantiate() is not InventoryItemDrop gearDrop)
+                continue;
 
-            dropParent.CallDeferred(Node.MethodName.AddChild, drop);
+            gearDrop.ItemDefinition = gear.Definition;
+            gearDrop.GearInstance = gear;
+            gearDrop.Quantity = 1;
+            gearDrop.PickupMode = DropPickupMode.InteractOnly;
+            SpawnDrop(dropParent, gearDrop);
         }
+    }
+
+    private void SpawnDrop(Node dropParent, Drop drop)
+    {
+        if (drop == null)
+            return;
+
+        if (dropParent is Node2D node2DParent)
+        {
+            var spawnStartPosition = node2DParent.ToLocal(GlobalPosition);
+            var spawnTargetPosition = node2DParent.ToLocal(GlobalPosition + ResolveDropSpawnOffset());
+            drop.ConfigureSpawnMotion(spawnStartPosition, spawnTargetPosition);
+        }
+
+        dropParent.CallDeferred(Node.MethodName.AddChild, drop);
+    }
+
+    private World FindWorld()
+    {
+        var current = GetParent();
+        while (current != null)
+        {
+            if (current is World world)
+                return world;
+
+            current = current.GetParent();
+        }
+
+        return null;
     }
 
     private static RandomNumberGenerator CreateLootRandom()

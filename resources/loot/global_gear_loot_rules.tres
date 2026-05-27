@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="GlobalGearLootRules" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/loot/GlobalGearLootRules.cs" id="1_rules_script"]
+[ext_resource type="Script" path="res://scripts/loot/GlobalGearLootLevelBand.cs" id="2_band_script"]
+
+[sub_resource type="Resource" id="Resource_band_1"]
+script = ExtResource("2_band_script")
+MinLevel = 1
+TrashWeight = 60.0
+CommonWeight = 36.0
+UncommonWeight = 4.0
+RareWeight = 0.0
+EpicWeight = 0.0
+LegendaryWeight = 0.0
+
+[sub_resource type="Resource" id="Resource_band_5"]
+script = ExtResource("2_band_script")
+MinLevel = 5
+TrashWeight = 30.0
+CommonWeight = 50.0
+UncommonWeight = 18.0
+RareWeight = 2.0
+EpicWeight = 0.0
+LegendaryWeight = 0.0
+
+[sub_resource type="Resource" id="Resource_band_10"]
+script = ExtResource("2_band_script")
+MinLevel = 10
+TrashWeight = 10.0
+CommonWeight = 45.0
+UncommonWeight = 35.0
+RareWeight = 9.0
+EpicWeight = 1.0
+LegendaryWeight = 0.0
+
+[sub_resource type="Resource" id="Resource_band_20"]
+script = ExtResource("2_band_script")
+MinLevel = 20
+TrashWeight = 0.0
+CommonWeight = 20.0
+UncommonWeight = 40.0
+RareWeight = 30.0
+EpicWeight = 9.0
+LegendaryWeight = 1.0
+
+[sub_resource type="Resource" id="Resource_band_30"]
+script = ExtResource("2_band_script")
+MinLevel = 30
+TrashWeight = 0.0
+CommonWeight = 5.0
+UncommonWeight = 20.0
+RareWeight = 40.0
+EpicWeight = 30.0
+LegendaryWeight = 5.0
+
+[sub_resource type="Resource" id="Resource_band_45"]
+script = ExtResource("2_band_script")
+MinLevel = 45
+TrashWeight = 0.0
+CommonWeight = 0.0
+UncommonWeight = 5.0
+RareWeight = 25.0
+EpicWeight = 50.0
+LegendaryWeight = 20.0
+
+[sub_resource type="Resource" id="Resource_band_60"]
+script = ExtResource("2_band_script")
+MinLevel = 60
+TrashWeight = 0.0
+CommonWeight = 0.0
+UncommonWeight = 0.0
+RareWeight = 10.0
+EpicWeight = 50.0
+LegendaryWeight = 40.0
+
+[resource]
+script = ExtResource("1_rules_script")
+DropChance = 0.5
+RollCount = 1
+LevelBands = Array[ExtResource("2_band_script")]([SubResource("Resource_band_1"), SubResource("Resource_band_5"), SubResource("Resource_band_10"), SubResource("Resource_band_20"), SubResource("Resource_band_30"), SubResource("Resource_band_45"), SubResource("Resource_band_60")])
