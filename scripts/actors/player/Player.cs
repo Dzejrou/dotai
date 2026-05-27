@@ -458,8 +458,12 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             ? 0
             : Math.Clamp(currentExperience, 0, Math.Max(0, required - 1));
 
-        EmitSignal(SignalName.LevelChanged, Level);
         EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, Level);
+    }
+
+    protected override void OnLevelChanged(int newLevel)
+    {
+        EmitSignal(SignalName.LevelChanged, newLevel);
     }
 
     public void ApplyLoadedHealthAndMana(int currentHealth, int currentMana)
@@ -488,7 +492,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             ? 0
             : Math.Clamp(_currentExperience, 0, required - 1);
 
-        EmitSignal(SignalName.LevelChanged, Level);
         EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, Level);
         return true;
     }
