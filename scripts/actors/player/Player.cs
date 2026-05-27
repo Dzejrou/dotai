@@ -78,10 +78,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     [Export]
     public int MaxLevelExperiencePerGold { get; set; } = 10;
 
-    private int _level = 1;
     private int _currentExperience;
 
-    public int Level => _level;
     public int CurrentExperience => _currentExperience;
 
     private float _spellCastPushbackPercent = 0.10f;
@@ -388,7 +386,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     public int GetRequiredExperienceForCurrentLevel()
     {
-        return GetRequiredExperienceForLevel(_level);
+        return GetRequiredExperienceForLevel(Level);
     }
 
     private int GetRequiredExperienceForLevel(int level)
@@ -409,7 +407,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         var maxLevel = Math.Max(1, MaxLevel);
         var xpPerGold = Math.Max(1, MaxLevelExperiencePerGold);
 
-        if (_level >= maxLevel)
+        if (Level >= maxLevel)
         {
             AddGold(amount / xpPerGold);
             return;
@@ -419,16 +417,15 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         _currentExperience += amount;
 
         var required = GetRequiredExperienceForCurrentLevel();
-        while (_currentExperience >= required && _level < maxLevel)
+        while (_currentExperience >= required && Level < maxLevel)
         {
             _currentExperience -= required;
-            _level++;
-            FloatingText.ShowCustom($"LEVEL {_level}", this, new Color(1.0f, 0.95f, 0.2f, 1.0f));
-            EmitSignal(SignalName.LevelChanged, _level);
+            Level++;
+            FloatingText.ShowCustom($"LEVEL {Level}", this, new Color(1.0f, 0.95f, 0.2f, 1.0f));
             required = GetRequiredExperienceForCurrentLevel();
         }
 
-        if (_level >= maxLevel && _currentExperience > 0)
+        if (Level >= maxLevel && _currentExperience > 0)
         {
             var leftoverGold = _currentExperience / xpPerGold;
             _currentExperience = 0;
@@ -437,14 +434,14 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         }
 
         EmitSignal(SignalName.ExperienceGained, amount, _currentExperience);
-        EmitSignal(SignalName.ExperienceChanged, _currentExperience, GetRequiredExperienceForCurrentLevel(), _level);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, GetRequiredExperienceForCurrentLevel(), Level);
     }
 
     public PlayerSaveData CreateSaveSnapshot()
     {
         return new PlayerSaveData
         {
-            Level = _level,
+            Level = Level,
             CurrentExperience = _currentExperience,
             CurrentHealth = CurrentHealth,
             CurrentMana = CurrentMana,
@@ -454,15 +451,15 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public void ApplyLoadedLevelAndExperience(int level, int currentExperience)
     {
         var maxLevel = Math.Max(1, MaxLevel);
-        _level = Math.Clamp(level, 1, maxLevel);
+        Level = Math.Clamp(level, 1, maxLevel);
 
         var required = GetRequiredExperienceForCurrentLevel();
-        _currentExperience = _level >= maxLevel
+        _currentExperience = Level >= maxLevel
             ? 0
             : Math.Clamp(currentExperience, 0, Math.Max(0, required - 1));
 
-        EmitSignal(SignalName.LevelChanged, _level);
-        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, _level);
+        EmitSignal(SignalName.LevelChanged, Level);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, Level);
     }
 
     public void ApplyLoadedHealthAndMana(int currentHealth, int currentMana)
@@ -481,18 +478,18 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return false;
 
         var maxLevel = Math.Max(1, MaxLevel);
-        var previousLevel = _level;
-        _level = Math.Clamp(_level + delta, 1, maxLevel);
-        if (_level == previousLevel)
+        var previousLevel = Level;
+        Level = Math.Clamp(Level + delta, 1, maxLevel);
+        if (Level == previousLevel)
             return false;
 
         var required = GetRequiredExperienceForCurrentLevel();
-        _currentExperience = _level >= maxLevel
+        _currentExperience = Level >= maxLevel
             ? 0
             : Math.Clamp(_currentExperience, 0, required - 1);
 
-        EmitSignal(SignalName.LevelChanged, _level);
-        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, _level);
+        EmitSignal(SignalName.LevelChanged, Level);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, Level);
         return true;
     }
 
@@ -504,16 +501,16 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     {
         var maxLevel = Math.Max(1, MaxLevel);
         var clamped = Math.Clamp(level, 1, maxLevel);
-        return TryAdjustLevelForTesting(clamped - _level);
+        return TryAdjustLevelForTesting(clamped - Level);
     }
 
     public void DebugSetCurrentExperience(int amount)
     {
         var maxLevel = Math.Max(1, MaxLevel);
         var required = GetRequiredExperienceForCurrentLevel();
-        var upperBound = _level >= maxLevel ? 0 : Math.Max(0, required - 1);
+        var upperBound = Level >= maxLevel ? 0 : Math.Max(0, required - 1);
         _currentExperience = Math.Clamp(amount, 0, upperBound);
-        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, _level);
+        EmitSignal(SignalName.ExperienceChanged, _currentExperience, required, Level);
     }
 
     public void DebugSetCurrentHealth(int value)

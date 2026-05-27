@@ -1,5 +1,6 @@
 using Godot;
 
+using System;
 using System.Collections.Generic;
 
 public partial class ActorSpawner : ActorSpawnPoint
@@ -20,6 +21,12 @@ public partial class ActorSpawner : ActorSpawnPoint
     [Export]
     public bool RandomizeInactivity { get; set; } = true;
 
+    [Export]
+    public int MinLevel { get; set; } = 0;
+
+    [Export]
+    public int MaxLevel { get; set; } = 0;
+
     protected override Node2D SpawnActor()
     {
         if (!ShouldSpawnActor())
@@ -33,7 +40,10 @@ public partial class ActorSpawner : ActorSpawnPoint
         }
 
         if (!RandomizeOnRespawn && TrySpawnCachedOption(validOptions, out var cachedActor))
+        {
+            ApplyResolvedLevel(cachedActor);
             return cachedActor;
+        }
 
         while (validOptions.Count > 0)
         {
@@ -47,6 +57,7 @@ public partial class ActorSpawner : ActorSpawnPoint
                 if (!RandomizeOnRespawn)
                     _cachedOption = option;
 
+                ApplyResolvedLevel(actor);
                 return actor;
             }
 
@@ -54,6 +65,63 @@ public partial class ActorSpawner : ActorSpawnPoint
         }
 
         GD.PushWarning($"{nameof(ActorSpawner)} '{Name}' could not spawn any configured actor scenes.");
+        return null;
+    }
+
+    private void ApplyResolvedLevel(Node2D actor)
+    {
+        if (actor is not CombatCharacter combatCharacter)
+            return;
+
+        combatCharacter.Level = ResolveSpawnLevel();
+    }
+
+    private int ResolveSpawnLevel()
+    {
+        var min = MinLevel;
+        var max = MaxLevel;
+
+        if (min <= 0 && max <= 0)
+            return RollFromRoomProfile();
+
+        if (min > 0 && max <= 0)
+            return Math.Max(1, min);
+
+        if (min <= 0 && max > 0)
+            return Math.Max(1, max);
+
+        if (min > max)
+        {
+            GD.PushWarning($"{nameof(ActorSpawner)} '{Name}' has MinLevel ({min}) greater than MaxLevel ({max}); normalizing range.");
+            (min, max) = (max, min);
+        }
+
+        var rolled = _random.RandiRange(min, max);
+        return Math.Max(1, rolled);
+    }
+
+    private int RollFromRoomProfile()
+    {
+        var room = FindParentRoom();
+        var roomLevel = room?.Level ?? 1;
+        var profile = room?.LevelRollProfile;
+        if (profile == null)
+            return Math.Max(1, roomLevel);
+
+        return profile.Roll(roomLevel, _random);
+    }
+
+    private Room FindParentRoom()
+    {
+        var current = GetParent();
+        while (current != null)
+        {
+            if (current is Room room)
+                return room;
+
+            current = current.GetParent();
+        }
+
         return null;
     }
 

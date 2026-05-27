@@ -26,6 +26,18 @@ public partial class Room : Node2D
     [Export]
     public bool PersistInstance { get; set; }
 
+    private int _level = 1;
+
+    [Export]
+    public int Level
+    {
+        get => _level;
+        set => _level = Math.Max(1, value);
+    }
+
+    [Export]
+    public LevelRollProfile LevelRollProfile { get; set; }
+
     [Export]
     public NodePath ExitsPath { get; set; } = new NodePath("Scaled/Exits");
 

@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="LevelRollProfile" format=3]
+
+[ext_resource type="Script" uid="uid://cnodaj08m4n2q" path="res://scripts/progression/LevelRollProfile.cs" id="1_profile_script"]
+[ext_resource type="Script" uid="uid://devrib63r8x3r" path="res://scripts/progression/LevelRollOffsetEntry.cs" id="2_entry_script"]
+
+[sub_resource type="Resource" id="Resource_offset_minus_2"]
+script = ExtResource("2_entry_script")
+LevelOffset = -2
+Weight = 10.0
+
+[sub_resource type="Resource" id="Resource_offset_minus_1"]
+script = ExtResource("2_entry_script")
+LevelOffset = -1
+Weight = 20.0
+
+[sub_resource type="Resource" id="Resource_offset_zero"]
+script = ExtResource("2_entry_script")
+LevelOffset = 0
+Weight = 35.0
+
+[sub_resource type="Resource" id="Resource_offset_plus_1"]
+script = ExtResource("2_entry_script")
+LevelOffset = 1
+Weight = 20.0
+
+[sub_resource type="Resource" id="Resource_offset_plus_2"]
+script = ExtResource("2_entry_script")
+LevelOffset = 2
+Weight = 10.0
+
+[sub_resource type="Resource" id="Resource_offset_plus_3"]
+script = ExtResource("2_entry_script")
+LevelOffset = 3
+Weight = 5.0
+
+[resource]
+script = ExtResource("1_profile_script")
+Offsets = Array[ExtResource("2_entry_script")]([SubResource("Resource_offset_minus_2"), SubResource("Resource_offset_minus_1"), SubResource("Resource_offset_zero"), SubResource("Resource_offset_plus_1"), SubResource("Resource_offset_plus_2"), SubResource("Resource_offset_plus_3")])
