@@ -151,6 +151,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
     public override void _Ready()
     {
+        _gameConfigStore.LoadGameSettings();
         SetOmniSprite(GetNode<OmniSprite>("OmniSprite"));
         EnsureAnimationFinishedConnected();
         InitializeCombatCharacter(requireManaState: true);

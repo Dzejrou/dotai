@@ -43,42 +43,63 @@ layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="VBox" type="VBoxContainer" parent="Root/Center/Panel"]
+[node name="Views" type="VBoxContainer" parent="Root/Center/Panel"]
+layout_mode = 2
+
+[node name="MainView" type="VBoxContainer" parent="Root/Center/Panel/Views"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Root/Center/Panel/VBox"]
+[node name="Title" type="Label" parent="Root/Center/Panel/Views/MainView"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Paused"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="Root/Center/Panel/VBox"]
+[node name="ResumeButton" type="Button" parent="Root/Center/Panel/Views/MainView"]
 layout_mode = 2
 text = "Resume"
 
-[node name="SaveButton" type="Button" parent="Root/Center/Panel/VBox"]
+[node name="SaveButton" type="Button" parent="Root/Center/Panel/Views/MainView"]
 layout_mode = 2
 text = "Save Game"
 
-[node name="LoadButton" type="Button" parent="Root/Center/Panel/VBox"]
+[node name="LoadButton" type="Button" parent="Root/Center/Panel/Views/MainView"]
 layout_mode = 2
 text = "Load Game"
 
-[node name="DebugButton" type="Button" parent="Root/Center/Panel/VBox"]
+[node name="SettingsButton" type="Button" parent="Root/Center/Panel/Views/MainView"]
+layout_mode = 2
+text = "Settings"
+
+[node name="DebugButton" type="Button" parent="Root/Center/Panel/Views/MainView"]
 layout_mode = 2
 text = "Debug"
 
-[node name="Options" type="VBoxContainer" parent="Root/Center/Panel/VBox"]
+[node name="SettingsView" type="VBoxContainer" parent="Root/Center/Panel/Views"]
+visible = false
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 8
 
-[node name="OptionsLabel" type="Label" parent="Root/Center/Panel/VBox/Options"]
+[node name="SettingsTitle" type="Label" parent="Root/Center/Panel/Views/SettingsView"]
 layout_mode = 2
-text = "Options"
+theme_override_font_sizes/font_size = 28
+text = "Settings"
 horizontal_alignment = 1
 
-[node name="ShowNamesToggle" type="CheckBox" parent="Root/Center/Panel/VBox/Options"]
+[node name="ShowActorNamesToggle" type="CheckBox" parent="Root/Center/Panel/Views/SettingsView"]
 layout_mode = 2
-text = "Show Unit Names"
+text = "Show actor names"
+
+[node name="ShowFloatingTextToggle" type="CheckBox" parent="Root/Center/Panel/Views/SettingsView"]
+layout_mode = 2
 button_pressed = true
+text = "Show floating text"
+
+[node name="ShowCombatLogDebugToggle" type="CheckBox" parent="Root/Center/Panel/Views/SettingsView"]
+layout_mode = 2
+text = "Show debug messages in combat log"
+
+[node name="BackButton" type="Button" parent="Root/Center/Panel/Views/SettingsView"]
+layout_mode = 2
+text = "Back"

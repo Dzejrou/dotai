@@ -10,6 +10,10 @@ public sealed class GameConfigStore
     private const string ConfigFilePath = "user://config.json";
     private const string VersionFieldName = "version";
     private const string SpellLoadoutFieldName = "spellLoadout";
+    private const string SettingsFieldName = "settings";
+    private const string ShowActorNamesFieldName = "showActorNames";
+    private const string ShowFloatingTextFieldName = "showFloatingText";
+    private const string ShowCombatLogDebugMessagesFieldName = "showCombatLogDebugMessages";
     private const int CurrentConfigVersion = 1;
     private static readonly JsonSerializerOptions JsonWriteOptions = new()
     {
@@ -50,6 +54,120 @@ public sealed class GameConfigStore
             default:
                 return;
         }
+    }
+
+    public void LoadGameSettings()
+    {
+        var status = TryLoadConfigRoot(out var root, out var message);
+        switch (status)
+        {
+            case ConfigLoadStatus.Missing:
+                ApplyGameSettings(null);
+                return;
+            case ConfigLoadStatus.Loaded:
+                ApplyGameSettings(root);
+                return;
+            case ConfigLoadStatus.Invalid:
+                GD.PushWarning(message);
+                ApplyGameSettings(null);
+                return;
+            default:
+                ApplyGameSettings(null);
+                return;
+        }
+    }
+
+    public bool TrySaveGameSettings(out string message)
+    {
+        message = string.Empty;
+
+        JsonObject root;
+        var status = TryLoadConfigRoot(out root, out var loadMessage);
+        switch (status)
+        {
+            case ConfigLoadStatus.Missing:
+                root = new JsonObject();
+                break;
+            case ConfigLoadStatus.Loaded:
+                break;
+            case ConfigLoadStatus.Invalid:
+                message = $"{loadMessage} Refusing to overwrite malformed config so unknown fields are not destroyed.";
+                return false;
+            default:
+                message = "Unknown configuration load status.";
+                return false;
+        }
+
+        root[SettingsFieldName] = BuildGameSettingsSection();
+        if (!root.ContainsKey(VersionFieldName))
+            root[VersionFieldName] = CurrentConfigVersion;
+
+        try
+        {
+            using var file = FileAccess.Open(ConfigFilePath, FileAccess.ModeFlags.Write);
+            if (file == null)
+            {
+                message = $"Failed to open {GetDisplayPath()} for writing.";
+                return false;
+            }
+
+            file.StoreString(root.ToJsonString(JsonWriteOptions));
+            message = $"Saved game settings to {GetDisplayPath()}.";
+            return true;
+        }
+        catch (Exception exception)
+        {
+            message = $"Failed to save {GetDisplayPath()}: {exception.Message}";
+            return false;
+        }
+    }
+
+    private static void ApplyGameSettings(JsonObject root)
+    {
+        var showActorNames = GameSettings.DefaultShowActorNames;
+        var showFloatingText = GameSettings.DefaultShowFloatingText;
+        var showCombatLogDebug = GameSettings.DefaultShowCombatLogDebugMessages;
+
+        if (root != null &&
+            root.TryGetPropertyValue(SettingsFieldName, out var settingsNode) &&
+            settingsNode is JsonObject settingsObject)
+        {
+            showActorNames = ReadBoolSetting(settingsObject, ShowActorNamesFieldName, showActorNames);
+            showFloatingText = ReadBoolSetting(settingsObject, ShowFloatingTextFieldName, showFloatingText);
+            showCombatLogDebug = ReadBoolSetting(settingsObject, ShowCombatLogDebugMessagesFieldName, showCombatLogDebug);
+        }
+        else if (root != null && root.ContainsKey(SettingsFieldName))
+        {
+            GD.PushWarning(
+                $"{GetDisplayPath()}: '{SettingsFieldName}' must be a JSON object. Using default game settings.");
+        }
+
+        GameSettings.SetShowActorNames(showActorNames);
+        GameSettings.SetShowFloatingText(showFloatingText);
+        GameSettings.SetShowCombatLogDebugMessages(showCombatLogDebug);
+    }
+
+    private static bool ReadBoolSetting(JsonObject settingsObject, string fieldName, bool defaultValue)
+    {
+        if (!settingsObject.TryGetPropertyValue(fieldName, out var node) || node == null)
+            return defaultValue;
+
+        if (node is JsonValue jsonValue && jsonValue.TryGetValue<bool>(out var parsed))
+            return parsed;
+
+        GD.PushWarning(
+            $"{GetDisplayPath()}: setting '{fieldName}' must be a boolean. Falling back to default '{defaultValue}'.");
+        return defaultValue;
+    }
+
+    private static JsonObject BuildGameSettingsSection()
+    {
+        return new JsonObject
+        {
+            [ShowActorNamesFieldName] = GameSettings.ShowActorNames,
+            [ShowFloatingTextFieldName] = GameSettings.ShowFloatingText,
+            [ShowCombatLogDebugMessagesFieldName] = GameSettings.ShowCombatLogDebugMessages,
+        };
     }
 
     public bool TrySaveSpellLoadout(SpellLoadout spellLoadout, out string message)
