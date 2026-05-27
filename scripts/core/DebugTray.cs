@@ -33,6 +33,12 @@ public partial class DebugTray : Control
     public NodePath QualityLabelPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/QualityLabel");
 
     [Export]
+    public NodePath LevelSpinBoxPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/LevelSpinBox");
+
+    [Export]
+    public NodePath LevelLabelPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/LevelLabel");
+
+    [Export]
     public NodePath StatsButtonPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/StatsButton");
 
     [Export]
@@ -71,6 +77,8 @@ public partial class DebugTray : Control
     private OptionButton _modeSelector;
     private OptionButton _qualitySelector;
     private Label _qualityLabel;
+    private SpinBox _levelSpinBox;
+    private Label _levelLabel;
     private Button _statsButton;
     private readonly Dictionary<string, Button> _cardsById = new();
     private readonly Dictionary<string, EquipmentSlot> _gearCardSlots = new();
@@ -80,6 +88,7 @@ public partial class DebugTray : Control
     private bool _draggingFromCard;
     private SpawnCatalogEntryKind _activeEntryKind = SpawnCatalogEntryKind.Character;
     private ItemQuality _selectedGearQuality = ItemQuality.Common;
+    private int _selectedCharacterLevel = 1;
 
     public bool TrayVisible => Visible;
 
@@ -98,6 +107,8 @@ public partial class DebugTray : Control
         _modeSelector = GetNodeOrNull<OptionButton>(ModeSelectorPath);
         _qualitySelector = GetNodeOrNull<OptionButton>(QualitySelectorPath);
         _qualityLabel = GetNodeOrNull<Label>(QualityLabelPath);
+        _levelSpinBox = GetNodeOrNull<SpinBox>(LevelSpinBoxPath);
+        _levelLabel = GetNodeOrNull<Label>(LevelLabelPath);
         _statsButton = GetNodeOrNull<Button>(StatsButtonPath);
         if (_statsButton != null)
             _statsButton.Pressed += OnStatsButtonPressed;
@@ -328,7 +339,20 @@ public partial class DebugTray : Control
             SyncQualitySelector();
         }
 
+        if (_levelSpinBox != null)
+        {
+            _levelSpinBox.MinValue = 1;
+            _levelSpinBox.MaxValue = 100;
+            _levelSpinBox.Step = 1;
+            _levelSpinBox.Rounded = true;
+            _levelSpinBox.Value = _selectedCharacterLevel;
+            _levelSpinBox.ValueChanged += OnLevelChanged;
+        }
+
+        _debugSpawner?.SetSelectedCharacterLevel(_selectedCharacterLevel);
+
         UpdateQualitySelectorVisibility();
+        UpdateLevelSelectorVisibility();
     }
 
     private void AddModeOption(string label, SpawnCatalogEntryKind entryKind)
@@ -716,6 +740,7 @@ public partial class DebugTray : Control
         SyncModeSelector();
         SyncFactionSelector();
         UpdateQualitySelectorVisibility();
+        UpdateLevelSelectorVisibility();
         UpdateCardSelection();
         UpdateStatusLabel();
     }
@@ -729,6 +754,13 @@ public partial class DebugTray : Control
         UpdateStatusLabel();
     }
 
+    private void OnLevelChanged(double value)
+    {
+        _selectedCharacterLevel = Math.Max(1, (int)value);
+        _debugSpawner?.SetSelectedCharacterLevel(_selectedCharacterLevel);
+        UpdateStatusLabel();
+    }
+
     private void UpdateQualitySelectorVisibility()
     {
         var isGearMode = _activeEntryKind == SpawnCatalogEntryKind.Gear;
@@ -736,6 +768,15 @@ public partial class DebugTray : Control
             _qualitySelector.Visible = isGearMode;
         if (_qualityLabel != null)
             _qualityLabel.Visible = isGearMode;
+    }
+
+    private void UpdateLevelSelectorVisibility()
+    {
+        var isCharacterMode = _activeEntryKind == SpawnCatalogEntryKind.Character;
+        if (_levelSpinBox != null)
+            _levelSpinBox.Visible = isCharacterMode;
+        if (_levelLabel != null)
+            _levelLabel.Visible = isCharacterMode;
     }
 
     private void SyncQualitySelector()

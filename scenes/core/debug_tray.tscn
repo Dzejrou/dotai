@@ -82,6 +82,18 @@ text = "Quality"
 custom_minimum_size = Vector2(130, 0)
 layout_mode = 2
 
+[node name="LevelLabel" type="Label" parent="Root/Bottom/Panel/VBox/Controls"]
+layout_mode = 2
+text = "Level"
+
+[node name="LevelSpinBox" type="SpinBox" parent="Root/Bottom/Panel/VBox/Controls"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+min_value = 1.0
+max_value = 100.0
+value = 1.0
+rounded = true
+
 [node name="StatsButton" type="Button" parent="Root/Bottom/Panel/VBox/Controls"]
 layout_mode = 2
 text = "Player Stats"
