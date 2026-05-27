@@ -25,6 +25,15 @@ public partial class World : Node2D
     public RoomRegistry RoomRegistry { get; set; }
 
     [Export]
+    public GlobalGearLootRules GlobalGearLootRules { get; set; }
+
+    [Export]
+    public GearGenerationRules GearGenerationRules { get; set; }
+
+    [Export]
+    public PackedScene GearDropScene { get; set; }
+
+    [Export]
     public StringName InitialScreenId { get; set; } = "entrance_hall";
 
     [Export]
