@@ -70,6 +70,7 @@ Theme = &"test"
 RoomType = &"sandbox"
 RoomSize = &"single_screen"
 PersistInstance = true
+Level = 5
 CameraBoundsRect = Rect2(-20000, -2000, 40000, 40000)
 
 [node name="Scaled" type="Node2D" parent="." unique_id=1342489936]

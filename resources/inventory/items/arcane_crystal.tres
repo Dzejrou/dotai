@@ -9,6 +9,5 @@ Id = "arcane_crystal"
 DisplayName = "Arcane Crystal"
 Icon = ExtResource("2_arcane_crystal_texture")
 MaxStackSize = 999
-Quality = 1
 SellPrice = 5
 GearXpPerUnit = 25
