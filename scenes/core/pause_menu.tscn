@@ -96,6 +96,15 @@ layout_mode = 2
 button_pressed = true
 text = "Show floating text"
 
+[node name="ShowCombatLogToggle" type="CheckBox" parent="Root/Center/Panel/Views/SettingsView"]
+layout_mode = 2
+text = "Show combat log"
+
+[node name="LockCombatLogPositionToggle" type="CheckBox" parent="Root/Center/Panel/Views/SettingsView"]
+layout_mode = 2
+button_pressed = true
+text = "Lock combat log position"
+
 [node name="ShowCombatLogDebugToggle" type="CheckBox" parent="Root/Center/Panel/Views/SettingsView"]
 layout_mode = 2
 text = "Show debug messages in combat log"

@@ -14,6 +14,11 @@ public sealed class GameConfigStore
     private const string ShowActorNamesFieldName = "showActorNames";
     private const string ShowFloatingTextFieldName = "showFloatingText";
     private const string ShowCombatLogDebugMessagesFieldName = "showCombatLogDebugMessages";
+    private const string ShowCombatLogFieldName = "showCombatLog";
+    private const string LockCombatLogPositionFieldName = "lockCombatLogPosition";
+    private const string CombatLogPositionFieldName = "combatLogPosition";
+    private const string CombatLogPositionXFieldName = "x";
+    private const string CombatLogPositionYFieldName = "y";
     private const int CurrentConfigVersion = 1;
     private static readonly JsonSerializerOptions JsonWriteOptions = new()
     {
@@ -127,6 +132,10 @@ public sealed class GameConfigStore
         var showActorNames = GameSettings.DefaultShowActorNames;
         var showFloatingText = GameSettings.DefaultShowFloatingText;
         var showCombatLogDebug = GameSettings.DefaultShowCombatLogDebugMessages;
+        var showCombatLog = GameSettings.DefaultShowCombatLog;
+        var lockCombatLogPosition = GameSettings.DefaultLockCombatLogPosition;
+        var combatLogPosition = GameSettings.DefaultCombatLogPosition;
+        var combatLogPositionCustomized = false;
 
         if (root != null &&
             root.TryGetPropertyValue(SettingsFieldName, out var settingsNode) &&
@@ -135,6 +144,12 @@ public sealed class GameConfigStore
             showActorNames = ReadBoolSetting(settingsObject, ShowActorNamesFieldName, showActorNames);
             showFloatingText = ReadBoolSetting(settingsObject, ShowFloatingTextFieldName, showFloatingText);
             showCombatLogDebug = ReadBoolSetting(settingsObject, ShowCombatLogDebugMessagesFieldName, showCombatLogDebug);
+            showCombatLog = ReadBoolSetting(settingsObject, ShowCombatLogFieldName, showCombatLog);
+            lockCombatLogPosition = ReadBoolSetting(settingsObject, LockCombatLogPositionFieldName, lockCombatLogPosition);
+            combatLogPositionCustomized = TryReadVector2Setting(
+                settingsObject, CombatLogPositionFieldName, out var parsedPosition);
+            if (combatLogPositionCustomized)
+                combatLogPosition = parsedPosition;
         }
         else if (root != null && root.ContainsKey(SettingsFieldName))
         {
@@ -145,6 +160,9 @@ public sealed class GameConfigStore
         GameSettings.SetShowActorNames(showActorNames);
         GameSettings.SetShowFloatingText(showFloatingText);
         GameSettings.SetShowCombatLogDebugMessages(showCombatLogDebug);
+        GameSettings.SetShowCombatLog(showCombatLog);
+        GameSettings.SetLockCombatLogPosition(lockCombatLogPosition);
+        GameSettings.SetCombatLogPosition(combatLogPosition, combatLogPositionCustomized);
     }
 
     private static bool ReadBoolSetting(JsonObject settingsObject, string fieldName, bool defaultValue)
@@ -162,12 +180,79 @@ public sealed class GameConfigStore
 
     private static JsonObject BuildGameSettingsSection()
     {
-        return new JsonObject
+        var section = new JsonObject
         {
             [ShowActorNamesFieldName] = GameSettings.ShowActorNames,
             [ShowFloatingTextFieldName] = GameSettings.ShowFloatingText,
             [ShowCombatLogDebugMessagesFieldName] = GameSettings.ShowCombatLogDebugMessages,
+            [ShowCombatLogFieldName] = GameSettings.ShowCombatLog,
+            [LockCombatLogPositionFieldName] = GameSettings.LockCombatLogPosition,
         };
+
+        if (GameSettings.CombatLogPositionCustomized)
+        {
+            var position = GameSettings.CombatLogPosition;
+            section[CombatLogPositionFieldName] = new JsonObject
+            {
+                [CombatLogPositionXFieldName] = position.X,
+                [CombatLogPositionYFieldName] = position.Y,
+            };
+        }
+
+        return section;
+    }
+
+    private static bool TryReadVector2Setting(JsonObject settingsObject, string fieldName, out Vector2 value)
+    {
+        value = Vector2.Zero;
+        if (!settingsObject.TryGetPropertyValue(fieldName, out var node) || node == null)
+            return false;
+
+        if (node is not JsonObject vectorObject)
+        {
+            GD.PushWarning(
+                $"{GetDisplayPath()}: setting '{fieldName}' must be an object with '{CombatLogPositionXFieldName}'/'{CombatLogPositionYFieldName}' numbers. Ignoring saved position.");
+            return false;
+        }
+
+        if (!TryReadFloatField(vectorObject, fieldName, CombatLogPositionXFieldName, out var x) ||
+            !TryReadFloatField(vectorObject, fieldName, CombatLogPositionYFieldName, out var y))
+        {
+            return false;
+        }
+
+        value = new Vector2(x, y);
+        return true;
+    }
+
+    private static bool TryReadFloatField(JsonObject vectorObject, string parentName, string fieldName, out float value)
+    {
+        value = 0.0f;
+        if (!vectorObject.TryGetPropertyValue(fieldName, out var node) || node == null)
+        {
+            GD.PushWarning(
+                $"{GetDisplayPath()}: setting '{parentName}.{fieldName}' is missing. Ignoring saved position.");
+            return false;
+        }
+
+        if (node is JsonValue jsonValue)
+        {
+            if (jsonValue.TryGetValue<float>(out var floatValue))
+            {
+                value = floatValue;
+                return true;
+            }
+
+            if (jsonValue.TryGetValue<double>(out var doubleValue))
+            {
+                value = (float)doubleValue;
+                return true;
+            }
+        }
+
+        GD.PushWarning(
+            $"{GetDisplayPath()}: setting '{parentName}.{fieldName}' must be a number. Ignoring saved position.");
+        return false;
     }
 
     public bool TrySaveSpellLoadout(SpellLoadout spellLoadout, out string message)
