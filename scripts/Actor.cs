@@ -192,6 +192,7 @@ public abstract partial class Actor : CombatCharacter
             return;
 
         ShowFloatingHealingNumber(healedAmount);
+        CombatLog.Heal(this, healedAmount);
     }
 
     public bool TryMoveTowardDestination(Vector2 destinationPosition, float speedMultiplier, CombatUnitState movingState, double delta)

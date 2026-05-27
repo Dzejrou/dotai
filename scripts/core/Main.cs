@@ -42,6 +42,7 @@ public partial class Main : Node2D
     private CharacterWindow _characterWindow;
     private PlayerDebugStatsWindow _playerDebugStatsWindow;
     private MerchantWindow _merchantWindow;
+    private CombatLogPanel _combatLogPanel;
     private Sprite2D _interactionPrompt;
     private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
@@ -51,6 +52,7 @@ public partial class Main : Node2D
     private const string PlayerDebugStatsWindowScenePath = "res://scenes/ui/player_debug_stats_window.tscn";
     private const string MerchantWindowScenePath = "res://scenes/ui/merchant_window.tscn";
     private const string CountdownHudScenePath = "res://scenes/ui/countdown_hud.tscn";
+    private const string CombatLogPanelScenePath = "res://scenes/ui/combat_log_panel.tscn";
     private const string InteractionPromptGlyphPath = "res://assets/glyphs/letter_g.png";
     private const string SpellBookActionName = "spell_book";
     private const string ToggleInventoryActionName = "toggle_inventory";
@@ -450,6 +452,13 @@ public partial class Main : Node2D
         {
             _countdownHud = countdownHud;
             hudCanvas.AddChild(_countdownHud);
+        }
+
+        var combatLogPanelScene = ResourceLoader.Load<PackedScene>(CombatLogPanelScenePath);
+        if (combatLogPanelScene?.Instantiate<CombatLogPanel>() is CombatLogPanel combatLogPanel)
+        {
+            _combatLogPanel = combatLogPanel;
+            hudCanvas.AddChild(_combatLogPanel);
         }
 
         var interactionPromptTexture = ResourceLoader.Load<Texture2D>(InteractionPromptGlyphPath);

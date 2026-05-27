@@ -48,6 +48,12 @@ public partial class PauseMenu : Control
     [Export]
     public NodePath ShowCombatLogDebugTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/ShowCombatLogDebugToggle");
 
+    [Export]
+    public NodePath ShowCombatLogTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/ShowCombatLogToggle");
+
+    [Export]
+    public NodePath LockCombatLogPositionTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/LockCombatLogPositionToggle");
+
     private readonly GameConfigStore _gameConfigStore = new();
     private Control _mainView;
     private Control _settingsView;
@@ -60,6 +66,8 @@ public partial class PauseMenu : Control
     private BaseButton _showActorNamesToggle;
     private BaseButton _showFloatingTextToggle;
     private BaseButton _showCombatLogDebugToggle;
+    private BaseButton _showCombatLogToggle;
+    private BaseButton _lockCombatLogPositionToggle;
 
     public override void _Ready()
     {
@@ -78,6 +86,8 @@ public partial class PauseMenu : Control
         _showActorNamesToggle = GetNodeOrNull<BaseButton>(ShowActorNamesTogglePath);
         _showFloatingTextToggle = GetNodeOrNull<BaseButton>(ShowFloatingTextTogglePath);
         _showCombatLogDebugToggle = GetNodeOrNull<BaseButton>(ShowCombatLogDebugTogglePath);
+        _showCombatLogToggle = GetNodeOrNull<BaseButton>(ShowCombatLogTogglePath);
+        _lockCombatLogPositionToggle = GetNodeOrNull<BaseButton>(LockCombatLogPositionTogglePath);
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
@@ -115,6 +125,18 @@ public partial class PauseMenu : Control
             _showCombatLogDebugToggle.Toggled += OnShowCombatLogDebugToggled;
         }
 
+        if (_showCombatLogToggle != null)
+        {
+            _showCombatLogToggle.ButtonPressed = GameSettings.ShowCombatLog;
+            _showCombatLogToggle.Toggled += OnShowCombatLogToggled;
+        }
+
+        if (_lockCombatLogPositionToggle != null)
+        {
+            _lockCombatLogPositionToggle.ButtonPressed = GameSettings.LockCombatLogPosition;
+            _lockCombatLogPositionToggle.Toggled += OnLockCombatLogPositionToggled;
+        }
+
         ShowMainView();
     }
 
@@ -146,6 +168,12 @@ public partial class PauseMenu : Control
 
         if (_showCombatLogDebugToggle != null)
             _showCombatLogDebugToggle.Toggled -= OnShowCombatLogDebugToggled;
+
+        if (_showCombatLogToggle != null)
+            _showCombatLogToggle.Toggled -= OnShowCombatLogToggled;
+
+        if (_lockCombatLogPositionToggle != null)
+            _lockCombatLogPositionToggle.Toggled -= OnLockCombatLogPositionToggled;
     }
 
     private void OnResumePressed()
@@ -193,6 +221,18 @@ public partial class PauseMenu : Control
     private void OnShowCombatLogDebugToggled(bool pressed)
     {
         GameSettings.SetShowCombatLogDebugMessages(pressed);
+        PersistSettings();
+    }
+
+    private void OnShowCombatLogToggled(bool pressed)
+    {
+        GameSettings.SetShowCombatLog(pressed);
+        PersistSettings();
+    }
+
+    private void OnLockCombatLogPositionToggled(bool pressed)
+    {
+        GameSettings.SetLockCombatLogPosition(pressed);
         PersistSettings();
     }
 

@@ -187,6 +187,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         damageInfo.ResolveCritForReceiver(this);
         damageInfo.ApplyReceiverResistance(ResolveResistance(damageInfo.School));
 
+        var preAbsorptionAmount = damageInfo.Amount;
         var remainingDamage = ResolveRemainingDamageAfterAbsorption(damageInfo, out var fullyAbsorbingAbsorber);
         damageInfo.RegisterHit(this, setReceiverTargetToSource);
         if (remainingDamage <= 0)
@@ -197,11 +198,15 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
                     ? absorberNode
                     : this;
                 FloatingText.ShowNeutral("ABSORB", origin);
+                CombatLog.Absorb(this, preAbsorptionAmount);
             }
             return false;
         }
 
         appliedDamage = HealthStateNode.ApplyDamage(remainingDamage);
+        if (appliedDamage > 0)
+            CombatLog.Damage(this, damageInfo.Source, appliedDamage, damageInfo.IsCritical);
+
         return appliedDamage > 0;
     }
 

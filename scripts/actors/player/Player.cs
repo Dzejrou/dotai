@@ -366,6 +366,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
 
         ShowFloatingHealingNumber(recovered);
+        CombatLog.Heal(this, recovered);
         _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
