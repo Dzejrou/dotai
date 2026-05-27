@@ -141,7 +141,7 @@ public partial class ActorHUD : Node2D
         _targetBracket = GetNodeOrNull<Node2D>("ContentRoot/TargetBracket");
         _leftBracket = GetNodeOrNull<Line2D>("ContentRoot/TargetBracket/LeftBracket");
         _rightBracket = GetNodeOrNull<Line2D>("ContentRoot/TargetBracket/RightBracket");
-        ActorHudSettings.Changed += OnActorHudSettingsChanged;
+        GameSettings.ShowActorNamesChanged += OnShowActorNamesChanged;
         ApplyBarSizes();
         RefreshPlacement();
         RefreshName();
@@ -158,7 +158,7 @@ public partial class ActorHUD : Node2D
     public override void _ExitTree()
     {
         UnbindPlayerXp();
-        ActorHudSettings.Changed -= OnActorHudSettingsChanged;
+        GameSettings.ShowActorNamesChanged -= OnShowActorNamesChanged;
     }
 
     public void Bind(Node2D owner)
@@ -283,7 +283,7 @@ public partial class ActorHUD : Node2D
             resolvedName = $"[{combatCharacter.Level}] {resolvedName}";
 
         var shouldShowName = ShowName &&
-                             ActorHudSettings.ShowNames &&
+                             GameSettings.ShowActorNames &&
                              (_unitFrame == null || _unitFrame.Visible) &&
                              !string.IsNullOrWhiteSpace(resolvedName);
         _nameLabel.Visible = shouldShowName;
@@ -467,7 +467,7 @@ public partial class ActorHUD : Node2D
             label.Size = barSize;
     }
 
-    private void OnActorHudSettingsChanged(bool _)
+    private void OnShowActorNamesChanged(bool _)
     {
         RefreshName();
     }
