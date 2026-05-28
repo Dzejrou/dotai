@@ -32,6 +32,26 @@ public partial class ActorHUD : Node2D
     [Export]
     public string DisplayName { get; set; } = string.Empty;
 
+    public string ResolvedDisplayName
+    {
+        get
+        {
+            var baseName = !string.IsNullOrWhiteSpace(DisplayName)
+                ? DisplayName
+                : _owner?.Name.ToString() ?? string.Empty;
+
+            if (string.IsNullOrEmpty(baseName) || _owner is not Actor actor)
+                return baseName;
+
+            return actor.Rank switch
+            {
+                ActorRank.Elite => $"Elite {baseName}",
+                ActorRank.Boss => $"Boss {baseName}",
+                _ => baseName,
+            };
+        }
+    }
+
     [Export]
     public float VerticalOffset { get; set; } = -40.0f;
 
@@ -275,9 +295,7 @@ public partial class ActorHUD : Node2D
         if (_nameLabel == null)
             return;
 
-        var resolvedName = !string.IsNullOrWhiteSpace(DisplayName)
-            ? DisplayName
-            : _owner?.Name.ToString() ?? string.Empty;
+        var resolvedName = ResolvedDisplayName;
 
         if (_owner is CombatCharacter combatCharacter && !string.IsNullOrWhiteSpace(resolvedName))
             resolvedName = $"[{combatCharacter.Level}] {resolvedName}";

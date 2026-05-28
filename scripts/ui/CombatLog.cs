@@ -100,8 +100,12 @@ public static class CombatLog
             return fallback;
 
         var hud = node.GetNodeOrNull<ActorHUD>("ActorHUD");
-        if (hud != null && !string.IsNullOrWhiteSpace(hud.DisplayName))
-            return hud.DisplayName;
+        if (hud != null)
+        {
+            var resolved = hud.ResolvedDisplayName;
+            if (!string.IsNullOrWhiteSpace(resolved))
+                return resolved;
+        }
 
         var name = node.Name.ToString();
         return string.IsNullOrEmpty(name) ? fallback : name;

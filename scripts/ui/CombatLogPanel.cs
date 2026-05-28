@@ -10,6 +10,7 @@ public partial class CombatLogPanel : Control
     private const float DefaultMarginRight = 16.0f;
     private const float DefaultMarginBottom = 96.0f;
     private const float MinVisible = 60.0f;
+    private const float ScrollBottomThreshold = 8.0f;
 
     private static readonly Color InfoColor = new Color(0.85f, 0.85f, 0.85f, 1.0f);
     private static readonly Color DamageColor = new Color(1.0f, 0.45f, 0.45f, 1.0f);
@@ -202,6 +203,11 @@ public partial class CombatLogPanel : Control
         if (_rowsContainer == null || !GodotObject.IsInstanceValid(_rowsContainer))
             return;
 
+        // Capture follow state before mutating rows: if the user has scrolled
+        // up, leave their view alone; if they're at/near the bottom, keep
+        // following new messages.
+        var shouldFollow = IsScrollAtBottom();
+
         var cap = Math.Max(1, MaxLines);
         while (_rows.Count >= cap)
         {
@@ -224,7 +230,24 @@ public partial class CombatLogPanel : Control
         // VBoxContainer re-lays out. Mark the scroll as pending; the
         // scrollbar's Changed signal will fire post-layout and we'll scroll
         // to the real bottom there.
-        _pendingScrollToBottom = true;
+        if (shouldFollow)
+            _pendingScrollToBottom = true;
+    }
+
+    private bool IsScrollAtBottom()
+    {
+        if (_scrollBar == null || !GodotObject.IsInstanceValid(_scrollBar))
+            return true;
+
+        var page = (float)_scrollBar.Page;
+        var max = (float)_scrollBar.MaxValue;
+        var value = (float)_scrollBar.Value;
+
+        // Content fits inside the viewport: there is no "up" to scroll to.
+        if (max <= page)
+            return true;
+
+        return value + page >= max - ScrollBottomThreshold;
     }
 
     private void OnScrollBarChanged()
