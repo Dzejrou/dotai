@@ -60,6 +60,11 @@ public abstract partial class Actor : CombatCharacter
     [Export]
     public int ExperienceReward { get; set; } = 0;
 
+    [Export]
+    public ActorRank Rank { get; set; } = ActorRank.Normal;
+
+    private ActorLevelScalingRules _cachedLevelScalingRules;
+
     protected void InitializeActor(
         OmniSprite omniSprite,
         NavigationAgent2D navigationAgent = null)
@@ -322,6 +327,38 @@ public abstract partial class Actor : CombatCharacter
     protected override void OnHealthStateChanged()
     {
         RefreshHealthLabel();
+    }
+
+    protected override void OnLevelChanged(int newLevel)
+    {
+        // Spawners assign Level before the actor enters the tree; skip until HealthState exists.
+        if (HealthStateNode == null)
+            return;
+
+        // SetMax clamps current health to the new max; it never grants a free heal.
+        HealthStateNode.SetMax(ResolvedMaxHealth);
+        RefreshHealthLabel();
+    }
+
+    protected override int ResolveScaledBaseMaxHealth(int baseMaxHealth)
+    {
+        var rules = ResolveLevelScalingRules();
+        return rules == null ? baseMaxHealth : rules.ScaleMaxHealth(baseMaxHealth, Level, Rank);
+    }
+
+    protected override float ResolveScaledBasePower(float basePower)
+    {
+        var rules = ResolveLevelScalingRules();
+        return rules == null ? basePower : rules.ScalePower(basePower, Level, Rank);
+    }
+
+    private ActorLevelScalingRules ResolveLevelScalingRules()
+    {
+        if (_cachedLevelScalingRules != null)
+            return _cachedLevelScalingRules;
+
+        _cachedLevelScalingRules = FindWorld()?.ActorLevelScalingRules;
+        return _cachedLevelScalingRules;
     }
 
     protected void SpawnCorpseAndFree()
