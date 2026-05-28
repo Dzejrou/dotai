@@ -348,11 +348,7 @@ public partial class StatusEffectController : Node
 
     private string ResolveOwnerDisplayName()
     {
-        if (_owner == null || !GodotObject.IsInstanceValid(_owner))
-            return string.Empty;
-
-        var name = _owner.Name.ToString();
-        return string.IsNullOrEmpty(name) ? string.Empty : name;
+        return CombatLog.ResolveName(_owner);
     }
 
     private void EmitStatusFloatingTextDeferred(string text, Color color)
