@@ -642,19 +642,40 @@ public abstract partial class Actor : CombatCharacter
 
     private void SpawnGlobalGearLootDrops(Node dropParent)
     {
+        CombatLog.Debug($"Global gear loot: {Name} (lvl {Level}) eval start.");
+
         var world = FindWorld();
         var rules = world?.GlobalGearLootRules;
         var gearRules = world?.GearGenerationRules;
         var dropScene = world?.GearDropScene;
 
-        if (rules == null || gearRules == null || dropScene == null)
+        if (rules == null)
+        {
+            CombatLog.Debug("Global gear loot: skipped (missing GlobalGearLootRules).");
             return;
+        }
+        if (gearRules == null)
+        {
+            CombatLog.Debug("Global gear loot: skipped (missing GearGenerationRules).");
+            return;
+        }
+        if (dropScene == null)
+        {
+            CombatLog.Debug("Global gear loot: skipped (missing GearDropScene).");
+            return;
+        }
 
         var rollCount = Math.Max(1, rules.RollCount);
         for (var i = 0; i < rollCount; i++)
         {
-            if (!rules.TryRollGear(Level, LootRandom, gearRules, out var gear) || gear == null)
+            var rolled = rules.TryRollGear(Level, LootRandom, gearRules, out var gear, out var rollResult);
+            if (!rolled || gear == null)
+            {
+                CombatLog.Debug($"Global gear loot: roll {i + 1}/{rollCount} failed ({FormatGlobalGearLootFailureReason(rollResult.FailureReason)}).");
                 continue;
+            }
+
+            CombatLog.Debug($"Global gear loot: roll {i + 1}/{rollCount} success (lvl {Level}, {rollResult.Quality} {rollResult.Slot}, \"{gear.Definition.DisplayName}\").");
 
             if (dropScene.Instantiate() is not InventoryItemDrop gearDrop)
                 continue;
@@ -665,6 +686,19 @@ public abstract partial class Actor : CombatCharacter
             gearDrop.PickupMode = DropPickupMode.InteractOnly;
             SpawnDrop(dropParent, gearDrop);
         }
+    }
+
+    private static string FormatGlobalGearLootFailureReason(GlobalGearLootRollFailureReason reason)
+    {
+        return reason switch
+        {
+            GlobalGearLootRollFailureReason.MissingConfig => "missing config",
+            GlobalGearLootRollFailureReason.ChanceMiss => "chance miss",
+            GlobalGearLootRollFailureReason.NoLevelBand => "no level band",
+            GlobalGearLootRollFailureReason.NoQualityWeight => "no quality weight",
+            GlobalGearLootRollFailureReason.GenerationFailure => "generation failure",
+            _ => "unknown",
+        };
     }
 
     private void SpawnDrop(Node dropParent, Drop drop)
