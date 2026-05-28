@@ -679,7 +679,7 @@ public abstract partial class Actor : CombatCharacter
 
     private void SpawnGlobalGearLootDrops(Node dropParent)
     {
-        CombatLog.Debug($"Global gear loot: {Name} (lvl {Level}) eval start.");
+        CombatLog.Debug($"Global gear loot: {CombatLog.ResolveName(this)} (lvl {Level}) eval start.");
 
         var world = FindWorld();
         var rules = world?.GlobalGearLootRules;
