@@ -49,6 +49,7 @@ wait_time = 30.0
 one_shot = true
 
 [node name="ActorHUD" parent="." unique_id=329917461 instance=ExtResource("10_actor_hud")]
+DisplayName = "Target Dummy"
 
 [node name="CombatState" type="Node" parent="." unique_id=338730228]
 script = ExtResource("11_combat_state")
