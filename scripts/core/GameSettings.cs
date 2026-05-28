@@ -9,6 +9,8 @@ public static class GameSettings
     public const bool DefaultShowCombatLogDebugMessages = false;
     public const bool DefaultShowCombatLog = false;
     public const bool DefaultLockCombatLogPosition = true;
+    public const bool DefaultGodMode = false;
+    public const bool DefaultOneHitKill = false;
     public static readonly Vector2 DefaultCombatLogPosition = Vector2.Zero;
 
     private static bool _showActorNames = DefaultShowActorNames;
@@ -16,6 +18,8 @@ public static class GameSettings
     private static bool _showCombatLogDebugMessages = DefaultShowCombatLogDebugMessages;
     private static bool _showCombatLog = DefaultShowCombatLog;
     private static bool _lockCombatLogPosition = DefaultLockCombatLogPosition;
+    private static bool _godMode = DefaultGodMode;
+    private static bool _oneHitKill = DefaultOneHitKill;
     private static Vector2 _combatLogPosition = DefaultCombatLogPosition;
     private static bool _combatLogPositionCustomized;
 
@@ -24,6 +28,8 @@ public static class GameSettings
     public static bool ShowCombatLogDebugMessages => _showCombatLogDebugMessages;
     public static bool ShowCombatLog => _showCombatLog;
     public static bool LockCombatLogPosition => _lockCombatLogPosition;
+    public static bool GodMode => _godMode;
+    public static bool OneHitKill => _oneHitKill;
     public static Vector2 CombatLogPosition => _combatLogPosition;
     public static bool CombatLogPositionCustomized => _combatLogPositionCustomized;
 
@@ -32,6 +38,8 @@ public static class GameSettings
     public static event Action<bool> ShowCombatLogDebugMessagesChanged;
     public static event Action<bool> ShowCombatLogChanged;
     public static event Action<bool> LockCombatLogPositionChanged;
+    public static event Action<bool> GodModeChanged;
+    public static event Action<bool> OneHitKillChanged;
     public static event Action<Vector2> CombatLogPositionChanged;
 
     public static void SetShowActorNames(bool value)
@@ -77,6 +85,24 @@ public static class GameSettings
 
         _lockCombatLogPosition = value;
         LockCombatLogPositionChanged?.Invoke(value);
+    }
+
+    public static void SetGodMode(bool value)
+    {
+        if (_godMode == value)
+            return;
+
+        _godMode = value;
+        GodModeChanged?.Invoke(value);
+    }
+
+    public static void SetOneHitKill(bool value)
+    {
+        if (_oneHitKill == value)
+            return;
+
+        _oneHitKill = value;
+        OneHitKillChanged?.Invoke(value);
     }
 
     public static void SetCombatLogPosition(Vector2 value, bool customized)

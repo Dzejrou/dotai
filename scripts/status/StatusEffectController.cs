@@ -132,6 +132,16 @@ public partial class StatusEffectController : Node
         if (_owner == null || effect == null)
             return;
 
+        if (GameSettings.GodMode && _owner is Player && effect.Category == StatusCategory.Debuff)
+        {
+            var statusName = string.IsNullOrWhiteSpace(effect.DisplayName)
+                ? effect.StatusKey.ToString()
+                : effect.DisplayName;
+            CombatLog.Debug($"God mode blocks {statusName} on {ResolveOwnerDisplayName()}.");
+            effect.QueueFree();
+            return;
+        }
+
         var applyChance = effect.ResolvedApplyChance;
         if (applyChance < 1.0f && (applyChance <= 0.0f || ApplyChanceRng.Randf() >= applyChance))
         {

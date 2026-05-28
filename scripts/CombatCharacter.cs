@@ -184,12 +184,23 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         if (damageInfo == null || IsDead)
             return false;
 
+        if (GameSettings.GodMode && this is Player)
+        {
+            CombatLog.Debug($"God mode blocks damage to {Name}.");
+            return false;
+        }
+
         damageInfo.ResolveCritForReceiver(this);
         damageInfo.ApplyReceiverResistance(ResolveResistance(damageInfo.School));
 
         var preAbsorptionAmount = damageInfo.Amount;
         var remainingDamage = ResolveRemainingDamageAfterAbsorption(damageInfo, out var fullyAbsorbingAbsorber);
         damageInfo.RegisterHit(this, setReceiverTargetToSource);
+
+        var oneHitKill = GameSettings.OneHitKill && damageInfo.Source is Player && this is not Player;
+        if (oneHitKill)
+            remainingDamage = Math.Max(remainingDamage, Math.Max(1, CurrentHealth));
+
         if (remainingDamage <= 0)
         {
             if (fullyAbsorbingAbsorber != null)
@@ -205,7 +216,11 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
 
         appliedDamage = HealthStateNode.ApplyDamage(remainingDamage);
         if (appliedDamage > 0)
+        {
+            if (oneHitKill)
+                CombatLog.Debug($"One-hit kill downs {Name}.");
             CombatLog.Damage(this, damageInfo.Source, appliedDamage, damageInfo.IsCritical);
+        }
 
         return appliedDamage > 0;
     }

@@ -16,6 +16,8 @@ public sealed class GameConfigStore
     private const string ShowCombatLogDebugMessagesFieldName = "showCombatLogDebugMessages";
     private const string ShowCombatLogFieldName = "showCombatLog";
     private const string LockCombatLogPositionFieldName = "lockCombatLogPosition";
+    private const string GodModeFieldName = "godMode";
+    private const string OneHitKillFieldName = "oneHitKill";
     private const string CombatLogPositionFieldName = "combatLogPosition";
     private const string CombatLogPositionXFieldName = "x";
     private const string CombatLogPositionYFieldName = "y";
@@ -134,6 +136,8 @@ public sealed class GameConfigStore
         var showCombatLogDebug = GameSettings.DefaultShowCombatLogDebugMessages;
         var showCombatLog = GameSettings.DefaultShowCombatLog;
         var lockCombatLogPosition = GameSettings.DefaultLockCombatLogPosition;
+        var godMode = GameSettings.DefaultGodMode;
+        var oneHitKill = GameSettings.DefaultOneHitKill;
         var combatLogPosition = GameSettings.DefaultCombatLogPosition;
         var combatLogPositionCustomized = false;
 
@@ -146,6 +150,8 @@ public sealed class GameConfigStore
             showCombatLogDebug = ReadBoolSetting(settingsObject, ShowCombatLogDebugMessagesFieldName, showCombatLogDebug);
             showCombatLog = ReadBoolSetting(settingsObject, ShowCombatLogFieldName, showCombatLog);
             lockCombatLogPosition = ReadBoolSetting(settingsObject, LockCombatLogPositionFieldName, lockCombatLogPosition);
+            godMode = ReadBoolSetting(settingsObject, GodModeFieldName, godMode);
+            oneHitKill = ReadBoolSetting(settingsObject, OneHitKillFieldName, oneHitKill);
             combatLogPositionCustomized = TryReadVector2Setting(
                 settingsObject, CombatLogPositionFieldName, out var parsedPosition);
             if (combatLogPositionCustomized)
@@ -162,6 +168,8 @@ public sealed class GameConfigStore
         GameSettings.SetShowCombatLogDebugMessages(showCombatLogDebug);
         GameSettings.SetShowCombatLog(showCombatLog);
         GameSettings.SetLockCombatLogPosition(lockCombatLogPosition);
+        GameSettings.SetGodMode(godMode);
+        GameSettings.SetOneHitKill(oneHitKill);
         GameSettings.SetCombatLogPosition(combatLogPosition, combatLogPositionCustomized);
     }
 
@@ -187,6 +195,8 @@ public sealed class GameConfigStore
             [ShowCombatLogDebugMessagesFieldName] = GameSettings.ShowCombatLogDebugMessages,
             [ShowCombatLogFieldName] = GameSettings.ShowCombatLog,
             [LockCombatLogPositionFieldName] = GameSettings.LockCombatLogPosition,
+            [GodModeFieldName] = GameSettings.GodMode,
+            [OneHitKillFieldName] = GameSettings.OneHitKill,
         };
 
         if (GameSettings.CombatLogPositionCustomized)
