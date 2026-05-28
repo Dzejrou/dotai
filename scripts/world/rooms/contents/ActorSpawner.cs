@@ -27,6 +27,9 @@ public partial class ActorSpawner : ActorSpawnPoint
     [Export]
     public int MaxLevel { get; set; } = 0;
 
+    [Export]
+    public ActorRank Rank { get; set; } = ActorRank.Normal;
+
     protected override Node2D SpawnActor()
     {
         if (!ShouldSpawnActor())
@@ -41,7 +44,7 @@ public partial class ActorSpawner : ActorSpawnPoint
 
         if (!RandomizeOnRespawn && TrySpawnCachedOption(validOptions, out var cachedActor))
         {
-            ApplyResolvedLevel(cachedActor);
+            ApplySpawnConfiguration(cachedActor);
             return cachedActor;
         }
 
@@ -57,7 +60,7 @@ public partial class ActorSpawner : ActorSpawnPoint
                 if (!RandomizeOnRespawn)
                     _cachedOption = option;
 
-                ApplyResolvedLevel(actor);
+                ApplySpawnConfiguration(actor);
                 return actor;
             }
 
@@ -66,6 +69,14 @@ public partial class ActorSpawner : ActorSpawnPoint
 
         GD.PushWarning($"{nameof(ActorSpawner)} '{Name}' could not spawn any configured actor scenes.");
         return null;
+    }
+
+    private void ApplySpawnConfiguration(Node2D actor)
+    {
+        if (actor is Actor rankedActor)
+            rankedActor.Rank = Rank;
+
+        ApplyResolvedLevel(actor);
     }
 
     private void ApplyResolvedLevel(Node2D actor)
