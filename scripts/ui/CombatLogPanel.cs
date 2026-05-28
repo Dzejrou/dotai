@@ -38,14 +38,17 @@ public partial class CombatLogPanel : Control
     private readonly Queue<Label> _rows = new();
     private PanelContainer _panel;
     private ScrollContainer _scroll;
+    private VScrollBar _scrollBar;
     private VBoxContainer _rowsContainer;
     private Action<CombatLogEntry> _entryHandler;
     private Action<bool> _showChangedHandler;
     private Action<bool> _lockChangedHandler;
     private Action<Vector2> _positionChangedHandler;
+    private Action _scrollBarChangedHandler;
     private bool _dragging;
     private Vector2 _dragOffset;
     private bool _appliedInitialPosition;
+    private bool _pendingScrollToBottom;
 
     public override void _Ready()
     {
@@ -76,6 +79,13 @@ public partial class CombatLogPanel : Control
             var innerHeight = Math.Max(0, PanelSize.Y - InnerMargin.Y);
             _scroll.CustomMinimumSize = new Vector2(innerWidth, innerHeight);
             _scroll.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
+
+            _scrollBar = _scroll.GetVScrollBar();
+            if (_scrollBar != null && GodotObject.IsInstanceValid(_scrollBar))
+            {
+                _scrollBarChangedHandler = OnScrollBarChanged;
+                _scrollBar.Changed += _scrollBarChangedHandler;
+            }
         }
 
         Visible = GameSettings.ShowCombatLog;
@@ -113,6 +123,12 @@ public partial class CombatLogPanel : Control
         {
             _panel.GuiInput -= OnPanelGuiInput;
             _panel.Resized -= OnPanelResized;
+        }
+
+        if (_scrollBar != null && GodotObject.IsInstanceValid(_scrollBar) && _scrollBarChangedHandler != null)
+        {
+            _scrollBar.Changed -= _scrollBarChangedHandler;
+            _scrollBarChangedHandler = null;
         }
 
         var sceneTree = GetTreeOrNull();
@@ -204,21 +220,26 @@ public partial class CombatLogPanel : Control
         _rowsContainer.AddChild(label);
         _rows.Enqueue(label);
 
-        // Defer the scroll-to-bottom: the new label must lay out before the
-        // ScrollContainer reports its updated max scroll value.
-        CallDeferred(nameof(ScrollToBottom));
+        // The scrollbar's MaxValue only reflects the new label after the
+        // VBoxContainer re-lays out. Mark the scroll as pending; the
+        // scrollbar's Changed signal will fire post-layout and we'll scroll
+        // to the real bottom there.
+        _pendingScrollToBottom = true;
     }
 
-    private void ScrollToBottom()
+    private void OnScrollBarChanged()
     {
+        if (!_pendingScrollToBottom)
+            return;
+
         if (_scroll == null || !GodotObject.IsInstanceValid(_scroll))
             return;
 
-        var scrollbar = _scroll.GetVScrollBar();
-        if (scrollbar == null || !GodotObject.IsInstanceValid(scrollbar))
+        if (_scrollBar == null || !GodotObject.IsInstanceValid(_scrollBar))
             return;
 
-        _scroll.ScrollVertical = (int)scrollbar.MaxValue;
+        _pendingScrollToBottom = false;
+        _scroll.ScrollVertical = (int)_scrollBar.MaxValue;
     }
 
     private static Color ResolveColorFor(CombatLogEntryKind kind)

@@ -321,6 +321,28 @@ public partial class StatusEffectController : Node
         var prefix = applied ? "+" : "-";
         var color = ResolveStatusFloatingTextColor(effect.Category, applied);
         CallDeferred(nameof(EmitStatusFloatingTextDeferred), $"{prefix}{displayName}", color);
+
+        CombatLog.Info(BuildStatusCombatLogText(displayName, applied));
+    }
+
+    private string BuildStatusCombatLogText(string displayName, bool applied)
+    {
+        var ownerName = ResolveOwnerDisplayName();
+        var verb = applied ? "gains" : "loses";
+
+        if (string.IsNullOrEmpty(ownerName))
+            return $"{(applied ? "+" : "-")}{displayName}";
+
+        return $"{ownerName} {verb} {displayName}.";
+    }
+
+    private string ResolveOwnerDisplayName()
+    {
+        if (_owner == null || !GodotObject.IsInstanceValid(_owner))
+            return string.Empty;
+
+        var name = _owner.Name.ToString();
+        return string.IsNullOrEmpty(name) ? string.Empty : name;
     }
 
     private void EmitStatusFloatingTextDeferred(string text, Color color)
