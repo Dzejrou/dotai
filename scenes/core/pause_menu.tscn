@@ -109,6 +109,14 @@ text = "Lock combat log position"
 layout_mode = 2
 text = "Show debug messages in combat log"
 
+[node name="GodModeToggle" type="CheckBox" parent="Root/Center/Panel/Views/SettingsView"]
+layout_mode = 2
+text = "God mode"
+
+[node name="OneHitKillToggle" type="CheckBox" parent="Root/Center/Panel/Views/SettingsView"]
+layout_mode = 2
+text = "One-hit kill"
+
 [node name="BackButton" type="Button" parent="Root/Center/Panel/Views/SettingsView"]
 layout_mode = 2
 text = "Back"

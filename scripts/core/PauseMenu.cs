@@ -54,6 +54,12 @@ public partial class PauseMenu : Control
     [Export]
     public NodePath LockCombatLogPositionTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/LockCombatLogPositionToggle");
 
+    [Export]
+    public NodePath GodModeTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/GodModeToggle");
+
+    [Export]
+    public NodePath OneHitKillTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/OneHitKillToggle");
+
     private readonly GameConfigStore _gameConfigStore = new();
     private Control _mainView;
     private Control _settingsView;
@@ -68,6 +74,8 @@ public partial class PauseMenu : Control
     private BaseButton _showCombatLogDebugToggle;
     private BaseButton _showCombatLogToggle;
     private BaseButton _lockCombatLogPositionToggle;
+    private BaseButton _godModeToggle;
+    private BaseButton _oneHitKillToggle;
 
     public override void _Ready()
     {
@@ -88,6 +96,8 @@ public partial class PauseMenu : Control
         _showCombatLogDebugToggle = GetNodeOrNull<BaseButton>(ShowCombatLogDebugTogglePath);
         _showCombatLogToggle = GetNodeOrNull<BaseButton>(ShowCombatLogTogglePath);
         _lockCombatLogPositionToggle = GetNodeOrNull<BaseButton>(LockCombatLogPositionTogglePath);
+        _godModeToggle = GetNodeOrNull<BaseButton>(GodModeTogglePath);
+        _oneHitKillToggle = GetNodeOrNull<BaseButton>(OneHitKillTogglePath);
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
@@ -137,6 +147,18 @@ public partial class PauseMenu : Control
             _lockCombatLogPositionToggle.Toggled += OnLockCombatLogPositionToggled;
         }
 
+        if (_godModeToggle != null)
+        {
+            _godModeToggle.ButtonPressed = GameSettings.GodMode;
+            _godModeToggle.Toggled += OnGodModeToggled;
+        }
+
+        if (_oneHitKillToggle != null)
+        {
+            _oneHitKillToggle.ButtonPressed = GameSettings.OneHitKill;
+            _oneHitKillToggle.Toggled += OnOneHitKillToggled;
+        }
+
         ShowMainView();
     }
 
@@ -174,6 +196,12 @@ public partial class PauseMenu : Control
 
         if (_lockCombatLogPositionToggle != null)
             _lockCombatLogPositionToggle.Toggled -= OnLockCombatLogPositionToggled;
+
+        if (_godModeToggle != null)
+            _godModeToggle.Toggled -= OnGodModeToggled;
+
+        if (_oneHitKillToggle != null)
+            _oneHitKillToggle.Toggled -= OnOneHitKillToggled;
     }
 
     private void OnResumePressed()
@@ -233,6 +261,18 @@ public partial class PauseMenu : Control
     private void OnLockCombatLogPositionToggled(bool pressed)
     {
         GameSettings.SetLockCombatLogPosition(pressed);
+        PersistSettings();
+    }
+
+    private void OnGodModeToggled(bool pressed)
+    {
+        GameSettings.SetGodMode(pressed);
+        PersistSettings();
+    }
+
+    private void OnOneHitKillToggled(bool pressed)
+    {
+        GameSettings.SetOneHitKill(pressed);
         PersistSettings();
     }
 
