@@ -37,6 +37,7 @@ public partial class DebugSpawner : Node2D
     private Sprite2D _placementGhost;
     private Faction _selectedFaction = Factions.Enemies;
     private int _selectedCharacterLevel = 1;
+    private ActorRank _selectedCharacterRank = ActorRank.Normal;
 
     public bool HasPendingPlacement => !string.IsNullOrEmpty(_pendingSpawnId) || _pendingGear;
 
@@ -46,6 +47,7 @@ public partial class DebugSpawner : Node2D
     public ItemQuality PendingGearQuality => _pendingGearQuality;
     public Faction SelectedFaction => _selectedFaction;
     public int SelectedCharacterLevel => _selectedCharacterLevel;
+    public ActorRank SelectedCharacterRank => _selectedCharacterRank;
 
     public GearSlotRules GetGearSlotRules(EquipmentSlot slot)
     {
@@ -128,6 +130,11 @@ public partial class DebugSpawner : Node2D
     public void SetSelectedCharacterLevel(int level)
     {
         _selectedCharacterLevel = Math.Max(1, level);
+    }
+
+    public void SetSelectedCharacterRank(ActorRank rank)
+    {
+        _selectedCharacterRank = rank;
     }
 
     public bool TryBeginPlacementFromActorAtScreenPosition(Vector2 screenPosition)
@@ -276,6 +283,9 @@ public partial class DebugSpawner : Node2D
         {
             var factionState = FactionState.ResolveFor(spawnedNode);
             factionState?.SetFaction(_selectedFaction);
+
+            if (spawnedNode is Actor actor)
+                actor.Rank = _selectedCharacterRank;
 
             if (spawnedNode is CombatCharacter combatCharacter)
                 combatCharacter.Level = _selectedCharacterLevel;

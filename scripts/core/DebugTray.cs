@@ -39,6 +39,12 @@ public partial class DebugTray : Control
     public NodePath LevelLabelPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/LevelLabel");
 
     [Export]
+    public NodePath RankSelectorPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/RankSelector");
+
+    [Export]
+    public NodePath RankLabelPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/RankLabel");
+
+    [Export]
     public NodePath StatsButtonPath { get; set; } = new NodePath("Bottom/Panel/VBox/Controls/StatsButton");
 
     [Export]
@@ -68,6 +74,13 @@ public partial class DebugTray : Control
         ItemQuality.Legendary,
     };
 
+    private static readonly ActorRank[] RankOrder =
+    {
+        ActorRank.Normal,
+        ActorRank.Elite,
+        ActorRank.Boss,
+    };
+
     private DebugSpawner _debugSpawner;
     private Control _trayPanel;
     private Label _statusLabel;
@@ -79,6 +92,8 @@ public partial class DebugTray : Control
     private Label _qualityLabel;
     private SpinBox _levelSpinBox;
     private Label _levelLabel;
+    private OptionButton _rankSelector;
+    private Label _rankLabel;
     private Button _statsButton;
     private readonly Dictionary<string, Button> _cardsById = new();
     private readonly Dictionary<string, EquipmentSlot> _gearCardSlots = new();
@@ -89,6 +104,7 @@ public partial class DebugTray : Control
     private SpawnCatalogEntryKind _activeEntryKind = SpawnCatalogEntryKind.Character;
     private ItemQuality _selectedGearQuality = ItemQuality.Common;
     private int _selectedCharacterLevel = 1;
+    private ActorRank _selectedCharacterRank = ActorRank.Normal;
 
     public bool TrayVisible => Visible;
 
@@ -109,6 +125,8 @@ public partial class DebugTray : Control
         _qualityLabel = GetNodeOrNull<Label>(QualityLabelPath);
         _levelSpinBox = GetNodeOrNull<SpinBox>(LevelSpinBoxPath);
         _levelLabel = GetNodeOrNull<Label>(LevelLabelPath);
+        _rankSelector = GetNodeOrNull<OptionButton>(RankSelectorPath);
+        _rankLabel = GetNodeOrNull<Label>(RankLabelPath);
         _statsButton = GetNodeOrNull<Button>(StatsButtonPath);
         if (_statsButton != null)
             _statsButton.Pressed += OnStatsButtonPressed;
@@ -349,10 +367,24 @@ public partial class DebugTray : Control
             _levelSpinBox.ValueChanged += OnLevelChanged;
         }
 
+        if (_rankSelector != null)
+        {
+            _rankSelector.Clear();
+            foreach (var rank in RankOrder)
+            {
+                _rankSelector.AddItem(rank.ToString());
+                _rankSelector.SetItemMetadata(_rankSelector.ItemCount - 1, (int)rank);
+            }
+            _rankSelector.ItemSelected += OnRankSelected;
+            SyncRankSelector();
+        }
+
         _debugSpawner?.SetSelectedCharacterLevel(_selectedCharacterLevel);
+        _debugSpawner?.SetSelectedCharacterRank(_selectedCharacterRank);
 
         UpdateQualitySelectorVisibility();
         UpdateLevelSelectorVisibility();
+        UpdateRankSelectorVisibility();
     }
 
     private void AddModeOption(string label, SpawnCatalogEntryKind entryKind)
@@ -741,6 +773,7 @@ public partial class DebugTray : Control
         SyncFactionSelector();
         UpdateQualitySelectorVisibility();
         UpdateLevelSelectorVisibility();
+        UpdateRankSelectorVisibility();
         UpdateCardSelection();
         UpdateStatusLabel();
     }
@@ -761,6 +794,16 @@ public partial class DebugTray : Control
         UpdateStatusLabel();
     }
 
+    private void OnRankSelected(long index)
+    {
+        if (_rankSelector == null)
+            return;
+
+        _selectedCharacterRank = (ActorRank)_rankSelector.GetItemMetadata((int)index).AsInt32();
+        _debugSpawner?.SetSelectedCharacterRank(_selectedCharacterRank);
+        UpdateStatusLabel();
+    }
+
     private void UpdateQualitySelectorVisibility()
     {
         var isGearMode = _activeEntryKind == SpawnCatalogEntryKind.Gear;
@@ -777,6 +820,30 @@ public partial class DebugTray : Control
             _levelSpinBox.Visible = isCharacterMode;
         if (_levelLabel != null)
             _levelLabel.Visible = isCharacterMode;
+    }
+
+    private void UpdateRankSelectorVisibility()
+    {
+        var isCharacterMode = _activeEntryKind == SpawnCatalogEntryKind.Character;
+        if (_rankSelector != null)
+            _rankSelector.Visible = isCharacterMode;
+        if (_rankLabel != null)
+            _rankLabel.Visible = isCharacterMode;
+    }
+
+    private void SyncRankSelector()
+    {
+        if (_rankSelector == null)
+            return;
+
+        for (var index = 0; index < _rankSelector.ItemCount; index++)
+        {
+            if ((ActorRank)_rankSelector.GetItemMetadata(index).AsInt32() != _selectedCharacterRank)
+                continue;
+
+            _rankSelector.Select(index);
+            break;
+        }
     }
 
     private void SyncQualitySelector()
