@@ -31,6 +31,9 @@ public partial class World : Node2D
     public GearGenerationRules GearGenerationRules { get; set; }
 
     [Export]
+    public ActorLevelScalingRules ActorLevelScalingRules { get; set; }
+
+    [Export]
     public PackedScene GearDropScene { get; set; }
 
     [Export]

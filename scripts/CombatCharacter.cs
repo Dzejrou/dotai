@@ -27,6 +27,10 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
 
     protected virtual void OnLevelChanged(int newLevel) { }
 
+    protected virtual int ResolveScaledBaseMaxHealth(int baseMaxHealth) => baseMaxHealth;
+
+    protected virtual float ResolveScaledBasePower(float basePower) => basePower;
+
     public float ResolvedCritRate =>
         StatsNode != null
             ? Math.Clamp(StatsNode.ResolvedCritRate + GetEquipmentBonus(EquipmentStatIds.CritRate), 0.0f, 1.0f)
@@ -34,7 +38,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public float ResolvedCritDamage =>
         Math.Max(0.0f, (StatsNode?.ResolvedCritDamage ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.CritDamage));
     public float ResolvedPower =>
-        Math.Max(0.0f, (StatsNode?.ResolvedPower ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.Power));
+        Math.Max(0.0f, ResolveScaledBasePower(StatsNode?.ResolvedPower ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.Power));
     public int ResolvedMP5 =>
         Math.Max(0, (StatsNode?.ResolvedMP5 ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.MP5));
     public int ResolvedHaste =>
@@ -55,7 +59,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public float ResolveResistance(DamageSchool school) =>
         (StatsNode?.ResolveResistance(school) ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.ResistanceFor(school));
     public int ResolvedMaxHealth =>
-        Math.Max(1, (StatsNode?.ResolvedMaxHealth ?? 1) + GetEquipmentIntBonus(EquipmentStatIds.MaxHealth));
+        Math.Max(1, ResolveScaledBaseMaxHealth(StatsNode?.ResolvedMaxHealth ?? 1) + GetEquipmentIntBonus(EquipmentStatIds.MaxHealth));
     public int ResolvedMaxMana =>
         Math.Max(0, (StatsNode?.ResolvedMaxMana ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.MaxMana));
 

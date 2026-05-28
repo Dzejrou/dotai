@@ -138,10 +138,10 @@ script = ExtResource("34_merchant_interaction_script")
 
 [node name="ChestContent" parent="Unscaled" unique_id=288433992 instance=ExtResource("7_content")]
 
-[node name="LockedChest" parent="Unscaled/ChestContent/Objects" index="0" unique_id=1675497592]
+[node name="LockedChest" parent="Unscaled/ChestContent/Objects" parent_id_path=PackedInt32Array(288433992, 605314198) index="0" unique_id=1675497592]
 position = Vector2(514, 849)
 
-[node name="LevelLockedChest" type="StaticBody2D" parent="Unscaled/ChestContent/Objects" index="1" unique_id=1263117603]
+[node name="LevelLockedChest" type="StaticBody2D" parent="Unscaled/ChestContent/Objects" parent_id_path=PackedInt32Array(288433992, 605314198) index="1" unique_id=1263117603]
 position = Vector2(384, 771)
 script = ExtResource("8_in37r")
 OpenAnimationFrames = ExtResource("9_yhf77")
@@ -164,14 +164,14 @@ script = ExtResource("14_lvlul")
 [node name="DropLootInteraction" type="Node" parent="Unscaled/ChestContent/Objects/LevelLockedChest" unique_id=702824193]
 script = ExtResource("13_8w8xx")
 
-[node name="UnlockedChest" parent="Unscaled/ChestContent/Objects" index="2" unique_id=272966836]
+[node name="UnlockedChest" parent="Unscaled/ChestContent/Objects" parent_id_path=PackedInt32Array(288433992, 605314198) index="2" unique_id=272966836]
 position = Vector2(515, 952)
 
-[node name="RandomRespawnActor" parent="Unscaled/ChestContent/Actors" index="0"]
+[node name="RandomRespawnActor" parent="Unscaled/ChestContent/Actors" parent_id_path=PackedInt32Array(288433992, 1981690122) index="0" unique_id=657177934]
 position = Vector2(265, 432)
 InactiveChance = 0.2
 
-[node name="CachedRespawnActor" parent="Unscaled/ChestContent/Actors" index="1"]
+[node name="CachedRespawnActor" parent="Unscaled/ChestContent/Actors" parent_id_path=PackedInt32Array(288433992, 1981690122) index="1" unique_id=2001708939]
 position = Vector2(412, 168)
 RandomizeInactivity = false
 
@@ -179,7 +179,7 @@ RandomizeInactivity = false
 wait_time = 10.0
 script = ExtResource("8_kj6pv")
 
-[node name="DryadSpawnPoint" type="Marker2D" parent="Unscaled/ChestContent/Actors" index="2" unique_id=2129428696]
+[node name="DryadSpawnPoint" type="Marker2D" parent="Unscaled/ChestContent/Actors" parent_id_path=PackedInt32Array(288433992, 1981690122) index="2" unique_id=2129428696]
 position = Vector2(679, 879)
 script = ExtResource("11_xnhs6")
 Options = Array[ExtResource("12_78isi")]([SubResource("Resource_dryad_option")])
@@ -197,17 +197,24 @@ position = Vector2(602.37634, 932.4418)
 [node name="PatrolNode3" type="Marker2D" parent="Unscaled/ChestContent/Actors/DryadSpawnPoint/PatrolPath" unique_id=1697219256]
 position = Vector2(677.10095, 1018.40625)
 
-[node name="SkeletonSpawner" type="Marker2D" parent="Unscaled/ChestContent/Actors" index="3" unique_id=267341223]
+[node name="SkeletonSpawner" type="Marker2D" parent="Unscaled/ChestContent/Actors" parent_id_path=PackedInt32Array(288433992, 1981690122) index="3" unique_id=267341223]
 position = Vector2(500, 31)
 script = ExtResource("11_xnhs6")
 Options = Array[ExtResource("12_78isi")]([SubResource("Resource_042ff")])
 RandomizeOnRespawn = false
 RandomizeInactivity = false
 
-[node name="Skeleton" parent="Unscaled/ChestContent/Actors" index="4" unique_id=1196794662 instance=ExtResource("13_ci7sf")]
+[node name="Skeleton" parent="Unscaled/ChestContent/Actors" parent_id_path=PackedInt32Array(288433992, 1981690122) index="4" unique_id=1196794662 instance=ExtResource("13_ci7sf")]
 position = Vector2(960, 206)
 
 [node name="Stats" parent="Unscaled/ChestContent/Actors/Skeleton" index="8"]
+MaxHealth = 2
+
+[node name="Skeleton2" parent="Unscaled/ChestContent/Actors" parent_id_path=PackedInt32Array(288433992, 1981690122) index="5" unique_id=263768638 instance=ExtResource("13_ci7sf")]
+position = Vector2(680, 362)
+Rank = 1
+
+[node name="Stats" parent="Unscaled/ChestContent/Actors/Skeleton2" index="8"]
 MaxHealth = 2
 
 [node name="WanderingKnight" parent="Unscaled" unique_id=231595167 instance=ExtResource("10_knight")]
@@ -353,3 +360,4 @@ position = Vector2(1439.5033, 291.0013)
 [editable path="Unscaled/MerchantAltar"]
 [editable path="Unscaled/ChestContent"]
 [editable path="Unscaled/ChestContent/Actors/Skeleton"]
+[editable path="Unscaled/ChestContent/Actors/Skeleton2"]

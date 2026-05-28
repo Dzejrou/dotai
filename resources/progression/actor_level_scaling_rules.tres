@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActorLevelScalingRules" format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/ActorLevelScalingRules.cs" id="1_scaling_script"]
+
+[resource]
+script = ExtResource("1_scaling_script")
+HealthPerLevelGrowth = 0.12
+PowerPerLevelGrowth = 0.08
+NormalRankMultiplier = 1.0
+EliteRankMultiplier = 2.0
+BossRankMultiplier = 4.0
