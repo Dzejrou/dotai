@@ -143,6 +143,7 @@ public partial class Chest : WorldObject, ILockable
     private void ShowLockedFeedback()
     {
         FloatingText.ShowBad("LOCKED", this);
+        CombatLog.Info("Locked.");
     }
 
     private void ApplyVisualState()

@@ -24,6 +24,7 @@ public partial class LevelUnlockInteraction : Interaction
         {
             if (context.Interactable is Node2D origin)
                 FloatingText.ShowBad($"Requires level {RequiredLevel}", origin);
+            CombatLog.Info($"Requires level {RequiredLevel}.");
             return InteractionResult.Stop;
         }
 
