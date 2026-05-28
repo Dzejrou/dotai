@@ -89,10 +89,19 @@ public static class CombatLog
         Emitted?.Invoke(new CombatLogEntry(kind, text));
     }
 
+    public static string ResolveName(Node node)
+    {
+        return ResolveDisplayName(node, string.Empty);
+    }
+
     private static string ResolveDisplayName(Node node, string fallback)
     {
         if (node == null || !GodotObject.IsInstanceValid(node))
             return fallback;
+
+        var hud = node.GetNodeOrNull<ActorHUD>("ActorHUD");
+        if (hud != null && !string.IsNullOrWhiteSpace(hud.DisplayName))
+            return hud.DisplayName;
 
         var name = node.Name.ToString();
         return string.IsNullOrEmpty(name) ? fallback : name;

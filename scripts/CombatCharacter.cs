@@ -222,7 +222,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         if (appliedDamage > 0)
         {
             if (oneHitKill)
-                CombatLog.Debug($"One-hit kill downs {Name}.");
+                CombatLog.Debug($"One-hit kill downs {CombatLog.ResolveName(this)}.");
             CombatLog.Damage(this, damageInfo.Source, appliedDamage, damageInfo.IsCritical);
         }
 
