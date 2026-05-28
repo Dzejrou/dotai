@@ -18,6 +18,9 @@ public static class FloatingText
 
     public static void ShowGood(string text, Node2D origin, Node attachTo = null)
     {
+        if (!CanShowFloatingText())
+            return;
+
         var layer = ResolveLayer();
         if (layer != null)
         {
@@ -30,6 +33,9 @@ public static class FloatingText
 
     public static void ShowBad(string text, Node2D origin, Node attachTo = null)
     {
+        if (!CanShowFloatingText())
+            return;
+
         var layer = ResolveLayer();
         if (layer != null)
         {
@@ -42,6 +48,9 @@ public static class FloatingText
 
     public static void ShowNeutral(string text, Node2D origin, Node attachTo = null)
     {
+        if (!CanShowFloatingText())
+            return;
+
         var layer = ResolveLayer();
         if (layer != null)
         {
@@ -59,6 +68,9 @@ public static class FloatingText
 
     public static void ShowDamage(int amount, bool isCritical, Node2D origin, Node attachTo = null)
     {
+        if (!CanShowFloatingText())
+            return;
+
         if (isCritical)
             ShowCustom($"{amount}!", origin, FallbackCritColor, attachTo);
         else
@@ -92,6 +104,9 @@ public static class FloatingText
         float duration = FallbackDuration,
         int fontSize = FallbackFontSize)
     {
+        if (!CanShowFloatingText())
+            return;
+
         var layer = ResolveLayer();
         if (layer != null)
         {
@@ -100,6 +115,11 @@ public static class FloatingText
         }
 
         ShowFallback(text, origin, color, attachTo, riseDistance, duration, fontSize);
+    }
+
+    private static bool CanShowFloatingText()
+    {
+        return GameSettings.ShowFloatingText;
     }
 
     private static FloatingTextLayer ResolveLayer()
