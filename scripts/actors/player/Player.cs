@@ -391,7 +391,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return GetRequiredExperienceForLevel(Level);
     }
 
-    private int GetRequiredExperienceForLevel(int level)
+    public int GetRequiredExperienceForLevel(int level)
     {
         var fallback = Math.Max(1, DefaultExperiencePerLevelFallback);
         var maxLevel = Math.Max(1, MaxLevel);

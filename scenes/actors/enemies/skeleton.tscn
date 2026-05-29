@@ -27,7 +27,6 @@ script = ExtResource("1_8g1m3")
 DropSpreadDistanceMin = 9.0
 DropSpreadDistanceMax = 30.0
 LootTable = ExtResource("16_skeleton_loot_table")
-ExperienceReward = 10
 
 [node name="OmniSprite" type="Node2D" parent="." unique_id=2100045633]
 script = ExtResource("1_omni_sprite")

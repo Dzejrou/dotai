@@ -24,7 +24,6 @@ height = 24.0
 [node name="Ogre" type="CharacterBody2D" unique_id=903405357]
 script = ExtResource("1_ogre")
 LootTable = ExtResource("15_ogre_loot_table")
-ExperienceReward = 30
 Speed = 60.0
 
 [node name="OmniSprite" type="Node2D" parent="." unique_id=2010721375]

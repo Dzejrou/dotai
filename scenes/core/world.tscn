@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/drops/inventory_item_drop.tscn" id="4c_gear_drop_scene"]
 [ext_resource type="Resource" path="res://resources/loot/global_gear_loot_rules.tres" id="4d_global_gear_loot_rules"]
 [ext_resource type="Resource" path="res://resources/progression/actor_level_scaling_rules.tres" id="4e_actor_level_scaling_rules"]
+[ext_resource type="Resource" path="res://resources/progression/actor_experience_reward_rules.tres" id="4f_actor_experience_reward_rules"]
 [ext_resource type="Script" uid="uid://dp732creo58kj" path="res://scripts/world/CorpseManager.cs" id="5_corpse_manager"]
 [ext_resource type="Resource" uid="uid://o81pu7wl78f6" path="res://resources/world/room_registry.tres" id="6_room_registry"]
 [ext_resource type="Script" uid="uid://ccjyylvlhcft2" path="res://scripts/world/dungeon/Dungeon.cs" id="7_dungeon"]
@@ -23,6 +24,7 @@ RoomRegistry = ExtResource("6_room_registry")
 GlobalGearLootRules = ExtResource("4d_global_gear_loot_rules")
 GearGenerationRules = ExtResource("4b_gear_rules")
 ActorLevelScalingRules = ExtResource("4e_actor_level_scaling_rules")
+ActorExperienceRewardRules = ExtResource("4f_actor_experience_reward_rules")
 GearDropScene = ExtResource("4c_gear_drop_scene")
 TransitionCooldownSeconds = 1.0
 
