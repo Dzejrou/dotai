@@ -34,6 +34,9 @@ public partial class World : Node2D
     public ActorLevelScalingRules ActorLevelScalingRules { get; set; }
 
     [Export]
+    public ActorExperienceRewardRules ActorExperienceRewardRules { get; set; }
+
+    [Export]
     public PackedScene GearDropScene { get; set; }
 
     [Export]

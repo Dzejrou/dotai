@@ -58,9 +58,6 @@ public abstract partial class Actor : CombatCharacter
     public bool RollGlobalGearLoot { get; set; } = true;
 
     [Export]
-    public int ExperienceReward { get; set; } = 0;
-
-    [Export]
     public ActorRank Rank { get; set; } = ActorRank.Normal;
 
     private ActorLevelScalingRules _cachedLevelScalingRules;
@@ -465,13 +462,39 @@ public abstract partial class Actor : CombatCharacter
         UnsubscribeFromNavigationDebug();
     }
 
+    private static ActorExperienceRewardRules _fallbackExperienceRewardRules;
+
     protected void TryGrantExperienceToKiller(Damage damageInfo)
     {
-        if (ExperienceReward <= 0)
+        if (damageInfo?.Source is not Player player || !GodotObject.IsInstanceValid(player))
             return;
 
-        if (damageInfo?.Source is Player player && GodotObject.IsInstanceValid(player))
-            player.AddExperience(ExperienceReward);
+        var reward = ResolveExperienceReward(player);
+        if (reward > 0)
+            player.AddExperience(reward);
+    }
+
+    private int ResolveExperienceReward(Player player)
+    {
+        var rules = FindWorld()?.ActorExperienceRewardRules ?? GetFallbackExperienceRewardRules();
+        var playerLevel = Math.Max(1, player.Level);
+        var enemyLevel = Math.Max(1, Level);
+
+        var sameLevelKills = rules.GetSameLevelKills(playerLevel);
+        var requiredXp = player.GetRequiredExperienceForRewardLevel(enemyLevel);
+        var baseXp = requiredXp / sameLevelKills;
+        var finalXp = baseXp * rules.GetRankMultiplier(Rank) * rules.GetLevelDifferenceMultiplier(enemyLevel - playerLevel);
+
+        if (finalXp <= 0.0f)
+            return 0;
+
+        var rounded = Mathf.RoundToInt(finalXp);
+        return rounded < 1 ? 1 : rounded;
+    }
+
+    private static ActorExperienceRewardRules GetFallbackExperienceRewardRules()
+    {
+        return _fallbackExperienceRewardRules ??= new ActorExperienceRewardRules();
     }
 
     protected virtual void OnActorExitTree() { }

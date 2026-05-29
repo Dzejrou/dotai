@@ -27,7 +27,6 @@ height = 26.0
 z_index = -1
 script = ExtResource("1_elf_ranger_script")
 LootTable = ExtResource("17_elf_ranger_loot_table")
-ExperienceReward = 12
 
 [node name="OmniSprite" type="Node2D" parent="." unique_id=1877841505]
 script = ExtResource("1_omni_sprite")
