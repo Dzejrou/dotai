@@ -416,6 +416,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         }
 
         FloatingText.ShowCustom($"+{amount} XP", this, new Color(0.3f, 1.0f, 0.5f, 1.0f));
+        CombatLog.Info($"Player receives {amount} experience.");
         _currentExperience += amount;
 
         var required = GetRequiredExperienceForCurrentLevel();
