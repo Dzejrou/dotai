@@ -481,7 +481,7 @@ public abstract partial class Actor : CombatCharacter
         var enemyLevel = Math.Max(1, Level);
 
         var sameLevelKills = rules.GetSameLevelKills(playerLevel);
-        var requiredXp = player.GetRequiredExperienceForLevel(enemyLevel);
+        var requiredXp = player.GetRequiredExperienceForRewardLevel(enemyLevel);
         var baseXp = requiredXp / sameLevelKills;
         var finalXp = baseXp * rules.GetRankMultiplier(Rank) * rules.GetLevelDifferenceMultiplier(enemyLevel - playerLevel);
 

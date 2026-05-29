@@ -391,7 +391,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         return GetRequiredExperienceForLevel(Level);
     }
 
-    public int GetRequiredExperienceForLevel(int level)
+    private int GetRequiredExperienceForLevel(int level)
     {
         var fallback = Math.Max(1, DefaultExperiencePerLevelFallback);
         var maxLevel = Math.Max(1, MaxLevel);
@@ -399,6 +399,16 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return fallback;
 
         return ExperienceTable?.GetRequiredExperienceForLevel(level, fallback) ?? fallback;
+    }
+
+    // Reward lookup for enemy XP calculation. Unlike the player-UI variant
+    // above, this clamps to the table's valid range so an enemy at or above
+    // the player's max level still uses the highest table-backed requirement
+    // rather than collapsing to the small fallback.
+    public int GetRequiredExperienceForRewardLevel(int level)
+    {
+        var fallback = Math.Max(1, DefaultExperiencePerLevelFallback);
+        return ExperienceTable?.GetRequiredExperienceForRewardLevel(level, fallback) ?? fallback;
     }
 
     public void AddExperience(int amount)
