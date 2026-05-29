@@ -674,12 +674,12 @@ public abstract partial class Actor : CombatCharacter
         }
 
         if (RollGlobalGearLoot)
-            SpawnGlobalGearLootDrops(dropParent);
+            SpawnGlobalGearLootDrops(dropParent, Rank);
     }
 
-    private void SpawnGlobalGearLootDrops(Node dropParent)
+    private void SpawnGlobalGearLootDrops(Node dropParent, ActorRank rank)
     {
-        CombatLog.Debug($"Global gear loot: {CombatLog.ResolveName(this)} (lvl {Level}) eval start.");
+        CombatLog.Debug($"Global gear loot: {CombatLog.ResolveName(this)} (lvl {Level}, rank {rank}) eval start.");
 
         var world = FindWorld();
         var rules = world?.GlobalGearLootRules;
@@ -702,7 +702,10 @@ public abstract partial class Actor : CombatCharacter
             return;
         }
 
-        var rollCount = Math.Max(1, rules.RollCount);
+        var baseRollCount = Math.Max(1, rules.RollCount);
+        var rankBonus = rules.GetRankRollBonus(rank);
+        var rollCount = baseRollCount + rankBonus;
+        CombatLog.Debug($"Global gear loot: rank {rank} rolls = {baseRollCount} base + {rankBonus} rank bonus = {rollCount} effective.");
         for (var i = 0; i < rollCount; i++)
         {
             var rolled = rules.TryRollGear(Level, LootRandom, gearRules, out var gear, out var rollResult);
@@ -712,7 +715,7 @@ public abstract partial class Actor : CombatCharacter
                 continue;
             }
 
-            CombatLog.Debug($"Global gear loot: roll {i + 1}/{rollCount} success (lvl {Level}, {rollResult.Quality} {rollResult.Slot}, \"{gear.Definition.DisplayName}\").");
+            CombatLog.Debug($"Global gear loot: roll {i + 1}/{rollCount} success (lvl {Level}, rank {rank}, {rollResult.Quality} {rollResult.Slot}, \"{gear.Definition.DisplayName}\").");
 
             if (dropScene.Instantiate() is not InventoryItemDrop gearDrop)
                 continue;
