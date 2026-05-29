@@ -41,8 +41,29 @@ public partial class GlobalGearLootRules : Resource
     [Export(PropertyHint.Range, "1,8,1")]
     public int RollCount { get; set; } = 1;
 
+    [Export(PropertyHint.Range, "0,8,1")]
+    public int NormalRankRollBonus { get; set; } = 0;
+
+    [Export(PropertyHint.Range, "0,8,1")]
+    public int EliteRankRollBonus { get; set; } = 1;
+
+    [Export(PropertyHint.Range, "0,8,1")]
+    public int BossRankRollBonus { get; set; } = 2;
+
     [Export]
     public Godot.Collections.Array<GlobalGearLootLevelBand> LevelBands { get; set; } = new();
+
+    public int GetRankRollBonus(ActorRank rank) => rank switch
+    {
+        ActorRank.Elite => Math.Max(0, EliteRankRollBonus),
+        ActorRank.Boss => Math.Max(0, BossRankRollBonus),
+        _ => Math.Max(0, NormalRankRollBonus),
+    };
+
+    public int GetEffectiveRollCount(ActorRank rank)
+    {
+        return Math.Max(1, RollCount) + GetRankRollBonus(rank);
+    }
 
     public bool TryRollGear(
         int actorLevel,
