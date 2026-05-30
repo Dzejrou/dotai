@@ -38,15 +38,9 @@ public partial class RestingController : Node
 
     public bool IsResting => _phase != RestingPhase.None;
 
-    public override void _Ready()
+    public void Initialize(Player player)
     {
-        _player = GetParentOrNull<Player>();
-        if (_player == null)
-        {
-            GD.PushError($"{GetPath()}: RestingController must be a direct child of Player.");
-            return;
-        }
-
+        _player = player ?? throw new ArgumentNullException(nameof(player));
         _omniSprite = _player.OmniSprite;
         EnsureAnimationFinishedConnected();
     }

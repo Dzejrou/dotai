@@ -173,6 +173,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         InitializeSpellInventory();
         LoadEquippedSpells();
         _restingController = GetNodeOrNull<RestingController>("RestingController");
+        _restingController?.Initialize(this);
         SetAnimationSafe(GetIdleAnimationName());
         AddToGroup(CombatGroups.Actors);
 
