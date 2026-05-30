@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/drops/inventory_item_drop.tscn" id="1_inventory_item_drop_scene"]
+[ext_resource type="Resource" path="res://resources/inventory/items/beer.tres" id="2_beer_item"]
+
+[node name="BeerDrop" instance=ExtResource("1_inventory_item_drop_scene")]
+ItemDefinition = ExtResource("2_beer_item")
+Quantity = 1

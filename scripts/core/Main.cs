@@ -131,6 +131,7 @@ public partial class Main : Node2D
             ? _world.ResolveInventoryController()
             : null;
         var equipmentController = _player?.EquipmentControllerNode;
+        _inventoryWindow?.BindPlayer(_player);
         _inventoryWindow?.Bind(_inventoryController, equipmentController);
         _characterWindow?.Bind(_inventoryController, equipmentController);
         _characterWindow?.BindStatsOwner(_player);

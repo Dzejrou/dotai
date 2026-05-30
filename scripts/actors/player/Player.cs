@@ -105,6 +105,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private bool _animationFinishedConnected;
     private readonly List<SpellBook> _spellBooks = new();
     private readonly List<SpellBook> _extraSpellBooks = new();
+    private RestingController _restingController;
     public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
     public bool CanBeTargeted => !_isDead;
@@ -171,6 +172,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         BindStatusEffects();
         InitializeSpellInventory();
         LoadEquippedSpells();
+        _restingController = GetNodeOrNull<RestingController>("RestingController");
+        _restingController?.Initialize(this);
         SetAnimationSafe(GetIdleAnimationName());
         AddToGroup(CombatGroups.Actors);
 
@@ -271,6 +274,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         TryCastEquippedSpells();
         var direction = GetInputDirection();
 
+        if (direction != Vector2.Zero)
+            _restingController?.CancelAll();
+
         if (UpdatePendingCast((float)delta, direction))
             return;
 
@@ -282,6 +288,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             Velocity = Vector2.Zero;
             UpdatePassiveTargetFacing();
             if (TryHoldCompletionAnimation())
+                return;
+
+            if (_restingController != null && _restingController.ShouldSuppressDefaultAnimation())
                 return;
 
             SetAnimationSafe(GetIdleAnimationName());
@@ -340,6 +349,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         ShowFloatingDamageNumber(damage, damageInfo.IsCritical);
         _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
+        _restingController?.CancelAll();
         TryApplySpellCastPushback(damage);
 
         if (HealthStateNode.IsDead)
@@ -584,6 +594,67 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         healing.InitializeRuntime(this, amount);
         ApplyHealing(healing);
         return Math.Max(0, CurrentHealth - currentHealthBefore);
+    }
+
+    public int RestoreHealthFromConsumable(int amount)
+    {
+        if (_isDead || amount <= 0 || HealthStateNode == null)
+            return 0;
+
+        var recovered = HealthStateNode.ApplyHealing(amount);
+        if (recovered > 0)
+        {
+            ShowFloatingHealingNumber(recovered);
+            _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
+        }
+
+        return recovered;
+    }
+
+    public int RestoreManaFromConsumable(int amount)
+    {
+        if (_isDead || amount <= 0 || ManaState == null)
+            return 0;
+
+        var restored = ManaState.Restore(amount);
+        if (restored > 0)
+        {
+            NotifyManaChanged();
+            FloatingText.ShowCustom($"+{restored} mana", this, new Color(0.45f, 0.78f, 1.0f, 1.0f));
+        }
+
+        return restored;
+    }
+
+    public bool TryConsumeInventorySlot(int slotIndex)
+    {
+        if (_isDead || _restingController == null)
+            return false;
+
+        var inventory = InventoryController;
+        if (inventory == null || !GodotObject.IsInstanceValid(inventory))
+            return false;
+
+        if (!inventory.TryGetEntry(slotIndex, out var entry) || entry is not InventoryStackEntry stackEntry)
+            return false;
+
+        var definition = stackEntry.Stack.Item;
+        if (definition == null || definition.ConsumableKind == ConsumableKind.None)
+            return false;
+
+        if (!_restingController.TryStartFromDefinition(definition))
+            return false;
+
+        var consumed = inventory.TryConsumeFromStackSlot(slotIndex, definition.Id, 1);
+        if (consumed <= 0)
+        {
+            _restingController.CancelAll();
+            return false;
+        }
+
+        var label = string.IsNullOrEmpty(definition.DisplayName) ? definition.Id : definition.DisplayName;
+        CombatLog.Info($"Player uses {label}.");
+        return true;
     }
 
     public bool TrySaveSpellLoadoutConfiguration(out string message)
