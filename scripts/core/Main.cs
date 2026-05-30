@@ -703,7 +703,7 @@ public partial class Main : Node2D
             _debugTrayRoot.Close(cancelPlacement);
     }
 
-    private void OnInventoryItemDroppedToWorld(int slotIndex)
+    private void OnInventoryItemDroppedToWorld(int slotIndex, int amount)
     {
         if (_inventoryController == null || !GodotObject.IsInstanceValid(_inventoryController))
             return;
@@ -711,6 +711,8 @@ public partial class Main : Node2D
         // Preflight: verify slot still has an entry before doing anything destructive.
         if (!_inventoryController.TryGetEntry(slotIndex, out var entry) || entry?.Definition == null)
             return;
+
+        var requestedAmount = Math.Max(1, amount);
 
         // Preflight: require an active room and living player to receive the drop.
         var room = _world?.ActiveRoom;
@@ -755,7 +757,9 @@ public partial class Main : Node2D
         }
         else
         {
-            itemDrop.Quantity = entry.Quantity;
+            // Partial-stack drags carry an explicit amount; clamp to the live stack
+            // so a stale UI selection can never spawn more than the source holds.
+            itemDrop.Quantity = Math.Min(requestedAmount, entry.Quantity);
         }
         itemDrop.PickupMode = DropPickupMode.InteractOnly;
 
@@ -770,12 +774,28 @@ public partial class Main : Node2D
         }
 
         // All preflight checks passed — remove from inventory now.
-        var taken = _inventoryController.TakeEntry(slotIndex);
-        if (taken == null)
+        if (entry is InventoryGearEntry)
         {
-            // Slot was vacated between preflight and take; discard the pre-built drop node.
-            itemDrop.Free();
-            return;
+            var taken = _inventoryController.TakeEntry(slotIndex);
+            if (taken == null)
+            {
+                // Slot was vacated between preflight and take; discard the pre-built drop node.
+                itemDrop.Free();
+                return;
+            }
+        }
+        else
+        {
+            // Stack source: pull only the requested amount (or the whole stack when
+            // the request meets/exceeds it). The controller handles emptying the slot.
+            if (!_inventoryController.TryTakePartialStack(slotIndex, requestedAmount, out var takenStack) ||
+                takenStack == null)
+            {
+                itemDrop.Free();
+                return;
+            }
+
+            itemDrop.Quantity = takenStack.Quantity;
         }
 
         spawnParent.CallDeferred(Node.MethodName.AddChild, itemDrop);

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public partial class InventoryWindow : Control
 {
     [Signal]
-    public delegate void ItemDroppedToWorldEventHandler(int slotIndex);
+    public delegate void ItemDroppedToWorldEventHandler(int slotIndex, int amount);
 
     [Export]
     public string WindowTitle { get; set; } = "Inventory";
@@ -43,7 +43,9 @@ public partial class InventoryWindow : Control
     private Label _titleLabel;
     private Label _summaryLabel;
     private GridContainer _slotGrid;
+    private SpinBox _amountSpinBox;
     private int _activeDragSlot = -1;
+    private int _activeDragAmount = 1;
     private bool _dragConsumed;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
@@ -65,6 +67,8 @@ public partial class InventoryWindow : Control
                 BringToFront = FocusWindow,
             };
         }
+
+        EnsureAmountControl();
 
         InventorySlotControl.DragConsumed += OnExternalDragConsumed;
 
@@ -243,8 +247,9 @@ public partial class InventoryWindow : Control
                 SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
             };
 
-            slotControl.DragStarted = (slot) => OnSlotDragStarted(slot);
-            slotControl.DropReceived = (from, to) => OnSlotDropReceived(from, to);
+            slotControl.AmountProvider = GetSelectedAmount;
+            slotControl.DragStarted = (slot, amount) => OnSlotDragStarted(slot, amount);
+            slotControl.DropReceived = (from, to, amount) => OnSlotDropReceived(from, to, amount);
             slotControl.DragEnded = (slot) => OnSlotDragEnded(slot);
             slotControl.EquipmentDropReceived = (equipmentSlot, to) => OnEquipmentDropReceived(equipmentSlot, to);
             slotControl.FocusRequested = FocusWindow;
@@ -351,16 +356,69 @@ public partial class InventoryWindow : Control
         _summaryLabel.Text = $"Gold: {gold}    {occupiedSlotCount}/{GetExpectedSlotCount()} slots occupied";
     }
 
-    private void OnSlotDragStarted(int slotIndex)
+    private void OnSlotDragStarted(int slotIndex, int amount)
     {
         _activeDragSlot = slotIndex;
+        _activeDragAmount = Math.Max(1, amount);
         _dragConsumed = false;
+        if (_amountSpinBox != null)
+            _amountSpinBox.SetValueNoSignal(_activeDragAmount);
     }
 
-    private void OnSlotDropReceived(int fromSlot, int toSlot)
+    private void OnSlotDropReceived(int fromSlot, int toSlot, int amount)
     {
         _dragConsumed = true;
-        _inventory?.TryInteractSlots(fromSlot, toSlot);
+        if (_inventory == null)
+            return;
+
+        if (!_inventory.TryGetEntry(fromSlot, out var fromEntry) || fromEntry == null)
+            return;
+
+        // Gear and non-stack entries ignore the amount — preserve full-stack swap/merge behavior.
+        if (fromEntry is not InventoryStackEntry || amount >= fromEntry.Quantity)
+        {
+            _inventory.TryInteractSlots(fromSlot, toSlot);
+            return;
+        }
+
+        _inventory.TryMovePartialStack(fromSlot, toSlot, amount);
+    }
+
+    private int GetSelectedAmount()
+    {
+        if (_amountSpinBox == null)
+            return 1;
+        return Math.Max(1, (int)_amountSpinBox.Value);
+    }
+
+    private void EnsureAmountControl()
+    {
+        if (_amountSpinBox != null && GodotObject.IsInstanceValid(_amountSpinBox))
+            return;
+
+        var header = GetNodeOrNull<Container>("Panel/Margin/VBox/Header");
+        if (header == null)
+            return;
+
+        var amountLabel = new Label
+        {
+            Text = "Amount:",
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        header.AddChild(amountLabel);
+
+        _amountSpinBox = new SpinBox
+        {
+            MinValue = 1,
+            MaxValue = 999,
+            Step = 1,
+            Value = 1,
+            CustomArrowStep = 1,
+            TooltipText = "Stack amount for inventory drags",
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd,
+        };
+        header.AddChild(_amountSpinBox);
     }
 
     private void OnEquipmentDropReceived(int equipmentSlotInt, int inventorySlot)
@@ -386,9 +444,10 @@ public partial class InventoryWindow : Control
     private void OnSlotDragEnded(int slotIndex)
     {
         if (!_dragConsumed && _activeDragSlot == slotIndex)
-            EmitSignal(SignalName.ItemDroppedToWorld, slotIndex);
+            EmitSignal(SignalName.ItemDroppedToWorld, slotIndex, _activeDragAmount);
 
         _activeDragSlot = -1;
+        _activeDragAmount = 1;
         _dragConsumed = false;
     }
 

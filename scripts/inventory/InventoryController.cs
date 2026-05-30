@@ -332,6 +332,84 @@ public partial class InventoryController : Node
         return true;
     }
 
+    // Moves up to `amount` from a stack at fromSlot into toSlot. Full-stack drags
+    // (amount >= source quantity) fall through to TryInteractSlots so swap/merge
+    // semantics stay identical. Partial drags must target either an empty slot or
+    // a matching stack with available space; partial drags onto any other entry
+    // (gear, non-matching stack, full matching stack) are rejected without mutation.
+    // Returns true when a change occurred (and emits InventoryChanged in that case).
+    public bool TryMovePartialStack(int fromSlot, int toSlot, int amount)
+    {
+        if (amount <= 0) return false;
+        if (fromSlot == toSlot) return false;
+        if (fromSlot < 0 || fromSlot >= _slots.Count) return false;
+        if (toSlot < 0 || toSlot >= _slots.Count) return false;
+
+        if (_slots[fromSlot] is not InventoryStackEntry fromStack)
+            return false;
+
+        if (amount >= fromStack.Stack.Quantity)
+            return TryInteractSlots(fromSlot, toSlot);
+
+        var item = fromStack.Stack.Item;
+        if (item == null)
+            return false;
+
+        var toEntry = _slots[toSlot];
+        if (toEntry == null)
+        {
+            fromStack.Stack.RemoveQuantity(amount);
+            _slots[toSlot] = new InventoryStackEntry(new InventoryStack(item, amount));
+            EmitInventoryChanged();
+            return true;
+        }
+
+        if (toEntry is InventoryStackEntry toStack &&
+            InventoryStackEntry.DefinitionsMatch(toStack.Stack.Item, item))
+        {
+            var available = toStack.Stack.AvailableSpace;
+            if (available <= 0)
+                return false;
+
+            var moved = Math.Min(amount, available);
+            toStack.Stack.AddQuantity(moved);
+            fromStack.Stack.RemoveQuantity(moved);
+            EmitInventoryChanged();
+            return true;
+        }
+
+        return false;
+    }
+
+    // Splits up to `amount` off a stack slot for callers that need the resulting
+    // InventoryStack (e.g. spawning a world drop). Behaves like TakeEntry when
+    // amount >= source quantity: empties the slot and returns the full stack.
+    // Returns false (with taken=null) when the slot is empty, not a stack, or amount<=0.
+    // Emits InventoryChanged on any successful split or take.
+    public bool TryTakePartialStack(int slotIndex, int amount, out InventoryStack taken)
+    {
+        taken = null;
+        if (amount <= 0) return false;
+        if (slotIndex < 0 || slotIndex >= _slots.Count) return false;
+        if (_slots[slotIndex] is not InventoryStackEntry stackEntry) return false;
+
+        var stack = stackEntry.Stack;
+        if (stack?.Item == null) return false;
+
+        if (amount >= stack.Quantity)
+        {
+            taken = stack;
+            _slots[slotIndex] = null;
+            EmitInventoryChanged();
+            return true;
+        }
+
+        stack.RemoveQuantity(amount);
+        taken = new InventoryStack(stack.Item, amount);
+        EmitInventoryChanged();
+        return true;
+    }
+
     public InventoryEntry TakeEntry(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= _slots.Count) return null;
