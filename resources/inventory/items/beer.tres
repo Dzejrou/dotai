@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://b2beerconsumableitem"]
+
+[ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
+[ext_resource type="Texture2D" uid="uid://cw5itygw445rs" path="res://assets/drops/beer.png" id="2_beer_texture"]
+
+[resource]
+script = ExtResource("1_inventory_item_definition_script")
+Id = "beer"
+DisplayName = "Beer"
+Icon = ExtResource("2_beer_texture")
+MaxStackSize = 20
+SellPrice = 2
+ConsumableKind = 2
+ConsumableAmountPerTick = 25
+ConsumableDurationSeconds = 20.0
+ConsumableTickIntervalSeconds = 2.0

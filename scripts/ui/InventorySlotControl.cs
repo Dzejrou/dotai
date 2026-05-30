@@ -36,15 +36,28 @@ public partial class InventorySlotControl : PanelContainer
     // Invoked on any left mouse press over this slot so the owning window can move to front.
     public Action FocusRequested { get; set; }
 
+    // Invoked on right-click. Owning window decides whether to activate the slot's item
+    // (e.g. start a consumable). Minimal use path placeholder until the menu hub lands.
+    public Action<int> UseRequested { get; set; }
+
     private bool _dragActive;
 
     public override void _GuiInput(InputEvent @event)
     {
-        if (@event is InputEventMouseButton mouseButton &&
-            mouseButton.ButtonIndex == MouseButton.Left &&
-            mouseButton.Pressed)
+        if (@event is not InputEventMouseButton mouseButton || !mouseButton.Pressed)
+            return;
+
+        if (mouseButton.ButtonIndex == MouseButton.Left)
         {
             FocusRequested?.Invoke();
+            return;
+        }
+
+        if (mouseButton.ButtonIndex == MouseButton.Right)
+        {
+            FocusRequested?.Invoke();
+            UseRequested?.Invoke(SlotIndex);
+            AcceptEvent();
         }
     }
 

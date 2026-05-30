@@ -39,6 +39,7 @@ public partial class InventoryWindow : Control
     private readonly List<InventorySlotView> _slotViews = new();
     private InventoryController _inventory;
     private EquipmentController _equipment;
+    private Player _player;
     private Control _windowPanel;
     private Label _titleLabel;
     private Label _summaryLabel;
@@ -111,6 +112,11 @@ public partial class InventoryWindow : Control
         var viewportSize = GetViewportRect().Size;
         _windowPanel.GlobalPosition = (viewportSize - size) * 0.5f;
         _panelPositioned = true;
+    }
+
+    public void BindPlayer(Player player)
+    {
+        _player = player;
     }
 
     public void Bind(InventoryController inventory, EquipmentController equipment = null)
@@ -263,6 +269,7 @@ public partial class InventoryWindow : Control
             slotControl.DragEnded = (slot) => OnSlotDragEnded(slot);
             slotControl.EquipmentDropReceived = (equipmentSlot, to) => OnEquipmentDropReceived(equipmentSlot, to);
             slotControl.FocusRequested = FocusWindow;
+            slotControl.UseRequested = OnSlotUseRequested;
 
             var margin = new MarginContainer
             {
@@ -364,6 +371,14 @@ public partial class InventoryWindow : Control
 
         var gold = _inventory != null && GodotObject.IsInstanceValid(_inventory) ? _inventory.Gold : 0;
         _summaryLabel.Text = $"Gold: {gold}    {occupiedSlotCount}/{GetExpectedSlotCount()} slots occupied";
+    }
+
+    private void OnSlotUseRequested(int slotIndex)
+    {
+        if (_player == null || !GodotObject.IsInstanceValid(_player))
+            return;
+
+        _player.TryConsumeInventorySlot(slotIndex);
     }
 
     private void OnSlotDragStarted(int slotIndex, int amount)

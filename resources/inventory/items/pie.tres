@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://b1pieconsumableitem"]
+
+[ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
+[ext_resource type="Texture2D" uid="uid://cgxgjhb6r4cgl" path="res://assets/drops/pie.png" id="2_pie_texture"]
+
+[resource]
+script = ExtResource("1_inventory_item_definition_script")
+Id = "pie"
+DisplayName = "Pie"
+Icon = ExtResource("2_pie_texture")
+MaxStackSize = 20
+SellPrice = 2
+ConsumableKind = 1
+ConsumableAmountPerTick = 8
+ConsumableDurationSeconds = 20.0
+ConsumableTickIntervalSeconds = 2.0
