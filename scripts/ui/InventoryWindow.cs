@@ -45,10 +45,19 @@ public partial class InventoryWindow : Control
     private GridContainer _slotGrid;
     private SpinBox _amountSpinBox;
     private int _activeDragSlot = -1;
-    private int _activeDragAmount = 1;
+    private int _activeDragAmount = MaxAmountResolved;
     private bool _dragConsumed;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
+
+    // Top step of the SpinBox renders as "MAX" and resolves to the full source
+    // stack at drag time. Picked above any plausible MaxStackSize so the user can
+    // still pick an explicit numeric amount on its own steps.
+    private const int MaxAmountSentinel = 1000;
+
+    // AmountProvider returns this when MAX is selected; the slot clamps it down
+    // to the live source quantity per operation without mutating the SpinBox.
+    private const int MaxAmountResolved = int.MaxValue;
 
     public override void _Ready()
     {
@@ -158,6 +167,7 @@ public partial class InventoryWindow : Control
             CenterPanelOnce();
             _windowDragger?.ClampToViewport();
             FocusWindow();
+            ResetAmountToMax();
             Refresh();
         }
     }
@@ -361,8 +371,8 @@ public partial class InventoryWindow : Control
         _activeDragSlot = slotIndex;
         _activeDragAmount = Math.Max(1, amount);
         _dragConsumed = false;
-        if (_amountSpinBox != null)
-            _amountSpinBox.SetValueNoSignal(_activeDragAmount);
+        // Intentionally do NOT mutate _amountSpinBox here: the configured selector
+        // value must survive drags from smaller stacks or gear/non-stackables.
     }
 
     private void OnSlotDropReceived(int fromSlot, int toSlot, int amount)
@@ -387,8 +397,11 @@ public partial class InventoryWindow : Control
     private int GetSelectedAmount()
     {
         if (_amountSpinBox == null)
-            return 1;
-        return Math.Max(1, (int)_amountSpinBox.Value);
+            return MaxAmountResolved;
+        var value = (int)_amountSpinBox.Value;
+        if (value >= MaxAmountSentinel)
+            return MaxAmountResolved;
+        return Math.Max(1, value);
     }
 
     private void EnsureAmountControl()
@@ -411,14 +424,46 @@ public partial class InventoryWindow : Control
         _amountSpinBox = new SpinBox
         {
             MinValue = 1,
-            MaxValue = 999,
+            MaxValue = MaxAmountSentinel,
             Step = 1,
-            Value = 1,
+            Value = MaxAmountSentinel,
             CustomArrowStep = 1,
-            TooltipText = "Stack amount for inventory drags",
+            TooltipText = "Stack amount for inventory drags. Top step is MAX (full source stack).",
             SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd,
         };
+        _amountSpinBox.ValueChanged += OnAmountSpinBoxValueChanged;
         header.AddChild(_amountSpinBox);
+        UpdateAmountSpinBoxDisplay();
+    }
+
+    private void OnAmountSpinBoxValueChanged(double value)
+    {
+        UpdateAmountSpinBoxDisplay();
+    }
+
+    // Renders the sentinel step as "MAX" instead of the underlying number.
+    // SpinBox writes the numeric text into its LineEdit on every value change,
+    // so we override it after the value-changed signal has fired.
+    private void UpdateAmountSpinBoxDisplay()
+    {
+        if (_amountSpinBox == null || !GodotObject.IsInstanceValid(_amountSpinBox))
+            return;
+
+        var lineEdit = _amountSpinBox.GetLineEdit();
+        if (lineEdit == null)
+            return;
+
+        if ((int)_amountSpinBox.Value >= MaxAmountSentinel)
+            lineEdit.Text = "MAX";
+    }
+
+    private void ResetAmountToMax()
+    {
+        if (_amountSpinBox == null || !GodotObject.IsInstanceValid(_amountSpinBox))
+            return;
+
+        _amountSpinBox.SetValueNoSignal(MaxAmountSentinel);
+        UpdateAmountSpinBoxDisplay();
     }
 
     private void OnEquipmentDropReceived(int equipmentSlotInt, int inventorySlot)
