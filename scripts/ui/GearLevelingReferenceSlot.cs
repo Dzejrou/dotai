@@ -143,19 +143,19 @@ public partial class GearLevelingReferenceSlot : PanelContainer
         // Tell the source inventory slot its drag was consumed by us. Otherwise
         // InventoryWindow's drag-end handler will spawn a world drop because we
         // referenced the stack without removing it.
-        if (data.VariantType == Variant.Type.Int)
-            InventorySlotControl.NotifyDragConsumed(data.AsInt32());
+        if (InventorySlotControl.TryReadInventoryPayload(data, out var sourceSlot, out _))
+            InventorySlotControl.NotifyDragConsumed(sourceSlot);
 
         ReferenceChanged?.Invoke();
     }
 
     private bool CanAcceptTarget(Variant data)
     {
-        if (data.VariantType == Variant.Type.Int)
+        if (InventorySlotControl.TryReadInventoryPayload(data, out var sourceSlot, out _))
         {
             if (Inventory == null)
                 return false;
-            return Inventory.TryGetEntry(data.AsInt32(), out var entry) &&
+            return Inventory.TryGetEntry(sourceSlot, out var entry) &&
                    entry is InventoryGearEntry;
         }
 
@@ -167,15 +167,14 @@ public partial class GearLevelingReferenceSlot : PanelContainer
 
     private bool AcceptTarget(Variant data)
     {
-        if (data.VariantType == Variant.Type.Int)
+        if (InventorySlotControl.TryReadInventoryPayload(data, out var sourceSlot, out _))
         {
-            var slot = data.AsInt32();
-            if (Inventory == null || !Inventory.TryGetEntry(slot, out var entry) ||
+            if (Inventory == null || !Inventory.TryGetEntry(sourceSlot, out var entry) ||
                 entry is not InventoryGearEntry)
                 return false;
 
             SourceKind = GearLevelingSourceKind.Inventory;
-            InventorySlotIndex = slot;
+            InventorySlotIndex = sourceSlot;
             return true;
         }
 
@@ -194,9 +193,9 @@ public partial class GearLevelingReferenceSlot : PanelContainer
     {
         // Only inventory-origin drags. Equipment-origin gear is explicitly disallowed
         // as fodder (the user has to unequip it first).
-        if (data.VariantType != Variant.Type.Int)
+        if (!InventorySlotControl.TryReadInventoryPayload(data, out var sourceSlot, out _))
             return false;
-        if (Inventory == null || !Inventory.TryGetEntry(data.AsInt32(), out var entry))
+        if (Inventory == null || !Inventory.TryGetEntry(sourceSlot, out var entry))
             return false;
 
         if (entry is InventoryStackEntry stackEntry)
@@ -212,8 +211,11 @@ public partial class GearLevelingReferenceSlot : PanelContainer
         if (!CanAcceptMaterial(data))
             return false;
 
+        if (!InventorySlotControl.TryReadInventoryPayload(data, out var sourceSlot, out _))
+            return false;
+
         SourceKind = GearLevelingSourceKind.Inventory;
-        InventorySlotIndex = data.AsInt32();
+        InventorySlotIndex = sourceSlot;
         return true;
     }
 

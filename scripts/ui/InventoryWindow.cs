@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public partial class InventoryWindow : Control
 {
     [Signal]
-    public delegate void ItemDroppedToWorldEventHandler(int slotIndex);
+    public delegate void ItemDroppedToWorldEventHandler(int slotIndex, int amount);
 
     [Export]
     public string WindowTitle { get; set; } = "Inventory";
@@ -43,10 +43,21 @@ public partial class InventoryWindow : Control
     private Label _titleLabel;
     private Label _summaryLabel;
     private GridContainer _slotGrid;
+    private SpinBox _amountSpinBox;
     private int _activeDragSlot = -1;
+    private int _activeDragAmount = MaxAmountResolved;
     private bool _dragConsumed;
     private WindowDragger _windowDragger;
     private bool _panelPositioned;
+
+    // Top step of the SpinBox renders as "MAX" and resolves to the full source
+    // stack at drag time. Picked above any plausible MaxStackSize so the user can
+    // still pick an explicit numeric amount on its own steps.
+    private const int MaxAmountSentinel = 1000;
+
+    // AmountProvider returns this when MAX is selected; the slot clamps it down
+    // to the live source quantity per operation without mutating the SpinBox.
+    private const int MaxAmountResolved = int.MaxValue;
 
     public override void _Ready()
     {
@@ -65,6 +76,8 @@ public partial class InventoryWindow : Control
                 BringToFront = FocusWindow,
             };
         }
+
+        EnsureAmountControl();
 
         InventorySlotControl.DragConsumed += OnExternalDragConsumed;
 
@@ -154,6 +167,7 @@ public partial class InventoryWindow : Control
             CenterPanelOnce();
             _windowDragger?.ClampToViewport();
             FocusWindow();
+            ResetAmountToMax();
             Refresh();
         }
     }
@@ -243,8 +257,9 @@ public partial class InventoryWindow : Control
                 SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
             };
 
-            slotControl.DragStarted = (slot) => OnSlotDragStarted(slot);
-            slotControl.DropReceived = (from, to) => OnSlotDropReceived(from, to);
+            slotControl.AmountProvider = GetSelectedAmount;
+            slotControl.DragStarted = (slot, amount) => OnSlotDragStarted(slot, amount);
+            slotControl.DropReceived = (from, to, amount) => OnSlotDropReceived(from, to, amount);
             slotControl.DragEnded = (slot) => OnSlotDragEnded(slot);
             slotControl.EquipmentDropReceived = (equipmentSlot, to) => OnEquipmentDropReceived(equipmentSlot, to);
             slotControl.FocusRequested = FocusWindow;
@@ -351,16 +366,104 @@ public partial class InventoryWindow : Control
         _summaryLabel.Text = $"Gold: {gold}    {occupiedSlotCount}/{GetExpectedSlotCount()} slots occupied";
     }
 
-    private void OnSlotDragStarted(int slotIndex)
+    private void OnSlotDragStarted(int slotIndex, int amount)
     {
         _activeDragSlot = slotIndex;
+        _activeDragAmount = Math.Max(1, amount);
         _dragConsumed = false;
+        // Intentionally do NOT mutate _amountSpinBox here: the configured selector
+        // value must survive drags from smaller stacks or gear/non-stackables.
     }
 
-    private void OnSlotDropReceived(int fromSlot, int toSlot)
+    private void OnSlotDropReceived(int fromSlot, int toSlot, int amount)
     {
         _dragConsumed = true;
-        _inventory?.TryInteractSlots(fromSlot, toSlot);
+        if (_inventory == null)
+            return;
+
+        if (!_inventory.TryGetEntry(fromSlot, out var fromEntry) || fromEntry == null)
+            return;
+
+        // Gear and non-stack entries ignore the amount — preserve full-stack swap/merge behavior.
+        if (fromEntry is not InventoryStackEntry || amount >= fromEntry.Quantity)
+        {
+            _inventory.TryInteractSlots(fromSlot, toSlot);
+            return;
+        }
+
+        _inventory.TryMovePartialStack(fromSlot, toSlot, amount);
+    }
+
+    private int GetSelectedAmount()
+    {
+        if (_amountSpinBox == null)
+            return MaxAmountResolved;
+        var value = (int)_amountSpinBox.Value;
+        if (value >= MaxAmountSentinel)
+            return MaxAmountResolved;
+        return Math.Max(1, value);
+    }
+
+    private void EnsureAmountControl()
+    {
+        if (_amountSpinBox != null && GodotObject.IsInstanceValid(_amountSpinBox))
+            return;
+
+        var header = GetNodeOrNull<Container>("Panel/Margin/VBox/Header");
+        if (header == null)
+            return;
+
+        var amountLabel = new Label
+        {
+            Text = "Amount:",
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        header.AddChild(amountLabel);
+
+        _amountSpinBox = new SpinBox
+        {
+            MinValue = 1,
+            MaxValue = MaxAmountSentinel,
+            Step = 1,
+            Value = MaxAmountSentinel,
+            CustomArrowStep = 1,
+            TooltipText = "Stack amount for inventory drags. Top step is MAX (full source stack).",
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd,
+        };
+        _amountSpinBox.ValueChanged += OnAmountSpinBoxValueChanged;
+        header.AddChild(_amountSpinBox);
+        UpdateAmountSpinBoxDisplay();
+    }
+
+    private void OnAmountSpinBoxValueChanged(double value)
+    {
+        UpdateAmountSpinBoxDisplay();
+    }
+
+    // Renders the sentinel step as "MAX" instead of the underlying number.
+    // SpinBox writes the numeric text into its LineEdit on every value change,
+    // so we override it after the value-changed signal has fired.
+    private void UpdateAmountSpinBoxDisplay()
+    {
+        if (_amountSpinBox == null || !GodotObject.IsInstanceValid(_amountSpinBox))
+            return;
+
+        var lineEdit = _amountSpinBox.GetLineEdit();
+        if (lineEdit == null)
+            return;
+
+        if ((int)_amountSpinBox.Value >= MaxAmountSentinel)
+            lineEdit.Text = "MAX";
+    }
+
+    private void ResetAmountToMax()
+    {
+        if (_amountSpinBox == null || !GodotObject.IsInstanceValid(_amountSpinBox))
+            return;
+
+        _amountSpinBox.SetValueNoSignal(MaxAmountSentinel);
+        UpdateAmountSpinBoxDisplay();
     }
 
     private void OnEquipmentDropReceived(int equipmentSlotInt, int inventorySlot)
@@ -386,9 +489,10 @@ public partial class InventoryWindow : Control
     private void OnSlotDragEnded(int slotIndex)
     {
         if (!_dragConsumed && _activeDragSlot == slotIndex)
-            EmitSignal(SignalName.ItemDroppedToWorld, slotIndex);
+            EmitSignal(SignalName.ItemDroppedToWorld, slotIndex, _activeDragAmount);
 
         _activeDragSlot = -1;
+        _activeDragAmount = 1;
         _dragConsumed = false;
     }
 

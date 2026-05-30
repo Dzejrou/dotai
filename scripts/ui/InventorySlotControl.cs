@@ -20,9 +20,13 @@ public partial class InventorySlotControl : PanelContainer
 
     public InventoryController Inventory { get; set; }
 
-    public Action<int> DragStarted { get; set; }
+    // Supplies the currently-selected amount for stack drags (e.g. from a SpinBox).
+    // The slot still clamps the result to [1, source quantity] at drag time.
+    public Func<int> AmountProvider { get; set; }
 
-    public Action<int, int> DropReceived { get; set; }
+    public Action<int, int> DragStarted { get; set; }
+
+    public Action<int, int, int> DropReceived { get; set; }
 
     public Action<int> DragEnded { get; set; }
 
@@ -49,7 +53,13 @@ public partial class InventorySlotControl : PanelContainer
         if (Inventory == null || !Inventory.TryGetEntry(SlotIndex, out var entry) || entry?.Definition == null)
             return default;
 
-        DragStarted?.Invoke(SlotIndex);
+        var sourceQuantity = Math.Max(1, entry.Quantity);
+        var requested = AmountProvider?.Invoke() ?? sourceQuantity;
+        var amount = entry is InventoryStackEntry
+            ? Math.Clamp(requested, 1, sourceQuantity)
+            : 1;
+
+        DragStarted?.Invoke(SlotIndex, amount);
         _dragActive = true;
 
         var preview = new Control { CustomMinimumSize = Size };
@@ -68,11 +78,12 @@ public partial class InventorySlotControl : PanelContainer
             preview.AddChild(icon);
         }
 
-        if (entry.ShowQuantity)
+        var showAmount = entry is InventoryStackEntry ? amount > 1 : entry.ShowQuantity;
+        if (showAmount)
         {
             var qty = new Label
             {
-                Text = entry.Quantity.ToString(),
+                Text = amount.ToString(),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Bottom,
                 MouseFilter = MouseFilterEnum.Ignore,
@@ -82,13 +93,19 @@ public partial class InventorySlotControl : PanelContainer
         }
 
         SetDragPreview(preview);
-        return Variant.From(SlotIndex);
+        return BuildInventoryPayload(SlotIndex, amount);
     }
 
     public override bool _CanDropData(Vector2 atPosition, Variant data)
     {
-        if (data.VariantType == Variant.Type.Int)
-            return data.AsInt32() != SlotIndex;
+        if (TryReadInventoryPayload(data, out var sourceSlot, out _))
+        {
+            // Inventory-origin drags are always "accepted" by another inventory slot so
+            // that releasing over an incompatible target counts as a no-op (consumed)
+            // rather than falling through to the world-drop branch in InventoryWindow.
+            // The controller-level move/split decides whether the drop actually mutates.
+            return sourceSlot != SlotIndex;
+        }
 
         if (TryReadEquipmentPayload(data, out _))
             return Inventory != null && Inventory.IsSlotEmpty(SlotIndex);
@@ -98,14 +115,47 @@ public partial class InventorySlotControl : PanelContainer
 
     public override void _DropData(Vector2 atPosition, Variant data)
     {
-        if (data.VariantType == Variant.Type.Int)
+        if (TryReadInventoryPayload(data, out var sourceSlot, out var amount))
         {
-            DropReceived?.Invoke(data.AsInt32(), SlotIndex);
+            DropReceived?.Invoke(sourceSlot, SlotIndex, amount);
             return;
         }
 
         if (TryReadEquipmentPayload(data, out var equipmentSlot))
             EquipmentDropReceived?.Invoke(equipmentSlot, SlotIndex);
+    }
+
+    public static Variant BuildInventoryPayload(int sourceSlot, int amount)
+    {
+        return new Godot.Collections.Dictionary
+        {
+            { "source", "inventory" },
+            { "slot", sourceSlot },
+            { "amount", Math.Max(1, amount) },
+        };
+    }
+
+    // Reads an inventory-origin drag payload. Backwards-compatible with raw int
+    // payloads is intentionally not provided; all in-tree producers now use the
+    // dictionary shape.
+    public static bool TryReadInventoryPayload(Variant data, out int sourceSlot, out int amount)
+    {
+        sourceSlot = -1;
+        amount = 0;
+        if (data.VariantType != Variant.Type.Dictionary)
+            return false;
+
+        var dict = data.AsGodotDictionary();
+        if (!dict.TryGetValue("source", out var source) || source.AsString() != "inventory")
+            return false;
+        if (!dict.TryGetValue("slot", out var slotValue))
+            return false;
+
+        sourceSlot = slotValue.AsInt32();
+        amount = dict.TryGetValue("amount", out var amountValue) ? amountValue.AsInt32() : 1;
+        if (amount < 1)
+            amount = 1;
+        return true;
     }
 
     private static bool TryReadEquipmentPayload(Variant data, out int equipmentSlot)

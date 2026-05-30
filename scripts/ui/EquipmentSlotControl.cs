@@ -65,13 +65,12 @@ public partial class EquipmentSlotControl : PanelContainer
 
     public override bool _CanDropData(Vector2 atPosition, Variant data)
     {
-        if (data.VariantType != Variant.Type.Int)
+        if (!InventorySlotControl.TryReadInventoryPayload(data, out var inventorySlotIndex, out _))
             return false;
 
         if (Inventory == null)
             return false;
 
-        var inventorySlotIndex = data.AsInt32();
         if (!Inventory.TryGetEntry(inventorySlotIndex, out var entry))
             return false;
 
@@ -83,10 +82,10 @@ public partial class EquipmentSlotControl : PanelContainer
 
     public override void _DropData(Vector2 atPosition, Variant data)
     {
-        if (data.VariantType != Variant.Type.Int)
+        if (!InventorySlotControl.TryReadInventoryPayload(data, out var inventorySlotIndex, out _))
             return;
 
-        InventoryDropReceived?.Invoke(data.AsInt32(), Slot);
+        InventoryDropReceived?.Invoke(inventorySlotIndex, Slot);
     }
 
     public override void _Notification(int what)
