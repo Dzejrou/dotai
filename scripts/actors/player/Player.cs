@@ -652,6 +652,8 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return false;
         }
 
+        var label = string.IsNullOrEmpty(definition.DisplayName) ? definition.Id : definition.DisplayName;
+        CombatLog.Info($"Player uses {label}.");
         return true;
     }
 

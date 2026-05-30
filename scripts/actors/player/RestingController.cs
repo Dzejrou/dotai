@@ -25,6 +25,7 @@ public partial class RestingController : Node
         public float TickIntervalSeconds;
         public float TimeUntilNextTick;
         public int AmountPerTick;
+        public string DisplayName;
     }
 
     private Player _player;
@@ -81,6 +82,7 @@ public partial class RestingController : Node
         track.TickIntervalSeconds = Math.Max(0.1f, definition.ConsumableTickIntervalSeconds);
         track.TimeUntilNextTick = track.TickIntervalSeconds;
         track.AmountPerTick = Math.Max(1, definition.ConsumableAmountPerTick);
+        track.DisplayName = string.IsNullOrEmpty(definition.DisplayName) ? definition.Id : definition.DisplayName;
 
         _lastStartedKind = definition.ConsumableKind;
 
@@ -168,10 +170,14 @@ public partial class RestingController : Node
         switch (kind)
         {
             case ConsumableKind.Food:
-                _player.RestoreHealthFromConsumable(track.AmountPerTick);
+                var hpRestored = _player.RestoreHealthFromConsumable(track.AmountPerTick);
+                if (hpRestored > 0)
+                    CombatLog.Info($"Player restores {hpRestored} HP from {track.DisplayName}.");
                 break;
             case ConsumableKind.Drink:
-                _player.RestoreManaFromConsumable(track.AmountPerTick);
+                var manaRestored = _player.RestoreManaFromConsumable(track.AmountPerTick);
+                if (manaRestored > 0)
+                    CombatLog.Info($"Player restores {manaRestored} mana from {track.DisplayName}.");
                 break;
         }
     }
