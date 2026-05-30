@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://b2beerconsumableitem"]
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://bvjdt8lcseefg"]
 
 [ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
 [ext_resource type="Texture2D" uid="uid://cw5itygw445rs" path="res://assets/drops/beer.png" id="2_beer_texture"]

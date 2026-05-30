@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://b1pieconsumableitem"]
+[gd_resource type="Resource" script_class="InventoryItemDefinition" format=3 uid="uid://cy2blig0k7fue"]
 
 [ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_inventory_item_definition_script"]
 [ext_resource type="Texture2D" uid="uid://cgxgjhb6r4cgl" path="res://assets/drops/pie.png" id="2_pie_texture"]

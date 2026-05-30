@@ -5,17 +5,10 @@ using System;
 [GlobalClass]
 public partial class RestingController : Node
 {
-    [Export]
-    public string SitAnimationPrefix { get; set; } = "sit";
-
-    [Export]
-    public string SitIdleAnimationPrefix { get; set; } = "sit-idle";
-
-    [Export]
-    public string EatAnimationPrefix { get; set; } = "eat";
-
-    [Export]
-    public string DrinkAnimationPrefix { get; set; } = "drink";
+    private const string SitAnimationPrefix = "sit-down";
+    private const string SitIdleAnimationPrefix = "sit-idle";
+    private const string EatAnimationPrefix = "eat";
+    private const string DrinkAnimationPrefix = "drink";
 
     private enum RestingPhase
     {
