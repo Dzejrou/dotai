@@ -30,7 +30,6 @@ public partial class Main : Node2D
     private PlayerSpellBar _spellBar;
     private PlayerDebugStatsWindow _playerDebugStatsWindow;
     private MerchantWindow _merchantWindow;
-    private CombatLogPanel _combatLogPanel;
     private Sprite2D _interactionPrompt;
     private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
@@ -409,8 +408,7 @@ public partial class Main : Node2D
         var combatLogPanelScene = ResourceLoader.Load<PackedScene>(CombatLogPanelScenePath);
         if (combatLogPanelScene?.Instantiate<CombatLogPanel>() is CombatLogPanel combatLogPanel)
         {
-            _combatLogPanel = combatLogPanel;
-            hudCanvas.AddChild(_combatLogPanel);
+            hudCanvas.AddChild(combatLogPanel);
         }
 
         var interactionPromptTexture = ResourceLoader.Load<Texture2D>(InteractionPromptGlyphPath);
