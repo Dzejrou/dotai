@@ -6,6 +6,7 @@ public enum MenuHubPage
 {
     GameMenu,
     Inventory,
+    Character,
 }
 
 [GlobalClass]
@@ -37,6 +38,9 @@ public partial class MenuHub : Control
 
     [Export]
     public NodePath InventoryPagePath { get; set; } = new NodePath("InventoryPage");
+
+    [Export]
+    public NodePath CharacterPagePath { get; set; } = new NodePath("CharacterPage");
 
     [Export]
     public NodePath GameMenuPagePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage");
@@ -98,6 +102,7 @@ public partial class MenuHub : Control
     private readonly GameConfigStore _gameConfigStore = new();
     private Control _gameMenuPageRoot;
     private MenuHubInventoryPage _inventoryPage;
+    private MenuHubCharacterPage _characterPage;
     private Control _gameMenuPage;
     private Control _mainView;
     private Control _settingsView;
@@ -125,6 +130,8 @@ public partial class MenuHub : Control
 
     public MenuHubInventoryPage InventoryPage => _inventoryPage;
 
+    public MenuHubCharacterPage CharacterPage => _characterPage;
+
     public override void _Ready()
     {
         ProcessMode = ProcessModeEnum.Always;
@@ -133,6 +140,7 @@ public partial class MenuHub : Control
 
         _gameMenuPageRoot = GetNodeOrNull<Control>(GameMenuPageRootPath);
         _inventoryPage = GetNodeOrNull<MenuHubInventoryPage>(InventoryPagePath);
+        _characterPage = GetNodeOrNull<MenuHubCharacterPage>(CharacterPagePath);
         _gameMenuPage = GetNodeOrNull<Control>(GameMenuPagePath);
         _mainView = GetNodeOrNull<Control>(MainViewPath);
         _settingsView = GetNodeOrNull<Control>(SettingsViewPath);
@@ -303,6 +311,11 @@ public partial class MenuHub : Control
         _inventoryPage.Bind(inventory, equipment);
     }
 
+    public void BindCharacterPage(Player player, EquipmentController equipment)
+    {
+        _characterPage?.Bind(player, equipment);
+    }
+
     public void SetInventoryPageWorldDropHandlers(Action<int, int> inventoryDrop, Action<GearInstance> gearDrop)
     {
         if (_inventoryPage == null)
@@ -463,8 +476,14 @@ public partial class MenuHub : Control
         if (_inventoryPage != null)
             _inventoryPage.Visible = page == MenuHubPage.Inventory;
 
+        if (_characterPage != null)
+            _characterPage.Visible = page == MenuHubPage.Character;
+
         if (page == MenuHubPage.Inventory)
             _inventoryPage?.OnPageEntered();
+
+        if (page == MenuHubPage.Character)
+            _characterPage?.OnPageEntered();
     }
 
     private void ShowMainView()
