@@ -621,6 +621,12 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (definition == null || definition.ConsumableKind == ConsumableKind.None)
             return false;
 
+        if (InCombat)
+        {
+            CombatLog.Info("Can't eat or drink while in combat.");
+            return false;
+        }
+
         if (!_restingController.TryStartFromDefinition(definition))
             return false;
 
