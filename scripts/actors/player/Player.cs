@@ -1390,10 +1390,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
                 ClearPendingPlacementSpell();
                 if (placementSpell.TryBeginPlacement(this, CreatePlacementCastRequest(GetGlobalMousePosition())))
-                {
                     _pendingPlacementSpell = placementSpell;
-                    _restingController?.CancelAll();
-                }
 
                 return;
             }
