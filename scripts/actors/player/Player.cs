@@ -1470,6 +1470,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (!spell.CanCast(this, lockedRequest))
             return false;
 
+        _restingController?.CancelAll();
         FaceSpellRequest(spell, lockedRequest);
 
         var castDuration = ApplyHasteToDuration(spell.CastTimeDuration);
