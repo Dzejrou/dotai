@@ -7,6 +7,7 @@ public enum MenuHubPage
     GameMenu,
     Inventory,
     Character,
+    SpellBook,
 }
 
 [GlobalClass]
@@ -41,6 +42,9 @@ public partial class MenuHub : Control
 
     [Export]
     public NodePath CharacterPagePath { get; set; } = new NodePath("CharacterPage");
+
+    [Export]
+    public NodePath SpellBookPagePath { get; set; } = new NodePath("SpellBookPage");
 
     [Export]
     public NodePath GameMenuPagePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage");
@@ -103,6 +107,7 @@ public partial class MenuHub : Control
     private Control _gameMenuPageRoot;
     private MenuHubInventoryPage _inventoryPage;
     private MenuHubCharacterPage _characterPage;
+    private MenuHubSpellBookPage _spellBookPage;
     private Control _gameMenuPage;
     private Control _mainView;
     private Control _settingsView;
@@ -132,6 +137,8 @@ public partial class MenuHub : Control
 
     public MenuHubCharacterPage CharacterPage => _characterPage;
 
+    public MenuHubSpellBookPage SpellBookPage => _spellBookPage;
+
     public override void _Ready()
     {
         ProcessMode = ProcessModeEnum.Always;
@@ -141,6 +148,7 @@ public partial class MenuHub : Control
         _gameMenuPageRoot = GetNodeOrNull<Control>(GameMenuPageRootPath);
         _inventoryPage = GetNodeOrNull<MenuHubInventoryPage>(InventoryPagePath);
         _characterPage = GetNodeOrNull<MenuHubCharacterPage>(CharacterPagePath);
+        _spellBookPage = GetNodeOrNull<MenuHubSpellBookPage>(SpellBookPagePath);
         _gameMenuPage = GetNodeOrNull<Control>(GameMenuPagePath);
         _mainView = GetNodeOrNull<Control>(MainViewPath);
         _settingsView = GetNodeOrNull<Control>(SettingsViewPath);
@@ -316,6 +324,11 @@ public partial class MenuHub : Control
         _characterPage?.Bind(player, equipment);
     }
 
+    public void BindSpellBookPage(Player player)
+    {
+        _spellBookPage?.Bind(player);
+    }
+
     public void SetInventoryPageWorldDropHandlers(Action<int, int> inventoryDrop, Action<GearInstance> gearDrop)
     {
         if (_inventoryPage == null)
@@ -479,11 +492,17 @@ public partial class MenuHub : Control
         if (_characterPage != null)
             _characterPage.Visible = page == MenuHubPage.Character;
 
+        if (_spellBookPage != null)
+            _spellBookPage.Visible = page == MenuHubPage.SpellBook;
+
         if (page == MenuHubPage.Inventory)
             _inventoryPage?.OnPageEntered();
 
         if (page == MenuHubPage.Character)
             _characterPage?.OnPageEntered();
+
+        if (page == MenuHubPage.SpellBook)
+            _spellBookPage?.OnPageEntered();
     }
 
     private void ShowMainView()

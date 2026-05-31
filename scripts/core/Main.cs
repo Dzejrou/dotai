@@ -28,14 +28,12 @@ public partial class Main : Node2D
     private bool _menuHubOpen;
     private CastBar _castBar;
     private PlayerSpellBar _spellBar;
-    private PlayerSpellBindingWindow _spellBindingWindow;
     private PlayerDebugStatsWindow _playerDebugStatsWindow;
     private MerchantWindow _merchantWindow;
     private CombatLogPanel _combatLogPanel;
     private Sprite2D _interactionPrompt;
     private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
-    private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
     private const string PlayerDebugStatsWindowScenePath = "res://scenes/ui/player_debug_stats_window.tscn";
     private const string MerchantWindowScenePath = "res://scenes/ui/merchant_window.tscn";
     private const string CountdownHudScenePath = "res://scenes/ui/countdown_hud.tscn";
@@ -100,7 +98,6 @@ public partial class Main : Node2D
             player.Connect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
             player.BindCastBar(_castBar);
             _spellBar?.Bind(player);
-            _spellBindingWindow?.Bind(player);
             _playerDebugStatsWindow?.Bind(player);
             UpdateInteractionPrompt(player.HasInteractionTarget);
         }
@@ -108,7 +105,6 @@ public partial class Main : Node2D
         {
             _castBar?.HideCast();
             _spellBar?.Bind(null);
-            _spellBindingWindow?.Bind(null);
             _playerDebugStatsWindow?.Bind(null);
             UpdateInteractionPrompt(false);
         }
@@ -123,6 +119,7 @@ public partial class Main : Node2D
             _menuHubRoot.BindInventoryPage(_player, _inventoryController, equipmentController);
             _menuHubRoot.SetInventoryPageWorldDropHandlers(OnInventoryItemDroppedToWorld, OnGearDroppedToWorld);
             _menuHubRoot.BindCharacterPage(_player, equipmentController);
+            _menuHubRoot.BindSpellBookPage(_player);
         }
 
         TryLoadFromSave();
@@ -205,7 +202,6 @@ public partial class Main : Node2D
         CloseDebugTray(false);
         UpdateInteractionPrompt(false);
         _gameOverActive = true;
-        _spellBindingWindow?.CloseWindow();
         _playerDebugStatsWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
         GetTree().Paused = true;
@@ -231,9 +227,6 @@ public partial class Main : Node2D
             return;
         if (_inventoryController == null || !GodotObject.IsInstanceValid(_inventoryController))
             return;
-
-        // Match the convention used by other window openers: close adjacent windows first.
-        _spellBindingWindow?.CloseWindow();
 
         _merchantWindow.Open(_inventoryController, stock);
     }
@@ -392,13 +385,6 @@ public partial class Main : Node2D
             hudCanvas.AddChild(_spellBar);
         }
 
-        var spellBindingWindowScene = ResourceLoader.Load<PackedScene>(PlayerSpellBindingWindowScenePath);
-        if (spellBindingWindowScene?.Instantiate<PlayerSpellBindingWindow>() is PlayerSpellBindingWindow spellBindingWindow)
-        {
-            _spellBindingWindow = spellBindingWindow;
-            hudCanvas.AddChild(_spellBindingWindow);
-        }
-
         var playerDebugStatsWindowScene = ResourceLoader.Load<PackedScene>(PlayerDebugStatsWindowScenePath);
         if (playerDebugStatsWindowScene?.Instantiate<PlayerDebugStatsWindow>() is PlayerDebugStatsWindow playerDebugStatsWindow)
         {
@@ -470,7 +456,6 @@ public partial class Main : Node2D
 
         if (keyEvent.PhysicalKeycode == Key.P)
         {
-            _spellBindingWindow?.CloseWindow();
             if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
                 CloseDebugTray();
             else
@@ -518,10 +503,19 @@ public partial class Main : Node2D
         if (!InputMap.HasAction(SpellBookActionName) || !@event.IsActionPressed(SpellBookActionName))
             return false;
 
-        if (_menuHubOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
+        if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
             return true;
 
-        _spellBindingWindow?.ToggleWindow();
+        if (_menuHubOpen)
+        {
+            if (_menuHubRoot != null && _menuHubRoot.CurrentPage == MenuHubPage.SpellBook)
+                CloseMenuHub();
+            else
+                _menuHubRoot?.SwitchTo(MenuHubPage.SpellBook);
+            return true;
+        }
+
+        OpenMenuHub(MenuHubPage.SpellBook);
         return true;
     }
 
@@ -592,7 +586,6 @@ public partial class Main : Node2D
     private void OpenMenuHub(MenuHubPage page = MenuHubPage.GameMenu)
     {
         CloseDebugTray();
-        _spellBindingWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
         _menuHubOpen = true;
         if (_menuHubRoot != null)
