@@ -172,12 +172,12 @@ public partial class RestingController : Node
             case ConsumableKind.Food:
                 var hpRestored = _player.RestoreHealthFromConsumable(track.AmountPerTick);
                 if (hpRestored > 0)
-                    CombatLog.Info($"Player restores {hpRestored} HP from {track.DisplayName}.");
+                    CombatLog.Healing($"Player restores {hpRestored} HP from {track.DisplayName}.");
                 break;
             case ConsumableKind.Drink:
                 var manaRestored = _player.RestoreManaFromConsumable(track.AmountPerTick);
                 if (manaRestored > 0)
-                    CombatLog.Info($"Player restores {manaRestored} mana from {track.DisplayName}.");
+                    CombatLog.Healing($"Player restores {manaRestored} mana from {track.DisplayName}.");
                 break;
         }
     }
