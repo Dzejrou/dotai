@@ -169,19 +169,13 @@ offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 24
+theme_override_constants/margin_top = 72
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 24
 
 [node name="VBox" type="VBoxContainer" parent="Root/InventoryPage/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 16
-
-[node name="PageTitle" type="Label" parent="Root/InventoryPage/Margin/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "Inventory & Equipment"
-horizontal_alignment = 1
 
 [node name="TopRow" type="HBoxContainer" parent="Root/InventoryPage/Margin/VBox"]
 layout_mode = 2
@@ -277,19 +271,13 @@ offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 24
+theme_override_constants/margin_top = 72
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 24
 
 [node name="VBox" type="VBoxContainer" parent="Root/CharacterPage/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 16
-
-[node name="PageTitle" type="Label" parent="Root/CharacterPage/Margin/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "Character"
-horizontal_alignment = 1
 
 [node name="Header" type="HBoxContainer" parent="Root/CharacterPage/Margin/VBox"]
 layout_mode = 2
@@ -380,19 +368,13 @@ offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 24
+theme_override_constants/margin_top = 72
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 24
 
 [node name="VBox" type="VBoxContainer" parent="Root/SpellBookPage/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 16
-
-[node name="PageTitle" type="Label" parent="Root/SpellBookPage/Margin/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "Spell Book"
-horizontal_alignment = 1
 
 [node name="Header" type="HBoxContainer" parent="Root/SpellBookPage/Margin/VBox"]
 layout_mode = 2
@@ -450,3 +432,47 @@ size_flags_horizontal = 3
 [node name="SaveButton" type="Button" parent="Root/SpellBookPage/Margin/VBox/Footer"]
 layout_mode = 2
 text = "Save"
+
+[node name="NavRow" type="HBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 52.0
+grow_horizontal = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="PrevButton" type="Button" parent="Root/NavRow"]
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Previous page"
+text = "<"
+
+[node name="CharacterButton" type="Button" parent="Root/NavRow"]
+layout_mode = 2
+focus_mode = 0
+text = "Character"
+
+[node name="InventoryButton" type="Button" parent="Root/NavRow"]
+layout_mode = 2
+focus_mode = 0
+text = "Inventory & Equipment"
+
+[node name="SpellBookButton" type="Button" parent="Root/NavRow"]
+layout_mode = 2
+focus_mode = 0
+text = "Spell Book"
+
+[node name="GameMenuButton" type="Button" parent="Root/NavRow"]
+layout_mode = 2
+focus_mode = 0
+text = "Game Menu"
+
+[node name="NextButton" type="Button" parent="Root/NavRow"]
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Next page"
+text = ">"

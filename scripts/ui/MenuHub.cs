@@ -103,6 +103,35 @@ public partial class MenuHub : Control
     [Export]
     public NodePath WindowSizeLargerButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/WindowSizeRow/LargerButton");
 
+    [Export]
+    public NodePath NavPrevButtonPath { get; set; } = new NodePath("NavRow/PrevButton");
+
+    [Export]
+    public NodePath NavNextButtonPath { get; set; } = new NodePath("NavRow/NextButton");
+
+    [Export]
+    public NodePath NavCharacterButtonPath { get; set; } = new NodePath("NavRow/CharacterButton");
+
+    [Export]
+    public NodePath NavInventoryButtonPath { get; set; } = new NodePath("NavRow/InventoryButton");
+
+    [Export]
+    public NodePath NavSpellBookButtonPath { get; set; } = new NodePath("NavRow/SpellBookButton");
+
+    [Export]
+    public NodePath NavGameMenuButtonPath { get; set; } = new NodePath("NavRow/GameMenuButton");
+
+    private static readonly MenuHubPage[] PageOrder =
+    {
+        MenuHubPage.Character,
+        MenuHubPage.Inventory,
+        MenuHubPage.SpellBook,
+        MenuHubPage.GameMenu,
+    };
+
+    private static readonly Color ActiveNavTint = new(1.0f, 0.85f, 0.35f);
+    private static readonly Color InactiveNavTint = Colors.White;
+
     private readonly GameConfigStore _gameConfigStore = new();
     private Control _gameMenuPageRoot;
     private MenuHubInventoryPage _inventoryPage;
@@ -127,6 +156,12 @@ public partial class MenuHub : Control
     private Label _windowSizeLabel;
     private Button _windowSizeSmallerButton;
     private Button _windowSizeLargerButton;
+    private Button _navPrevButton;
+    private Button _navNextButton;
+    private Button _navCharacterButton;
+    private Button _navInventoryButton;
+    private Button _navSpellBookButton;
+    private Button _navGameMenuButton;
     private int _windowPresetIndex;
 
     public bool IsOpen => Visible;
@@ -168,6 +203,12 @@ public partial class MenuHub : Control
         _windowSizeLabel = GetNodeOrNull<Label>(WindowSizeLabelPath);
         _windowSizeSmallerButton = GetNodeOrNull<Button>(WindowSizeSmallerButtonPath);
         _windowSizeLargerButton = GetNodeOrNull<Button>(WindowSizeLargerButtonPath);
+        _navPrevButton = GetNodeOrNull<Button>(NavPrevButtonPath);
+        _navNextButton = GetNodeOrNull<Button>(NavNextButtonPath);
+        _navCharacterButton = GetNodeOrNull<Button>(NavCharacterButtonPath);
+        _navInventoryButton = GetNodeOrNull<Button>(NavInventoryButtonPath);
+        _navSpellBookButton = GetNodeOrNull<Button>(NavSpellBookButtonPath);
+        _navGameMenuButton = GetNodeOrNull<Button>(NavGameMenuButtonPath);
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
@@ -235,6 +276,24 @@ public partial class MenuHub : Control
         if (_windowSizeLargerButton != null)
             _windowSizeLargerButton.Pressed += OnWindowSizeLargerPressed;
 
+        if (_navPrevButton != null)
+            _navPrevButton.Pressed += OnNavPrevPressed;
+
+        if (_navNextButton != null)
+            _navNextButton.Pressed += OnNavNextPressed;
+
+        if (_navCharacterButton != null)
+            _navCharacterButton.Pressed += OnNavCharacterPressed;
+
+        if (_navInventoryButton != null)
+            _navInventoryButton.Pressed += OnNavInventoryPressed;
+
+        if (_navSpellBookButton != null)
+            _navSpellBookButton.Pressed += OnNavSpellBookPressed;
+
+        if (_navGameMenuButton != null)
+            _navGameMenuButton.Pressed += OnNavGameMenuPressed;
+
         InitializeWindowPreset();
         RefreshWindowSizeView();
 
@@ -288,6 +347,43 @@ public partial class MenuHub : Control
 
         if (_windowSizeLargerButton != null)
             _windowSizeLargerButton.Pressed -= OnWindowSizeLargerPressed;
+
+        if (_navPrevButton != null)
+            _navPrevButton.Pressed -= OnNavPrevPressed;
+
+        if (_navNextButton != null)
+            _navNextButton.Pressed -= OnNavNextPressed;
+
+        if (_navCharacterButton != null)
+            _navCharacterButton.Pressed -= OnNavCharacterPressed;
+
+        if (_navInventoryButton != null)
+            _navInventoryButton.Pressed -= OnNavInventoryPressed;
+
+        if (_navSpellBookButton != null)
+            _navSpellBookButton.Pressed -= OnNavSpellBookPressed;
+
+        if (_navGameMenuButton != null)
+            _navGameMenuButton.Pressed -= OnNavGameMenuPressed;
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (!Visible)
+            return;
+
+        if (@event.IsActionPressed("move_left"))
+        {
+            CyclePage(-1);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (@event.IsActionPressed("move_right"))
+        {
+            CyclePage(1);
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     public void Open(MenuHubPage page = MenuHubPage.GameMenu)
@@ -503,6 +599,69 @@ public partial class MenuHub : Control
 
         if (page == MenuHubPage.SpellBook)
             _spellBookPage?.OnPageEntered();
+
+        UpdateNavHighlight();
+    }
+
+    private void CyclePage(int direction)
+    {
+        var currentIndex = Array.IndexOf(PageOrder, CurrentPage);
+        if (currentIndex < 0)
+            currentIndex = 0;
+
+        var length = PageOrder.Length;
+        var nextIndex = ((currentIndex + direction) % length + length) % length;
+        var nextPage = PageOrder[nextIndex];
+        if (nextPage == CurrentPage)
+            return;
+
+        ShowPage(nextPage);
+    }
+
+    private void UpdateNavHighlight()
+    {
+        ApplyNavTint(_navCharacterButton, CurrentPage == MenuHubPage.Character);
+        ApplyNavTint(_navInventoryButton, CurrentPage == MenuHubPage.Inventory);
+        ApplyNavTint(_navSpellBookButton, CurrentPage == MenuHubPage.SpellBook);
+        ApplyNavTint(_navGameMenuButton, CurrentPage == MenuHubPage.GameMenu);
+    }
+
+    private static void ApplyNavTint(Button button, bool active)
+    {
+        if (button == null)
+            return;
+
+        button.SelfModulate = active ? ActiveNavTint : InactiveNavTint;
+    }
+
+    private void OnNavPrevPressed()
+    {
+        CyclePage(-1);
+    }
+
+    private void OnNavNextPressed()
+    {
+        CyclePage(1);
+    }
+
+    private void OnNavCharacterPressed()
+    {
+        SwitchTo(MenuHubPage.Character);
+    }
+
+    private void OnNavInventoryPressed()
+    {
+        SwitchTo(MenuHubPage.Inventory);
+    }
+
+    private void OnNavSpellBookPressed()
+    {
+        SwitchTo(MenuHubPage.SpellBook);
+    }
+
+    private void OnNavGameMenuPressed()
+    {
+        SwitchTo(MenuHubPage.GameMenu);
     }
 
     private void ShowMainView()

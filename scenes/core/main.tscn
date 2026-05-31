@@ -11,6 +11,7 @@
 script = ExtResource("3_main")
 
 [node name="World" parent="." unique_id=1334063756 instance=ExtResource("1_world")]
+process_mode = 1
 
 [node name="GameOver" parent="." unique_id=981792121 instance=ExtResource("2_gameover")]
 
