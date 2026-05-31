@@ -29,7 +29,6 @@ public partial class Main : Node2D
     private CastBar _castBar;
     private PlayerSpellBar _spellBar;
     private PlayerSpellBindingWindow _spellBindingWindow;
-    private CharacterWindow _characterWindow;
     private PlayerDebugStatsWindow _playerDebugStatsWindow;
     private MerchantWindow _merchantWindow;
     private CombatLogPanel _combatLogPanel;
@@ -37,7 +36,6 @@ public partial class Main : Node2D
     private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
-    private const string CharacterWindowScenePath = "res://scenes/ui/character_window.tscn";
     private const string PlayerDebugStatsWindowScenePath = "res://scenes/ui/player_debug_stats_window.tscn";
     private const string MerchantWindowScenePath = "res://scenes/ui/merchant_window.tscn";
     private const string CountdownHudScenePath = "res://scenes/ui/countdown_hud.tscn";
@@ -119,13 +117,12 @@ public partial class Main : Node2D
             ? _world.ResolveInventoryController()
             : null;
         var equipmentController = _player?.EquipmentControllerNode;
-        _characterWindow?.Bind(_inventoryController, equipmentController);
-        _characterWindow?.BindStatsOwner(_player);
 
         if (_menuHubRoot != null)
         {
             _menuHubRoot.BindInventoryPage(_player, _inventoryController, equipmentController);
             _menuHubRoot.SetInventoryPageWorldDropHandlers(OnInventoryItemDroppedToWorld, OnGearDroppedToWorld);
+            _menuHubRoot.BindCharacterPage(_player, equipmentController);
         }
 
         TryLoadFromSave();
@@ -209,7 +206,6 @@ public partial class Main : Node2D
         UpdateInteractionPrompt(false);
         _gameOverActive = true;
         _spellBindingWindow?.CloseWindow();
-        _characterWindow?.CloseWindow();
         _playerDebugStatsWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
         GetTree().Paused = true;
@@ -237,7 +233,6 @@ public partial class Main : Node2D
             return;
 
         // Match the convention used by other window openers: close adjacent windows first.
-        _characterWindow?.CloseWindow();
         _spellBindingWindow?.CloseWindow();
 
         _merchantWindow.Open(_inventoryController, stock);
@@ -404,13 +399,6 @@ public partial class Main : Node2D
             hudCanvas.AddChild(_spellBindingWindow);
         }
 
-        var characterWindowScene = ResourceLoader.Load<PackedScene>(CharacterWindowScenePath);
-        if (characterWindowScene?.Instantiate<CharacterWindow>() is CharacterWindow characterWindow)
-        {
-            _characterWindow = characterWindow;
-            hudCanvas.AddChild(_characterWindow);
-        }
-
         var playerDebugStatsWindowScene = ResourceLoader.Load<PackedScene>(PlayerDebugStatsWindowScenePath);
         if (playerDebugStatsWindowScene?.Instantiate<PlayerDebugStatsWindow>() is PlayerDebugStatsWindow playerDebugStatsWindow)
         {
@@ -533,7 +521,6 @@ public partial class Main : Node2D
         if (_menuHubOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
             return true;
 
-        _characterWindow?.CloseWindow();
         _spellBindingWindow?.ToggleWindow();
         return true;
     }
@@ -573,11 +560,19 @@ public partial class Main : Node2D
             return false;
         }
 
-        if (_menuHubOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
+        if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
             return true;
 
-        _spellBindingWindow?.CloseWindow();
-        _characterWindow?.ToggleWindow();
+        if (_menuHubOpen)
+        {
+            if (_menuHubRoot != null && _menuHubRoot.CurrentPage == MenuHubPage.Character)
+                CloseMenuHub();
+            else
+                _menuHubRoot?.SwitchTo(MenuHubPage.Character);
+            return true;
+        }
+
+        OpenMenuHub(MenuHubPage.Character);
         return true;
     }
 
@@ -598,7 +593,6 @@ public partial class Main : Node2D
     {
         CloseDebugTray();
         _spellBindingWindow?.CloseWindow();
-        _characterWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
         _menuHubOpen = true;
         if (_menuHubRoot != null)
@@ -619,7 +613,6 @@ public partial class Main : Node2D
 
     private void OpenDebugTray()
     {
-        _characterWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
 
         if (_debugTrayRoot != null)
