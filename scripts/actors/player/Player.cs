@@ -1390,7 +1390,10 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
                 ClearPendingPlacementSpell();
                 if (placementSpell.TryBeginPlacement(this, CreatePlacementCastRequest(GetGlobalMousePosition())))
+                {
                     _pendingPlacementSpell = placementSpell;
+                    _restingController?.CancelAll();
+                }
 
                 return;
             }
@@ -1470,6 +1473,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (!spell.CanCast(this, lockedRequest))
             return false;
 
+        _restingController?.CancelAll();
         FaceSpellRequest(spell, lockedRequest);
 
         var castDuration = ApplyHasteToDuration(spell.CastTimeDuration);
