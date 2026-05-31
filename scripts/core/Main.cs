@@ -5,15 +5,6 @@ using System;
 [GlobalClass]
 public partial class Main : Node2D
 {
-    private static readonly Vector2I[] WindowPresets =
-    {
-        new Vector2I(960, 540),
-        new Vector2I(1280, 720),
-        new Vector2I(1600, 900),
-        new Vector2I(1920, 1080),
-        new Vector2I(2560, 1440),
-    };
-
     [Export]
     public NodePath WorldPath { get; set; } = new NodePath("World");
 
@@ -21,7 +12,7 @@ public partial class Main : Node2D
     public NodePath GameOverPath { get; set; } = new NodePath("GameOver/Root");
 
     [Export]
-    public NodePath PauseMenuPath { get; set; } = new NodePath("PauseMenu/Root");
+    public NodePath MenuHubPath { get; set; } = new NodePath("MenuHub/Root");
 
     [Export]
     public NodePath DebugTrayPath { get; set; } = new NodePath("DebugTray/Root");
@@ -30,11 +21,11 @@ public partial class Main : Node2D
     private Player _player;
     private InventoryController _inventoryController;
     private Control _gameOverRoot;
-    private PauseMenu _pauseMenuRoot;
+    private MenuHub _menuHubRoot;
     private DebugTray _debugTrayRoot;
     private bool _gameOverActive;
     private bool _restartingFromGameOver;
-    private bool _pauseMenuOpen;
+    private bool _menuHubOpen;
     private CastBar _castBar;
     private PlayerSpellBar _spellBar;
     private PlayerSpellBindingWindow _spellBindingWindow;
@@ -57,7 +48,6 @@ public partial class Main : Node2D
     private const string SpellBookActionName = "spell_book";
     private const string ToggleInventoryActionName = "toggle_inventory";
     private const string ToggleCharacterWindowActionName = "toggle_character_window";
-    private int _windowPresetIndex;
     private CountdownHUD _countdownHud;
     private readonly SaveGameStore _saveGameStore = new();
 
@@ -79,7 +69,7 @@ public partial class Main : Node2D
         }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
-        _pauseMenuRoot = GetNodeOrNull<PauseMenu>(PauseMenuPath);
+        _menuHubRoot = GetNodeOrNull<MenuHub>(MenuHubPath);
         _debugTrayRoot = GetNodeOrNull<DebugTray>(DebugTrayPath);
         CreateHud();
 
@@ -89,14 +79,14 @@ public partial class Main : Node2D
             _gameOverRoot.ProcessMode = ProcessModeEnum.Always;
         }
 
-        if (_pauseMenuRoot != null)
+        if (_menuHubRoot != null)
         {
-            _pauseMenuRoot.Visible = false;
-            _pauseMenuRoot.ProcessMode = ProcessModeEnum.Always;
-            _pauseMenuRoot.Connect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
-            _pauseMenuRoot.Connect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
-            _pauseMenuRoot.Connect(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested)));
-            _pauseMenuRoot.Connect(PauseMenu.SignalName.LoadRequested, new Callable(this, nameof(OnPauseMenuLoadRequested)));
+            _menuHubRoot.Visible = false;
+            _menuHubRoot.ProcessMode = ProcessModeEnum.Always;
+            _menuHubRoot.Connect(MenuHub.SignalName.ResumeRequested, new Callable(this, nameof(OnMenuHubResumeRequested)));
+            _menuHubRoot.Connect(MenuHub.SignalName.DebugRequested, new Callable(this, nameof(OnMenuHubDebugRequested)));
+            _menuHubRoot.Connect(MenuHub.SignalName.SaveRequested, new Callable(this, nameof(OnMenuHubSaveRequested)));
+            _menuHubRoot.Connect(MenuHub.SignalName.LoadRequested, new Callable(this, nameof(OnMenuHubLoadRequested)));
         }
 
         if (_debugTrayRoot != null)
@@ -136,8 +126,6 @@ public partial class Main : Node2D
         _characterWindow?.Bind(_inventoryController, equipmentController);
         _characterWindow?.BindStatsOwner(_player);
 
-        InitializeWindowPreset();
-
         TryLoadFromSave();
     }
 
@@ -158,21 +146,21 @@ public partial class Main : Node2D
             _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
             _player.Disconnect(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged)));
 
-        if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
-            _pauseMenuRoot.IsConnected(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested))))
-            _pauseMenuRoot.Disconnect(PauseMenu.SignalName.ResumeRequested, new Callable(this, nameof(OnPauseMenuResumeRequested)));
+        if (GodotObject.IsInstanceValid(_menuHubRoot) &&
+            _menuHubRoot.IsConnected(MenuHub.SignalName.ResumeRequested, new Callable(this, nameof(OnMenuHubResumeRequested))))
+            _menuHubRoot.Disconnect(MenuHub.SignalName.ResumeRequested, new Callable(this, nameof(OnMenuHubResumeRequested)));
 
-        if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
-            _pauseMenuRoot.IsConnected(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested))))
-            _pauseMenuRoot.Disconnect(PauseMenu.SignalName.DebugRequested, new Callable(this, nameof(OnPauseMenuDebugRequested)));
+        if (GodotObject.IsInstanceValid(_menuHubRoot) &&
+            _menuHubRoot.IsConnected(MenuHub.SignalName.DebugRequested, new Callable(this, nameof(OnMenuHubDebugRequested))))
+            _menuHubRoot.Disconnect(MenuHub.SignalName.DebugRequested, new Callable(this, nameof(OnMenuHubDebugRequested)));
 
-        if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
-            _pauseMenuRoot.IsConnected(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested))))
-            _pauseMenuRoot.Disconnect(PauseMenu.SignalName.SaveRequested, new Callable(this, nameof(OnPauseMenuSaveRequested)));
+        if (GodotObject.IsInstanceValid(_menuHubRoot) &&
+            _menuHubRoot.IsConnected(MenuHub.SignalName.SaveRequested, new Callable(this, nameof(OnMenuHubSaveRequested))))
+            _menuHubRoot.Disconnect(MenuHub.SignalName.SaveRequested, new Callable(this, nameof(OnMenuHubSaveRequested)));
 
-        if (GodotObject.IsInstanceValid(_pauseMenuRoot) &&
-            _pauseMenuRoot.IsConnected(PauseMenu.SignalName.LoadRequested, new Callable(this, nameof(OnPauseMenuLoadRequested))))
-            _pauseMenuRoot.Disconnect(PauseMenu.SignalName.LoadRequested, new Callable(this, nameof(OnPauseMenuLoadRequested)));
+        if (GodotObject.IsInstanceValid(_menuHubRoot) &&
+            _menuHubRoot.IsConnected(MenuHub.SignalName.LoadRequested, new Callable(this, nameof(OnMenuHubLoadRequested))))
+            _menuHubRoot.Disconnect(MenuHub.SignalName.LoadRequested, new Callable(this, nameof(OnMenuHubLoadRequested)));
 
         if (GodotObject.IsInstanceValid(_debugTrayRoot) &&
             _debugTrayRoot.IsConnected(DebugTray.SignalName.PlayerStatsRequested, new Callable(this, nameof(OnDebugTrayPlayerStatsRequested))))
@@ -181,9 +169,6 @@ public partial class Main : Node2D
 
     public override void _Input(InputEvent @event)
     {
-        if (TryHandleWindowResizeInput(@event))
-            return;
-
         if (TryHandleNavigationDebugInput(@event))
             return;
 
@@ -204,7 +189,7 @@ public partial class Main : Node2D
         if (TryHandleCharacterWindowInput(@event))
             return;
 
-        TryHandlePauseMenuInput(@event);
+        TryHandleMenuHubInput(@event);
     }
 
     public override void _Process(double delta)
@@ -217,7 +202,7 @@ public partial class Main : Node2D
         if (_gameOverActive)
             return;
 
-        ClosePauseMenu();
+        CloseMenuHub();
         CloseDebugTray(false);
         UpdateInteractionPrompt(false);
         _gameOverActive = true;
@@ -265,18 +250,18 @@ public partial class Main : Node2D
         GetTree().ReloadCurrentScene();
     }
 
-    private void OnPauseMenuResumeRequested()
+    private void OnMenuHubResumeRequested()
     {
-        ClosePauseMenu();
+        CloseMenuHub();
     }
 
-    private void OnPauseMenuDebugRequested()
+    private void OnMenuHubDebugRequested()
     {
-        ClosePauseMenu();
+        CloseMenuHub();
         OpenDebugTray();
     }
 
-    private void OnPauseMenuSaveRequested()
+    private void OnMenuHubSaveRequested()
     {
         if (_player == null || !GodotObject.IsInstanceValid(_player))
         {
@@ -316,7 +301,7 @@ public partial class Main : Node2D
             GD.PushWarning(message);
     }
 
-    private void OnPauseMenuLoadRequested()
+    private void OnMenuHubLoadRequested()
     {
         switch (TryApplySaveFromDisk())
         {
@@ -498,58 +483,7 @@ public partial class Main : Node2D
         _interactionPrompt.GlobalPosition = promptPosition;
     }
 
-    private void InitializeWindowPreset()
-    {
-        var currentSize = DisplayServer.WindowGetSize();
-        var closestPresetIndex = 0;
-        var closestDistanceSq = int.MaxValue;
-
-        for (var i = 0; i < WindowPresets.Length; i++)
-        {
-            var preset = WindowPresets[i];
-            var dx = currentSize.X - preset.X;
-            var dy = currentSize.Y - preset.Y;
-            var distanceSq = dx * dx + dy * dy;
-            if (distanceSq < closestDistanceSq)
-            {
-                closestDistanceSq = distanceSq;
-                closestPresetIndex = i;
-            }
-        }
-
-        _windowPresetIndex = Mathf.Clamp(closestPresetIndex, 0, WindowPresets.Length - 1);
-    }
-
-    private bool TryHandleWindowResizeInput(InputEvent @event)
-    {
-        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
-            return false;
-
-        var shouldIncrease = keyEvent.PhysicalKeycode == Key.Key9;
-        var shouldDecrease = keyEvent.PhysicalKeycode == Key.Key0;
-
-        if (!shouldIncrease && !shouldDecrease)
-            return false;
-
-        var newIndex = _windowPresetIndex;
-        if (shouldIncrease)
-            newIndex++;
-        else
-            newIndex--;
-
-        newIndex = Mathf.Clamp(newIndex, 0, WindowPresets.Length - 1);
-        if (newIndex == _windowPresetIndex)
-            return true;
-
-        _windowPresetIndex = newIndex;
-        var newSize = WindowPresets[_windowPresetIndex];
-        DisplayServer.WindowSetSize(newSize);
-        GD.Print($"Window size set to {newSize.X}x{newSize.Y}");
-
-        return true;
-    }
-
-    private bool TryHandlePauseMenuInput(InputEvent @event)
+    private bool TryHandleMenuHubInput(InputEvent @event)
     {
         if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
             return false;
@@ -561,7 +495,7 @@ public partial class Main : Node2D
                 CloseDebugTray();
             else
             {
-                ClosePauseMenu();
+                CloseMenuHub();
                 OpenDebugTray();
             }
 
@@ -584,14 +518,14 @@ public partial class Main : Node2D
                 return true;
 
             CloseDebugTray();
-            OpenPauseMenu();
+            OpenMenuHub();
             return true;
         }
 
-        if (_pauseMenuOpen)
-            ClosePauseMenu();
+        if (_menuHubOpen)
+            CloseMenuHub();
         else
-            OpenPauseMenu();
+            OpenMenuHub();
 
         return true;
     }
@@ -604,7 +538,7 @@ public partial class Main : Node2D
         if (!InputMap.HasAction(SpellBookActionName) || !@event.IsActionPressed(SpellBookActionName))
             return false;
 
-        if (_pauseMenuOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
+        if (_menuHubOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
             return true;
 
         _inventoryWindow?.CloseWindow();
@@ -621,7 +555,7 @@ public partial class Main : Node2D
         if (!InputMap.HasAction(ToggleInventoryActionName) || !@event.IsActionPressed(ToggleInventoryActionName))
             return false;
 
-        if (_pauseMenuOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
+        if (_menuHubOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
             return true;
 
         _spellBindingWindow?.CloseWindow();
@@ -640,7 +574,7 @@ public partial class Main : Node2D
             return false;
         }
 
-        if (_pauseMenuOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
+        if (_menuHubOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
             return true;
 
         _spellBindingWindow?.CloseWindow();
@@ -661,25 +595,25 @@ public partial class Main : Node2D
         return true;
     }
 
-    private void OpenPauseMenu()
+    private void OpenMenuHub()
     {
         CloseDebugTray();
         _spellBindingWindow?.CloseWindow();
         _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
-        _pauseMenuOpen = true;
-        if (_pauseMenuRoot != null)
-            _pauseMenuRoot.Visible = true;
+        _menuHubOpen = true;
+        if (_menuHubRoot != null)
+            _menuHubRoot.Open();
 
         GetTree().Paused = true;
     }
 
-    private void ClosePauseMenu()
+    private void CloseMenuHub()
     {
-        _pauseMenuOpen = false;
-        if (_pauseMenuRoot != null)
-            _pauseMenuRoot.Visible = false;
+        _menuHubOpen = false;
+        if (_menuHubRoot != null)
+            _menuHubRoot.Close();
 
         if (!_gameOverActive)
             GetTree().Paused = false;

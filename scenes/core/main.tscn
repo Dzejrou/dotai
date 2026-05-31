@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://cnpc2ij535kmo" path="res://scenes/core/world.tscn" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/core/game_over.tscn" id="2_gameover"]
 [ext_resource type="Script" uid="uid://drwf66y3lnatq" path="res://scripts/core/Main.cs" id="3_main"]
-[ext_resource type="PackedScene" path="res://scenes/core/pause_menu.tscn" id="4_pausemenu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/menu_hub.tscn" id="4_menuhub"]
 [ext_resource type="PackedScene" path="res://scenes/core/debug_tray.tscn" id="5_debugtray"]
 [ext_resource type="Script" path="res://scripts/shared/FloatingTextLayer.cs" id="6_floating_text_layer"]
 
@@ -14,7 +14,7 @@ script = ExtResource("3_main")
 
 [node name="GameOver" parent="." unique_id=981792121 instance=ExtResource("2_gameover")]
 
-[node name="PauseMenu" parent="." unique_id=1978111045 instance=ExtResource("4_pausemenu")]
+[node name="MenuHub" parent="." unique_id=1978111045 instance=ExtResource("4_menuhub")]
 
 [node name="DebugTray" parent="." unique_id=963173231 instance=ExtResource("5_debugtray")]
 

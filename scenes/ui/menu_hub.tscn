@@ -1,0 +1,144 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/MenuHub.cs" id="1_menu_hub"]
+
+[node name="MenuHub" type="CanvasLayer"]
+layer = 200
+
+[node name="Root" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+process_mode = 3
+script = ExtResource("1_menu_hub")
+
+[node name="Backdrop" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.08, 1)
+
+[node name="Center" type="CenterContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Root/Center"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Pages" type="VBoxContainer" parent="Root/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PageTitle" type="Label" parent="Root/Center/Panel/Pages"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Game Menu"
+horizontal_alignment = 1
+
+[node name="GameMenuPage" type="VBoxContainer" parent="Root/Center/Panel/Pages"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MainView" type="VBoxContainer" parent="Root/Center/Panel/Pages/GameMenuPage"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ResumeButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/MainView"]
+layout_mode = 2
+text = "Resume"
+
+[node name="SaveButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/MainView"]
+layout_mode = 2
+text = "Save Game"
+
+[node name="LoadButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/MainView"]
+layout_mode = 2
+text = "Load Game"
+
+[node name="SettingsButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/MainView"]
+layout_mode = 2
+text = "Settings"
+
+[node name="DebugButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/MainView"]
+layout_mode = 2
+text = "Debug"
+
+[node name="SettingsView" type="VBoxContainer" parent="Root/Center/Panel/Pages/GameMenuPage"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SettingsTitle" type="Label" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="ShowActorNamesToggle" type="CheckBox" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+text = "Show actor names"
+
+[node name="ShowFloatingTextToggle" type="CheckBox" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+button_pressed = true
+text = "Show floating text"
+
+[node name="ShowCombatLogToggle" type="CheckBox" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+text = "Show combat log"
+
+[node name="LockCombatLogPositionToggle" type="CheckBox" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+button_pressed = true
+text = "Lock combat log position"
+
+[node name="ShowCombatLogDebugToggle" type="CheckBox" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+text = "Show debug messages in combat log"
+
+[node name="GodModeToggle" type="CheckBox" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+text = "God mode"
+
+[node name="OneHitKillToggle" type="CheckBox" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+text = "One-hit kill"
+
+[node name="WindowSizeRow" type="HBoxContainer" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WindowSizeLabel" type="Label" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView/WindowSizeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Window size:"
+
+[node name="SmallerButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView/WindowSizeRow"]
+layout_mode = 2
+text = "Smaller"
+
+[node name="LargerButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView/WindowSizeRow"]
+layout_mode = 2
+text = "Larger"
+
+[node name="BackButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
+layout_mode = 2
+text = "Back"
