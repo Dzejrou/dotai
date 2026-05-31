@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class PauseMenu : Control
+public partial class MenuHub : Control
 {
     [Signal]
     public delegate void ResumeRequestedEventHandler();
@@ -15,52 +15,74 @@ public partial class PauseMenu : Control
     [Signal]
     public delegate void LoadRequestedEventHandler();
 
-    [Export]
-    public NodePath MainViewPath { get; set; } = new NodePath("Center/Panel/Views/MainView");
+    private static readonly Vector2I[] WindowPresets =
+    {
+        new Vector2I(960, 540),
+        new Vector2I(1280, 720),
+        new Vector2I(1600, 900),
+        new Vector2I(1920, 1080),
+        new Vector2I(2560, 1440),
+    };
 
     [Export]
-    public NodePath SettingsViewPath { get; set; } = new NodePath("Center/Panel/Views/SettingsView");
+    public NodePath GameMenuPagePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage");
 
     [Export]
-    public NodePath ResumeButtonPath { get; set; } = new NodePath("Center/Panel/Views/MainView/ResumeButton");
+    public NodePath MainViewPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/MainView");
 
     [Export]
-    public NodePath SaveButtonPath { get; set; } = new NodePath("Center/Panel/Views/MainView/SaveButton");
+    public NodePath SettingsViewPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView");
 
     [Export]
-    public NodePath LoadButtonPath { get; set; } = new NodePath("Center/Panel/Views/MainView/LoadButton");
+    public NodePath ResumeButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/MainView/ResumeButton");
 
     [Export]
-    public NodePath SettingsButtonPath { get; set; } = new NodePath("Center/Panel/Views/MainView/SettingsButton");
+    public NodePath SaveButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/MainView/SaveButton");
 
     [Export]
-    public NodePath DebugButtonPath { get; set; } = new NodePath("Center/Panel/Views/MainView/DebugButton");
+    public NodePath LoadButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/MainView/LoadButton");
 
     [Export]
-    public NodePath BackButtonPath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/BackButton");
+    public NodePath SettingsButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/MainView/SettingsButton");
 
     [Export]
-    public NodePath ShowActorNamesTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/ShowActorNamesToggle");
+    public NodePath DebugButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/MainView/DebugButton");
 
     [Export]
-    public NodePath ShowFloatingTextTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/ShowFloatingTextToggle");
+    public NodePath BackButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/BackButton");
 
     [Export]
-    public NodePath ShowCombatLogDebugTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/ShowCombatLogDebugToggle");
+    public NodePath ShowActorNamesTogglePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/ShowActorNamesToggle");
 
     [Export]
-    public NodePath ShowCombatLogTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/ShowCombatLogToggle");
+    public NodePath ShowFloatingTextTogglePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/ShowFloatingTextToggle");
 
     [Export]
-    public NodePath LockCombatLogPositionTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/LockCombatLogPositionToggle");
+    public NodePath ShowCombatLogDebugTogglePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/ShowCombatLogDebugToggle");
 
     [Export]
-    public NodePath GodModeTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/GodModeToggle");
+    public NodePath ShowCombatLogTogglePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/ShowCombatLogToggle");
 
     [Export]
-    public NodePath OneHitKillTogglePath { get; set; } = new NodePath("Center/Panel/Views/SettingsView/OneHitKillToggle");
+    public NodePath LockCombatLogPositionTogglePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/LockCombatLogPositionToggle");
+
+    [Export]
+    public NodePath GodModeTogglePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/GodModeToggle");
+
+    [Export]
+    public NodePath OneHitKillTogglePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/OneHitKillToggle");
+
+    [Export]
+    public NodePath WindowSizeLabelPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/WindowSizeRow/WindowSizeLabel");
+
+    [Export]
+    public NodePath WindowSizeSmallerButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/WindowSizeRow/SmallerButton");
+
+    [Export]
+    public NodePath WindowSizeLargerButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/WindowSizeRow/LargerButton");
 
     private readonly GameConfigStore _gameConfigStore = new();
+    private Control _gameMenuPage;
     private Control _mainView;
     private Control _settingsView;
     private Button _resumeButton;
@@ -76,6 +98,12 @@ public partial class PauseMenu : Control
     private BaseButton _lockCombatLogPositionToggle;
     private BaseButton _godModeToggle;
     private BaseButton _oneHitKillToggle;
+    private Label _windowSizeLabel;
+    private Button _windowSizeSmallerButton;
+    private Button _windowSizeLargerButton;
+    private int _windowPresetIndex;
+
+    public bool IsOpen => Visible;
 
     public override void _Ready()
     {
@@ -83,6 +111,7 @@ public partial class PauseMenu : Control
 
         _gameConfigStore.LoadGameSettings();
 
+        _gameMenuPage = GetNodeOrNull<Control>(GameMenuPagePath);
         _mainView = GetNodeOrNull<Control>(MainViewPath);
         _settingsView = GetNodeOrNull<Control>(SettingsViewPath);
         _resumeButton = GetNodeOrNull<Button>(ResumeButtonPath);
@@ -98,6 +127,9 @@ public partial class PauseMenu : Control
         _lockCombatLogPositionToggle = GetNodeOrNull<BaseButton>(LockCombatLogPositionTogglePath);
         _godModeToggle = GetNodeOrNull<BaseButton>(GodModeTogglePath);
         _oneHitKillToggle = GetNodeOrNull<BaseButton>(OneHitKillTogglePath);
+        _windowSizeLabel = GetNodeOrNull<Label>(WindowSizeLabelPath);
+        _windowSizeSmallerButton = GetNodeOrNull<Button>(WindowSizeSmallerButtonPath);
+        _windowSizeLargerButton = GetNodeOrNull<Button>(WindowSizeLargerButtonPath);
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
@@ -159,6 +191,16 @@ public partial class PauseMenu : Control
             _oneHitKillToggle.Toggled += OnOneHitKillToggled;
         }
 
+        if (_windowSizeSmallerButton != null)
+            _windowSizeSmallerButton.Pressed += OnWindowSizeSmallerPressed;
+
+        if (_windowSizeLargerButton != null)
+            _windowSizeLargerButton.Pressed += OnWindowSizeLargerPressed;
+
+        InitializeWindowPreset();
+        RefreshWindowSizeView();
+
+        ShowGameMenuPage();
         ShowMainView();
     }
 
@@ -202,6 +244,23 @@ public partial class PauseMenu : Control
 
         if (_oneHitKillToggle != null)
             _oneHitKillToggle.Toggled -= OnOneHitKillToggled;
+
+        if (_windowSizeSmallerButton != null)
+            _windowSizeSmallerButton.Pressed -= OnWindowSizeSmallerPressed;
+
+        if (_windowSizeLargerButton != null)
+            _windowSizeLargerButton.Pressed -= OnWindowSizeLargerPressed;
+    }
+
+    public void Open()
+    {
+        ShowGameMenuPage();
+        Visible = true;
+    }
+
+    public void Close()
+    {
+        Visible = false;
     }
 
     private void OnResumePressed()
@@ -276,10 +335,79 @@ public partial class PauseMenu : Control
         PersistSettings();
     }
 
+    private void OnWindowSizeSmallerPressed()
+    {
+        StepWindowSize(-1);
+    }
+
+    private void OnWindowSizeLargerPressed()
+    {
+        StepWindowSize(1);
+    }
+
+    private void StepWindowSize(int delta)
+    {
+        var newIndex = Mathf.Clamp(_windowPresetIndex + delta, 0, WindowPresets.Length - 1);
+        if (newIndex == _windowPresetIndex)
+        {
+            RefreshWindowSizeView();
+            return;
+        }
+
+        _windowPresetIndex = newIndex;
+        var newSize = WindowPresets[_windowPresetIndex];
+        DisplayServer.WindowSetSize(newSize);
+        GD.Print($"Window size set to {newSize.X}x{newSize.Y}");
+        RefreshWindowSizeView();
+    }
+
+    private void InitializeWindowPreset()
+    {
+        var currentSize = DisplayServer.WindowGetSize();
+        var closestPresetIndex = 0;
+        var closestDistanceSq = int.MaxValue;
+
+        for (var i = 0; i < WindowPresets.Length; i++)
+        {
+            var preset = WindowPresets[i];
+            var dx = currentSize.X - preset.X;
+            var dy = currentSize.Y - preset.Y;
+            var distanceSq = dx * dx + dy * dy;
+            if (distanceSq < closestDistanceSq)
+            {
+                closestDistanceSq = distanceSq;
+                closestPresetIndex = i;
+            }
+        }
+
+        _windowPresetIndex = Mathf.Clamp(closestPresetIndex, 0, WindowPresets.Length - 1);
+    }
+
+    private void RefreshWindowSizeView()
+    {
+        if (_windowSizeLabel != null)
+        {
+            var size = WindowPresets[_windowPresetIndex];
+            _windowSizeLabel.Text = $"Window size: {size.X}x{size.Y}";
+        }
+
+        if (_windowSizeSmallerButton != null)
+            _windowSizeSmallerButton.Disabled = _windowPresetIndex == 0;
+
+        if (_windowSizeLargerButton != null)
+            _windowSizeLargerButton.Disabled = _windowPresetIndex == WindowPresets.Length - 1;
+    }
+
     private void PersistSettings()
     {
         if (!_gameConfigStore.TrySaveGameSettings(out var message))
             GD.PushWarning(message);
+    }
+
+    private void ShowGameMenuPage()
+    {
+        if (_gameMenuPage != null)
+            _gameMenuPage.Visible = true;
     }
 
     private void ShowMainView()
