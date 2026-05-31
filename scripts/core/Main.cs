@@ -29,7 +29,6 @@ public partial class Main : Node2D
     private CastBar _castBar;
     private PlayerSpellBar _spellBar;
     private PlayerSpellBindingWindow _spellBindingWindow;
-    private InventoryWindow _inventoryWindow;
     private CharacterWindow _characterWindow;
     private PlayerDebugStatsWindow _playerDebugStatsWindow;
     private MerchantWindow _merchantWindow;
@@ -38,7 +37,6 @@ public partial class Main : Node2D
     private const string CastBarScenePath = "res://scenes/ui/cast_bar.tscn";
     private const string PlayerSpellBarScenePath = "res://scenes/ui/player_spell_bar.tscn";
     private const string PlayerSpellBindingWindowScenePath = "res://scenes/ui/player_spell_binding_window.tscn";
-    private const string InventoryWindowScenePath = "res://scenes/ui/inventory_window.tscn";
     private const string CharacterWindowScenePath = "res://scenes/ui/character_window.tscn";
     private const string PlayerDebugStatsWindowScenePath = "res://scenes/ui/player_debug_stats_window.tscn";
     private const string MerchantWindowScenePath = "res://scenes/ui/merchant_window.tscn";
@@ -121,10 +119,14 @@ public partial class Main : Node2D
             ? _world.ResolveInventoryController()
             : null;
         var equipmentController = _player?.EquipmentControllerNode;
-        _inventoryWindow?.BindPlayer(_player);
-        _inventoryWindow?.Bind(_inventoryController, equipmentController);
         _characterWindow?.Bind(_inventoryController, equipmentController);
         _characterWindow?.BindStatsOwner(_player);
+
+        if (_menuHubRoot != null)
+        {
+            _menuHubRoot.BindInventoryPage(_player, _inventoryController, equipmentController);
+            _menuHubRoot.SetInventoryPageWorldDropHandlers(OnInventoryItemDroppedToWorld, OnGearDroppedToWorld);
+        }
 
         TryLoadFromSave();
     }
@@ -207,7 +209,6 @@ public partial class Main : Node2D
         UpdateInteractionPrompt(false);
         _gameOverActive = true;
         _spellBindingWindow?.CloseWindow();
-        _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
         _playerDebugStatsWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
@@ -236,7 +237,6 @@ public partial class Main : Node2D
             return;
 
         // Match the convention used by other window openers: close adjacent windows first.
-        _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
         _spellBindingWindow?.CloseWindow();
 
@@ -404,14 +404,6 @@ public partial class Main : Node2D
             hudCanvas.AddChild(_spellBindingWindow);
         }
 
-        var inventoryWindowScene = ResourceLoader.Load<PackedScene>(InventoryWindowScenePath);
-        if (inventoryWindowScene?.Instantiate<InventoryWindow>() is InventoryWindow inventoryWindow)
-        {
-            _inventoryWindow = inventoryWindow;
-            _inventoryWindow.Connect(InventoryWindow.SignalName.ItemDroppedToWorld, new Callable(this, nameof(OnInventoryItemDroppedToWorld)));
-            hudCanvas.AddChild(_inventoryWindow);
-        }
-
         var characterWindowScene = ResourceLoader.Load<PackedScene>(CharacterWindowScenePath);
         if (characterWindowScene?.Instantiate<CharacterWindow>() is CharacterWindow characterWindow)
         {
@@ -518,14 +510,14 @@ public partial class Main : Node2D
                 return true;
 
             CloseDebugTray();
-            OpenMenuHub();
+            OpenMenuHub(MenuHubPage.GameMenu);
             return true;
         }
 
         if (_menuHubOpen)
             CloseMenuHub();
         else
-            OpenMenuHub();
+            OpenMenuHub(MenuHubPage.GameMenu);
 
         return true;
     }
@@ -541,7 +533,6 @@ public partial class Main : Node2D
         if (_menuHubOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
             return true;
 
-        _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
         _spellBindingWindow?.ToggleWindow();
         return true;
@@ -555,11 +546,19 @@ public partial class Main : Node2D
         if (!InputMap.HasAction(ToggleInventoryActionName) || !@event.IsActionPressed(ToggleInventoryActionName))
             return false;
 
-        if (_menuHubOpen || (_debugTrayRoot != null && _debugTrayRoot.TrayVisible))
+        if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
             return true;
 
-        _spellBindingWindow?.CloseWindow();
-        _inventoryWindow?.ToggleWindow();
+        if (_menuHubOpen)
+        {
+            if (_menuHubRoot != null && _menuHubRoot.CurrentPage == MenuHubPage.Inventory)
+                CloseMenuHub();
+            else
+                _menuHubRoot?.SwitchTo(MenuHubPage.Inventory);
+            return true;
+        }
+
+        OpenMenuHub(MenuHubPage.Inventory);
         return true;
     }
 
@@ -595,16 +594,15 @@ public partial class Main : Node2D
         return true;
     }
 
-    private void OpenMenuHub()
+    private void OpenMenuHub(MenuHubPage page = MenuHubPage.GameMenu)
     {
         CloseDebugTray();
         _spellBindingWindow?.CloseWindow();
-        _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
         _menuHubOpen = true;
         if (_menuHubRoot != null)
-            _menuHubRoot.Open();
+            _menuHubRoot.Open(page);
 
         GetTree().Paused = true;
     }
@@ -621,7 +619,6 @@ public partial class Main : Node2D
 
     private void OpenDebugTray()
     {
-        _inventoryWindow?.CloseWindow();
         _characterWindow?.CloseWindow();
         _merchantWindow?.CloseWindow();
 
@@ -649,41 +646,9 @@ public partial class Main : Node2D
 
         var requestedAmount = Math.Max(1, amount);
 
-        // Preflight: require an active room and living player to receive the drop.
-        var room = _world?.ActiveRoom;
-        if (room == null || !GodotObject.IsInstanceValid(room))
+        if (!TryBuildWorldDropNode(entry.Definition, out var itemDrop, out var spawnParent))
             return;
 
-        if (_player == null || !GodotObject.IsInstanceValid(_player) || !_player.IsInsideTree())
-            return;
-
-        // Preflight: load and instantiate the drop scene before touching inventory.
-        var dropScene = ResourceLoader.Load<PackedScene>("res://scenes/world/drops/inventory_item_drop.tscn");
-        if (dropScene == null)
-        {
-            GD.PushError($"{nameof(Main)}: failed to load inventory_item_drop.tscn — item kept in inventory.");
-            return;
-        }
-
-        var instance = dropScene.Instantiate();
-        if (instance is not InventoryItemDrop itemDrop)
-        {
-            instance?.Free();
-            GD.PushError($"{nameof(Main)}: inventory_item_drop.tscn did not produce an InventoryItemDrop — item kept in inventory.");
-            return;
-        }
-
-        // Preflight: resolve the spawn parent.
-        var spawnParent = room.GetUnscaledEphemeralRoot();
-        if (spawnParent == null)
-        {
-            itemDrop.Free();
-            GD.PushError($"{nameof(Main)}: could not resolve unscaled ephemeral root — item kept in inventory.");
-            return;
-        }
-
-        // Configure the drop node (still not in inventory at this point).
-        itemDrop.ItemDefinition = entry.Definition;
         if (entry is InventoryGearEntry gearEntry)
         {
             // Preserve gear identity across drop/pickup so future rolls survive a world toss.
@@ -695,17 +660,6 @@ public partial class Main : Node2D
             // Partial-stack drags carry an explicit amount; clamp to the live stack
             // so a stale UI selection can never spawn more than the source holds.
             itemDrop.Quantity = Math.Min(requestedAmount, entry.Quantity);
-        }
-        itemDrop.PickupMode = DropPickupMode.InteractOnly;
-
-        // Compute spawn motion in the coordinate space of the ephemeral root's Node2D parent.
-        if (spawnParent.GetParent() is Node2D spawnOriginNode)
-        {
-            var angle = (float)GD.RandRange(0.0, Mathf.Tau);
-            var distance = (float)GD.RandRange(8.0, 20.0);
-            var offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
-            var localOrigin = spawnOriginNode.ToLocal(_player.GlobalPosition);
-            itemDrop.ConfigureSpawnMotion(localOrigin, localOrigin + offset);
         }
 
         // All preflight checks passed — remove from inventory now.
@@ -734,5 +688,78 @@ public partial class Main : Node2D
         }
 
         spawnParent.CallDeferred(Node.MethodName.AddChild, itemDrop);
+    }
+
+    private void OnGearDroppedToWorld(GearInstance gear)
+    {
+        if (gear?.Definition == null)
+            return;
+
+        if (!TryBuildWorldDropNode(gear.Definition, out var itemDrop, out var spawnParent))
+        {
+            // Roll back: page already unequipped the gear, so put it back in inventory
+            // if at all possible to avoid losing it.
+            if (_inventoryController != null && GodotObject.IsInstanceValid(_inventoryController))
+                _inventoryController.AddGear(gear);
+            return;
+        }
+
+        itemDrop.GearInstance = gear;
+        itemDrop.Quantity = 1;
+        spawnParent.CallDeferred(Node.MethodName.AddChild, itemDrop);
+    }
+
+    private bool TryBuildWorldDropNode(InventoryItemDefinition definition, out InventoryItemDrop itemDrop, out Node spawnParent)
+    {
+        itemDrop = null;
+        spawnParent = null;
+
+        // Preflight: require an active room and living player to receive the drop.
+        var room = _world?.ActiveRoom;
+        if (room == null || !GodotObject.IsInstanceValid(room))
+            return false;
+
+        if (_player == null || !GodotObject.IsInstanceValid(_player) || !_player.IsInsideTree())
+            return false;
+
+        var dropScene = ResourceLoader.Load<PackedScene>("res://scenes/world/drops/inventory_item_drop.tscn");
+        if (dropScene == null)
+        {
+            GD.PushError($"{nameof(Main)}: failed to load inventory_item_drop.tscn.");
+            return false;
+        }
+
+        var instance = dropScene.Instantiate();
+        if (instance is not InventoryItemDrop drop)
+        {
+            instance?.Free();
+            GD.PushError($"{nameof(Main)}: inventory_item_drop.tscn did not produce an InventoryItemDrop.");
+            return false;
+        }
+
+        var parent = room.GetUnscaledEphemeralRoot();
+        if (parent == null)
+        {
+            drop.Free();
+            GD.PushError($"{nameof(Main)}: could not resolve unscaled ephemeral root.");
+            return false;
+        }
+
+        drop.ItemDefinition = definition;
+        drop.PickupMode = DropPickupMode.InteractOnly;
+
+        // Compute spawn motion in the coordinate space of the ephemeral root's Node2D parent.
+        if (parent.GetParent() is Node2D spawnOriginNode)
+        {
+            var angle = (float)GD.RandRange(0.0, Mathf.Tau);
+            var distance = (float)GD.RandRange(8.0, 20.0);
+            var offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
+            var localOrigin = spawnOriginNode.ToLocal(_player.GlobalPosition);
+            drop.ConfigureSpawnMotion(localOrigin, localOrigin + offset);
+        }
+
+        itemDrop = drop;
+        spawnParent = parent;
+        return true;
     }
 }

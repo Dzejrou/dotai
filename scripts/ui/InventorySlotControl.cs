@@ -6,9 +6,9 @@ using System;
 public partial class InventorySlotControl : PanelContainer
 {
     // Raised by custom drop targets (e.g. the gear leveling reference slot) that
-    // accept an inventory-origin drag without going through InventoryWindow's
-    // OnSlotDropReceived / OnEquipmentDropReceived paths. The owning InventoryWindow
-    // listens so it can flip _dragConsumed and avoid spawning a world drop.
+    // accept an inventory-origin drag without going through the owning page's
+    // OnSlotDropReceived / OnEquipmentDropReceived paths. The owning page listens
+    // so it can flip its _dragConsumed flag and skip any drag-end side effects.
     public static event Action<int> DragConsumed;
 
     public static void NotifyDragConsumed(int sourceSlotIndex)
@@ -32,6 +32,10 @@ public partial class InventorySlotControl : PanelContainer
 
     // Invoked when an equipment-origin drag is dropped onto this inventory slot.
     public Action<int, int> EquipmentDropReceived { get; set; }
+
+    // Invoked when the trash buffer drag is dropped onto this inventory slot.
+    // The owning page resolves what's in the buffer and how to restore it.
+    public Action<int> TrashDropReceived { get; set; }
 
     // Invoked on any left mouse press over this slot so the owning window can move to front.
     public Action FocusRequested { get; set; }
@@ -115,13 +119,16 @@ public partial class InventorySlotControl : PanelContainer
         {
             // Inventory-origin drags are always "accepted" by another inventory slot so
             // that releasing over an incompatible target counts as a no-op (consumed)
-            // rather than falling through to the world-drop branch in InventoryWindow.
-            // The controller-level move/split decides whether the drop actually mutates.
+            // rather than falling through to a world-drop branch upstream. The
+            // controller-level move/split decides whether the drop actually mutates.
             return sourceSlot != SlotIndex;
         }
 
         if (TryReadEquipmentPayload(data, out _))
             return Inventory != null && Inventory.IsSlotEmpty(SlotIndex);
+
+        if (MenuHubUtilitySlot.IsTrashPayload(data))
+            return TrashDropReceived != null;
 
         return false;
     }
@@ -135,7 +142,13 @@ public partial class InventorySlotControl : PanelContainer
         }
 
         if (TryReadEquipmentPayload(data, out var equipmentSlot))
+        {
             EquipmentDropReceived?.Invoke(equipmentSlot, SlotIndex);
+            return;
+        }
+
+        if (MenuHubUtilitySlot.IsTrashPayload(data))
+            TrashDropReceived?.Invoke(SlotIndex);
     }
 
     public static Variant BuildInventoryPayload(int sourceSlot, int amount)

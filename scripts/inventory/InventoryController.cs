@@ -410,6 +410,43 @@ public partial class InventoryController : Node
         return true;
     }
 
+    // Places `stack` into a specific slot for callers that already own a detached
+    // InventoryStack (e.g. the hub's trash buffer restoring its contents). Empty
+    // targets receive the stack as-is. Matching stacks merge up to their capacity
+    // and the leftover is returned through `remainder`. Mismatched non-empty targets
+    // are rejected without mutation.
+    public bool TryPlaceStackAtSlot(int slotIndex, InventoryStack stack, out InventoryStack remainder)
+    {
+        remainder = null;
+        if (slotIndex < 0 || slotIndex >= _slots.Count) return false;
+        if (stack?.Item == null || stack.Quantity <= 0) return false;
+
+        var entry = _slots[slotIndex];
+        if (entry == null)
+        {
+            _slots[slotIndex] = new InventoryStackEntry(stack);
+            EmitInventoryChanged();
+            return true;
+        }
+
+        if (entry is InventoryStackEntry toStack &&
+            InventoryStackEntry.DefinitionsMatch(toStack.Stack.Item, stack.Item))
+        {
+            var available = toStack.Stack.AvailableSpace;
+            if (available <= 0)
+                return false;
+
+            var moved = Math.Min(stack.Quantity, available);
+            toStack.Stack.AddQuantity(moved);
+            var leftover = stack.Quantity - moved;
+            remainder = leftover > 0 ? new InventoryStack(stack.Item, leftover) : null;
+            EmitInventoryChanged();
+            return true;
+        }
+
+        return false;
+    }
+
     public InventoryEntry TakeEntry(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= _slots.Count) return null;
