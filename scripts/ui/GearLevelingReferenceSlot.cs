@@ -140,9 +140,9 @@ public partial class GearLevelingReferenceSlot : PanelContainer
         if (!changed)
             return;
 
-        // Tell the source inventory slot its drag was consumed by us. Otherwise
-        // InventoryWindow's drag-end handler will spawn a world drop because we
-        // referenced the stack without removing it.
+        // Tell the source inventory slot its drag was consumed by us so the
+        // owning page treats it as a no-op even though we only referenced the
+        // stack without removing it.
         if (InventorySlotControl.TryReadInventoryPayload(data, out var sourceSlot, out _))
             InventorySlotControl.NotifyDragConsumed(sourceSlot);
 

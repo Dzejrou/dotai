@@ -1,5 +1,13 @@
 using Godot;
 
+using System;
+
+public enum MenuHubPage
+{
+    GameMenu,
+    Inventory,
+}
+
 [GlobalClass]
 public partial class MenuHub : Control
 {
@@ -23,6 +31,12 @@ public partial class MenuHub : Control
         new Vector2I(1920, 1080),
         new Vector2I(2560, 1440),
     };
+
+    [Export]
+    public NodePath GameMenuPageRootPath { get; set; } = new NodePath("Center");
+
+    [Export]
+    public NodePath InventoryPagePath { get; set; } = new NodePath("InventoryPage");
 
     [Export]
     public NodePath GameMenuPagePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage");
@@ -82,6 +96,8 @@ public partial class MenuHub : Control
     public NodePath WindowSizeLargerButtonPath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage/SettingsView/WindowSizeRow/LargerButton");
 
     private readonly GameConfigStore _gameConfigStore = new();
+    private Control _gameMenuPageRoot;
+    private MenuHubInventoryPage _inventoryPage;
     private Control _gameMenuPage;
     private Control _mainView;
     private Control _settingsView;
@@ -105,12 +121,18 @@ public partial class MenuHub : Control
 
     public bool IsOpen => Visible;
 
+    public MenuHubPage CurrentPage { get; private set; } = MenuHubPage.GameMenu;
+
+    public MenuHubInventoryPage InventoryPage => _inventoryPage;
+
     public override void _Ready()
     {
         ProcessMode = ProcessModeEnum.Always;
 
         _gameConfigStore.LoadGameSettings();
 
+        _gameMenuPageRoot = GetNodeOrNull<Control>(GameMenuPageRootPath);
+        _inventoryPage = GetNodeOrNull<MenuHubInventoryPage>(InventoryPagePath);
         _gameMenuPage = GetNodeOrNull<Control>(GameMenuPagePath);
         _mainView = GetNodeOrNull<Control>(MainViewPath);
         _settingsView = GetNodeOrNull<Control>(SettingsViewPath);
@@ -200,7 +222,7 @@ public partial class MenuHub : Control
         InitializeWindowPreset();
         RefreshWindowSizeView();
 
-        ShowGameMenuPage();
+        ShowPage(MenuHubPage.GameMenu);
         ShowMainView();
     }
 
@@ -252,15 +274,42 @@ public partial class MenuHub : Control
             _windowSizeLargerButton.Pressed -= OnWindowSizeLargerPressed;
     }
 
-    public void Open()
+    public void Open(MenuHubPage page = MenuHubPage.GameMenu)
     {
-        ShowGameMenuPage();
+        ShowPage(page);
         Visible = true;
     }
 
     public void Close()
     {
         Visible = false;
+        _inventoryPage?.OnHubClosed();
+    }
+
+    public void SwitchTo(MenuHubPage page)
+    {
+        if (CurrentPage == page)
+            return;
+
+        ShowPage(page);
+    }
+
+    public void BindInventoryPage(Player player, InventoryController inventory, EquipmentController equipment)
+    {
+        if (_inventoryPage == null)
+            return;
+
+        _inventoryPage.BindPlayer(player);
+        _inventoryPage.Bind(inventory, equipment);
+    }
+
+    public void SetInventoryPageWorldDropHandlers(Action<int, int> inventoryDrop, Action<GearInstance> gearDrop)
+    {
+        if (_inventoryPage == null)
+            return;
+
+        _inventoryPage.InventoryDropToWorldRequested = inventoryDrop;
+        _inventoryPage.GearDropToWorldRequested = gearDrop;
     }
 
     private void OnResumePressed()
@@ -404,10 +453,18 @@ public partial class MenuHub : Control
             GD.PushWarning(message);
     }
 
-    private void ShowGameMenuPage()
+    private void ShowPage(MenuHubPage page)
     {
-        if (_gameMenuPage != null)
-            _gameMenuPage.Visible = true;
+        CurrentPage = page;
+
+        if (_gameMenuPageRoot != null)
+            _gameMenuPageRoot.Visible = page == MenuHubPage.GameMenu;
+
+        if (_inventoryPage != null)
+            _inventoryPage.Visible = page == MenuHubPage.Inventory;
+
+        if (page == MenuHubPage.Inventory)
+            _inventoryPage?.OnPageEntered();
     }
 
     private void ShowMainView()

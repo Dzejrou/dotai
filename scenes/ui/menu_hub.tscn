@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/MenuHub.cs" id="1_menu_hub"]
+[ext_resource type="Script" path="res://scripts/ui/MenuHubInventoryPage.cs" id="2_inventory_page"]
 
 [node name="MenuHub" type="CanvasLayer"]
 layer = 200
@@ -142,3 +143,111 @@ text = "Larger"
 [node name="BackButton" type="Button" parent="Root/Center/Panel/Pages/GameMenuPage/SettingsView"]
 layout_mode = 2
 text = "Back"
+
+[node name="InventoryPage" type="Control" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("2_inventory_page")
+
+[node name="Margin" type="MarginContainer" parent="Root/InventoryPage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="Root/InventoryPage/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="PageTitle" type="Label" parent="Root/InventoryPage/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Inventory & Equipment"
+horizontal_alignment = 1
+
+[node name="TopRow" type="HBoxContainer" parent="Root/InventoryPage/Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="EquipmentArea" type="VBoxContainer" parent="Root/InventoryPage/Margin/VBox/TopRow"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="EquipmentTitle" type="Label" parent="Root/InventoryPage/Margin/VBox/TopRow/EquipmentArea"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Equipment"
+
+[node name="Slots" type="Control" parent="Root/InventoryPage/Margin/VBox/TopRow/EquipmentArea"]
+custom_minimum_size = Vector2(360, 160)
+layout_mode = 2
+
+[node name="LevelingArea" type="VBoxContainer" parent="Root/InventoryPage/Margin/VBox/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="LevelingTitle" type="Label" parent="Root/InventoryPage/Margin/VBox/TopRow/LevelingArea"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Gear Leveling"
+
+[node name="BottomRow" type="HBoxContainer" parent="Root/InventoryPage/Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="InventoryColumn" type="VBoxContainer" parent="Root/InventoryPage/Margin/VBox/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="InventoryTitle" type="Label" parent="Root/InventoryPage/Margin/VBox/BottomRow/InventoryColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Inventory"
+
+[node name="AmountRow" type="HBoxContainer" parent="Root/InventoryPage/Margin/VBox/BottomRow/InventoryColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SlotGrid" type="GridContainer" parent="Root/InventoryPage/Margin/VBox/BottomRow/InventoryColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 10
+
+[node name="Summary" type="Label" parent="Root/InventoryPage/Margin/VBox/BottomRow/InventoryColumn"]
+layout_mode = 2
+text = "0/0 slots occupied"
+
+[node name="UtilityColumn" type="VBoxContainer" parent="Root/InventoryPage/Margin/VBox/BottomRow"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="UtilityTitle" type="Label" parent="Root/InventoryPage/Margin/VBox/BottomRow/UtilityColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Utility"
