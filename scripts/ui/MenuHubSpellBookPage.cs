@@ -3,32 +3,24 @@ using Godot;
 using System.Collections.Generic;
 
 [GlobalClass]
-public partial class PlayerSpellBindingWindow : Control
+public partial class MenuHubSpellBookPage : Control
 {
     [Export]
-    public NodePath TitleLabelPath { get; set; } = new("Center/Panel/Margin/VBox/Header/Title");
+    public NodePath SelectionLabelPath { get; set; } = new("Margin/VBox/SelectionLabel");
 
     [Export]
-    public NodePath CloseButtonPath { get; set; } = new("Center/Panel/Margin/VBox/Header/CloseButton");
+    public NodePath SpellGridPath { get; set; } = new("Margin/VBox/SpellList/SpellGrid");
 
     [Export]
-    public NodePath SelectionLabelPath { get; set; } = new("Center/Panel/Margin/VBox/SelectionLabel");
+    public NodePath TestTogglePath { get; set; } = new("Margin/VBox/Header/TestToggle");
 
     [Export]
-    public NodePath SpellGridPath { get; set; } = new("Center/Panel/Margin/VBox/SpellList/SpellGrid");
+    public NodePath SlotGridPath { get; set; } = new("Margin/VBox/SlotSection/SlotGrid");
 
     [Export]
-    public NodePath TestTogglePath { get; set; } = new("Center/Panel/Margin/VBox/Header/TestToggle");
-
-    [Export]
-    public NodePath SlotGridPath { get; set; } = new("Center/Panel/Margin/VBox/SlotSection/SlotGrid");
-
-    [Export]
-    public NodePath SaveButtonPath { get; set; } = new("Center/Panel/Margin/VBox/Footer/SaveButton");
+    public NodePath SaveButtonPath { get; set; } = new("Margin/VBox/Footer/SaveButton");
 
     private Player _player;
-    private Label _titleLabel;
-    private Button _closeButton;
     private Label _selectionLabel;
     private CheckButton _testToggle;
     private GridContainer _spellGrid;
@@ -42,18 +34,12 @@ public partial class PlayerSpellBindingWindow : Control
     public override void _Ready()
     {
         ProcessMode = ProcessModeEnum.Always;
-        Visible = false;
 
-        _titleLabel = GetNodeOrNull<Label>(TitleLabelPath);
-        _closeButton = GetNodeOrNull<Button>(CloseButtonPath);
         _selectionLabel = GetNodeOrNull<Label>(SelectionLabelPath);
         _testToggle = GetNodeOrNull<CheckButton>(TestTogglePath);
         _spellGrid = GetNodeOrNull<GridContainer>(SpellGridPath);
         _slotGrid = GetNodeOrNull<GridContainer>(SlotGridPath);
         _saveButton = GetNodeOrNull<Button>(SaveButtonPath);
-
-        if (_closeButton != null)
-            _closeButton.Pressed += CloseWindow;
 
         if (_testToggle != null)
         {
@@ -70,9 +56,6 @@ public partial class PlayerSpellBindingWindow : Control
 
     public override void _ExitTree()
     {
-        if (_closeButton != null)
-            _closeButton.Pressed -= CloseWindow;
-
         if (_testToggle != null)
             _testToggle.Toggled -= OnTestToggleToggled;
 
@@ -107,30 +90,13 @@ public partial class PlayerSpellBindingWindow : Control
         RefreshSelectionLabel();
     }
 
-    public void ToggleWindow()
+    // Called by MenuHub when this page becomes the active one.
+    public void OnPageEntered()
     {
-        if (_player == null || !GodotObject.IsInstanceValid(_player))
-            return;
-
-        if (Visible)
-        {
-            CloseWindow();
-            return;
-        }
-
-        Visible = true;
         _selectedSpellTemplate = null;
-        RefreshSpellButtons();
+        RebuildSpellButtons();
         RefreshSlotButtons();
         RefreshSelectionLabel();
-    }
-
-    public void CloseWindow()
-    {
-        Visible = false;
-        _selectedSpellTemplate = null;
-        RefreshSelectionLabel();
-        RefreshSpellButtons();
     }
 
     private void OnPlayerSpellLoadoutChanged()
