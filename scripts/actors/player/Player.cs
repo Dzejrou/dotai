@@ -47,15 +47,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public float Speed { get; set; } = 140.0f;
 
     [Export]
-    public float HealthRegenerationInterval { get; set; } = 5.0f;
-
-    [Export]
-    public int HealthRegenerationAmount { get; set; } = 1;
-
-    [Export]
-    public float HealthRegenerationDelayAfterDamage { get; set; } = 5.0f;
-
-    [Export]
     public float SoftTargetRange { get; set; } = 180.0f;
 
     [Export]
@@ -88,8 +79,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
     private PendingPlayerCast _pendingCast;
     private IPlacementSpell _pendingPlacementSpell;
-    private float _healthRegenTimer;
-    private float _healthRegenDelayTimer;
     private float _spellCastPushbackCooldownRemaining;
     private IInteractable _activeInteractable;
     private Node2D _activeInteractableNode;
@@ -256,11 +245,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             NotifyManaChanged();
 
         TickSpellCastPushbackCooldown((float)delta);
-        HandleHealthRegenerationDelay((float)delta);
-        if (InCombat)
-            _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
-        else
-            HandleHealthRegeneration((float)delta);
         if (Input.IsActionJustPressed("tab_target"))
             CycleTabTarget(1);
         if (Input.IsActionJustPressed("tab_target_reverse"))
@@ -348,7 +332,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
 
         ShowFloatingDamageNumber(damage, damageInfo.IsCritical);
-        _healthRegenDelayTimer = Math.Max(HealthRegenerationDelayAfterDamage, 0.0f);
         _restingController?.CancelAll();
         TryApplySpellCastPushback(damage);
 
@@ -377,7 +360,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         ShowFloatingHealingNumber(recovered);
         CombatLog.Heal(this, recovered);
-        _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
     public int AddGold(int amount)
@@ -603,10 +585,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         var recovered = HealthStateNode.ApplyHealing(amount);
         if (recovered > 0)
-        {
             ShowFloatingHealingNumber(recovered);
-            _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
-        }
 
         return recovered;
     }
@@ -1149,44 +1128,6 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return null;
 
         return actor.GetNodeOrNull<ActorHUD>("ActorHUD");
-    }
-
-    private void HandleHealthRegeneration(float delta)
-    {
-        if (CurrentHealth >= MaxHealableHealth)
-        {
-            _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
-            return;
-        }
-
-        _healthRegenTimer -= delta;
-        if (_healthRegenTimer > 0.0f)
-            return;
-
-        if (CurrentHealth < MaxHealableHealth)
-        {
-            var missingHealth = MaxHealableHealth - CurrentHealth;
-            var recovered = Math.Clamp(HealthRegenerationAmount, 1, missingHealth);
-            var healing = new Healing();
-            healing.InitializeRuntime(this, recovered);
-            ApplyHealing(healing);
-        }
-
-        var interval = Math.Max(HealthRegenerationInterval, 0.0f);
-        if (interval == 0.0f)
-            _healthRegenTimer = 0.0f;
-        else
-            _healthRegenTimer = interval;
-    }
-
-    private void HandleHealthRegenerationDelay(float delta)
-    {
-        if (_healthRegenDelayTimer <= 0.0f)
-            return;
-
-        _healthRegenDelayTimer -= delta;
-        _healthRegenDelayTimer = Math.Max(0.0f, _healthRegenDelayTimer);
-        _healthRegenTimer = Math.Max(HealthRegenerationInterval, 0.0f);
     }
 
     private void ShowFloatingDamageNumber(int amount, bool isCritical)
