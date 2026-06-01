@@ -341,6 +341,7 @@ public partial class Main : Node2D
         {
             _player.ApplyLoadedLevelAndExperience(data.Player.Level, data.Player.CurrentExperience);
             _player.ApplyLoadedHealthAndMana(data.Player.CurrentHealth, data.Player.CurrentMana);
+            _player.ApplyLoadedQuickConsumables(data.Player.QuickFoodItemId, data.Player.QuickDrinkItemId);
         }
 
         GD.Print($"Loaded save from {SaveGameStore.SaveFilePath}.");

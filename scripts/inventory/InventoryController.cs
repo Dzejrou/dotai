@@ -281,6 +281,58 @@ public partial class InventoryController : Node
         return consumed;
     }
 
+    // Returns the index of the first stack slot whose item id matches, or -1 when
+    // none is found. Gear entries are ignored: assignments operate on stacks only.
+    public int FindFirstStackSlotByItemId(string itemId)
+    {
+        if (string.IsNullOrEmpty(itemId))
+            return -1;
+
+        for (var i = 0; i < _slots.Count; i++)
+        {
+            if (_slots[i] is not InventoryStackEntry stackEntry)
+                continue;
+
+            var item = stackEntry.Stack.Item;
+            if (item != null && string.Equals(item.Id, itemId, StringComparison.Ordinal))
+                return i;
+        }
+
+        return -1;
+    }
+
+    // Total quantity held across every stack slot matching the item id. Gear entries
+    // are ignored.
+    public int GetQuantityByItemId(string itemId)
+    {
+        if (string.IsNullOrEmpty(itemId))
+            return 0;
+
+        var total = 0;
+        foreach (var entry in _slots)
+        {
+            if (entry is not InventoryStackEntry stackEntry)
+                continue;
+
+            var item = stackEntry.Stack.Item;
+            if (item != null && string.Equals(item.Id, itemId, StringComparison.Ordinal))
+                total += stackEntry.Stack.Quantity;
+        }
+
+        return total;
+    }
+
+    // Consumes a single unit of the given item id from the first matching stack slot.
+    // Returns true when one unit was consumed.
+    public bool TryConsumeOneByItemId(string itemId)
+    {
+        var slotIndex = FindFirstStackSlotByItemId(itemId);
+        if (slotIndex < 0)
+            return false;
+
+        return TryConsumeFromStackSlot(slotIndex, itemId, 1) > 0;
+    }
+
     public void Clear()
     {
         var changed = false;

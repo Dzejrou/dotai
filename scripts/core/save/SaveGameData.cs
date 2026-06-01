@@ -16,6 +16,11 @@ public sealed class PlayerSaveData
     public int CurrentExperience { get; set; }
     public int CurrentHealth { get; set; }
     public int CurrentMana { get; set; }
+
+    // Quick consumable assignments stored by item-definition id. Older saves without
+    // these fields deserialize to empty strings, which load as empty assignments.
+    public string QuickFoodItemId { get; set; } = string.Empty;
+    public string QuickDrinkItemId { get; set; } = string.Empty;
 }
 
 public sealed class InventorySaveData

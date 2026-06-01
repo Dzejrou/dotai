@@ -105,6 +105,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     public SpellBook TestSpellBookNode { get; private set; }
     public IReadOnlyList<SpellBook> ExtraSpellBookNodes => _extraSpellBooks;
     public SpellLoadout SpellLoadoutNode { get; private set; }
+    public QuickConsumableLoadout QuickConsumableLoadoutNode { get; private set; }
     public bool CanCastSpells => !_isDead;
     public bool HasInteractionTarget => _activeInteractable != null;
     public Node2D CurrentInteractionTarget => _activeInteractableNode;
@@ -161,6 +162,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         BindStatusEffects();
         InitializeSpellInventory();
         LoadEquippedSpells();
+        QuickConsumableLoadoutNode = GetNodeOrNull<QuickConsumableLoadout>("QuickConsumableLoadout");
+        if (QuickConsumableLoadoutNode == null)
+            GD.PushError($"{GetPath()}: missing required QuickConsumableLoadout child.");
         _restingController = GetNodeOrNull<RestingController>("RestingController");
         _restingController?.Initialize(this);
         SetAnimationSafe(GetIdleAnimationName());
@@ -450,7 +454,35 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             CurrentExperience = _currentExperience,
             CurrentHealth = CurrentHealth,
             CurrentMana = CurrentMana,
+            QuickFoodItemId = QuickConsumableLoadoutNode?.FoodItemId ?? string.Empty,
+            QuickDrinkItemId = QuickConsumableLoadoutNode?.DrinkItemId ?? string.Empty,
         };
+    }
+
+    // Applies persisted quick consumable assignments. Ids that no longer resolve in the
+    // item catalog (or resolve to the wrong kind) are treated as empty and dropped
+    // silently — stale player-save assignment data is not a warning-worthy condition.
+    public void ApplyLoadedQuickConsumables(string foodItemId, string drinkItemId)
+    {
+        if (QuickConsumableLoadoutNode == null || !GodotObject.IsInstanceValid(QuickConsumableLoadoutNode))
+            return;
+
+        var catalog = InventoryController?.ItemCatalog;
+        var resolvedFood = ResolveAssignedConsumableId(catalog, foodItemId, ConsumableKind.Food);
+        var resolvedDrink = ResolveAssignedConsumableId(catalog, drinkItemId, ConsumableKind.Drink);
+        QuickConsumableLoadoutNode.ApplyLoadedAssignments(resolvedFood, resolvedDrink);
+    }
+
+    private static string ResolveAssignedConsumableId(InventoryItemCatalog catalog, string itemId, ConsumableKind expectedKind)
+    {
+        if (string.IsNullOrEmpty(itemId) || catalog == null)
+            return string.Empty;
+
+        var definition = catalog.Resolve(itemId, null);
+        if (definition == null || definition.ConsumableKind != expectedKind)
+            return string.Empty;
+
+        return itemId;
     }
 
     public void ApplyLoadedLevelAndExperience(int level, int currentExperience)
@@ -632,6 +664,68 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
 
         var consumed = inventory.TryConsumeFromStackSlot(slotIndex, definition.Id, 1);
         if (consumed <= 0)
+        {
+            _restingController.CancelAll();
+            return false;
+        }
+
+        var label = string.IsNullOrEmpty(definition.DisplayName) ? definition.Id : definition.DisplayName;
+        CombatLog.Info($"Player uses {label}.");
+        return true;
+    }
+
+    // Activates the persistent quick food/drink assignment. Wired for future action-bar
+    // use; the hub page only configures assignments for now. Mirrors the direct
+    // inventory-use flow: validate, start the resting consumable flow, then consume one.
+    public bool TryConsumeQuickAssignment(ConsumableKind kind)
+    {
+        if (_isDead || _restingController == null)
+            return false;
+
+        if (kind != ConsumableKind.Food && kind != ConsumableKind.Drink)
+            return false;
+
+        if (QuickConsumableLoadoutNode == null || !GodotObject.IsInstanceValid(QuickConsumableLoadoutNode))
+            return false;
+
+        var inventory = InventoryController;
+        if (inventory == null || !GodotObject.IsInstanceValid(inventory))
+            return false;
+
+        var assignedId = QuickConsumableLoadoutNode.GetAssignedItemId(kind);
+        if (string.IsNullOrEmpty(assignedId))
+        {
+            CombatLog.Info(kind == ConsumableKind.Food ? "No food assigned." : "No drink assigned.");
+            return false;
+        }
+
+        var definition = inventory.ItemCatalog?.Resolve(assignedId, null);
+        if (definition == null || definition.ConsumableKind != kind)
+        {
+            CombatLog.Info(kind == ConsumableKind.Food
+                ? "Assigned food is no longer available."
+                : "Assigned drink is no longer available.");
+            QuickConsumableLoadoutNode.Clear(kind);
+            return false;
+        }
+
+        if (inventory.FindFirstStackSlotByItemId(assignedId) < 0)
+        {
+            var missingLabel = string.IsNullOrEmpty(definition.DisplayName) ? definition.Id : definition.DisplayName;
+            CombatLog.Info($"No {missingLabel} in inventory.");
+            return false;
+        }
+
+        if (InCombat)
+        {
+            CombatLog.Info("Can't eat or drink while in combat.");
+            return false;
+        }
+
+        if (!_restingController.TryStartFromDefinition(definition))
+            return false;
+
+        if (!inventory.TryConsumeOneByItemId(definition.Id))
         {
             _restingController.CancelAll();
             return false;
