@@ -9,6 +9,7 @@ public partial class RestingController : Node
     private const string SitIdleAnimationPrefix = "sit-idle";
     private const string EatAnimationPrefix = "eat";
     private const string DrinkAnimationPrefix = "drink";
+    private const string StandUpAnimationPrefix = "stand-up";
 
     private enum RestingPhase
     {
@@ -16,6 +17,7 @@ public partial class RestingController : Node
         SittingDown,
         Active,
         SitIdle,
+        StandingUp,
     }
 
     private sealed class TrackState
@@ -105,6 +107,24 @@ public partial class RestingController : Node
         _phase = RestingPhase.None;
         _lastStartedKind = ConsumableKind.None;
         _currentAnimationName = null;
+    }
+
+    public void CancelFromDamage()
+    {
+        if (_phase == RestingPhase.None || _phase == RestingPhase.StandingUp)
+            return;
+
+        _food.Active = false;
+        _drink.Active = false;
+        _lastStartedKind = ConsumableKind.None;
+
+        _phase = RestingPhase.StandingUp;
+        _currentAnimationName = null;
+        if (!PlayPrefix(StandUpAnimationPrefix))
+        {
+            _phase = RestingPhase.None;
+            _currentAnimationName = null;
+        }
     }
 
     public bool ShouldSuppressDefaultAnimation()
@@ -203,6 +223,9 @@ public partial class RestingController : Node
             case RestingPhase.SitIdle:
                 PlayPrefix(SitIdleAnimationPrefix);
                 break;
+            case RestingPhase.StandingUp:
+                PlayPrefix(StandUpAnimationPrefix);
+                break;
         }
     }
 
@@ -254,11 +277,17 @@ public partial class RestingController : Node
 
     private void OnOmniSpriteAnimationFinished()
     {
-        if (_phase != RestingPhase.SittingDown)
-            return;
-
-        _phase = (_food.Active || _drink.Active) ? RestingPhase.Active : RestingPhase.SitIdle;
-        _currentAnimationName = null;
-        UpdateAnimation();
+        switch (_phase)
+        {
+            case RestingPhase.SittingDown:
+                _phase = (_food.Active || _drink.Active) ? RestingPhase.Active : RestingPhase.SitIdle;
+                _currentAnimationName = null;
+                UpdateAnimation();
+                break;
+            case RestingPhase.StandingUp:
+                _phase = RestingPhase.None;
+                _currentAnimationName = null;
+                break;
+        }
     }
 }
