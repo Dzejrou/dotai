@@ -332,7 +332,7 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             return;
 
         ShowFloatingDamageNumber(damage, damageInfo.IsCritical);
-        _restingController?.CancelAll();
+        _restingController?.CancelFromDamage();
         TryApplySpellCastPushback(damage);
 
         if (HealthStateNode.IsDead)
