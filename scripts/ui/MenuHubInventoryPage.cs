@@ -96,6 +96,10 @@ public partial class MenuHubInventoryPage : Control
     private Label _trashQuantityLabel;
     private Label _trashPlaceholder;
 
+    private readonly Dictionary<ConsumableKind, QuickConsumableSlotView> _quickConsumableSlots = new();
+    private QuickConsumableLoadout _quickLoadout;
+    private bool _quickLoadoutBound;
+
     private int _activeDragSlot = -1;
     private int _activeDragAmount = MaxAmountResolved;
     private bool _dragConsumed;
@@ -129,6 +133,7 @@ public partial class MenuHubInventoryPage : Control
         InventorySlotControl.DragConsumed -= OnExternalDragConsumed;
         UnbindCurrentInventory();
         UnbindCurrentEquipment();
+        UnbindQuickConsumableLoadout();
     }
 
     public void BindPlayer(Player player)
@@ -177,10 +182,54 @@ public partial class MenuHubInventoryPage : Control
             view.Root.Equipment = _equipment;
         }
 
+        foreach (var view in _quickConsumableSlots.Values)
+            view.Root.Inventory = _inventory;
+
         _levelingPanel?.Bind(_inventory, _equipment);
+
+        BindQuickConsumableLoadout();
 
         RebuildSlotsForCapacity();
         Refresh();
+    }
+
+    private void BindQuickConsumableLoadout()
+    {
+        var loadout = _player != null && GodotObject.IsInstanceValid(_player)
+            ? _player.QuickConsumableLoadoutNode
+            : null;
+
+        if (ReferenceEquals(_quickLoadout, loadout))
+            return;
+
+        UnbindQuickConsumableLoadout();
+        _quickLoadout = loadout;
+
+        if (_quickLoadout == null || !GodotObject.IsInstanceValid(_quickLoadout))
+            return;
+
+        var callable = new Callable(this, nameof(OnQuickConsumablesChanged));
+        if (!_quickLoadout.IsConnected(QuickConsumableLoadout.SignalName.QuickConsumablesChanged, callable))
+            _quickLoadout.Connect(QuickConsumableLoadout.SignalName.QuickConsumablesChanged, callable);
+
+        _quickLoadoutBound = true;
+    }
+
+    private void UnbindQuickConsumableLoadout()
+    {
+        if (!_quickLoadoutBound || _quickLoadout == null || !GodotObject.IsInstanceValid(_quickLoadout))
+        {
+            _quickLoadoutBound = false;
+            _quickLoadout = null;
+            return;
+        }
+
+        var callable = new Callable(this, nameof(OnQuickConsumablesChanged));
+        if (_quickLoadout.IsConnected(QuickConsumableLoadout.SignalName.QuickConsumablesChanged, callable))
+            _quickLoadout.Disconnect(QuickConsumableLoadout.SignalName.QuickConsumablesChanged, callable);
+
+        _quickLoadoutBound = false;
+        _quickLoadout = null;
     }
 
     // Called by MenuHub when the hub is closing so we can drop the temporary
@@ -464,6 +513,59 @@ public partial class MenuHubInventoryPage : Control
         trashOverlay.AddChild(_trashPlaceholder);
 
         _utilityColumn.AddChild(_trashSlot);
+
+        BuildQuickConsumableSlot(ConsumableKind.Food, "FOOD");
+        BuildQuickConsumableSlot(ConsumableKind.Drink, "DRINK");
+    }
+
+    private void BuildQuickConsumableSlot(ConsumableKind kind, string placeholderText)
+    {
+        if (_utilityColumn == null)
+            return;
+
+        var slot = new MenuHubQuickConsumableSlot
+        {
+            Name = $"{kind}QuickSlot",
+            Kind = kind,
+            Inventory = _inventory,
+            MouseFilter = MouseFilterEnum.Stop,
+            CustomMinimumSize = new Vector2(UtilitySlotSize, UtilitySlotSize),
+        };
+        slot.AssignRequested = sourceSlot => OnQuickConsumableAssign(kind, sourceSlot);
+        slot.ClearRequested = () => OnQuickConsumableClear(kind);
+
+        var overlay = new Control { MouseFilter = MouseFilterEnum.Ignore };
+        overlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        slot.AddChild(overlay);
+
+        var icon = new TextureRect
+        {
+            MouseFilter = MouseFilterEnum.Ignore,
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            Visible = false,
+        };
+        icon.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        icon.OffsetLeft = 4;
+        icon.OffsetTop = 4;
+        icon.OffsetRight = -4;
+        icon.OffsetBottom = -4;
+        overlay.AddChild(icon);
+
+        var placeholder = new Label
+        {
+            Text = placeholderText,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore,
+            Modulate = new Color(1.0f, 1.0f, 1.0f, 0.55f),
+        };
+        placeholder.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        overlay.AddChild(placeholder);
+
+        _utilityColumn.AddChild(slot);
+        _quickConsumableSlots[kind] = new QuickConsumableSlotView(slot, icon, placeholder);
     }
 
     private MenuHubUtilitySlot BuildUtilitySlot(string title, MenuHubUtilityKind kind)
@@ -512,6 +614,7 @@ public partial class MenuHubInventoryPage : Control
         RefreshSlots();
         RefreshEquipmentSlots();
         RefreshTrashSlot();
+        RefreshQuickConsumableSlots();
         _levelingPanel?.RefreshPanel();
     }
 
@@ -598,6 +701,77 @@ public partial class MenuHubInventoryPage : Control
         _trashQuantityLabel.Text = _trashBuffer.ShowQuantity ? _trashBuffer.Quantity.ToString() : string.Empty;
         if (_trashSlot != null)
             _trashSlot.TooltipText = _trashBuffer.TooltipText;
+    }
+
+    private void OnQuickConsumablesChanged()
+    {
+        RefreshQuickConsumableSlots();
+    }
+
+    private void OnQuickConsumableAssign(ConsumableKind kind, int sourceSlotIndex)
+    {
+        if (_quickLoadout == null || !GodotObject.IsInstanceValid(_quickLoadout))
+            return;
+
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return;
+
+        // Assignment records the item-definition id only; the inventory stack is left intact.
+        if (!_inventory.TryGetEntry(sourceSlotIndex, out var entry) || entry is not InventoryStackEntry stackEntry)
+            return;
+
+        _quickLoadout.TryAssign(kind, stackEntry.Stack.Item);
+    }
+
+    private void OnQuickConsumableClear(ConsumableKind kind)
+    {
+        if (_quickLoadout == null || !GodotObject.IsInstanceValid(_quickLoadout))
+            return;
+
+        _quickLoadout.Clear(kind);
+    }
+
+    private void RefreshQuickConsumableSlots()
+    {
+        foreach (var pair in _quickConsumableSlots)
+        {
+            var kind = pair.Key;
+            var view = pair.Value;
+
+            var assignedId = _quickLoadout != null && GodotObject.IsInstanceValid(_quickLoadout)
+                ? _quickLoadout.GetAssignedItemId(kind)
+                : string.Empty;
+
+            var definition = ResolveQuickAssignmentDefinition(assignedId);
+            if (definition == null)
+            {
+                view.Icon.Texture = null;
+                view.Icon.Visible = false;
+                view.Placeholder.Visible = true;
+                view.Root.TooltipText = kind == ConsumableKind.Food
+                    ? "Drag a food item here to assign your quick food. Right-click to clear."
+                    : "Drag a drink item here to assign your quick drink. Right-click to clear.";
+                continue;
+            }
+
+            var quantity = _inventory != null && GodotObject.IsInstanceValid(_inventory)
+                ? _inventory.GetQuantityByItemId(assignedId)
+                : 0;
+            var displayName = string.IsNullOrEmpty(definition.DisplayName) ? definition.Id : definition.DisplayName;
+
+            view.Icon.Texture = definition.Icon;
+            view.Icon.Visible = definition.Icon != null;
+            view.Placeholder.Visible = definition.Icon == null;
+            view.Root.TooltipText = $"{displayName}\nIn inventory: {quantity}";
+        }
+    }
+
+    private InventoryItemDefinition ResolveQuickAssignmentDefinition(string itemId)
+    {
+        if (string.IsNullOrEmpty(itemId) || _inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return null;
+
+        return _inventory.ItemCatalog?.Resolve(itemId, null);
     }
 
     private void OnExternalDragConsumed(int sourceSlotIndex)
@@ -874,6 +1048,20 @@ public partial class MenuHubInventoryPage : Control
 
         public EquipmentSlotControl Root { get; }
         public TextureRect IconRect { get; }
+        public Label Placeholder { get; }
+    }
+
+    private sealed class QuickConsumableSlotView
+    {
+        public QuickConsumableSlotView(MenuHubQuickConsumableSlot root, TextureRect icon, Label placeholder)
+        {
+            Root = root;
+            Icon = icon;
+            Placeholder = placeholder;
+        }
+
+        public MenuHubQuickConsumableSlot Root { get; }
+        public TextureRect Icon { get; }
         public Label Placeholder { get; }
     }
 }
