@@ -213,16 +213,16 @@ public partial class PlayerSpellBar : Control
         {
             Name = "Keybind",
             Text = ResolveActionLabel(slotAction),
-            Position = new Vector2(0.0f, SlotSize.Y - 15.0f),
-            Size = new Vector2(SlotSize.X, 14.0f),
+            Position = new Vector2(0.0f, SlotSize.Y - 16.0f),
+            Size = new Vector2(SlotSize.X, 16.0f),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        keyLabel.AddThemeFontSizeOverride("font_size", 11);
+        // Gold-on-dark sits below the icon, so no outline is needed; a heavy outline
+        // at a small font size fills the gap in glyphs like "Q" and makes it read "O".
+        keyLabel.AddThemeFontSizeOverride("font_size", 14);
         keyLabel.AddThemeColorOverride("font_color", KeyLabelColor);
-        keyLabel.AddThemeConstantOverride("outline_size", 3);
-        keyLabel.AddThemeColorOverride("font_outline_color", new Color(0.0f, 0.0f, 0.0f, 0.85f));
         slotRoot.AddChild(keyLabel);
 
         var armedOverlay = CreateOverlay(
@@ -425,16 +425,9 @@ public partial class PlayerSpellBar : Control
         slotView.Icon.Texture = spell.Icon;
         slotView.Icon.Visible = spell.Icon != null;
 
-        var manaCost = spell.DisplayManaCost;
-        if (manaCost > 0)
-        {
-            slotView.ManaLabel.Text = manaCost.ToString();
-            slotView.ManaLabel.Visible = true;
-        }
-        else
-        {
-            slotView.ManaLabel.Visible = false;
-        }
+        // Always show the cost, including 0, so every bound spell slot reads consistently.
+        slotView.ManaLabel.Text = spell.DisplayManaCost.ToString();
+        slotView.ManaLabel.Visible = true;
     }
 
     private void RefreshConsumableSlot(ActionSlotView slotView)
