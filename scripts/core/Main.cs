@@ -160,6 +160,10 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_debugTrayRoot) &&
             _debugTrayRoot.IsConnected(DebugTray.SignalName.PlayerStatsRequested, new Callable(this, nameof(OnDebugTrayPlayerStatsRequested))))
             _debugTrayRoot.Disconnect(DebugTray.SignalName.PlayerStatsRequested, new Callable(this, nameof(OnDebugTrayPlayerStatsRequested)));
+
+        if (GodotObject.IsInstanceValid(_spellBar) &&
+            _spellBar.IsConnected(PlayerSpellBar.SignalName.MenuRequested, new Callable(this, nameof(OnSpellBarMenuRequested))))
+            _spellBar.Disconnect(PlayerSpellBar.SignalName.MenuRequested, new Callable(this, nameof(OnSpellBarMenuRequested)));
     }
 
     public override void _Input(InputEvent @event)
@@ -235,6 +239,14 @@ public partial class Main : Node2D
         _restartingFromGameOver = true;
         GetTree().Paused = false;
         GetTree().ReloadCurrentScene();
+    }
+
+    private void OnSpellBarMenuRequested()
+    {
+        if (_menuHubOpen)
+            return;
+
+        OpenMenuHub(MenuHubPage.GameMenu);
     }
 
     private void OnMenuHubResumeRequested()
@@ -383,6 +395,7 @@ public partial class Main : Node2D
         {
             _spellBar = spellBar;
             hudCanvas.AddChild(_spellBar);
+            _spellBar.Connect(PlayerSpellBar.SignalName.MenuRequested, new Callable(this, nameof(OnSpellBarMenuRequested)));
         }
 
         var playerDebugStatsWindowScene = ResourceLoader.Load<PackedScene>(PlayerDebugStatsWindowScenePath);

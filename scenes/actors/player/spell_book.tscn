@@ -27,6 +27,17 @@
 [ext_resource type="Script" uid="uid://nsh3wv6hplss" path="res://scripts/spells/IceShieldSpell.cs" id="27_ice_shield_spell"]
 [ext_resource type="PackedScene" path="res://scenes/effects/ice_shield.tscn" id="28_ice_shield_scene"]
 [ext_resource type="Script" uid="uid://gtkj6udlgnar" path="res://scripts/status/FrozenEffect.cs" id="30_frozen_effect"]
+[ext_resource type="Texture2D" uid="uid://dmc7w0vyq01or" path="res://assets/spell_icons/fireball.png" id="31_fireball_icon"]
+[ext_resource type="Texture2D" uid="uid://7rrn1k2vsjjg" path="res://assets/spell_icons/frost_nova.png" id="32_frost_nova_icon"]
+[ext_resource type="Texture2D" uid="uid://dsvta6d58b4v0" path="res://assets/spell_icons/blink.png" id="33_blink_icon"]
+[ext_resource type="Texture2D" uid="uid://b7ksfb8e1u7kv" path="res://assets/spell_icons/ring_of_fire.png" id="34_ring_of_fire_icon"]
+[ext_resource type="Texture2D" uid="uid://c4482aa0pjd2y" path="res://assets/spell_icons/fire_nova.png" id="35_fire_nova_icon"]
+[ext_resource type="Texture2D" uid="uid://c3hpycajexhho" path="res://assets/spell_icons/iceball.png" id="36_iceball_icon"]
+[ext_resource type="Texture2D" uid="uid://cyj0xqwgydimv" path="res://assets/spell_icons/ice_spikes.png" id="37_ice_spikes_icon"]
+[ext_resource type="Texture2D" uid="uid://dx5b8e60l02l0" path="res://assets/spell_icons/ice_shield.png" id="38_ice_shield_icon"]
+[ext_resource type="Texture2D" uid="uid://bjl0rydfsm1xj" path="res://assets/spell_icons/blizzard.png" id="39_blizzard_icon"]
+[ext_resource type="Texture2D" uid="uid://b2vevoapm5mki" path="res://assets/spell_icons/poison_cloud.png" id="40_poison_cloud_icon"]
+[ext_resource type="Texture2D" uid="uid://cyqi03l7asyn8" path="res://assets/spell_icons/doom.png" id="41_doom_icon"]
 
 [node name="SpellBook" type="Node" unique_id=146802088]
 script = ExtResource("1_spell_book")
@@ -39,6 +50,7 @@ ProjectileVisualFrames = ExtResource("20_fire_ball_frames")
 SpellId = "fire_ball"
 CastAction = &"cast_spell1"
 HudLabel = "Fireball"
+Icon = ExtResource("31_fireball_icon")
 CastTimeSeconds = 1.0
 
 [node name="Damage" type="Node" parent="FireBall" unique_id=76691458]
@@ -66,6 +78,7 @@ VfxScene = ExtResource("4_frost_nova_vfx")
 SpellId = "frost_nova"
 CastAction = &"cast_spell2"
 HudLabel = "Frost Nova"
+Icon = ExtResource("32_frost_nova_icon")
 ManaCost = 20
 Cooldown = 3.0
 
@@ -97,6 +110,7 @@ BlinkDistance = 256.0
 SpellId = "blink"
 CastAction = &"cast_spell3"
 HudLabel = "Blink"
+Icon = ExtResource("33_blink_icon")
 ManaCost = 15
 Cooldown = 1.5
 
@@ -105,6 +119,7 @@ script = ExtResource("9_ring_of_fire_spell")
 SpellId = "ring_of_fire"
 CastAction = &"cast_spell4"
 HudLabel = "Ring of Fire"
+Icon = ExtResource("34_ring_of_fire_icon")
 ManaCost = 35
 Cooldown = 6.0
 CastTimeSeconds = 2.0
@@ -121,6 +136,7 @@ VfxScene = ExtResource("3_fire_nova_vfx")
 SpellId = "fire_nova"
 CastAction = &"cast_spell5"
 HudLabel = "Fire Nova"
+Icon = ExtResource("35_fire_nova_icon")
 ManaCost = 20
 
 [node name="Damage" type="Node" parent="FireNova" unique_id=1870933637]
@@ -150,6 +166,7 @@ ProjectileVisualFrames = ExtResource("21_ice_ball_frames")
 SpellId = "ice_ball"
 CastAction = &"cast_spell6"
 HudLabel = "Ice Ball"
+Icon = ExtResource("36_iceball_icon")
 CastTimeSeconds = 1.0
 
 [node name="Damage" type="Node" parent="IceBall" unique_id=1071426036]
@@ -180,6 +197,7 @@ script = ExtResource("16_ice_spikes_spell")
 SpellId = "ice_spikes"
 CastAction = &"cast_spell7"
 HudLabel = "Ice Spikes"
+Icon = ExtResource("37_ice_spikes_icon")
 ManaCost = 35
 Cooldown = 6.0
 CastTimeSeconds = 3.0
@@ -192,12 +210,14 @@ script = ExtResource("27_ice_shield_spell")
 ShieldScene = ExtResource("28_ice_shield_scene")
 SpellId = "ice_shield"
 HudLabel = "Ice Shield"
+Icon = ExtResource("38_ice_shield_icon")
 Cooldown = 60.0
 
 [node name="Blizzard" type="Node" parent="." unique_id=1938442057]
 script = ExtResource("25_blizzard_spell")
 SpellId = "blizzard"
 HudLabel = "Blizzard"
+Icon = ExtResource("39_blizzard_icon")
 ManaCost = 35
 Cooldown = 6.0
 ChannelDurationSeconds = 12.0
@@ -209,6 +229,7 @@ visible = false
 script = ExtResource("18_y1cuy")
 SpellId = "poison_cloud"
 HudLabel = "Poison Cloud"
+Icon = ExtResource("40_poison_cloud_icon")
 ManaCost = 10
 Cooldown = 8.0
 
@@ -220,6 +241,7 @@ EffectLifetime = 30.0
 script = ExtResource("22_doom_spell")
 SpellId = "doom"
 HudLabel = "Doom"
+Icon = ExtResource("41_doom_icon")
 
 [node name="DoomArea" parent="Doom" unique_id=54320717 instance=ExtResource("23_doom_area")]
 visible = false

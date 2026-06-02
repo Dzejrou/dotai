@@ -6,17 +6,30 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class PlayerSpellBar : Control
 {
-    private sealed class SpellSlotView
+    [Signal]
+    public delegate void MenuRequestedEventHandler();
+
+    private enum SlotKind
     {
+        Spell,
+        Food,
+        Drink,
+        Menu,
+    }
+
+    private sealed class ActionSlotView
+    {
+        public SlotKind Kind { get; init; }
         public StringName SlotAction { get; init; }
+        public ConsumableKind ConsumableKind { get; init; }
         public Spell Spell { get; set; }
         public Control Root { get; init; }
         public ColorRect Frame { get; init; }
-        public Label NameLabel { get; init; }
+        public TextureRect Icon { get; init; }
         public Label ManaLabel { get; init; }
         public ColorRect ArmedOverlay { get; init; }
         public ColorRect ManaUnavailableOverlay { get; init; }
-        public ColorRect Overlay { get; init; }
+        public ColorRect CooldownOverlay { get; init; }
         public Label CooldownLabel { get; init; }
     }
 
@@ -24,24 +37,36 @@ public partial class PlayerSpellBar : Control
     public NodePath SlotsPath { get; set; } = new NodePath("Slots");
 
     [Export]
-    public Vector2 SlotSize { get; set; } = new Vector2(120.0f, 58.0f);
+    public Vector2 SlotSize { get; set; } = new Vector2(40.0f, 50.0f);
 
     [Export]
-    public Vector2 ScreenMargin { get; set; } = new Vector2(12.0f, 12.0f);
+    public int SlotSeparation { get; set; } = 3;
+
+    [Export]
+    public float BottomMargin { get; set; } = 10.0f;
+
+    private const float IconSize = 32.0f;
 
     private static readonly Color DefaultFrameColor = new(0.05f, 0.06f, 0.08f, 0.95f);
+    private static readonly Color BodyColor = new(0.18f, 0.21f, 0.26f, 0.96f);
     private static readonly Color ArmedFrameColor = new(0.92f, 0.68f, 0.22f, 1.0f);
     private static readonly Color ArmedOverlayColor = new(0.98f, 0.78f, 0.18f, 0.18f);
-    private static readonly Color EmptyLabelColor = new(0.72f, 0.72f, 0.72f, 0.9f);
+    private static readonly Color ManaUnavailableColor = new(0.16f, 0.04f, 0.06f, 0.38f);
+    private static readonly Color CooldownColor = new(0.0f, 0.0f, 0.0f, 0.55f);
+    private static readonly Color KeyLabelColor = new(0.95f, 0.84f, 0.48f, 1.0f);
+    private static readonly Color ManaAvailableColor = new(0.55f, 0.78f, 1.0f, 1.0f);
+    private static readonly Color ManaDepletedColor = new(1.0f, 0.34f, 0.34f, 1.0f);
+    private static readonly Color MenuGlyphColor = new(0.86f, 0.88f, 0.94f, 1.0f);
 
     private Player _player;
     private HBoxContainer _slots;
-    private readonly List<SpellSlotView> _slotViews = new();
+    private readonly List<ActionSlotView> _slotViews = new();
 
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
         _slots = GetNodeOrNull<HBoxContainer>(SlotsPath);
+        _slots?.AddThemeConstantOverride("separation", SlotSeparation);
         ApplyBarLayout();
     }
 
@@ -49,10 +74,19 @@ public partial class PlayerSpellBar : Control
     {
         foreach (var slotView in _slotViews)
         {
-            RefreshSlotView(slotView);
-            UpdateArmedPlacementView(slotView);
-            UpdateManaAvailabilityView(slotView);
-            UpdateCooldownView(slotView);
+            switch (slotView.Kind)
+            {
+                case SlotKind.Spell:
+                    RefreshSpellSlot(slotView);
+                    UpdateArmedPlacementView(slotView);
+                    UpdateManaAvailabilityView(slotView);
+                    UpdateCooldownView(slotView);
+                    break;
+                case SlotKind.Food:
+                case SlotKind.Drink:
+                    RefreshConsumableSlot(slotView);
+                    break;
+            }
         }
     }
 
@@ -60,14 +94,7 @@ public partial class PlayerSpellBar : Control
     {
         _player = player;
         ClearSlots();
-        if (_slots == null || player == null)
-        {
-            Visible = false;
-            ApplyBarLayout();
-            return;
-        }
-
-        if (player.SpellLoadoutNode == null)
+        if (_slots == null || player == null || !GodotObject.IsInstanceValid(player))
         {
             Visible = false;
             ApplyBarLayout();
@@ -77,18 +104,27 @@ public partial class PlayerSpellBar : Control
         foreach (var slotAction in SpellLoadout.SlotActions)
             _slotViews.Add(CreateSpellSlot(slotAction));
 
+        _slotViews.Add(CreateConsumableSlot(ConsumableKind.Food));
+        _slotViews.Add(CreateConsumableSlot(ConsumableKind.Drink));
+        _slotViews.Add(CreateMenuSlot());
+
         Visible = _slotViews.Count > 0;
         ApplyBarLayout();
 
         foreach (var slotView in _slotViews)
-            RefreshSlotView(slotView);
+        {
+            if (slotView.Kind == SlotKind.Spell)
+                RefreshSpellSlot(slotView);
+            else if (slotView.Kind is SlotKind.Food or SlotKind.Drink)
+                RefreshConsumableSlot(slotView);
+        }
     }
 
-    private SpellSlotView CreateSpellSlot(StringName slotAction)
+    private Control CreateSlotRoot(string name)
     {
         var slotRoot = new Control
         {
-            Name = $"{slotAction}Slot",
+            Name = name,
             CustomMinimumSize = SlotSize,
             Size = SlotSize,
             ClipContents = true,
@@ -101,108 +137,219 @@ public partial class PlayerSpellBar : Control
             Name = "Frame",
             Color = DefaultFrameColor,
             Size = SlotSize,
+            MouseFilter = MouseFilterEnum.Ignore,
         };
         slotRoot.AddChild(frame);
 
         var body = new ColorRect
         {
             Name = "Body",
-            Color = new Color(0.18f, 0.21f, 0.26f, 0.96f),
+            Color = BodyColor,
             Position = new Vector2(2.0f, 2.0f),
             Size = SlotSize - new Vector2(4.0f, 4.0f),
+            MouseFilter = MouseFilterEnum.Ignore,
         };
         slotRoot.AddChild(body);
 
-        var keybindLabel = new Label
-        {
-            Name = "Keybind",
-            Text = ResolveActionLabel(slotAction),
-            Position = new Vector2(8.0f, 4.0f),
-            Size = new Vector2(SlotSize.X - 16.0f, 14.0f),
-        };
-        keybindLabel.AddThemeFontSizeOverride("font_size", 14);
-        keybindLabel.AddThemeColorOverride("font_color", new Color(0.95f, 0.84f, 0.48f, 1.0f));
-        slotRoot.AddChild(keybindLabel);
+        return slotRoot;
+    }
 
-        var nameLabel = new Label
+    private TextureRect CreateIconRect(Control slotRoot)
+    {
+        var iconOffset = new Vector2((SlotSize.X - IconSize) * 0.5f, 2.0f);
+        var icon = new TextureRect
         {
-            Name = "Name",
-            Text = "Empty",
-            Position = new Vector2(8.0f, 18.0f),
-            Size = new Vector2(SlotSize.X - 16.0f, 18.0f),
-            HorizontalAlignment = HorizontalAlignment.Center,
+            Name = "Icon",
+            Position = iconOffset,
+            Size = new Vector2(IconSize, IconSize),
+            CustomMinimumSize = new Vector2(IconSize, IconSize),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
         };
-        nameLabel.AddThemeFontSizeOverride("font_size", 15);
-        nameLabel.AddThemeColorOverride("font_color", EmptyLabelColor);
-        slotRoot.AddChild(nameLabel);
+        slotRoot.AddChild(icon);
+        return icon;
+    }
+
+    private ColorRect CreateOverlay(Control slotRoot, string name, Color color, Vector2 position, Vector2 size)
+    {
+        var overlay = new ColorRect
+        {
+            Name = name,
+            Color = color,
+            Position = position,
+            Size = size,
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        slotRoot.AddChild(overlay);
+        return overlay;
+    }
+
+    private ActionSlotView CreateSpellSlot(StringName slotAction)
+    {
+        var slotRoot = CreateSlotRoot($"{slotAction}Slot");
+        var icon = CreateIconRect(slotRoot);
 
         var manaLabel = new Label
         {
             Name = "ManaCost",
-            Text = "--",
-            Position = new Vector2(8.0f, SlotSize.Y - 20.0f),
-            Size = new Vector2(SlotSize.X - 16.0f, 14.0f),
-            HorizontalAlignment = HorizontalAlignment.Right,
+            Position = new Vector2(2.0f, 0.0f),
+            Size = new Vector2(SlotSize.X - 4.0f, 13.0f),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top,
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
         };
-        manaLabel.AddThemeFontSizeOverride("font_size", 13);
-        manaLabel.AddThemeColorOverride("font_color", new Color(0.55f, 0.78f, 1.0f, 1.0f));
+        manaLabel.AddThemeFontSizeOverride("font_size", 11);
+        manaLabel.AddThemeColorOverride("font_color", ManaAvailableColor);
+        manaLabel.AddThemeConstantOverride("outline_size", 3);
+        manaLabel.AddThemeColorOverride("font_outline_color", new Color(0.0f, 0.0f, 0.0f, 0.85f));
         slotRoot.AddChild(manaLabel);
 
-        var armedOverlay = new ColorRect
+        var keyLabel = new Label
         {
-            Name = "ArmedOverlay",
-            Color = ArmedOverlayColor,
-            Position = new Vector2(2.0f, 2.0f),
-            Size = SlotSize - new Vector2(4.0f, 4.0f),
-            Visible = false,
+            Name = "Keybind",
+            Text = ResolveActionLabel(slotAction),
+            Position = new Vector2(0.0f, SlotSize.Y - 15.0f),
+            Size = new Vector2(SlotSize.X, 14.0f),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        slotRoot.AddChild(armedOverlay);
+        keyLabel.AddThemeFontSizeOverride("font_size", 11);
+        keyLabel.AddThemeColorOverride("font_color", KeyLabelColor);
+        keyLabel.AddThemeConstantOverride("outline_size", 3);
+        keyLabel.AddThemeColorOverride("font_outline_color", new Color(0.0f, 0.0f, 0.0f, 0.85f));
+        slotRoot.AddChild(keyLabel);
 
-        var manaUnavailableOverlay = new ColorRect
-        {
-            Name = "ManaUnavailableOverlay",
-            Color = new Color(0.16f, 0.04f, 0.06f, 0.38f),
-            Size = SlotSize,
-            Visible = false,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        slotRoot.AddChild(manaUnavailableOverlay);
-
-        var cooldownOverlay = new ColorRect
-        {
-            Name = "CooldownOverlay",
-            Color = new Color(0.0f, 0.0f, 0.0f, 0.55f),
-            Size = SlotSize,
-            Visible = false,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        slotRoot.AddChild(cooldownOverlay);
+        var armedOverlay = CreateOverlay(
+            slotRoot, "ArmedOverlay", ArmedOverlayColor, new Vector2(2.0f, 2.0f), SlotSize - new Vector2(4.0f, 4.0f));
+        var manaUnavailableOverlay = CreateOverlay(
+            slotRoot, "ManaUnavailableOverlay", ManaUnavailableColor, Vector2.Zero, SlotSize);
+        var cooldownOverlay = CreateOverlay(
+            slotRoot, "CooldownOverlay", CooldownColor, Vector2.Zero, SlotSize);
 
         var cooldownLabel = new Label
         {
             Name = "CooldownText",
-            Position = new Vector2(SlotSize.X - 34.0f, 4.0f),
-            Size = new Vector2(28.0f, 16.0f),
-            HorizontalAlignment = HorizontalAlignment.Right,
+            Position = new Vector2(0.0f, (SlotSize.Y - 18.0f) * 0.5f),
+            Size = new Vector2(SlotSize.X, 18.0f),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
             Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
         };
-        cooldownLabel.AddThemeFontSizeOverride("font_size", 16);
-        cooldownLabel.AddThemeColorOverride("font_color", new Color(1.0f, 0.34f, 0.34f, 1.0f));
+        cooldownLabel.AddThemeFontSizeOverride("font_size", 15);
+        cooldownLabel.AddThemeColorOverride("font_color", ManaDepletedColor);
+        cooldownLabel.AddThemeConstantOverride("outline_size", 3);
+        cooldownLabel.AddThemeColorOverride("font_outline_color", new Color(0.0f, 0.0f, 0.0f, 0.85f));
         slotRoot.AddChild(cooldownLabel);
 
-        return new SpellSlotView
+        return new ActionSlotView
         {
+            Kind = SlotKind.Spell,
             SlotAction = slotAction,
             Root = slotRoot,
-            Frame = frame,
-            NameLabel = nameLabel,
+            Frame = GetFrame(slotRoot),
+            Icon = icon,
             ManaLabel = manaLabel,
             ArmedOverlay = armedOverlay,
             ManaUnavailableOverlay = manaUnavailableOverlay,
-            Overlay = cooldownOverlay,
+            CooldownOverlay = cooldownOverlay,
             CooldownLabel = cooldownLabel,
         };
+    }
+
+    private ActionSlotView CreateConsumableSlot(ConsumableKind kind)
+    {
+        var slotRoot = CreateSlotRoot($"{kind}Slot");
+        var icon = CreateIconRect(slotRoot);
+        AddClickButton(slotRoot, kind == ConsumableKind.Food ? OnFoodPressed : OnDrinkPressed);
+
+        return new ActionSlotView
+        {
+            Kind = kind == ConsumableKind.Food ? SlotKind.Food : SlotKind.Drink,
+            ConsumableKind = kind,
+            Root = slotRoot,
+            Frame = GetFrame(slotRoot),
+            Icon = icon,
+        };
+    }
+
+    private ActionSlotView CreateMenuSlot()
+    {
+        var slotRoot = CreateSlotRoot("MenuSlot");
+
+        // Asset-free hamburger glyph drawn from three centered bars.
+        var barWidth = IconSize * 0.625f;
+        var barHeight = 3.0f;
+        var barX = (SlotSize.X - barWidth) * 0.5f;
+        var centerY = SlotSize.Y * 0.5f;
+        foreach (var offsetY in new[] { -8.0f, 0.0f, 8.0f })
+        {
+            var bar = new ColorRect
+            {
+                Name = "MenuBar",
+                Color = MenuGlyphColor,
+                Position = new Vector2(barX, centerY + offsetY - (barHeight * 0.5f)),
+                Size = new Vector2(barWidth, barHeight),
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            slotRoot.AddChild(bar);
+        }
+
+        AddClickButton(slotRoot, OnMenuPressed);
+
+        return new ActionSlotView
+        {
+            Kind = SlotKind.Menu,
+            Root = slotRoot,
+            Frame = GetFrame(slotRoot),
+        };
+    }
+
+    private void AddClickButton(Control slotRoot, Action onPressed)
+    {
+        var button = new Button
+        {
+            Name = "ClickArea",
+            Flat = true,
+            FocusMode = FocusModeEnum.None,
+            Size = SlotSize,
+            CustomMinimumSize = SlotSize,
+            MouseFilter = MouseFilterEnum.Stop,
+        };
+        button.AddThemeStyleboxOverride("normal", new StyleBoxEmpty());
+        button.AddThemeStyleboxOverride("hover", new StyleBoxEmpty());
+        button.AddThemeStyleboxOverride("pressed", new StyleBoxEmpty());
+        button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
+        button.Pressed += onPressed;
+        slotRoot.AddChild(button);
+    }
+
+    private static ColorRect GetFrame(Control slotRoot)
+    {
+        return slotRoot.GetNodeOrNull<ColorRect>("Frame");
+    }
+
+    private void OnFoodPressed()
+    {
+        if (_player != null && GodotObject.IsInstanceValid(_player))
+            _player.TryConsumeQuickAssignment(ConsumableKind.Food);
+    }
+
+    private void OnDrinkPressed()
+    {
+        if (_player != null && GodotObject.IsInstanceValid(_player))
+            _player.TryConsumeQuickAssignment(ConsumableKind.Drink);
+    }
+
+    private void OnMenuPressed()
+    {
+        EmitSignal(SignalName.MenuRequested);
     }
 
     private void ClearSlots()
@@ -218,22 +365,28 @@ public partial class PlayerSpellBar : Control
 
     private void ApplyBarLayout()
     {
-        SetAnchorsAndOffsetsPreset(LayoutPreset.BottomLeft);
+        AnchorLeft = 0.5f;
+        AnchorRight = 0.5f;
+        AnchorTop = 1.0f;
+        AnchorBottom = 1.0f;
+        GrowHorizontal = GrowDirection.Both;
+        GrowVertical = GrowDirection.Begin;
+
         if (_slots == null || _slotViews.Count == 0)
         {
-            OffsetLeft = ScreenMargin.X;
-            OffsetRight = ScreenMargin.X;
-            OffsetBottom = -ScreenMargin.Y;
-            OffsetTop = OffsetBottom;
+            OffsetLeft = 0.0f;
+            OffsetRight = 0.0f;
+            OffsetTop = -BottomMargin;
+            OffsetBottom = -BottomMargin;
             return;
         }
 
         var spacing = _slots.GetThemeConstant("separation");
         var totalWidth = (SlotSize.X * _slotViews.Count) + (spacing * Math.Max(0, _slotViews.Count - 1));
         var totalHeight = SlotSize.Y;
-        OffsetLeft = ScreenMargin.X;
-        OffsetRight = ScreenMargin.X + totalWidth;
-        OffsetBottom = -ScreenMargin.Y;
+        OffsetLeft = -totalWidth * 0.5f;
+        OffsetRight = totalWidth * 0.5f;
+        OffsetBottom = -BottomMargin;
         OffsetTop = OffsetBottom - totalHeight;
     }
 
@@ -254,27 +407,61 @@ public partial class PlayerSpellBar : Control
         return action.ToString();
     }
 
-    private void RefreshSlotView(SpellSlotView slotView)
+    private void RefreshSpellSlot(ActionSlotView slotView)
     {
-        if (slotView == null)
+        if (slotView == null || slotView.Icon == null || slotView.ManaLabel == null)
             return;
 
         slotView.Spell = ResolveEquippedSpell(slotView.SlotAction);
-        if (slotView.NameLabel == null || slotView.ManaLabel == null)
-            return;
-
-        if (slotView.Spell == null || !GodotObject.IsInstanceValid(slotView.Spell))
+        var spell = slotView.Spell;
+        if (spell == null || !GodotObject.IsInstanceValid(spell))
         {
-            slotView.NameLabel.Text = "Empty";
-            slotView.NameLabel.AddThemeColorOverride("font_color", EmptyLabelColor);
-            slotView.ManaLabel.Text = "--";
-            slotView.ManaLabel.AddThemeColorOverride("font_color", EmptyLabelColor);
+            slotView.Icon.Texture = null;
+            slotView.Icon.Visible = false;
+            slotView.ManaLabel.Visible = false;
             return;
         }
 
-        slotView.NameLabel.Text = slotView.Spell.DisplayLabel;
-        slotView.NameLabel.AddThemeColorOverride("font_color", new Color(0.96f, 0.96f, 0.96f, 1.0f));
-        slotView.ManaLabel.Text = $"{slotView.Spell.DisplayManaCost} MP";
+        slotView.Icon.Texture = spell.Icon;
+        slotView.Icon.Visible = spell.Icon != null;
+
+        var manaCost = spell.DisplayManaCost;
+        if (manaCost > 0)
+        {
+            slotView.ManaLabel.Text = manaCost.ToString();
+            slotView.ManaLabel.Visible = true;
+        }
+        else
+        {
+            slotView.ManaLabel.Visible = false;
+        }
+    }
+
+    private void RefreshConsumableSlot(ActionSlotView slotView)
+    {
+        if (slotView?.Icon == null)
+            return;
+
+        var icon = ResolveConsumableIcon(slotView.ConsumableKind);
+        slotView.Icon.Texture = icon;
+        slotView.Icon.Visible = icon != null;
+    }
+
+    private Texture2D ResolveConsumableIcon(ConsumableKind kind)
+    {
+        if (_player == null || !GodotObject.IsInstanceValid(_player))
+            return null;
+
+        var loadout = _player.QuickConsumableLoadoutNode;
+        if (loadout == null || !GodotObject.IsInstanceValid(loadout))
+            return null;
+
+        var assignedId = loadout.GetAssignedItemId(kind);
+        if (string.IsNullOrEmpty(assignedId))
+            return null;
+
+        var definition = _player.InventoryController?.ItemCatalog?.Resolve(assignedId, null);
+        return definition?.Icon;
     }
 
     private Spell ResolveEquippedSpell(StringName slotAction)
@@ -290,46 +477,37 @@ public partial class PlayerSpellBar : Control
         return _player.SpellLoadoutNode.GetEquippedSpell(slotAction);
     }
 
-    private void UpdateManaAvailabilityView(SpellSlotView slotView)
+    private void UpdateManaAvailabilityView(ActionSlotView slotView)
     {
         if (_player == null ||
             !GodotObject.IsInstanceValid(_player) ||
             slotView.Spell == null ||
             !GodotObject.IsInstanceValid(slotView.Spell) ||
             slotView.ManaLabel == null ||
-            slotView.ManaUnavailableOverlay == null ||
-            slotView.Root == null)
+            slotView.ManaUnavailableOverlay == null)
         {
             if (slotView?.ManaUnavailableOverlay != null)
                 slotView.ManaUnavailableOverlay.Visible = false;
             return;
         }
 
-        var slotSize = slotView.Root.Size;
-        if (slotSize == Vector2.Zero)
-            slotSize = SlotSize;
-
         var canAffordSpell = _player.CurrentMana >= Math.Max(0, slotView.Spell.DisplayManaCost);
         slotView.ManaLabel.AddThemeColorOverride(
-            "font_color",
-            canAffordSpell
-                ? new Color(0.55f, 0.78f, 1.0f, 1.0f)
-                : new Color(1.0f, 0.34f, 0.34f, 1.0f));
+            "font_color", canAffordSpell ? ManaAvailableColor : ManaDepletedColor);
 
         slotView.ManaUnavailableOverlay.Visible = !canAffordSpell;
         slotView.ManaUnavailableOverlay.Position = Vector2.Zero;
-        slotView.ManaUnavailableOverlay.Size = slotSize;
+        slotView.ManaUnavailableOverlay.Size = ResolveSlotSize(slotView);
     }
 
-    private void UpdateArmedPlacementView(SpellSlotView slotView)
+    private void UpdateArmedPlacementView(ActionSlotView slotView)
     {
         if (_player == null ||
             !GodotObject.IsInstanceValid(_player) ||
             slotView.Spell == null ||
             !GodotObject.IsInstanceValid(slotView.Spell) ||
             slotView.Frame == null ||
-            slotView.ArmedOverlay == null ||
-            slotView.Root == null)
+            slotView.ArmedOverlay == null)
         {
             if (slotView?.Frame != null)
                 slotView.Frame.Color = DefaultFrameColor;
@@ -342,24 +520,20 @@ public partial class PlayerSpellBar : Control
         slotView.Frame.Color = isArmedPlacementSpell ? ArmedFrameColor : DefaultFrameColor;
         slotView.ArmedOverlay.Visible = isArmedPlacementSpell;
 
-        var slotSize = slotView.Root.Size;
-        if (slotSize == Vector2.Zero)
-            slotSize = SlotSize;
-
+        var slotSize = ResolveSlotSize(slotView);
         slotView.ArmedOverlay.Position = new Vector2(2.0f, 2.0f);
         slotView.ArmedOverlay.Size = slotSize - new Vector2(4.0f, 4.0f);
     }
 
-    private void UpdateCooldownView(SpellSlotView slotView)
+    private void UpdateCooldownView(ActionSlotView slotView)
     {
         if (slotView.Spell == null ||
             !GodotObject.IsInstanceValid(slotView.Spell) ||
-            slotView.Overlay == null ||
-            slotView.CooldownLabel == null ||
-            slotView.Root == null)
+            slotView.CooldownOverlay == null ||
+            slotView.CooldownLabel == null)
         {
-            if (slotView?.Overlay != null)
-                slotView.Overlay.Visible = false;
+            if (slotView?.CooldownOverlay != null)
+                slotView.CooldownOverlay.Visible = false;
             if (slotView?.CooldownLabel != null)
                 slotView.CooldownLabel.Visible = false;
             return;
@@ -369,25 +543,29 @@ public partial class PlayerSpellBar : Control
         var cooldownRemaining = Math.Max(0.0f, slotView.Spell.CooldownRemaining);
         if (cooldownDuration <= 0.0f || cooldownRemaining <= 0.0f)
         {
-            slotView.Overlay.Visible = false;
+            slotView.CooldownOverlay.Visible = false;
             slotView.CooldownLabel.Visible = false;
             return;
         }
 
-        var slotSize = slotView.Root.Size;
-        if (slotSize == Vector2.Zero)
-            slotSize = SlotSize;
-
+        var slotSize = ResolveSlotSize(slotView);
         var cooldownFraction = Mathf.Clamp(cooldownRemaining / cooldownDuration, 0.0f, 1.0f);
-        slotView.Overlay.Visible = true;
-        slotView.Overlay.Position = Vector2.Zero;
-        slotView.Overlay.Size = new Vector2(slotSize.X, slotSize.Y * cooldownFraction);
+        slotView.CooldownOverlay.Visible = true;
+        slotView.CooldownOverlay.Position = Vector2.Zero;
+        slotView.CooldownOverlay.Size = new Vector2(slotSize.X, slotSize.Y * cooldownFraction);
 
         slotView.CooldownLabel.Visible = true;
-        slotView.CooldownLabel.Position = new Vector2(slotSize.X - 34.0f, 4.0f);
-        slotView.CooldownLabel.Size = new Vector2(28.0f, 16.0f);
         slotView.CooldownLabel.Text = cooldownRemaining >= 1.0f
             ? Mathf.CeilToInt(cooldownRemaining).ToString()
             : $"{cooldownRemaining:0.0}";
+    }
+
+    private Vector2 ResolveSlotSize(ActionSlotView slotView)
+    {
+        if (slotView?.Root == null)
+            return SlotSize;
+
+        var slotSize = slotView.Root.Size;
+        return slotSize == Vector2.Zero ? SlotSize : slotSize;
     }
 }
