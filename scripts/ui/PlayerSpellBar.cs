@@ -58,6 +58,9 @@ public partial class PlayerSpellBar : Control
     private static readonly Color ManaDepletedColor = new(1.0f, 0.34f, 0.34f, 1.0f);
     private static readonly Color MenuGlyphColor = new(0.86f, 0.88f, 0.94f, 1.0f);
 
+    // Fixed display labels for the seven spell cast keys, in slot order (slots 1-7).
+    private static readonly string[] SlotKeyLabels = { "Q", "E", "R", "T", "F", "C", "V" };
+
     private Player _player;
     private HBoxContainer _slots;
     private readonly List<ActionSlotView> _slotViews = new();
@@ -101,8 +104,8 @@ public partial class PlayerSpellBar : Control
             return;
         }
 
-        foreach (var slotAction in SpellLoadout.SlotActions)
-            _slotViews.Add(CreateSpellSlot(slotAction));
+        for (var slotIndex = 0; slotIndex < SpellLoadout.SlotActions.Length; slotIndex++)
+            _slotViews.Add(CreateSpellSlot(SpellLoadout.SlotActions[slotIndex], slotIndex));
 
         _slotViews.Add(CreateConsumableSlot(ConsumableKind.Food));
         _slotViews.Add(CreateConsumableSlot(ConsumableKind.Drink));
@@ -127,7 +130,9 @@ public partial class PlayerSpellBar : Control
             Name = name,
             CustomMinimumSize = SlotSize,
             Size = SlotSize,
-            ClipContents = true,
+            // Don't clip: the key label sits at the bottom edge, and clipping shaves off
+            // glyph descenders (e.g. the tail of "Q", which then reads as "O").
+            ClipContents = false,
             MouseFilter = MouseFilterEnum.Ignore,
         };
         _slots.AddChild(slotRoot);
@@ -188,7 +193,7 @@ public partial class PlayerSpellBar : Control
         return overlay;
     }
 
-    private ActionSlotView CreateSpellSlot(StringName slotAction)
+    private ActionSlotView CreateSpellSlot(StringName slotAction, int slotIndex)
     {
         var slotRoot = CreateSlotRoot($"{slotAction}Slot");
         var icon = CreateIconRect(slotRoot);
@@ -212,15 +217,13 @@ public partial class PlayerSpellBar : Control
         var keyLabel = new Label
         {
             Name = "Keybind",
-            Text = ResolveActionLabel(slotAction),
+            Text = slotIndex >= 0 && slotIndex < SlotKeyLabels.Length ? SlotKeyLabels[slotIndex] : string.Empty,
             Position = new Vector2(0.0f, SlotSize.Y - 16.0f),
             Size = new Vector2(SlotSize.X, 16.0f),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        // Gold-on-dark sits below the icon, so no outline is needed; a heavy outline
-        // at a small font size fills the gap in glyphs like "Q" and makes it read "O".
         keyLabel.AddThemeFontSizeOverride("font_size", 14);
         keyLabel.AddThemeColorOverride("font_color", KeyLabelColor);
         slotRoot.AddChild(keyLabel);
@@ -388,23 +391,6 @@ public partial class PlayerSpellBar : Control
         OffsetRight = totalWidth * 0.5f;
         OffsetBottom = -BottomMargin;
         OffsetTop = OffsetBottom - totalHeight;
-    }
-
-    private static string ResolveActionLabel(StringName action)
-    {
-        foreach (var inputEvent in InputMap.ActionGetEvents(action))
-        {
-            if (inputEvent is not InputEventKey keyEvent)
-                continue;
-
-            var keycode = keyEvent.PhysicalKeycode != Key.None
-                ? keyEvent.PhysicalKeycode
-                : keyEvent.Keycode;
-            if (keycode != Key.None)
-                return OS.GetKeycodeString(keycode).ToUpperInvariant();
-        }
-
-        return action.ToString();
     }
 
     private void RefreshSpellSlot(ActionSlotView slotView)
