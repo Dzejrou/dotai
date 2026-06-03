@@ -15,6 +15,9 @@ public abstract partial class Spell : Node
     public string HudLabel { get; set; } = string.Empty;
 
     [Export]
+    public Texture2D Icon { get; set; }
+
+    [Export]
     public int ManaCost { get; set; } = 0;
 
     [Export]

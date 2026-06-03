@@ -5,6 +5,26 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class MenuHubSpellBookPage : Control
 {
+    private sealed class SpellButtonView
+    {
+        public Button Button { get; init; }
+        public TextureRect Icon { get; init; }
+        public Label Placeholder { get; init; }
+        public Label NameLabel { get; init; }
+        public Label BindLabel { get; init; }
+        public Spell Template { get; init; }
+    }
+
+    private sealed class SlotButtonView
+    {
+        public Button Button { get; init; }
+        public TextureRect Icon { get; init; }
+        public Label Placeholder { get; init; }
+        public Label KeyLabel { get; init; }
+        public Label NameLabel { get; init; }
+        public StringName SlotAction { get; init; }
+    }
+
     [Export]
     public NodePath SelectionLabelPath { get; set; } = new("Margin/VBox/SelectionLabel");
 
@@ -20,14 +40,22 @@ public partial class MenuHubSpellBookPage : Control
     [Export]
     public NodePath SaveButtonPath { get; set; } = new("Margin/VBox/Footer/SaveButton");
 
+    private static readonly Vector2 IconHolderSize = new(48.0f, 48.0f);
+    private static readonly Color SelectedTint = new(1.0f, 0.93f, 0.72f, 1.0f);
+    private static readonly Color SpellNameColor = new(0.96f, 0.96f, 0.96f, 1.0f);
+    private static readonly Color EmptyNameColor = new(0.72f, 0.72f, 0.72f, 0.9f);
+    private static readonly Color KeyLabelColor = new(0.95f, 0.84f, 0.48f, 1.0f);
+    private static readonly Color BindLabelColor = new(0.62f, 0.82f, 0.98f, 1.0f);
+    private static readonly Color PlaceholderColor = new(0.6f, 0.62f, 0.7f, 0.9f);
+
     private Player _player;
     private Label _selectionLabel;
     private CheckButton _testToggle;
     private GridContainer _spellGrid;
     private GridContainer _slotGrid;
     private Button _saveButton;
-    private readonly Dictionary<Button, Spell> _spellButtons = new();
-    private readonly Dictionary<Button, StringName> _slotButtons = new();
+    private readonly List<SpellButtonView> _spellButtonViews = new();
+    private readonly List<SlotButtonView> _slotButtonViews = new();
     private Spell _selectedSpellTemplate;
     private bool _includeTestSpells;
 
@@ -110,31 +138,54 @@ public partial class MenuHubSpellBookPage : Control
         if (_spellGrid == null)
             return;
 
-        foreach (var pair in _spellButtons)
+        foreach (var view in _spellButtonViews)
         {
-            if (GodotObject.IsInstanceValid(pair.Key))
-                pair.Key.QueueFree();
+            if (GodotObject.IsInstanceValid(view.Button))
+                view.Button.QueueFree();
         }
 
-        _spellButtons.Clear();
+        _spellButtonViews.Clear();
 
         if (_player?.SpellBookNode == null)
             return;
 
         foreach (var spellTemplate in _player.GetBindableSpells(_includeTestSpells))
-        {
-            var spellButton = new Button
-            {
-                CustomMinimumSize = new Vector2(132.0f, 56.0f),
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                ClipText = false,
-            };
-            spellButton.Pressed += () => OnSpellTemplatePressed(spellTemplate);
-            _spellGrid.AddChild(spellButton);
-            _spellButtons[spellButton] = spellTemplate;
-        }
+            _spellButtonViews.Add(CreateSpellButton(spellTemplate));
 
         RefreshSpellButtons();
+    }
+
+    private SpellButtonView CreateSpellButton(Spell spellTemplate)
+    {
+        var button = new Button
+        {
+            CustomMinimumSize = new Vector2(140.0f, 92.0f),
+            // Tooltip text gives us a hook for richer spell tooltips on hover later.
+            TooltipText = spellTemplate.DisplayLabel,
+        };
+
+        var vbox = CreateCardLayout(button);
+        var (iconHolder, icon, placeholder) = CreateIconHolder();
+        vbox.AddChild(iconHolder);
+
+        var nameLabel = CreateCenteredLabel(spellTemplate.DisplayLabel, 13, SpellNameColor);
+        vbox.AddChild(nameLabel);
+
+        var bindLabel = CreateCenteredLabel(string.Empty, 11, BindLabelColor);
+        vbox.AddChild(bindLabel);
+
+        button.Pressed += () => OnSpellTemplatePressed(spellTemplate);
+        _spellGrid.AddChild(button);
+
+        return new SpellButtonView
+        {
+            Button = button,
+            Icon = icon,
+            Placeholder = placeholder,
+            NameLabel = nameLabel,
+            BindLabel = bindLabel,
+            Template = spellTemplate,
+        };
     }
 
     private void OnTestToggleToggled(bool toggledOn)
@@ -152,82 +203,175 @@ public partial class MenuHubSpellBookPage : Control
         if (_slotGrid == null)
             return;
 
-        foreach (var pair in _slotButtons)
+        foreach (var view in _slotButtonViews)
         {
-            if (GodotObject.IsInstanceValid(pair.Key))
-                pair.Key.QueueFree();
+            if (GodotObject.IsInstanceValid(view.Button))
+                view.Button.QueueFree();
         }
 
-        _slotButtons.Clear();
+        _slotButtonViews.Clear();
 
         foreach (var slotAction in SpellLoadout.SlotActions)
-        {
-            var slotButton = new Button
-            {
-                CustomMinimumSize = new Vector2(116.0f, 60.0f),
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            };
-            var capturedSlotAction = slotAction;
-            slotButton.Pressed += () => OnSlotPressed(capturedSlotAction);
-            _slotGrid.AddChild(slotButton);
-            _slotButtons[slotButton] = slotAction;
-        }
+            _slotButtonViews.Add(CreateSlotButton(slotAction));
 
         RefreshSlotButtons();
     }
 
+    private SlotButtonView CreateSlotButton(StringName slotAction)
+    {
+        var button = new Button
+        {
+            CustomMinimumSize = new Vector2(140.0f, 100.0f),
+        };
+
+        var vbox = CreateCardLayout(button);
+
+        var keyLabel = CreateCenteredLabel(ResolveActionLabel(slotAction), 16, KeyLabelColor);
+        vbox.AddChild(keyLabel);
+
+        var (iconHolder, icon, placeholder) = CreateIconHolder();
+        vbox.AddChild(iconHolder);
+
+        var nameLabel = CreateCenteredLabel("Empty", 12, EmptyNameColor);
+        vbox.AddChild(nameLabel);
+
+        var capturedSlotAction = slotAction;
+        button.Pressed += () => OnSlotPressed(capturedSlotAction);
+        _slotGrid.AddChild(button);
+
+        return new SlotButtonView
+        {
+            Button = button,
+            Icon = icon,
+            Placeholder = placeholder,
+            KeyLabel = keyLabel,
+            NameLabel = nameLabel,
+            SlotAction = slotAction,
+        };
+    }
+
+    private static VBoxContainer CreateCardLayout(Button button)
+    {
+        var vbox = new VBoxContainer
+        {
+            MouseFilter = MouseFilterEnum.Ignore,
+            Alignment = BoxContainer.AlignmentMode.Center,
+        };
+        vbox.AddThemeConstantOverride("separation", 4);
+        vbox.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        button.AddChild(vbox);
+        return vbox;
+    }
+
+    private static (Control Holder, TextureRect Icon, Label Placeholder) CreateIconHolder()
+    {
+        var holder = new Control
+        {
+            CustomMinimumSize = IconHolderSize,
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+
+        var icon = new TextureRect
+        {
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        icon.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        holder.AddChild(icon);
+
+        var placeholder = new Label
+        {
+            Text = "?",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        placeholder.AddThemeFontSizeOverride("font_size", 22);
+        placeholder.AddThemeColorOverride("font_color", PlaceholderColor);
+        placeholder.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        holder.AddChild(placeholder);
+
+        return (holder, icon, placeholder);
+    }
+
+    private static Label CreateCenteredLabel(string text, int fontSize, Color color)
+    {
+        var label = new Label
+        {
+            Text = text,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        label.AddThemeFontSizeOverride("font_size", fontSize);
+        label.AddThemeColorOverride("font_color", color);
+        return label;
+    }
+
     private void RefreshSpellButtons()
     {
-        foreach (var pair in _spellButtons)
+        foreach (var view in _spellButtonViews)
         {
-            var button = pair.Key;
-            var spellTemplate = pair.Value;
-            if (!GodotObject.IsInstanceValid(button) || spellTemplate == null)
+            if (!GodotObject.IsInstanceValid(view.Button) || view.Template == null)
                 continue;
 
-            button.Text = BuildSpellButtonText(spellTemplate);
-            button.Modulate = ReferenceEquals(_selectedSpellTemplate, spellTemplate)
-                ? new Color(1.0f, 0.93f, 0.72f, 1.0f)
+            ApplyIcon(view.Icon, view.Placeholder, view.Template.Icon);
+
+            view.BindLabel.Text =
+                _player?.SpellLoadoutNode != null &&
+                _player.SpellLoadoutNode.TryFindAssignedSlotAction(view.Template.SpellId, out var assignedSlot)
+                    ? ResolveActionLabel(assignedSlot)
+                    : string.Empty;
+            view.BindLabel.Visible = !string.IsNullOrEmpty(view.BindLabel.Text);
+
+            view.Button.Modulate = ReferenceEquals(_selectedSpellTemplate, view.Template)
+                ? SelectedTint
                 : Colors.White;
         }
     }
 
     private void RefreshSlotButtons()
     {
-        foreach (var pair in _slotButtons)
+        foreach (var view in _slotButtonViews)
         {
-            var button = pair.Key;
-            var slotAction = pair.Value;
-            if (!GodotObject.IsInstanceValid(button))
+            if (!GodotObject.IsInstanceValid(view.Button))
                 continue;
 
-            button.Text = BuildSlotButtonText(slotAction);
-            button.Disabled = _player?.SpellLoadoutNode == null;
+            var equippedSpell = _player?.SpellLoadoutNode?.GetEquippedSpell(view.SlotAction);
+            if (equippedSpell == null || !GodotObject.IsInstanceValid(equippedSpell))
+            {
+                view.Icon.Texture = null;
+                view.Icon.Visible = false;
+                view.Placeholder.Visible = false;
+                view.NameLabel.Text = "Empty";
+                view.NameLabel.AddThemeColorOverride("font_color", EmptyNameColor);
+            }
+            else
+            {
+                ApplyIcon(view.Icon, view.Placeholder, equippedSpell.Icon);
+                view.NameLabel.Text = equippedSpell.DisplayLabel;
+                view.NameLabel.AddThemeColorOverride("font_color", SpellNameColor);
+            }
+
+            view.Button.Disabled = _player?.SpellLoadoutNode == null;
         }
 
         if (_saveButton != null)
             _saveButton.Disabled = _player?.SpellLoadoutNode == null;
     }
 
-    private string BuildSpellButtonText(Spell spellTemplate)
+    private static void ApplyIcon(TextureRect icon, Label placeholder, Texture2D texture)
     {
-        if (_player?.SpellLoadoutNode != null &&
-            _player.SpellLoadoutNode.TryFindAssignedSlotAction(spellTemplate.SpellId, out var assignedSlot))
-        {
-            return $"{spellTemplate.DisplayLabel}\n{ResolveActionLabel(assignedSlot)}";
-        }
-
-        return spellTemplate.DisplayLabel;
-    }
-
-    private string BuildSlotButtonText(StringName slotAction)
-    {
-        var keybindLabel = ResolveActionLabel(slotAction);
-        var equippedSpell = _player?.SpellLoadoutNode?.GetEquippedSpell(slotAction);
-        if (equippedSpell == null || !GodotObject.IsInstanceValid(equippedSpell))
-            return $"{keybindLabel}\nEmpty";
-
-        return $"{keybindLabel}\n{equippedSpell.DisplayLabel}";
+        var hasIcon = texture != null;
+        icon.Texture = texture;
+        icon.Visible = hasIcon;
+        placeholder.Visible = !hasIcon;
     }
 
     private void OnSpellTemplatePressed(Spell spellTemplate)
