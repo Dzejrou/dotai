@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://iagrd4uy7h2c"]
+
+[ext_resource type="Script" uid="uid://d3wat2e5tq6nx" path="res://scripts/actors/npcs/MerchantNpc.cs" id="1_merchant_script"]
+[ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="2_omni_sprite"]
+[ext_resource type="SpriteFrames" uid="uid://c6fvmj3aob5vu" path="res://resources/animations/merchant_spriteframes.tres" id="3_merchant_frames"]
+[ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="4_actor_hud"]
+[ext_resource type="Script" uid="uid://bmic48xfmq7a7" path="res://scripts/combat/CombatState.cs" id="5_combat_state"]
+[ext_resource type="Script" uid="uid://8rwtvm2k8417" path="res://scripts/combat/HealthState.cs" id="6_health_state"]
+[ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="7_faction_state"]
+[ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="8_status_effect_controller"]
+[ext_resource type="Script" uid="uid://b84ktu5cuj172" path="res://scripts/stats/Stats.cs" id="9_stats"]
+[ext_resource type="Script" uid="uid://dmrwobc7vj7j" path="res://scripts/world/merchants/MerchantStock.cs" id="10_merchant_stock"]
+[ext_resource type="Script" uid="uid://devchgd2kfcxy" path="res://scripts/world/interactions/MerchantInteraction.cs" id="11_merchant_interaction"]
+[ext_resource type="Resource" uid="uid://kslooljeu2ma" path="res://resources/merchants/test_merchant.tres" id="12_test_merchant"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_merchant"]
+radius = 5.0
+height = 26.0
+
+[node name="Merchant" type="CharacterBody2D" unique_id=265679677]
+z_index = -1
+script = ExtResource("1_merchant_script")
+
+[node name="OmniSprite" type="Node2D" parent="." unique_id=494181660]
+script = ExtResource("2_omni_sprite")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=721709561]
+position = Vector2(0, -2)
+sprite_frames = ExtResource("3_merchant_frames")
+animation = &"idle_south"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=329316168]
+position = Vector2(0, 12)
+shape = SubResource("CapsuleShape2D_merchant")
+
+[node name="ActorHUD" parent="." unique_id=1858769470 instance=ExtResource("4_actor_hud")]
+DisplayName = "Merchant"
+VerticalOffset = -45.0
+
+[node name="CombatState" type="Node" parent="." unique_id=1093022400]
+script = ExtResource("5_combat_state")
+
+[node name="HealthState" type="Node" parent="." unique_id=715111612]
+script = ExtResource("6_health_state")
+
+[node name="FactionState" type="Node" parent="." unique_id=852582151]
+script = ExtResource("7_faction_state")
+FactionKey = "allies"
+
+[node name="StatusEffectController" type="Node" parent="." unique_id=219463561]
+script = ExtResource("8_status_effect_controller")
+
+[node name="Stats" type="Node" parent="." unique_id=985826405]
+script = ExtResource("9_stats")
+MaxHealth = 20
+MaxMana = 0
+Power = 0.0
+
+[node name="MerchantStock" type="Node" parent="." unique_id=845860020]
+script = ExtResource("10_merchant_stock")
+Definition = ExtResource("12_test_merchant")
+
+[node name="MerchantInteraction" type="Node" parent="." unique_id=137042993]
+script = ExtResource("11_merchant_interaction")

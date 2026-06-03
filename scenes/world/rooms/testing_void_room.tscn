@@ -37,9 +37,7 @@
 [ext_resource type="Script" uid="uid://birryig8e7hfp" path="res://scripts/ai/behaviors/PatrolBehavior.cs" id="30_jdy5i"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="31_fari3"]
 [ext_resource type="Script" uid="uid://b84ktu5cuj172" path="res://scripts/stats/Stats.cs" id="32_stats"]
-[ext_resource type="Script" uid="uid://dmrwobc7vj7j" path="res://scripts/world/merchants/MerchantStock.cs" id="33_merchant_stock_script"]
-[ext_resource type="Script" uid="uid://devchgd2kfcxy" path="res://scripts/world/interactions/MerchantInteraction.cs" id="34_merchant_interaction_script"]
-[ext_resource type="Resource" uid="uid://kslooljeu2ma" path="res://resources/merchants/test_merchant.tres" id="35_test_merchant_definition"]
+[ext_resource type="PackedScene" uid="uid://iagrd4uy7h2c" path="res://scenes/actors/npcs/merchant.tscn" id="33_merchant"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -125,16 +123,8 @@ EffectLifetime = 0.0
 position = Vector2(276, 894)
 scale = Vector2(0.6, 0.6)
 
-[node name="MerchantAltar" parent="Unscaled" unique_id=911000001 instance=ExtResource("6_67bni")]
+[node name="Merchant" parent="Unscaled" unique_id=911000001 instance=ExtResource("33_merchant")]
 position = Vector2(335, 1062)
-scale = Vector2(0.6, 0.6)
-
-[node name="MerchantStock" type="Node" parent="Unscaled/MerchantAltar" unique_id=911000002]
-script = ExtResource("33_merchant_stock_script")
-Definition = ExtResource("35_test_merchant_definition")
-
-[node name="MerchantInteraction" type="Node" parent="Unscaled/MerchantAltar" unique_id=911000003]
-script = ExtResource("34_merchant_interaction_script")
 
 [node name="ChestContent" parent="Unscaled" unique_id=288433992 instance=ExtResource("7_content")]
 
@@ -357,7 +347,6 @@ position = Vector2(1298.8608, 334.64896)
 [node name="PatrolNode7" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=164955460]
 position = Vector2(1439.5033, 291.0013)
 
-[editable path="Unscaled/MerchantAltar"]
 [editable path="Unscaled/ChestContent"]
 [editable path="Unscaled/ChestContent/Actors/Skeleton"]
 [editable path="Unscaled/ChestContent/Actors/Skeleton2"]
