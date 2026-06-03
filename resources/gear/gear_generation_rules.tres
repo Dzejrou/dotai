@@ -1,17 +1,647 @@
-[gd_resource type="Resource" script_class="GearGenerationRules" load_steps=188 format=3]
+[gd_resource type="Resource" script_class="GearGenerationRules" format=3 uid="uid://bjr37b6pfoya6"]
 
-[ext_resource type="Script" path="res://scripts/gear/GearGenerationRules.cs" id="g_rules_script"]
-[ext_resource type="Script" path="res://scripts/gear/GearQualityRules.cs" id="g_quality_script"]
-[ext_resource type="Script" path="res://scripts/gear/GearSlotRules.cs" id="g_slot_script"]
-[ext_resource type="Script" path="res://scripts/gear/GearStatValueEntry.cs" id="g_value_entry_script"]
-[ext_resource type="Script" path="res://scripts/gear/GearMainStatScaleEntry.cs" id="g_scale_entry_script"]
-[ext_resource type="Texture2D" uid="uid://ddningmwgdm14" path="res://assets/gear/hood.png" id="icon_Head"]
+[ext_resource type="Script" uid="uid://ddv7iik6843gi" path="res://scripts/gear/GearQualityRules.cs" id="g_quality_script"]
+[ext_resource type="Script" uid="uid://cw8digqepe66r" path="res://scripts/gear/GearGenerationRules.cs" id="g_rules_script"]
+[ext_resource type="Script" uid="uid://bhxl0f681bsk8" path="res://scripts/gear/GearMainStatScaleEntry.cs" id="g_scale_entry_script"]
+[ext_resource type="Script" uid="uid://be1yhr3r7b5c6" path="res://scripts/gear/GearSlotRules.cs" id="g_slot_script"]
+[ext_resource type="Script" uid="uid://400vdqylx085" path="res://scripts/gear/GearStatValueEntry.cs" id="g_value_entry_script"]
+[ext_resource type="Texture2D" uid="uid://fmmek3jh2hih" path="res://assets/gear/artifact.png" id="icon_Artifact"]
 [ext_resource type="Texture2D" uid="uid://cngwxj7u1c514" path="res://assets/gear/boots.png" id="icon_Boots"]
-[ext_resource type="Texture2D" uid="uid://bdq15u0xf0ua7" path="res://assets/gear/torso.png" id="icon_Torso"]
-[ext_resource type="Texture2D" path="res://assets/gear/legs.png" id="icon_Legs"]
-[ext_resource type="Texture2D" uid="uid://ygv8xbbu1j6e" path="res://assets/gear/ring.png" id="icon_Ring"]
 [ext_resource type="Texture2D" uid="uid://c0x6t57r7qm7o" path="res://assets/gear/gloves.png" id="icon_Gloves"]
-[ext_resource type="Texture2D" path="res://assets/gear/artifact.png" id="icon_Artifact"]
+[ext_resource type="Texture2D" uid="uid://ddningmwgdm14" path="res://assets/gear/hood.png" id="icon_Head"]
+[ext_resource type="Texture2D" uid="uid://yj8l0hmm524f" path="res://assets/gear/legs.png" id="icon_Legs"]
+[ext_resource type="Texture2D" uid="uid://ygv8xbbu1j6e" path="res://assets/gear/ring.png" id="icon_Ring"]
+[ext_resource type="Texture2D" uid="uid://bdq15u0xf0ua7" path="res://assets/gear/torso.png" id="icon_Torso"]
+
+[sub_resource type="Resource" id="ms_MaxHealth_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxHealth"
+Quality = 0
+MaxValue = 40
+
+[sub_resource type="Resource" id="ms_MaxHealth_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxHealth"
+MaxValue = 100
+
+[sub_resource type="Resource" id="ms_MaxHealth_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxHealth"
+Quality = 2
+MaxValue = 200
+
+[sub_resource type="Resource" id="ms_MaxHealth_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxHealth"
+Quality = 3
+MaxValue = 350
+
+[sub_resource type="Resource" id="ms_MaxHealth_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxHealth"
+Quality = 4
+MaxValue = 500
+
+[sub_resource type="Resource" id="ms_MaxHealth_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxHealth"
+Quality = 5
+MaxValue = 750
+
+[sub_resource type="Resource" id="ms_MaxMana_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxMana"
+Quality = 0
+MaxValue = 40
+
+[sub_resource type="Resource" id="ms_MaxMana_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxMana"
+MaxValue = 100
+
+[sub_resource type="Resource" id="ms_MaxMana_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxMana"
+Quality = 2
+MaxValue = 200
+
+[sub_resource type="Resource" id="ms_MaxMana_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxMana"
+Quality = 3
+MaxValue = 350
+
+[sub_resource type="Resource" id="ms_MaxMana_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxMana"
+Quality = 4
+MaxValue = 500
+
+[sub_resource type="Resource" id="ms_MaxMana_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MaxMana"
+Quality = 5
+MaxValue = 750
+
+[sub_resource type="Resource" id="ms_MP5_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MP5"
+Quality = 0
+MaxValue = 4
+
+[sub_resource type="Resource" id="ms_MP5_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MP5"
+MaxValue = 10
+
+[sub_resource type="Resource" id="ms_MP5_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MP5"
+Quality = 2
+MaxValue = 20
+
+[sub_resource type="Resource" id="ms_MP5_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MP5"
+Quality = 3
+MaxValue = 30
+
+[sub_resource type="Resource" id="ms_MP5_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MP5"
+Quality = 4
+MaxValue = 40
+
+[sub_resource type="Resource" id="ms_MP5_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MP5"
+Quality = 5
+MaxValue = 60
+
+[sub_resource type="Resource" id="ms_Power_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Power"
+Quality = 0
+MaxValue = 10
+
+[sub_resource type="Resource" id="ms_Power_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Power"
+MaxValue = 25
+
+[sub_resource type="Resource" id="ms_Power_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Power"
+Quality = 2
+MaxValue = 50
+
+[sub_resource type="Resource" id="ms_Power_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Power"
+Quality = 3
+MaxValue = 75
+
+[sub_resource type="Resource" id="ms_Power_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Power"
+Quality = 4
+MaxValue = 110
+
+[sub_resource type="Resource" id="ms_Power_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Power"
+Quality = 5
+MaxValue = 160
+
+[sub_resource type="Resource" id="ms_Haste_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Haste"
+Quality = 0
+MaxValue = 40
+
+[sub_resource type="Resource" id="ms_Haste_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Haste"
+MaxValue = 100
+
+[sub_resource type="Resource" id="ms_Haste_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Haste"
+Quality = 2
+MaxValue = 200
+
+[sub_resource type="Resource" id="ms_Haste_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Haste"
+Quality = 3
+MaxValue = 350
+
+[sub_resource type="Resource" id="ms_Haste_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Haste"
+Quality = 4
+MaxValue = 500
+
+[sub_resource type="Resource" id="ms_Haste_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "Haste"
+Quality = 5
+MaxValue = 750
+
+[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MovementSpeedMultiplier"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MovementSpeedMultiplier"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MovementSpeedMultiplier"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MovementSpeedMultiplier"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MovementSpeedMultiplier"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "MovementSpeedMultiplier"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_CritRate_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritRate"
+Quality = 0
+MaxValue = 0.04
+
+[sub_resource type="Resource" id="ms_CritRate_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritRate"
+MaxValue = 0.08
+
+[sub_resource type="Resource" id="ms_CritRate_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritRate"
+Quality = 2
+MaxValue = 0.12
+
+[sub_resource type="Resource" id="ms_CritRate_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritRate"
+Quality = 3
+MaxValue = 0.16
+
+[sub_resource type="Resource" id="ms_CritRate_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritRate"
+Quality = 4
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_CritRate_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritRate"
+Quality = 5
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_CritDamage_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritDamage"
+Quality = 0
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_CritDamage_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritDamage"
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_CritDamage_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritDamage"
+Quality = 2
+MaxValue = 0.4
+
+[sub_resource type="Resource" id="ms_CritDamage_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritDamage"
+Quality = 3
+MaxValue = 0.6
+
+[sub_resource type="Resource" id="ms_CritDamage_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritDamage"
+Quality = 4
+MaxValue = 0.8
+
+[sub_resource type="Resource" id="ms_CritDamage_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "CritDamage"
+Quality = 5
+MaxValue = 1.0
+
+[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalDamageBonus"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalDamageBonus"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalDamageBonus"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalDamageBonus"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalDamageBonus"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalDamageBonus"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_FireDamageBonus_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireDamageBonus"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_FireDamageBonus_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireDamageBonus"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_FireDamageBonus_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireDamageBonus"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_FireDamageBonus_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireDamageBonus"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_FireDamageBonus_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireDamageBonus"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_FireDamageBonus_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireDamageBonus"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_IceDamageBonus_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceDamageBonus"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_IceDamageBonus_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceDamageBonus"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_IceDamageBonus_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceDamageBonus"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_IceDamageBonus_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceDamageBonus"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_IceDamageBonus_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceDamageBonus"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_IceDamageBonus_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceDamageBonus"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_PoisonDamageBonus_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonDamageBonus"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_PoisonDamageBonus_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonDamageBonus"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_PoisonDamageBonus_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonDamageBonus"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_PoisonDamageBonus_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonDamageBonus"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_PoisonDamageBonus_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonDamageBonus"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_PoisonDamageBonus_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonDamageBonus"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneDamageBonus"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneDamageBonus"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneDamageBonus"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneDamageBonus"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneDamageBonus"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneDamageBonus"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_PhysicalResistance_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalResistance"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_PhysicalResistance_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalResistance"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_PhysicalResistance_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalResistance"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_PhysicalResistance_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalResistance"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_PhysicalResistance_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalResistance"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_PhysicalResistance_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PhysicalResistance"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_FireResistance_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireResistance"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_FireResistance_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireResistance"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_FireResistance_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireResistance"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_FireResistance_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireResistance"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_FireResistance_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireResistance"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_FireResistance_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "FireResistance"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_IceResistance_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceResistance"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_IceResistance_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceResistance"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_IceResistance_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceResistance"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_IceResistance_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceResistance"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_IceResistance_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceResistance"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_IceResistance_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "IceResistance"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_PoisonResistance_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonResistance"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_PoisonResistance_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonResistance"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_PoisonResistance_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonResistance"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_PoisonResistance_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonResistance"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_PoisonResistance_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonResistance"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_PoisonResistance_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "PoisonResistance"
+Quality = 5
+MaxValue = 0.3
+
+[sub_resource type="Resource" id="ms_ArcaneResistance_Trash"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneResistance"
+Quality = 0
+MaxValue = 0.05
+
+[sub_resource type="Resource" id="ms_ArcaneResistance_Common"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneResistance"
+MaxValue = 0.1
+
+[sub_resource type="Resource" id="ms_ArcaneResistance_Uncommon"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneResistance"
+Quality = 2
+MaxValue = 0.15
+
+[sub_resource type="Resource" id="ms_ArcaneResistance_Rare"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneResistance"
+Quality = 3
+MaxValue = 0.2
+
+[sub_resource type="Resource" id="ms_ArcaneResistance_Epic"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneResistance"
+Quality = 4
+MaxValue = 0.25
+
+[sub_resource type="Resource" id="ms_ArcaneResistance_Legendary"]
+script = ExtResource("g_scale_entry_script")
+StatId = "ArcaneResistance"
+Quality = 5
+MaxValue = 0.3
 
 [sub_resource type="Resource" id="sv_Trash_MaxHealth"]
 script = ExtResource("g_value_entry_script")
@@ -58,6 +688,13 @@ script = ExtResource("g_value_entry_script")
 StatId = "DamageBonus"
 Value = 0.005
 
+[sub_resource type="Resource" id="qr_Trash"]
+script = ExtResource("g_quality_script")
+Quality = 0
+BaseFodderXp = 5
+BaseSellPrice = 1
+SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Trash_MaxHealth"), SubResource("sv_Trash_MaxMana"), SubResource("sv_Trash_MP5"), SubResource("sv_Trash_Power"), SubResource("sv_Trash_Haste"), SubResource("sv_Trash_MovementSpeedMultiplier"), SubResource("sv_Trash_CritRate"), SubResource("sv_Trash_CritDamage"), SubResource("sv_Trash_DamageBonus")])
+
 [sub_resource type="Resource" id="sv_Common_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
@@ -102,6 +739,14 @@ Value = 0.05
 script = ExtResource("g_value_entry_script")
 StatId = "DamageBonus"
 Value = 0.01
+
+[sub_resource type="Resource" id="qr_Common"]
+script = ExtResource("g_quality_script")
+MaxLevel = 8
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381])
+BaseFodderXp = 20
+BaseSellPrice = 5
+SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Common_MaxHealth"), SubResource("sv_Common_MaxMana"), SubResource("sv_Common_MP5"), SubResource("sv_Common_Power"), SubResource("sv_Common_Haste"), SubResource("sv_Common_MovementSpeedMultiplier"), SubResource("sv_Common_CritRate"), SubResource("sv_Common_CritDamage"), SubResource("sv_Common_DamageBonus")])
 
 [sub_resource type="Resource" id="sv_Uncommon_MaxHealth"]
 script = ExtResource("g_value_entry_script")
@@ -148,6 +793,16 @@ script = ExtResource("g_value_entry_script")
 StatId = "DamageBonus"
 Value = 0.02
 
+[sub_resource type="Resource" id="qr_Uncommon"]
+script = ExtResource("g_quality_script")
+Quality = 2
+MaxLevel = 12
+SubstatCount = 3
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930])
+BaseFodderXp = 50
+BaseSellPrice = 15
+SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Uncommon_MaxHealth"), SubResource("sv_Uncommon_MaxMana"), SubResource("sv_Uncommon_MP5"), SubResource("sv_Uncommon_Power"), SubResource("sv_Uncommon_Haste"), SubResource("sv_Uncommon_MovementSpeedMultiplier"), SubResource("sv_Uncommon_CritRate"), SubResource("sv_Uncommon_CritDamage"), SubResource("sv_Uncommon_DamageBonus")])
+
 [sub_resource type="Resource" id="sv_Rare_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
@@ -192,6 +847,16 @@ Value = 0.12
 script = ExtResource("g_value_entry_script")
 StatId = "DamageBonus"
 Value = 0.03
+
+[sub_resource type="Resource" id="qr_Rare"]
+script = ExtResource("g_quality_script")
+Quality = 3
+MaxLevel = 16
+SubstatCount = 3
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271])
+BaseFodderXp = 120
+BaseSellPrice = 40
+SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Rare_MaxHealth"), SubResource("sv_Rare_MaxMana"), SubResource("sv_Rare_MP5"), SubResource("sv_Rare_Power"), SubResource("sv_Rare_Haste"), SubResource("sv_Rare_MovementSpeedMultiplier"), SubResource("sv_Rare_CritRate"), SubResource("sv_Rare_CritDamage"), SubResource("sv_Rare_DamageBonus")])
 
 [sub_resource type="Resource" id="sv_Epic_MaxHealth"]
 script = ExtResource("g_value_entry_script")
@@ -238,6 +903,16 @@ script = ExtResource("g_value_entry_script")
 StatId = "DamageBonus"
 Value = 0.04
 
+[sub_resource type="Resource" id="qr_Epic"]
+script = ExtResource("g_quality_script")
+Quality = 4
+MaxLevel = 20
+SubstatCount = 4
+ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271, 2839, 3549, 4436, 5545])
+BaseFodderXp = 250
+BaseSellPrice = 100
+SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Epic_MaxHealth"), SubResource("sv_Epic_MaxMana"), SubResource("sv_Epic_MP5"), SubResource("sv_Epic_Power"), SubResource("sv_Epic_Haste"), SubResource("sv_Epic_MovementSpeedMultiplier"), SubResource("sv_Epic_CritRate"), SubResource("sv_Epic_CritDamage"), SubResource("sv_Epic_DamageBonus")])
+
 [sub_resource type="Resource" id="sv_Legendary_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
@@ -283,56 +958,6 @@ script = ExtResource("g_value_entry_script")
 StatId = "DamageBonus"
 Value = 0.05
 
-[sub_resource type="Resource" id="qr_Trash"]
-script = ExtResource("g_quality_script")
-Quality = 0
-MaxLevel = 1
-SubstatCount = 2
-ExperienceToNextLevel = Array[int]([])
-BaseFodderXp = 5
-BaseSellPrice = 1
-SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Trash_MaxHealth"), SubResource("sv_Trash_MaxMana"), SubResource("sv_Trash_MP5"), SubResource("sv_Trash_Power"), SubResource("sv_Trash_Haste"), SubResource("sv_Trash_MovementSpeedMultiplier"), SubResource("sv_Trash_CritRate"), SubResource("sv_Trash_CritDamage"), SubResource("sv_Trash_DamageBonus")])
-
-[sub_resource type="Resource" id="qr_Common"]
-script = ExtResource("g_quality_script")
-Quality = 1
-MaxLevel = 8
-SubstatCount = 2
-ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381])
-BaseFodderXp = 20
-BaseSellPrice = 5
-SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Common_MaxHealth"), SubResource("sv_Common_MaxMana"), SubResource("sv_Common_MP5"), SubResource("sv_Common_Power"), SubResource("sv_Common_Haste"), SubResource("sv_Common_MovementSpeedMultiplier"), SubResource("sv_Common_CritRate"), SubResource("sv_Common_CritDamage"), SubResource("sv_Common_DamageBonus")])
-
-[sub_resource type="Resource" id="qr_Uncommon"]
-script = ExtResource("g_quality_script")
-Quality = 2
-MaxLevel = 12
-SubstatCount = 3
-ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930])
-BaseFodderXp = 50
-BaseSellPrice = 15
-SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Uncommon_MaxHealth"), SubResource("sv_Uncommon_MaxMana"), SubResource("sv_Uncommon_MP5"), SubResource("sv_Uncommon_Power"), SubResource("sv_Uncommon_Haste"), SubResource("sv_Uncommon_MovementSpeedMultiplier"), SubResource("sv_Uncommon_CritRate"), SubResource("sv_Uncommon_CritDamage"), SubResource("sv_Uncommon_DamageBonus")])
-
-[sub_resource type="Resource" id="qr_Rare"]
-script = ExtResource("g_quality_script")
-Quality = 3
-MaxLevel = 16
-SubstatCount = 3
-ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271])
-BaseFodderXp = 120
-BaseSellPrice = 40
-SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Rare_MaxHealth"), SubResource("sv_Rare_MaxMana"), SubResource("sv_Rare_MP5"), SubResource("sv_Rare_Power"), SubResource("sv_Rare_Haste"), SubResource("sv_Rare_MovementSpeedMultiplier"), SubResource("sv_Rare_CritRate"), SubResource("sv_Rare_CritDamage"), SubResource("sv_Rare_DamageBonus")])
-
-[sub_resource type="Resource" id="qr_Epic"]
-script = ExtResource("g_quality_script")
-Quality = 4
-MaxLevel = 20
-SubstatCount = 4
-ExperienceToNextLevel = Array[int]([100, 125, 156, 195, 244, 305, 381, 476, 595, 744, 930, 1163, 1453, 1817, 2271, 2839, 3549, 4436, 5545])
-BaseFodderXp = 250
-BaseSellPrice = 100
-SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Epic_MaxHealth"), SubResource("sv_Epic_MaxMana"), SubResource("sv_Epic_MP5"), SubResource("sv_Epic_Power"), SubResource("sv_Epic_Haste"), SubResource("sv_Epic_MovementSpeedMultiplier"), SubResource("sv_Epic_CritRate"), SubResource("sv_Epic_CritDamage"), SubResource("sv_Epic_DamageBonus")])
-
 [sub_resource type="Resource" id="qr_Legendary"]
 script = ExtResource("g_quality_script")
 Quality = 5
@@ -345,7 +970,6 @@ SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Lege
 
 [sub_resource type="Resource" id="sr_Head"]
 script = ExtResource("g_slot_script")
-Slot = 0
 DisplayName = "Hood"
 Icon = ExtResource("icon_Head")
 MainStat1Pool = Array[String](["CritRate", "CritDamage", "Power"])
@@ -398,654 +1022,6 @@ DisplayName = "Artifact"
 Icon = ExtResource("icon_Artifact")
 MainStat1Pool = Array[String](["PhysicalDamageBonus", "FireDamageBonus", "IceDamageBonus", "PoisonDamageBonus", "ArcaneDamageBonus"])
 MainStat2Pool = Array[String](["MaxHealth", "Power", "MaxMana"])
-
-[sub_resource type="Resource" id="ms_MaxHealth_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxHealth"
-Quality = 0
-MaxValue = 40
-
-[sub_resource type="Resource" id="ms_MaxHealth_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxHealth"
-Quality = 1
-MaxValue = 100
-
-[sub_resource type="Resource" id="ms_MaxHealth_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxHealth"
-Quality = 2
-MaxValue = 200
-
-[sub_resource type="Resource" id="ms_MaxHealth_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxHealth"
-Quality = 3
-MaxValue = 350
-
-[sub_resource type="Resource" id="ms_MaxHealth_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxHealth"
-Quality = 4
-MaxValue = 500
-
-[sub_resource type="Resource" id="ms_MaxHealth_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxHealth"
-Quality = 5
-MaxValue = 750
-
-[sub_resource type="Resource" id="ms_MaxMana_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxMana"
-Quality = 0
-MaxValue = 40
-
-[sub_resource type="Resource" id="ms_MaxMana_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxMana"
-Quality = 1
-MaxValue = 100
-
-[sub_resource type="Resource" id="ms_MaxMana_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxMana"
-Quality = 2
-MaxValue = 200
-
-[sub_resource type="Resource" id="ms_MaxMana_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxMana"
-Quality = 3
-MaxValue = 350
-
-[sub_resource type="Resource" id="ms_MaxMana_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxMana"
-Quality = 4
-MaxValue = 500
-
-[sub_resource type="Resource" id="ms_MaxMana_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MaxMana"
-Quality = 5
-MaxValue = 750
-
-[sub_resource type="Resource" id="ms_MP5_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MP5"
-Quality = 0
-MaxValue = 4
-
-[sub_resource type="Resource" id="ms_MP5_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MP5"
-Quality = 1
-MaxValue = 10
-
-[sub_resource type="Resource" id="ms_MP5_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MP5"
-Quality = 2
-MaxValue = 20
-
-[sub_resource type="Resource" id="ms_MP5_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MP5"
-Quality = 3
-MaxValue = 30
-
-[sub_resource type="Resource" id="ms_MP5_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MP5"
-Quality = 4
-MaxValue = 40
-
-[sub_resource type="Resource" id="ms_MP5_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MP5"
-Quality = 5
-MaxValue = 60
-
-[sub_resource type="Resource" id="ms_Power_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Power"
-Quality = 0
-MaxValue = 10
-
-[sub_resource type="Resource" id="ms_Power_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Power"
-Quality = 1
-MaxValue = 25
-
-[sub_resource type="Resource" id="ms_Power_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Power"
-Quality = 2
-MaxValue = 50
-
-[sub_resource type="Resource" id="ms_Power_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Power"
-Quality = 3
-MaxValue = 75
-
-[sub_resource type="Resource" id="ms_Power_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Power"
-Quality = 4
-MaxValue = 110
-
-[sub_resource type="Resource" id="ms_Power_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Power"
-Quality = 5
-MaxValue = 160
-
-[sub_resource type="Resource" id="ms_Haste_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Haste"
-Quality = 0
-MaxValue = 40
-
-[sub_resource type="Resource" id="ms_Haste_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Haste"
-Quality = 1
-MaxValue = 100
-
-[sub_resource type="Resource" id="ms_Haste_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Haste"
-Quality = 2
-MaxValue = 200
-
-[sub_resource type="Resource" id="ms_Haste_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Haste"
-Quality = 3
-MaxValue = 350
-
-[sub_resource type="Resource" id="ms_Haste_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Haste"
-Quality = 4
-MaxValue = 500
-
-[sub_resource type="Resource" id="ms_Haste_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "Haste"
-Quality = 5
-MaxValue = 750
-
-[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MovementSpeedMultiplier"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MovementSpeedMultiplier"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MovementSpeedMultiplier"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MovementSpeedMultiplier"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MovementSpeedMultiplier"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "MovementSpeedMultiplier"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_CritRate_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritRate"
-Quality = 0
-MaxValue = 0.04
-
-[sub_resource type="Resource" id="ms_CritRate_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritRate"
-Quality = 1
-MaxValue = 0.08
-
-[sub_resource type="Resource" id="ms_CritRate_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritRate"
-Quality = 2
-MaxValue = 0.12
-
-[sub_resource type="Resource" id="ms_CritRate_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritRate"
-Quality = 3
-MaxValue = 0.16
-
-[sub_resource type="Resource" id="ms_CritRate_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritRate"
-Quality = 4
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_CritRate_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritRate"
-Quality = 5
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_CritDamage_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritDamage"
-Quality = 0
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_CritDamage_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritDamage"
-Quality = 1
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_CritDamage_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritDamage"
-Quality = 2
-MaxValue = 0.4
-
-[sub_resource type="Resource" id="ms_CritDamage_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritDamage"
-Quality = 3
-MaxValue = 0.6
-
-[sub_resource type="Resource" id="ms_CritDamage_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritDamage"
-Quality = 4
-MaxValue = 0.8
-
-[sub_resource type="Resource" id="ms_CritDamage_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "CritDamage"
-Quality = 5
-MaxValue = 1.0
-
-[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalDamageBonus"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalDamageBonus"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalDamageBonus"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalDamageBonus"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalDamageBonus"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_PhysicalDamageBonus_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalDamageBonus"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_FireDamageBonus_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireDamageBonus"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_FireDamageBonus_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireDamageBonus"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_FireDamageBonus_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireDamageBonus"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_FireDamageBonus_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireDamageBonus"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_FireDamageBonus_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireDamageBonus"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_FireDamageBonus_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireDamageBonus"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_IceDamageBonus_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceDamageBonus"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_IceDamageBonus_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceDamageBonus"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_IceDamageBonus_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceDamageBonus"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_IceDamageBonus_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceDamageBonus"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_IceDamageBonus_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceDamageBonus"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_IceDamageBonus_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceDamageBonus"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_PoisonDamageBonus_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonDamageBonus"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_PoisonDamageBonus_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonDamageBonus"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_PoisonDamageBonus_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonDamageBonus"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_PoisonDamageBonus_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonDamageBonus"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_PoisonDamageBonus_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonDamageBonus"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_PoisonDamageBonus_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonDamageBonus"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneDamageBonus"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneDamageBonus"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneDamageBonus"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneDamageBonus"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneDamageBonus"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_ArcaneDamageBonus_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneDamageBonus"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_PhysicalResistance_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalResistance"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_PhysicalResistance_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalResistance"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_PhysicalResistance_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalResistance"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_PhysicalResistance_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalResistance"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_PhysicalResistance_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalResistance"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_PhysicalResistance_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PhysicalResistance"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_FireResistance_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireResistance"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_FireResistance_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireResistance"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_FireResistance_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireResistance"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_FireResistance_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireResistance"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_FireResistance_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireResistance"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_FireResistance_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "FireResistance"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_IceResistance_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceResistance"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_IceResistance_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceResistance"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_IceResistance_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceResistance"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_IceResistance_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceResistance"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_IceResistance_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceResistance"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_IceResistance_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "IceResistance"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_PoisonResistance_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonResistance"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_PoisonResistance_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonResistance"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_PoisonResistance_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonResistance"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_PoisonResistance_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonResistance"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_PoisonResistance_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonResistance"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_PoisonResistance_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "PoisonResistance"
-Quality = 5
-MaxValue = 0.3
-
-[sub_resource type="Resource" id="ms_ArcaneResistance_Trash"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneResistance"
-Quality = 0
-MaxValue = 0.05
-
-[sub_resource type="Resource" id="ms_ArcaneResistance_Common"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneResistance"
-Quality = 1
-MaxValue = 0.1
-
-[sub_resource type="Resource" id="ms_ArcaneResistance_Uncommon"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneResistance"
-Quality = 2
-MaxValue = 0.15
-
-[sub_resource type="Resource" id="ms_ArcaneResistance_Rare"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneResistance"
-Quality = 3
-MaxValue = 0.2
-
-[sub_resource type="Resource" id="ms_ArcaneResistance_Epic"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneResistance"
-Quality = 4
-MaxValue = 0.25
-
-[sub_resource type="Resource" id="ms_ArcaneResistance_Legendary"]
-script = ExtResource("g_scale_entry_script")
-StatId = "ArcaneResistance"
-Quality = 5
-MaxValue = 0.3
 
 [resource]
 script = ExtResource("g_rules_script")
