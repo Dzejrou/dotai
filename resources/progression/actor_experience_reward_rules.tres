@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="ActorExperienceRewardRules" format=3]
+[gd_resource type="Resource" script_class="ActorExperienceRewardRules" format=3 uid="uid://belixlrhvetat"]
 
-[ext_resource type="Script" path="res://scripts/progression/ActorExperienceRewardRules.cs" id="1_reward_rules_script"]
-[ext_resource type="Script" path="res://scripts/progression/ActorExperienceRewardLevelDifferenceEntry.cs" id="2_diff_entry_script"]
+[ext_resource type="Script" uid="uid://4o5y675txq8s" path="res://scripts/progression/ActorExperienceRewardRules.cs" id="1_reward_rules_script"]
+[ext_resource type="Script" uid="uid://dvmkqqgtraid5" path="res://scripts/progression/ActorExperienceRewardLevelDifferenceEntry.cs" id="2_diff_entry_script"]
 
 [sub_resource type="Resource" id="Resource_diff_neg5"]
 script = ExtResource("2_diff_entry_script")
@@ -30,8 +30,6 @@ Multiplier = 0.8
 
 [sub_resource type="Resource" id="Resource_diff_0"]
 script = ExtResource("2_diff_entry_script")
-MinDifference = 0
-Multiplier = 1.0
 
 [sub_resource type="Resource" id="Resource_diff_pos1"]
 script = ExtResource("2_diff_entry_script")
@@ -50,11 +48,4 @@ Multiplier = 1.3
 
 [resource]
 script = ExtResource("1_reward_rules_script")
-SameLevelKillsBase = 8.0
-SameLevelKillsMaxBonus = 10.0
-SameLevelKillsMaxLevel = 60
-SameLevelKillsExponent = 2.0
-NormalRankMultiplier = 1.0
-EliteRankMultiplier = 2.5
-BossRankMultiplier = 10.0
 LevelDifferenceMultipliers = Array[ExtResource("2_diff_entry_script")]([SubResource("Resource_diff_neg5"), SubResource("Resource_diff_neg4"), SubResource("Resource_diff_neg3"), SubResource("Resource_diff_neg2"), SubResource("Resource_diff_neg1"), SubResource("Resource_diff_0"), SubResource("Resource_diff_pos1"), SubResource("Resource_diff_pos2"), SubResource("Resource_diff_pos3")])
