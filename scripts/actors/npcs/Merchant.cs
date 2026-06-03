@@ -1,7 +1,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class MerchantNpc : Actor, ITargetable, IInteractable, IInteractionPromptAnchor
+public partial class Merchant : Actor, ITargetable, IInteractable, IInteractionPromptAnchor
 {
     [Export]
     public Vector2 InteractionPromptOffset { get; set; } = new(0.0f, -48.0f);

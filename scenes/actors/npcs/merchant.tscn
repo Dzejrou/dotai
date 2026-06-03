@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://iagrd4uy7h2c"]
 
-[ext_resource type="Script" uid="uid://d3wat2e5tq6nx" path="res://scripts/actors/npcs/MerchantNpc.cs" id="1_merchant_script"]
+[ext_resource type="Script" uid="uid://c66xqkq03rufd" path="res://scripts/actors/npcs/Merchant.cs" id="1_merchant_script"]
 [ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="2_omni_sprite"]
 [ext_resource type="SpriteFrames" uid="uid://c6fvmj3aob5vu" path="res://resources/animations/merchant_spriteframes.tres" id="3_merchant_frames"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="4_actor_hud"]
