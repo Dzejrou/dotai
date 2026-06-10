@@ -161,19 +161,32 @@ public partial class PlayerSpellBar : Control
 
     private TextureRect CreateIconRect(Control slotRoot)
     {
-        var iconOffset = new Vector2((SlotSize.X - IconSize) * 0.5f, 2.0f);
-        var icon = new TextureRect
+        return SetUpIconRect(slotRoot, new TextureRect());
+    }
+
+    private TextureRect CreateSpellIconRect(Control slotRoot, StringName slotAction)
+    {
+        var icon = SetUpIconRect(slotRoot, new SpellTooltipIcon
         {
-            Name = "Icon",
-            Position = iconOffset,
-            Size = new Vector2(IconSize, IconSize),
-            CustomMinimumSize = new Vector2(IconSize, IconSize),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            Visible = false,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
+            SpellProvider = () => ResolveEquippedSpell(slotAction),
+        });
+        // Pass instead of Ignore: hovering the icon surfaces the spell tooltip while
+        // unconsumed clicks keep falling through to world input (placement casts).
+        icon.MouseFilter = MouseFilterEnum.Pass;
+        return icon;
+    }
+
+    private T SetUpIconRect<T>(Control slotRoot, T icon) where T : TextureRect
+    {
+        icon.Name = "Icon";
+        icon.Position = new Vector2((SlotSize.X - IconSize) * 0.5f, 2.0f);
+        icon.Size = new Vector2(IconSize, IconSize);
+        icon.CustomMinimumSize = new Vector2(IconSize, IconSize);
+        icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+        icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+        icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+        icon.Visible = false;
+        icon.MouseFilter = MouseFilterEnum.Ignore;
         slotRoot.AddChild(icon);
         return icon;
     }
@@ -196,7 +209,7 @@ public partial class PlayerSpellBar : Control
     private ActionSlotView CreateSpellSlot(StringName slotAction, int slotIndex)
     {
         var slotRoot = CreateSlotRoot($"{slotAction}Slot");
-        var icon = CreateIconRect(slotRoot);
+        var icon = CreateSpellIconRect(slotRoot, slotAction);
 
         var manaLabel = new Label
         {
@@ -270,7 +283,9 @@ public partial class PlayerSpellBar : Control
     {
         var slotRoot = CreateSlotRoot($"{kind}Slot");
         var icon = CreateIconRect(slotRoot);
-        AddClickButton(slotRoot, kind == ConsumableKind.Food ? OnFoodPressed : OnDrinkPressed);
+        var button = AddClickButton(slotRoot, kind == ConsumableKind.Food ? OnFoodPressed : OnDrinkPressed);
+        button.TooltipTextProvider = () => ResolveAssignedConsumable(kind)?.DisplayName ?? string.Empty;
+        button.TooltipBuilder = () => BuildConsumableTooltip(kind);
 
         return new ActionSlotView
         {
@@ -304,7 +319,8 @@ public partial class PlayerSpellBar : Control
             slotRoot.AddChild(bar);
         }
 
-        AddClickButton(slotRoot, OnMenuPressed);
+        var button = AddClickButton(slotRoot, OnMenuPressed);
+        button.TooltipText = "Game Menu";
 
         return new ActionSlotView
         {
@@ -314,9 +330,9 @@ public partial class PlayerSpellBar : Control
         };
     }
 
-    private void AddClickButton(Control slotRoot, Action onPressed)
+    private TooltipButton AddClickButton(Control slotRoot, Action onPressed)
     {
-        var button = new Button
+        var button = new TooltipButton
         {
             Name = "ClickArea",
             Flat = true,
@@ -331,6 +347,7 @@ public partial class PlayerSpellBar : Control
         button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         button.Pressed += onPressed;
         slotRoot.AddChild(button);
+        return button;
     }
 
     private static ColorRect GetFrame(Control slotRoot)
@@ -428,6 +445,11 @@ public partial class PlayerSpellBar : Control
 
     private Texture2D ResolveConsumableIcon(ConsumableKind kind)
     {
+        return ResolveAssignedConsumable(kind)?.Icon;
+    }
+
+    private InventoryItemDefinition ResolveAssignedConsumable(ConsumableKind kind)
+    {
         if (_player == null || !GodotObject.IsInstanceValid(_player))
             return null;
 
@@ -439,8 +461,20 @@ public partial class PlayerSpellBar : Control
         if (string.IsNullOrEmpty(assignedId))
             return null;
 
-        var definition = _player.InventoryController?.ItemCatalog?.Resolve(assignedId, null);
-        return definition?.Icon;
+        return _player.InventoryController?.ItemCatalog?.Resolve(assignedId, null);
+    }
+
+    private Control BuildConsumableTooltip(ConsumableKind kind)
+    {
+        var definition = ResolveAssignedConsumable(kind);
+        if (definition == null)
+            return null;
+
+        var inventory = _player?.InventoryController;
+        var quantity = inventory != null && GodotObject.IsInstanceValid(inventory)
+            ? inventory.GetQuantityByItemId(definition.Id)
+            : 0;
+        return TooltipFactory.Build(definition, quantity, alwaysShowQuantity: true);
     }
 
     private Spell ResolveEquippedSpell(StringName slotAction)

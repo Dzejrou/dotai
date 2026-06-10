@@ -51,6 +51,8 @@ SpellId = "fire_ball"
 CastAction = &"cast_spell1"
 HudLabel = "Fireball"
 Icon = ExtResource("31_fireball_icon")
+Description = "Hurls a blazing orb that ignites its target."
+School = 1
 CastTimeSeconds = 1.0
 
 [node name="Damage" type="Node" parent="FireBall" unique_id=76691458]
@@ -79,6 +81,8 @@ SpellId = "frost_nova"
 CastAction = &"cast_spell2"
 HudLabel = "Frost Nova"
 Icon = ExtResource("32_frost_nova_icon")
+Description = "A burst of frost that damages nearby enemies, slowing and freezing them."
+School = 2
 ManaCost = 20
 Cooldown = 3.0
 
@@ -111,6 +115,8 @@ SpellId = "blink"
 CastAction = &"cast_spell3"
 HudLabel = "Blink"
 Icon = ExtResource("33_blink_icon")
+Description = "Instantly teleports you a short distance."
+School = 4
 ManaCost = 15
 Cooldown = 1.5
 
@@ -120,6 +126,8 @@ SpellId = "ring_of_fire"
 CastAction = &"cast_spell4"
 HudLabel = "Ring of Fire"
 Icon = ExtResource("34_ring_of_fire_icon")
+Description = "Conjures a ring of flame on the ground that burns enemies inside."
+School = 1
 ManaCost = 35
 Cooldown = 6.0
 CastTimeSeconds = 2.0
@@ -137,6 +145,8 @@ SpellId = "fire_nova"
 CastAction = &"cast_spell5"
 HudLabel = "Fire Nova"
 Icon = ExtResource("35_fire_nova_icon")
+Description = "Erupts in a wave of flame around you, igniting nearby enemies."
+School = 1
 ManaCost = 20
 
 [node name="Damage" type="Node" parent="FireNova" unique_id=1870933637]
@@ -167,6 +177,8 @@ SpellId = "ice_ball"
 CastAction = &"cast_spell6"
 HudLabel = "Ice Ball"
 Icon = ExtResource("36_iceball_icon")
+Description = "Hurls a freezing orb that chills its target and may freeze it solid."
+School = 2
 CastTimeSeconds = 1.0
 
 [node name="Damage" type="Node" parent="IceBall" unique_id=1071426036]
@@ -198,6 +210,8 @@ SpellId = "ice_spikes"
 CastAction = &"cast_spell7"
 HudLabel = "Ice Spikes"
 Icon = ExtResource("37_ice_spikes_icon")
+Description = "Raises a field of ice spikes that tears at enemies standing inside."
+School = 2
 ManaCost = 35
 Cooldown = 6.0
 CastTimeSeconds = 3.0
@@ -211,6 +225,8 @@ ShieldScene = ExtResource("28_ice_shield_scene")
 SpellId = "ice_shield"
 HudLabel = "Ice Shield"
 Icon = ExtResource("38_ice_shield_icon")
+Description = "Surrounds you with a shield of ice that absorbs incoming damage."
+School = 2
 Cooldown = 60.0
 
 [node name="Blizzard" type="Node" parent="." unique_id=1938442057]
@@ -218,6 +234,8 @@ script = ExtResource("25_blizzard_spell")
 SpellId = "blizzard"
 HudLabel = "Blizzard"
 Icon = ExtResource("39_blizzard_icon")
+Description = "Channels a raging snowstorm that batters enemies in the target area."
+School = 2
 ManaCost = 35
 Cooldown = 6.0
 ChannelDurationSeconds = 12.0
@@ -230,6 +248,8 @@ script = ExtResource("18_y1cuy")
 SpellId = "poison_cloud"
 HudLabel = "Poison Cloud"
 Icon = ExtResource("40_poison_cloud_icon")
+Description = "Releases a lingering cloud of venom that poisons enemies inside."
+School = 3
 ManaCost = 10
 Cooldown = 8.0
 
@@ -242,6 +262,8 @@ script = ExtResource("22_doom_spell")
 SpellId = "doom"
 HudLabel = "Doom"
 Icon = ExtResource("41_doom_icon")
+Description = "Calls down utter annihilation on the target area."
+School = 4
 
 [node name="DoomArea" parent="Doom" unique_id=54320717 instance=ExtResource("23_doom_area")]
 visible = false

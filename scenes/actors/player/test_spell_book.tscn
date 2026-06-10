@@ -14,15 +14,18 @@ script = ExtResource("2_test_aoe_respawn_spell")
 SpellId = "TEST_AoE_respawn"
 HudLabel = "TEST_AoE_respawn"
 Icon = ExtResource("5_test_icon")
+Description = "Debug spell: respawns the current room's enemies."
 
 [node name="TEST_add_level" type="Node" parent="."]
 script = ExtResource("3_test_add_level_spell")
 SpellId = "TEST_add_level"
 HudLabel = "TEST_add_level"
 Icon = ExtResource("5_test_icon")
+Description = "Debug spell: grants one player level."
 
 [node name="TEST_sub_level" type="Node" parent="."]
 script = ExtResource("4_test_sub_level_spell")
 SpellId = "TEST_sub_level"
 HudLabel = "TEST_sub_level"
 Icon = ExtResource("5_test_icon")
+Description = "Debug spell: removes one player level."

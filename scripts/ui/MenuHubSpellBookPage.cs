@@ -157,11 +157,11 @@ public partial class MenuHubSpellBookPage : Control
 
     private SpellButtonView CreateSpellButton(Spell spellTemplate)
     {
-        var button = new Button
+        var button = new TooltipButton
         {
             CustomMinimumSize = new Vector2(140.0f, 92.0f),
-            // Tooltip text gives us a hook for richer spell tooltips on hover later.
-            TooltipText = spellTemplate.DisplayLabel,
+            TooltipTextProvider = () => ResolveSpellSafe(spellTemplate)?.DisplayLabel ?? string.Empty,
+            TooltipBuilder = () => TooltipFactory.Build(ResolveSpellSafe(spellTemplate)),
         };
 
         var vbox = CreateCardLayout(button);
@@ -219,9 +219,11 @@ public partial class MenuHubSpellBookPage : Control
 
     private SlotButtonView CreateSlotButton(StringName slotAction)
     {
-        var button = new Button
+        var button = new TooltipButton
         {
             CustomMinimumSize = new Vector2(140.0f, 100.0f),
+            TooltipTextProvider = () => ResolveEquippedSpell(slotAction)?.DisplayLabel ?? string.Empty,
+            TooltipBuilder = () => TooltipFactory.Build(ResolveEquippedSpell(slotAction)),
         };
 
         var vbox = CreateCardLayout(button);
@@ -372,6 +374,16 @@ public partial class MenuHubSpellBookPage : Control
         icon.Texture = texture;
         icon.Visible = hasIcon;
         placeholder.Visible = !hasIcon;
+    }
+
+    private static Spell ResolveSpellSafe(Spell spell)
+    {
+        return spell != null && GodotObject.IsInstanceValid(spell) ? spell : null;
+    }
+
+    private Spell ResolveEquippedSpell(StringName slotAction)
+    {
+        return ResolveSpellSafe(_player?.SpellLoadoutNode?.GetEquippedSpell(slotAction));
     }
 
     private void OnSpellTemplatePressed(Spell spellTemplate)
