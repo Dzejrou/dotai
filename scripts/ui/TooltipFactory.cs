@@ -20,7 +20,7 @@ public static class TooltipFactory
             return null;
 
         var style = ResolveStyle();
-        var (panel, vbox) = BuildShell(style, gear.Definition?.DisplayName, gear.Quality);
+        var (panel, vbox) = BuildShell(style, gear.Definition?.DisplayName, ItemQualityColors.GetColor(gear.Quality));
 
         AddLine(vbox, $"Quality: {gear.Quality}", style);
         AddLine(vbox, $"Slot: {gear.Slot}", style);
@@ -48,23 +48,61 @@ public static class TooltipFactory
 
     public static Control Build(InventoryItemDefinition item, int quantity)
     {
+        return Build(item, quantity, alwaysShowQuantity: false);
+    }
+
+    // alwaysShowQuantity: quick-slot tooltips always show the held quantity (even x1
+    // or x0); inventory stack tooltips keep omitting the redundant x1 row.
+    public static Control Build(InventoryItemDefinition item, int quantity, bool alwaysShowQuantity)
+    {
         if (item == null)
             return null;
 
         var style = ResolveStyle();
-        var (panel, vbox) = BuildShell(style, item.DisplayName, item.Quality);
+        var (panel, vbox) = BuildShell(style, item.DisplayName, ItemQualityColors.GetColor(item.Quality));
 
         AddLine(vbox, $"Quality: {item.Quality}", style);
-        if (quantity > 1)
-            AddLine(vbox, $"x{quantity}", style);
+        if (alwaysShowQuantity || quantity > 1)
+            AddLine(vbox, $"x{System.Math.Max(0, quantity)}", style);
 
         return panel;
+    }
+
+    public static Control Build(Spell spell)
+    {
+        if (spell == null)
+            return null;
+
+        var style = ResolveStyle();
+        var (panel, vbox) = BuildShell(style, spell.DisplayLabel, SpellSchoolColors.GetColor(spell.DisplaySchool));
+
+        if (!string.IsNullOrWhiteSpace(spell.Description))
+            AddWrappedLine(vbox, spell.Description, style);
+
+        if (spell.DisplayManaCost > 0)
+            AddLine(vbox, $"Mana: {spell.DisplayManaCost}", style);
+
+        if (spell.CooldownDuration > 0.0f)
+            AddLine(vbox, $"Cooldown: {FormatSeconds(spell.CooldownDuration)}", style);
+
+        if (spell.CastTimeDuration > 0.0f)
+            AddLine(vbox, $"Cast time: {FormatSeconds(spell.CastTimeDuration)}", style);
+
+        if (spell.ChannelDuration > 0.0f)
+            AddLine(vbox, $"Channel: {FormatSeconds(spell.ChannelDuration)}", style);
+
+        return panel;
+    }
+
+    private static string FormatSeconds(float seconds)
+    {
+        return $"{seconds:0.#}s";
     }
 
     private static (PanelContainer Panel, VBoxContainer VBox) BuildShell(
         GearTooltipStyle style,
         string displayName,
-        ItemQuality quality)
+        Color nameColor)
     {
         var panel = new PanelContainer
         {
@@ -87,7 +125,7 @@ public static class TooltipFactory
             Text = string.IsNullOrEmpty(displayName) ? "Unknown" : displayName,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
-        nameLabel.AddThemeColorOverride("font_color", ItemQualityColors.GetColor(quality));
+        nameLabel.AddThemeColorOverride("font_color", nameColor);
         if (style.NameFontSize > 0)
             nameLabel.AddThemeFontSizeOverride("font_size", style.NameFontSize);
         vbox.AddChild(nameLabel);
@@ -134,6 +172,22 @@ public static class TooltipFactory
     private static void AddLine(VBoxContainer parent, string text, GearTooltipStyle style)
     {
         AddLine(parent, text, style, null);
+    }
+
+    // Word-wrapped variant for free-form prose (spell descriptions) so long text
+    // wraps at the tooltip's minimum width instead of widening the panel.
+    private static void AddWrappedLine(VBoxContainer parent, string text, GearTooltipStyle style)
+    {
+        var label = new Label
+        {
+            Text = text,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            CustomMinimumSize = new Vector2(style.MinWidth, 0.0f),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        if (style.BodyFontSize > 0)
+            label.AddThemeFontSizeOverride("font_size", style.BodyFontSize);
+        parent.AddChild(label);
     }
 
     private static void AddLine(VBoxContainer parent, string text, GearTooltipStyle style, Color? color)
