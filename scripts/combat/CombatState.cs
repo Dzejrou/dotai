@@ -5,6 +5,9 @@ using System;
 [GlobalClass]
 public partial class CombatState : Node
 {
+    [Signal]
+    public delegate void CombatStateChangedEventHandler(bool inCombat);
+
     public const float DefaultCombatTimeoutSeconds = 10.0f;
 
     private float _combatTimeRemaining;
@@ -21,9 +24,11 @@ public partial class CombatState : Node
         if (_combatTimeRemaining <= 0.0f)
             return;
 
-        _combatTimeRemaining = Math.Max(0.0f, _combatTimeRemaining - Math.Max(0.0f, (float)delta));
-        if (_combatTimeRemaining <= 0.0f)
+        var remaining = Math.Max(0.0f, _combatTimeRemaining - Math.Max(0.0f, (float)delta));
+        if (remaining <= 0.0f)
             ExitCombat();
+        else
+            SetCombatTimeRemaining(remaining);
     }
 
     public void SetTarget(Node2D target)
@@ -38,7 +43,7 @@ public partial class CombatState : Node
 
     public void RefreshCombat(float durationSeconds = DefaultCombatTimeoutSeconds)
     {
-        _combatTimeRemaining = Math.Max(0.0f, durationSeconds);
+        SetCombatTimeRemaining(Math.Max(0.0f, durationSeconds));
     }
 
     public void EnterCombat(Node2D target = null, float durationSeconds = DefaultCombatTimeoutSeconds)
@@ -64,8 +69,21 @@ public partial class CombatState : Node
 
     public void ExitCombat()
     {
-        _combatTimeRemaining = 0.0f;
+        // Clear the target before emitting the leave transition so subscribers
+        // observe a fully out-of-combat state.
         ClearTarget();
+        SetCombatTimeRemaining(0.0f);
+    }
+
+    // Single mutation point for the combat timer: the transition signal fires
+    // exactly when InCombat flips, so refreshes (including zero-duration ones)
+    // can never desync the public state from the emitted transitions.
+    private void SetCombatTimeRemaining(float value)
+    {
+        var wasInCombat = InCombat;
+        _combatTimeRemaining = value;
+        if (InCombat != wasInCombat)
+            EmitSignal(SignalName.CombatStateChanged, InCombat);
     }
 
     public static CombatState ResolveFor(Node node)

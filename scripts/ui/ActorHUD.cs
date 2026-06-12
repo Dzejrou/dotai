@@ -22,6 +22,12 @@ public partial class ActorHUD : Node2D
     private static readonly Color DefaultHealthBackgroundColor = new Color(0.16f, 0.36f, 0.16f, 0.85f);
     private static readonly Color PoisonedHealthFillColor = new Color(0.42f, 0.92f, 0.42f, 1.0f);
     private static readonly Color PoisonedHealthBackgroundColor = new Color(0.12f, 0.28f, 0.12f, 0.85f);
+    private static readonly Color InCombatIndicatorColor = new Color(0.95f, 0.3f, 0.3f, 1.0f);
+    private static readonly Color OutOfCombatIndicatorColor = new Color(0.62f, 0.62f, 0.62f, 1.0f);
+
+    private const string InCombatIndicatorText = "Combat";
+    private const string OutOfCombatIndicatorText = "Not in combat";
+    private const float CombatIndicatorSpacing = 6.0f;
 
     [Export]
     public bool ShowName { get; set; } = true;
@@ -120,6 +126,7 @@ public partial class ActorHUD : Node2D
     private ColorRect _healthBackground;
     private ColorRect _healthFill;
     private Label _healthLabel;
+    private Label _combatStatusLabel;
     private Control _manaBar;
     private ColorRect _manaBackground;
     private ColorRect _manaFill;
@@ -132,6 +139,7 @@ public partial class ActorHUD : Node2D
     private Line2D _rightBracket;
     private Node2D _owner;
     private Player _playerOwner;
+    private CombatState _playerCombatState;
     private ManaState _manaState;
     private Faction _faction;
     private int _currentHealth;
@@ -151,6 +159,7 @@ public partial class ActorHUD : Node2D
         _healthBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/HealthBar/HealthBackground");
         _healthFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/HealthBar/HealthFill");
         _healthLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/HealthBar/HealthLabel");
+        _combatStatusLabel = GetNodeOrNull<Label>("ContentRoot/UnitFrame/HealthBar/CombatStatusLabel");
         _manaBar = GetNodeOrNull<Control>("ContentRoot/UnitFrame/ManaBar");
         _manaBackground = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/ManaBar/ManaBackground");
         _manaFill = GetNodeOrNull<ColorRect>("ContentRoot/UnitFrame/ManaBar/ManaFill");
@@ -171,6 +180,7 @@ public partial class ActorHUD : Node2D
         RefreshHealthBar();
         RefreshXpVisibility();
         RefreshXpBar();
+        RefreshCombatIndicator();
         SetUnitFrameVisible(false);
         SetTargetBracketVisible(false);
     }
@@ -178,12 +188,14 @@ public partial class ActorHUD : Node2D
     public override void _ExitTree()
     {
         UnbindPlayerXp();
+        UnbindPlayerCombat();
         GameSettings.ShowActorNamesChanged -= OnShowActorNamesChanged;
     }
 
     public void Bind(Node2D owner)
     {
         UnbindPlayerXp();
+        UnbindPlayerCombat();
         _owner = owner;
         _playerOwner = owner as Player;
         _manaState = owner?.GetNodeOrNull<ManaState>("ManaState");
@@ -191,11 +203,13 @@ public partial class ActorHUD : Node2D
         _requiredXp = Math.Max(1, _playerOwner?.GetRequiredExperienceForCurrentLevel() ?? 1);
         _playerLevel = _playerOwner?.Level ?? 1;
         BindPlayerXp();
+        BindPlayerCombat();
         RefreshName();
         RefreshManaVisibility();
         RefreshManaBar();
         RefreshXpVisibility();
         RefreshXpBar();
+        RefreshCombatIndicator();
     }
 
     public void SetHealth(int current, int max)
@@ -288,6 +302,14 @@ public partial class ActorHUD : Node2D
         ApplyBarSize(_healthBar, _healthBackground, _healthLabel, HealthBarWidth, HealthBarHeight);
         ApplyBarSize(_manaBar, _manaBackground, _manaLabel, ManaBarWidth, ManaBarHeight);
         ApplyBarSize(_xpBar, _xpBackground, null, XpBarWidth, XpBarHeight);
+
+        if (_combatStatusLabel != null)
+        {
+            var barWidth = Math.Max(2.0f, HealthBarWidth);
+            var barHeight = Math.Max(2.0f, HealthBarHeight);
+            _combatStatusLabel.Position = new Vector2(barWidth + CombatIndicatorSpacing, 0.0f);
+            _combatStatusLabel.Size = new Vector2(_combatStatusLabel.Size.X, barHeight);
+        }
     }
 
     private void RefreshName()
@@ -423,6 +445,56 @@ public partial class ActorHUD : Node2D
 
         if (_xpBackground != null)
             _xpBackground.Color = XpBackgroundColor;
+    }
+
+    private void BindPlayerCombat()
+    {
+        _playerCombatState = _playerOwner != null ? CombatState.ResolveFor(_playerOwner) : null;
+        if (_playerCombatState == null)
+            return;
+
+        _playerCombatState.Connect(
+            CombatState.SignalName.CombatStateChanged,
+            new Callable(this, nameof(OnPlayerCombatStateChanged)));
+    }
+
+    private void UnbindPlayerCombat()
+    {
+        if (_playerCombatState == null || !GodotObject.IsInstanceValid(_playerCombatState))
+        {
+            _playerCombatState = null;
+            return;
+        }
+
+        var callable = new Callable(this, nameof(OnPlayerCombatStateChanged));
+        if (_playerCombatState.IsConnected(CombatState.SignalName.CombatStateChanged, callable))
+            _playerCombatState.Disconnect(CombatState.SignalName.CombatStateChanged, callable);
+
+        _playerCombatState = null;
+    }
+
+    private void OnPlayerCombatStateChanged(bool inCombat)
+    {
+        RefreshCombatIndicator();
+    }
+
+    private void RefreshCombatIndicator()
+    {
+        if (_combatStatusLabel == null)
+            return;
+
+        if (_playerCombatState == null)
+        {
+            _combatStatusLabel.Visible = false;
+            return;
+        }
+
+        var inCombat = _playerCombatState.InCombat;
+        _combatStatusLabel.Visible = true;
+        _combatStatusLabel.Text = inCombat ? InCombatIndicatorText : OutOfCombatIndicatorText;
+        _combatStatusLabel.AddThemeColorOverride(
+            "font_color",
+            inCombat ? InCombatIndicatorColor : OutOfCombatIndicatorColor);
     }
 
     private void BindPlayerXp()
