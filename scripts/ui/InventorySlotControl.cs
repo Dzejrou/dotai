@@ -20,6 +20,10 @@ public partial class InventorySlotControl : PanelContainer
 
     public InventoryController Inventory { get; set; }
 
+    // Enables the Shift-held equipped-gear comparison on gear tooltips. Optional;
+    // owners without an equipment binding leave it null and get the plain tooltip.
+    public EquipmentController Equipment { get; set; }
+
     // Supplies the currently-selected amount for stack drags (e.g. from a SpinBox).
     // The slot still clamps the result to [1, source quantity] at drag time.
     public Func<int> AmountProvider { get; set; }
@@ -219,7 +223,7 @@ public partial class InventorySlotControl : PanelContainer
             return null;
 
         if (entry is InventoryGearEntry gearEntry && gearEntry.Gear?.Definition != null)
-            return TooltipFactory.Build(gearEntry.Gear);
+            return TooltipFactory.Build(gearEntry.Gear, Equipment);
 
         if (entry is InventoryStackEntry stackEntry && stackEntry.Stack.Item != null)
             return TooltipFactory.Build(stackEntry.Stack.Item, stackEntry.Stack.Quantity);

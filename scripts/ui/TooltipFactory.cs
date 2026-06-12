@@ -11,10 +11,19 @@ public static class TooltipFactory
 
     public static Control Build(GearInstance gear) => Build(gear, int.MaxValue);
 
+    // equipment: when non-null, appends a Shift-held comparison section against the
+    // item equipped in the hovered gear's slot. The section stays hidden until Shift
+    // is pressed, so the normal tooltip is unchanged.
+    public static Control Build(GearInstance gear, EquipmentController equipment) =>
+        BuildGear(gear, int.MaxValue, equipment);
+
     // revealedSubstatCount: how many substats to show with their real values; the
     // remainder render as red "???" placeholder lines. Pass int.MaxValue to reveal all.
     // Used by merchant tooltips to support hidden substats before purchase.
-    public static Control Build(GearInstance gear, int revealedSubstatCount)
+    public static Control Build(GearInstance gear, int revealedSubstatCount) =>
+        BuildGear(gear, revealedSubstatCount, null);
+
+    private static Control BuildGear(GearInstance gear, int revealedSubstatCount, EquipmentController equipment)
     {
         if (gear == null)
             return null;
@@ -41,6 +50,16 @@ public static class TooltipFactory
                 AddLine(vbox, "  " + GearTooltipBuilder.FormatModifier(gear.Substats[i]), style);
             for (var i = revealed; i < gear.Substats.Count; i++)
                 AddLine(vbox, PlaceholderText, style, PlaceholderColor);
+        }
+
+        if (equipment != null)
+        {
+            vbox.AddChild(new GearComparisonTooltipSection
+            {
+                Gear = gear,
+                Equipment = equipment,
+                Style = style,
+            });
         }
 
         return panel;

@@ -57,15 +57,22 @@ public static class GearTooltipBuilder
         if (modifier == null || string.IsNullOrEmpty(modifier.StatId))
             return string.Empty;
 
-        var sign = modifier.Value >= 0 ? "+" : "";
-        var name = GetDisplayName(modifier.StatId);
-        if (PercentStats.Contains(modifier.StatId))
+        return FormatStatValue(modifier.StatId, modifier.Value);
+    }
+
+    // Shared by gear stat lines and comparison-delta lines so both use the same
+    // display names, percent handling, and value formatting.
+    public static string FormatStatValue(string statId, float value)
+    {
+        var sign = value >= 0 ? "+" : "";
+        var name = GetDisplayName(statId);
+        if (PercentStats.Contains(statId))
         {
-            var percent = modifier.Value * 100.0f;
+            var percent = value * 100.0f;
             return $"{sign}{percent:0.##}% {name}";
         }
 
-        return $"{sign}{modifier.Value:0.##} {name}";
+        return $"{sign}{value:0.##} {name}";
     }
 
     public static string GetDisplayName(string statId) => statId switch

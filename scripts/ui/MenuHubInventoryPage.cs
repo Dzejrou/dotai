@@ -174,7 +174,10 @@ public partial class MenuHubInventoryPage : Control
         }
 
         foreach (var slotControl in _slotControls)
+        {
             slotControl.Inventory = _inventory;
+            slotControl.Equipment = _equipment;
+        }
 
         foreach (var view in _equipmentSlotViews.Values)
         {
@@ -402,6 +405,7 @@ public partial class MenuHubInventoryPage : Control
             {
                 SlotIndex = i,
                 Inventory = _inventory,
+                Equipment = _equipment,
                 CustomMinimumSize = new Vector2(InventoryCellSize + 10.0f, InventoryCellSize + 10.0f),
                 MouseFilter = MouseFilterEnum.Stop,
                 SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
