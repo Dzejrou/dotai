@@ -1,5 +1,7 @@
 using Godot;
 
+using System;
+
 // Shift-held comparison section appended to owned-gear tooltips. Hidden while
 // Shift is up so the normal tooltip is unchanged; while either Shift is held it
 // shows stat deltas against the gear equipped in the hovered item's slot and
@@ -16,6 +18,10 @@ public partial class GearComparisonTooltipSection : VBoxContainer
     private bool _shiftHeld;
     private bool _dirty = true;
     private bool _hasComparison;
+
+    // The popup's placement as computed by the engine at show time, captured
+    // before we ever move the window; collapse restores it.
+    private Vector2I? _basePosition;
 
     public override void _Ready()
     {
@@ -110,8 +116,12 @@ public partial class GearComparisonTooltipSection : VBoxContainer
         AddChild(label);
     }
 
-    // The tooltip lives in its own popup window sized once at show time; grow or
-    // shrink it back to content size when the comparison section toggles.
+    // The tooltip lives in its own popup window placed and clamped on screen only
+    // once, at show time; grow or shrink it back to content size when the
+    // comparison section toggles. While expanded, re-clamp the window to the
+    // visible bounds ourselves (hugging the edge like the engine's show-time
+    // clamp) so the comparison can't run off screen; collapse restores the
+    // engine's original placement so the plain tooltip is unchanged.
     private void FitTooltipWindow()
     {
         var window = GetWindow();
@@ -119,6 +129,42 @@ public partial class GearComparisonTooltipSection : VBoxContainer
             return;
 
         window.WrapControls = true;
+        _basePosition ??= window.Position;
         window.ResetSize();
+
+        if (!Visible)
+        {
+            window.Position = _basePosition.Value;
+            return;
+        }
+
+        // Clamp from the base placement each time so the result is idempotent
+        // across rebuilds while Shift stays held. The upper bound never drops
+        // below the lower one, so a comparison taller than the screen degrades
+        // to hugging the top edge.
+        var bounds = GetTooltipBounds(window);
+        var position = _basePosition.Value;
+        position.X = Math.Clamp(
+            position.X,
+            bounds.Position.X,
+            Math.Max(bounds.Position.X, bounds.End.X - window.Size.X));
+        position.Y = Math.Clamp(
+            position.Y,
+            bounds.Position.Y,
+            Math.Max(bounds.Position.Y, bounds.End.Y - window.Size.Y));
+        window.Position = position;
+    }
+
+    private Rect2I GetTooltipBounds(Window window)
+    {
+        if (window.IsEmbedded())
+        {
+            // Embedded popup positions are in the embedding viewport's coordinates.
+            var visible = window.GetParent()?.GetViewport()?.GetVisibleRect()
+                ?? GetTree().Root.GetVisibleRect();
+            return new Rect2I((Vector2I)visible.Position, (Vector2I)visible.Size);
+        }
+
+        return DisplayServer.ScreenGetUsableRect(window.CurrentScreen);
     }
 }
