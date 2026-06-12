@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
+[ext_resource type="PackedScene" uid="uid://cd8ph5fhvyjvb" path="res://scenes/world/rooms/combat_dungeon_room.tscn" id="3_combat_dungeon_room"]
+[ext_resource type="PackedScene" uid="uid://b037su72uf678" path="res://scenes/world/rooms/contents/combat_dungeon_room_content1.tscn" id="4_combat_content_1"]
+[ext_resource type="PackedScene" uid="uid://drto7ni3dk0bc" path="res://scenes/world/rooms/contents/combat_dungeon_room_content2.tscn" id="5_combat_content_2"]
+
+[sub_resource type="Resource" id="Resource_combat_content_option_1"]
+script = ExtResource("2_room_content_option_script")
+Id = &"combat_dungeon_content_1"
+DisplayName = "Combat Encounter 1"
+ContentScene = ExtResource("4_combat_content_1")
+
+[sub_resource type="Resource" id="Resource_combat_content_option_2"]
+script = ExtResource("2_room_content_option_script")
+Id = &"combat_dungeon_content_2"
+DisplayName = "Combat Encounter 2"
+ContentScene = ExtResource("5_combat_content_2")
+
+[resource]
+script = ExtResource("1_room_template_definition_script")
+Id = &"combat_dungeon"
+DisplayName = "Combat Dungeon Room"
+RoomScene = ExtResource("3_combat_dungeon_room")
+ContentOptions = Array[ExtResource("2_room_content_option_script")]([SubResource("Resource_combat_content_option_1"), SubResource("Resource_combat_content_option_2")])

@@ -5,22 +5,6 @@
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" path="res://scenes/world/chest.tscn" id="4_2ubne"]
 [ext_resource type="Script" uid="uid://bnwnfcww81y3p" path="res://scripts/world/rooms/RoomClearUnlocker.cs" id="4_room_clear_unlocker"]
-[ext_resource type="Script" uid="uid://c0dqo44pkt1r" path="res://scripts/world/rooms/contents/ContentSet.cs" id="5_content_set_script"]
-[ext_resource type="Script" uid="uid://byj4p1nimu1if" path="res://scripts/world/rooms/contents/ContentTemplateEntry.cs" id="6_content_template_entry_script"]
-[ext_resource type="PackedScene" uid="uid://b037su72uf678" path="res://scenes/world/rooms/contents/combat_dungeon_room_content1.tscn" id="7_content_template_1"]
-[ext_resource type="PackedScene" uid="uid://drto7ni3dk0bc" path="res://scenes/world/rooms/contents/combat_dungeon_room_content2.tscn" id="8_content_template_2"]
-
-[sub_resource type="Resource" id="1_content_template_entry"]
-script = ExtResource("6_content_template_entry_script")
-ContentScene = ExtResource("7_content_template_1")
-
-[sub_resource type="Resource" id="2_content_template_entry"]
-script = ExtResource("6_content_template_entry_script")
-ContentScene = ExtResource("8_content_template_2")
-
-[sub_resource type="Resource" id="1_content_set"]
-script = ExtResource("5_content_set_script")
-Entries = Array[ExtResource("6_content_template_entry_script")]([SubResource("1_content_template_entry"), SubResource("2_content_template_entry")])
 
 [sub_resource type="NavigationPolygon" id="1_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -37,7 +21,6 @@ size = Vector2(18, 283.5)
 
 [node name="Room" type="Node2D" unique_id=1908132245]
 script = ExtResource("2_combat_dungeon_room")
-ContentTemplates = SubResource("1_content_set")
 ScreenId = &"dungeon_combat"
 DisplayName = "Combat Dungeon Room"
 Theme = &"dungeon"

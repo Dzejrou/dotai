@@ -11,20 +11,11 @@ public partial class CombatDungeonRoom : Room
     public delegate void RoomClearedEventHandler();
 
     [Export]
-    public ContentSet ContentTemplates { get; set; }
-
-    [Export]
-    public NodePath ContentRootPath { get; set; } = new("Unscaled/ContentRoot");
-
-    [Export]
     public NodePath RoomClearUnlockerPath { get; set; } = new NodePath("RoomClearUnlocker");
 
-    private readonly RandomNumberGenerator _random = new();
     private Content _activeContent;
-    private Node _contentRoot;
     private bool _isCleared;
-    private bool _contentInitialized;
-    private bool _contentRootResolved;
+    private bool _contentResolved;
     private RoomClearUnlocker _roomClearUnlocker;
 
     public override void _Ready()
@@ -32,9 +23,7 @@ public partial class CombatDungeonRoom : Room
         base._Ready();
         RoomCleared += OnRoomCleared;
         _roomClearUnlocker = ResolveRoomClearUnlocker();
-        _random.Randomize();
         SetTopDoorsLocked(true);
-        InitializeContent();
         EvaluateRoomState();
     }
 
@@ -42,7 +31,6 @@ public partial class CombatDungeonRoom : Room
     {
         RoomCleared -= OnRoomCleared;
         _activeContent = null;
-        _contentRoot = null;
         _roomClearUnlocker = null;
         base._ExitTree();
     }
@@ -73,54 +61,9 @@ public partial class CombatDungeonRoom : Room
         door.TargetExitId = targetExitId;
     }
 
-    private void InitializeContent()
-    {
-        if (_contentInitialized)
-            return;
-
-        _contentInitialized = true;
-
-        var contentRoot = ResolveContentRoot();
-        if (contentRoot == null)
-        {
-            GD.PushWarning($"{nameof(CombatDungeonRoom)} '{Name}' could not resolve content root at '{ContentRootPath}'.");
-            return;
-        }
-
-        if (ContentTemplates == null)
-        {
-            GD.PushWarning($"{nameof(CombatDungeonRoom)} '{Name}' does not define any content templates.");
-            return;
-        }
-
-        var contentScene = ContentTemplates.PickTemplate(_random);
-        if (contentScene == null)
-        {
-            GD.PushWarning($"{nameof(CombatDungeonRoom)} '{Name}' could not choose a valid content template.");
-            return;
-        }
-
-        var contentInstance = contentScene.Instantiate();
-        if (contentInstance == null)
-        {
-            GD.PushWarning($"{nameof(CombatDungeonRoom)} '{Name}' failed to instantiate content scene '{contentScene.ResourcePath}'.");
-            return;
-        }
-
-        contentRoot.AddChild(contentInstance);
-        if (contentInstance is not Content content)
-        {
-            GD.PushWarning(
-                $"{nameof(CombatDungeonRoom)} '{Name}' instantiated '{contentScene.ResourcePath}', but its root is '{contentInstance.GetType().Name}' instead of {nameof(Content)}.");
-            return;
-        }
-
-        _activeContent = content;
-    }
-
     private void EvaluateRoomState()
     {
-        if (_isCleared || GetActiveContent()?.IsEmpty != true)
+        if (_isCleared || ResolveActiveContent()?.IsEmpty != true)
             return;
 
         _isCleared = true;
@@ -152,19 +95,14 @@ public partial class CombatDungeonRoom : Room
             door.IsLocked = isLocked;
     }
 
-    private Content GetActiveContent()
+    private Content ResolveActiveContent()
     {
-        return GodotObject.IsInstanceValid(_activeContent) ? _activeContent : null;
-    }
+        if (_contentResolved)
+            return GodotObject.IsInstanceValid(_activeContent) ? _activeContent : null;
 
-    private Node ResolveContentRoot()
-    {
-        if (_contentRootResolved)
-            return GodotObject.IsInstanceValid(_contentRoot) ? _contentRoot : null;
-
-        _contentRootResolved = true;
-        _contentRoot = ContentRootPath.IsEmpty ? null : GetNodeOrNull<Node>(ContentRootPath);
-        return _contentRoot;
+        _contentResolved = true;
+        _activeContent = GetInjectedContent();
+        return _activeContent;
     }
 
     private RoomClearUnlocker ResolveRoomClearUnlocker()
