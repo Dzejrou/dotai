@@ -11,9 +11,16 @@ public partial class OmniSprite : Node2D
     private const string AnimatedSpriteNodeName = "AnimatedSprite2D";
     private const string StaticSpriteNodeName = "Sprite2D";
     private const string MissingSpriteNodeName = "__MissingSprite2D";
+    private const string ConventionalSpriteFramesPathFormat = "res://resources/animations/{0}_spriteframes.tres";
     private const int MissingTextureSize = 16;
 
     private static Texture2D _missingTexture;
+
+    [Export]
+    public bool UseConventionalAnimationLookup { get; set; }
+
+    [Export]
+    public string AssetKey { get; set; } = "";
 
     private readonly Dictionary<StringName, Color> _statusTints = new();
     private AnimatedSprite2D _animatedSprite;
@@ -22,6 +29,8 @@ public partial class OmniSprite : Node2D
     private Texture2D _configuredStaticTexture;
     private Color _baseModulate = Colors.White;
     private bool _animatedSpriteSignalsConnected;
+    private bool _missingAnimationRequested;
+    private bool _conventionalLookupWarningEmitted;
 
     public AnimatedSprite2D AnimatedSprite
     {
@@ -53,6 +62,7 @@ public partial class OmniSprite : Node2D
     public override void _Ready()
     {
         ResolveChildVisuals();
+        TryLoadConventionalSpriteFrames();
         RefreshVisualState();
     }
 
@@ -76,12 +86,18 @@ public partial class OmniSprite : Node2D
 
     public bool TryPlay(string animationName, float customSpeed = 1.0f)
     {
+        if (SpriteFrames == null)
+            TryLoadConventionalSpriteFrames();
+
         if (!HasAnimation(animationName))
         {
+            _missingAnimationRequested = true;
+            AnimatedSprite?.Stop();
             RefreshVisualState();
             return false;
         }
 
+        _missingAnimationRequested = false;
         AnimatedSprite?.Play(animationName, customSpeed: customSpeed);
         RefreshVisualState();
         return true;
@@ -89,7 +105,14 @@ public partial class OmniSprite : Node2D
 
     public void StopAnimation()
     {
+        _missingAnimationRequested = false;
         AnimatedSprite?.Stop();
+        RefreshVisualState();
+    }
+
+    public void RefreshConventionalSpriteFrames()
+    {
+        TryLoadConventionalSpriteFrames();
         RefreshVisualState();
     }
 
@@ -99,6 +122,7 @@ public partial class OmniSprite : Node2D
         if (animatedSprite == null)
             return;
 
+        _missingAnimationRequested = false;
         animatedSprite.SpriteFrames = spriteFrames;
         if (!string.IsNullOrEmpty(animationName))
             animatedSprite.Animation = animationName;
@@ -248,12 +272,74 @@ public partial class OmniSprite : Node2D
 
     private bool HasActiveAnimatedVisual()
     {
+        if (_missingAnimationRequested)
+            return false;
+
         var animatedSprite = AnimatedSprite;
         if (animatedSprite?.SpriteFrames == null)
             return false;
 
         var animationName = animatedSprite.Animation;
         return !animationName.IsEmpty && HasAnimation(animationName);
+    }
+
+    private void TryLoadConventionalSpriteFrames()
+    {
+        if (!UseConventionalAnimationLookup)
+            return;
+
+        var animatedSprite = AnimatedSprite;
+        if (animatedSprite == null || animatedSprite.SpriteFrames != null)
+            return;
+
+        var assetKey = AssetKey?.Trim();
+        if (string.IsNullOrEmpty(assetKey))
+        {
+            WarnInvalidConventionalLookupOnce(
+                $"{nameof(UseConventionalAnimationLookup)} is enabled but {nameof(AssetKey)} is empty.");
+            return;
+        }
+
+        if (!IsValidAssetKey(assetKey))
+        {
+            WarnInvalidConventionalLookupOnce(
+                $"{nameof(AssetKey)} \"{assetKey}\" may only contain letters, digits, '_' or '-'.");
+            return;
+        }
+
+        var resourcePath = string.Format(ConventionalSpriteFramesPathFormat, assetKey);
+
+        // A resource that does not exist yet is an expected development state; stay quiet.
+        if (!ResourceLoader.Exists(resourcePath))
+            return;
+
+        if (ResourceLoader.Load(resourcePath) is not SpriteFrames spriteFrames)
+        {
+            WarnInvalidConventionalLookupOnce($"resource at {resourcePath} is not a SpriteFrames.");
+            return;
+        }
+
+        animatedSprite.SpriteFrames = spriteFrames;
+    }
+
+    private void WarnInvalidConventionalLookupOnce(string message)
+    {
+        if (_conventionalLookupWarningEmitted)
+            return;
+
+        _conventionalLookupWarningEmitted = true;
+        GD.PushWarning($"{GetPath()}: {message}");
+    }
+
+    private static bool IsValidAssetKey(string assetKey)
+    {
+        foreach (var character in assetKey)
+        {
+            if (!char.IsLetterOrDigit(character) && character != '_' && character != '-')
+                return false;
+        }
+
+        return true;
     }
 
     private Color ComposeModulate()

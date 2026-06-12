@@ -59,11 +59,14 @@ public abstract partial class AnimatedCharacter : CharacterBody2D
 
     public bool TryPlayDirectionalAnimation(string animationPrefix, float customSpeed = 1.0f)
     {
-        var animationName = ResolveDirectionalAnimationName(animationPrefix);
-        if (animationName == null)
+        if (OmniSprite == null || string.IsNullOrEmpty(animationPrefix))
             return false;
 
-        return OmniSprite != null && OmniSprite.TryPlay(animationName, customSpeed);
+        // Forward unresolvable names so OmniSprite can register the missing request
+        // (placeholder visual) and retry its lazy resource lookup.
+        var animationName = ResolveDirectionalAnimationName(animationPrefix)
+            ?? GetDirectionalAnimationName(animationPrefix);
+        return OmniSprite.TryPlay(animationName, customSpeed);
     }
 
     public void PlayIdleIfAvailable()
