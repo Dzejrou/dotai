@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
+[ext_resource type="PackedScene" uid="uid://ccyfthojw57t7" path="res://scenes/world/rooms/testing_void_room.tscn" id="3_testing_void_room"]
+[ext_resource type="PackedScene" uid="uid://dwochr8ocdyfl" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="4_void_chests_content"]
+
+[sub_resource type="Resource" id="Resource_void_chests_content_option"]
+script = ExtResource("2_room_content_option_script")
+Id = &"testing_void_chests"
+DisplayName = "Void Chests"
+ContentScene = ExtResource("4_void_chests_content")
+
+[resource]
+script = ExtResource("1_room_template_definition_script")
+Id = &"testing_void"
+DisplayName = "Testing Void"
+RoomScene = ExtResource("3_testing_void_room")
+ContentOptions = Array[ExtResource("2_room_content_option_script")]([SubResource("Resource_void_chests_content_option")])

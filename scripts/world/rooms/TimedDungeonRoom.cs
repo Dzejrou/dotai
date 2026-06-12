@@ -4,9 +4,6 @@ using Godot;
 public partial class TimedDungeonRoom : TimedRoom
 {
     [Export]
-    public NodePath ContentPath { get; set; } = new("Unscaled/EnemyContent");
-
-    [Export]
     public NodePath ProgressionDoorPath { get; set; } = new("Scaled/Exits/NorthCenterDoor");
 
     [Export]
@@ -91,10 +88,7 @@ public partial class TimedDungeonRoom : TimedRoom
             return GodotObject.IsInstanceValid(_content) ? _content : null;
 
         _contentResolved = true;
-        _content = ContentPath.IsEmpty ? null : GetNodeOrNull<Content>(ContentPath);
-        if (_content == null)
-            GD.PushError($"{nameof(TimedDungeonRoom)} '{Name}' could not resolve content at '{ContentPath}'.");
-
+        _content = GetInjectedContent();
         return _content;
     }
 

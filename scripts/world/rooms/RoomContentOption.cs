@@ -1,8 +1,14 @@
 using Godot;
 
 [GlobalClass]
-public partial class ContentTemplateEntry : Resource
+public partial class RoomContentOption : Resource
 {
+    [Export]
+    public StringName Id { get; set; } = default;
+
+    [Export]
+    public string DisplayName { get; set; } = string.Empty;
+
     [Export]
     public PackedScene ContentScene { get; set; }
 

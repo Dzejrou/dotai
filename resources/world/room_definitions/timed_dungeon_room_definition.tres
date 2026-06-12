@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
+[ext_resource type="PackedScene" uid="uid://dbld31u62o1rn" path="res://scenes/world/rooms/timed_dungeon_room.tscn" id="3_timed_dungeon_room"]
+[ext_resource type="PackedScene" uid="uid://cdqmfnayi70xg" path="res://scenes/world/rooms/contents/timed_dungeon_ogre_content.tscn" id="4_timed_ogre_content"]
+
+[sub_resource type="Resource" id="Resource_timed_ogre_content_option"]
+script = ExtResource("2_room_content_option_script")
+Id = &"timed_dungeon_ogres"
+DisplayName = "Timed Ogre Encounter"
+ContentScene = ExtResource("4_timed_ogre_content")
+
+[resource]
+script = ExtResource("1_room_template_definition_script")
+Id = &"timed_dungeon"
+DisplayName = "Timed Dungeon Room"
+RoomScene = ExtResource("3_timed_dungeon_room")
+ContentOptions = Array[ExtResource("2_room_content_option_script")]([SubResource("Resource_timed_ogre_content_option")])

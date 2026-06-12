@@ -31,13 +31,13 @@ public partial class Dungeon : Node
     private static readonly StringName SpecialTopExitId = "north_center";
 
     [Export]
-    public Godot.Collections.Array<PackedScene> CombatRoomTemplates { get; set; } = new();
+    public Godot.Collections.Array<RoomTemplateDefinition> CombatRoomDefinitions { get; set; } = new();
 
     [Export]
     public Godot.Collections.Array<PackedScene> SpecialRoomTemplates { get; set; } = new();
 
     [Export]
-    public Godot.Collections.Array<PackedScene> TimedRoomTemplates { get; set; } = new();
+    public Godot.Collections.Array<RoomTemplateDefinition> TimedRoomDefinitions { get; set; } = new();
 
     [Export(PropertyHint.Range, "0,1,0.01")]
     public float SpecialRoomChance { get; set; } = 0.2f;
@@ -183,43 +183,89 @@ public partial class Dungeon : Node
 
     private bool TryInstantiateDungeonRoom(DungeonRoomKind roomKind, out Room room)
     {
+        return roomKind == DungeonRoomKind.Special
+            ? TryInstantiateSpecialDungeonRoom(out room)
+            : TryInstantiateDefinedDungeonRoom(roomKind, out room);
+    }
+
+    private bool TryInstantiateSpecialDungeonRoom(out Room room)
+    {
         room = null;
 
-        var template = ChooseRoomTemplate(roomKind);
+        var template = ChooseSpecialRoomTemplate();
         if (template == null)
         {
-            GD.PushError($"{nameof(Dungeon)} has no configured {roomKind} room templates.");
+            GD.PushError($"{nameof(Dungeon)} has no configured {DungeonRoomKind.Special} room templates.");
             return false;
         }
 
         room = template.Instantiate<Room>();
         if (room == null)
         {
-            GD.PushError($"{nameof(Dungeon)} could not instantiate a dungeon room for {roomKind}.");
+            GD.PushError($"{nameof(Dungeon)} could not instantiate a dungeon room for {DungeonRoomKind.Special}.");
             return false;
         }
 
         return true;
     }
 
-    private PackedScene ChooseRoomTemplate(DungeonRoomKind roomKind)
+    private bool TryInstantiateDefinedDungeonRoom(DungeonRoomKind roomKind, out Room room)
     {
-        var templates = roomKind switch
+        room = null;
+
+        var definition = ChooseRoomDefinition(roomKind);
+        if (definition == null)
         {
-            DungeonRoomKind.Combat => CombatRoomTemplates,
-            DungeonRoomKind.Special => SpecialRoomTemplates,
-            DungeonRoomKind.Timed => TimedRoomTemplates,
+            GD.PushError($"{nameof(Dungeon)} has no configured {roomKind} room definitions.");
+            return false;
+        }
+
+        var roomInstance = definition.RoomScene.Instantiate();
+        if (roomInstance is not Room definedRoom)
+        {
+            GD.PushError($"{nameof(Dungeon)} room definition '{definition.GetLabel()}' did not instantiate a {nameof(Room)} root for {roomKind}.");
+            roomInstance?.QueueFree();
+            return false;
+        }
+
+        var contentOption = definition.PickContentOption(_random);
+        definedRoom.TryInjectContent(contentOption?.ContentScene);
+        room = definedRoom;
+        return true;
+    }
+
+    private RoomTemplateDefinition ChooseRoomDefinition(DungeonRoomKind roomKind)
+    {
+        var definitions = roomKind switch
+        {
+            DungeonRoomKind.Combat => CombatRoomDefinitions,
+            DungeonRoomKind.Timed => TimedRoomDefinitions,
             _ => null,
         };
 
-        var validTemplates = new List<PackedScene>();
-        if (templates != null)
+        var validDefinitions = new List<RoomTemplateDefinition>();
+        if (definitions != null)
         {
-            foreach (var template in templates)
+            foreach (var definition in definitions)
             {
-                if (template != null)
-                    validTemplates.Add(template);
+                if (definition?.RoomScene != null)
+                    validDefinitions.Add(definition);
             }
+        }
+
+        if (validDefinitions.Count == 0)
+            return null;
+
+        return validDefinitions[_random.RandiRange(0, validDefinitions.Count - 1)];
+    }
+
+    private PackedScene ChooseSpecialRoomTemplate()
+    {
+        var validTemplates = new List<PackedScene>();
+        foreach (var template in SpecialRoomTemplates)
+        {
+            if (template != null)
+                validTemplates.Add(template);
         }
 
         if (validTemplates.Count == 0)

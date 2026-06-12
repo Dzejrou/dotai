@@ -57,12 +57,14 @@ public partial class Room : Node2D
     public NodePath ScaledPath { get; set; } = new NodePath("Scaled");
 
     [Export]
+    public NodePath ContentRootPath { get; set; } = new NodePath("Unscaled/ContentRoot");
+
+    [Export]
     public Rect2 CameraBoundsRect { get; set; } = new Rect2(0.0f, 0.0f, 400.0f, 400.0f);
 
     public event Action<RoomTransition> TransitionTriggered;
 
     private readonly Dictionary<StringName, RoomTransition> _transitionsById = new();
-    private Node _attachedContentInstance;
 
     public override void _EnterTree()
     {
@@ -165,31 +167,40 @@ public partial class Room : Node2D
         return ResolveEphemeralRoot(UnscaledPath, nameof(UnscaledPath));
     }
 
-    public bool TryAttachContent(PackedScene contentScene, bool replaceExisting = false)
+    public Node GetContentRoot()
     {
+        if (ContentRootPath.IsEmpty)
+            return null;
+
+        return GetNodeOrNull<Node>(ContentRootPath);
+    }
+
+    public Content GetInjectedContent()
+    {
+        var contentRoot = GetContentRoot();
+        if (contentRoot == null)
+            return null;
+
+        foreach (var child in contentRoot.GetChildren())
+        {
+            if (child is Content content)
+                return content;
+        }
+
+        return null;
+    }
+
+    public bool TryInjectContent(PackedScene contentScene)
+    {
+        var contentRoot = GetContentRoot();
+        if (contentRoot == null)
+        {
+            GD.PushError($"{nameof(Room)} '{Name}' could not resolve content root '{ContentRootPath}' for content injection.");
+            return false;
+        }
+
         if (contentScene == null)
-        {
-            GD.PushError($"{nameof(Room)} '{Name}' cannot attach a null content scene.");
-            return false;
-        }
-
-        var unscaledRoot = GetUnscaledRoot();
-        if (unscaledRoot == null)
-        {
-            GD.PushError($"{nameof(Room)} '{Name}' could not resolve unscaled root '{UnscaledPath}' for content attachment.");
-            return false;
-        }
-
-        if (GodotObject.IsInstanceValid(_attachedContentInstance))
-        {
-            if (!replaceExisting)
-            {
-                GD.PushError($"{nameof(Room)} '{Name}' already has attached runtime content.");
-                return false;
-            }
-
-            ClearAttachedContent();
-        }
+            return true;
 
         var contentInstance = contentScene.Instantiate();
         if (contentInstance == null)
@@ -198,25 +209,16 @@ public partial class Room : Node2D
             return false;
         }
 
-        unscaledRoot.AddChild(contentInstance);
-        _attachedContentInstance = contentInstance;
-        return true;
-    }
-
-    public void ClearAttachedContent()
-    {
-        if (!GodotObject.IsInstanceValid(_attachedContentInstance))
+        if (contentInstance is not Content content)
         {
-            _attachedContentInstance = null;
-            return;
+            GD.PushError(
+                $"{nameof(Room)} '{Name}' cannot inject '{contentScene.ResourcePath}': its root is '{contentInstance.GetType().Name}' instead of {nameof(Content)}.");
+            contentInstance.QueueFree();
+            return false;
         }
 
-        var parent = _attachedContentInstance.GetParent();
-        if (parent != null)
-            parent.RemoveChild(_attachedContentInstance);
-
-        _attachedContentInstance.QueueFree();
-        _attachedContentInstance = null;
+        contentRoot.AddChild(content);
+        return true;
     }
 
     private void CacheTransitions()
