@@ -146,6 +146,9 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         SetOmniSprite(GetNode<OmniSprite>("OmniSprite"));
         EnsureAnimationFinishedConnected();
         InitializeCombatCharacter(requireManaState: true);
+        CombatStateNode.Connect(
+            CombatState.SignalName.CombatStateChanged,
+            new Callable(this, nameof(OnCombatStateChanged)));
         BindEquipmentController();
         _actorHud = GetNodeOrNull<ActorHUD>("ActorHUD");
         _lootMagnetArea = GetNodeOrNull<Area2D>("LootMagnetArea");
@@ -224,6 +227,11 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
             EquipmentControllerNode.Disconnect(EquipmentController.SignalName.Changed, callable);
 
         _equipmentChangedBound = false;
+    }
+
+    private void OnCombatStateChanged(bool inCombat)
+    {
+        CombatLog.System(inCombat ? "Player enters combat." : "Player leaves combat.");
     }
 
     private void OnEquipmentChanged()
