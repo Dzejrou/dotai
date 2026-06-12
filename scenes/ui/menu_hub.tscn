@@ -1,10 +1,12 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/MenuHub.cs" id="1_menu_hub"]
 [ext_resource type="Script" path="res://scripts/ui/MenuHubInventoryPage.cs" id="2_inventory_page"]
 [ext_resource type="Script" path="res://scripts/ui/MenuHubCharacterPage.cs" id="3_character_page"]
 [ext_resource type="Script" path="res://scripts/ui/MenuHubSpellBookPage.cs" id="4_spell_book_page"]
 [ext_resource type="Script" path="res://scripts/ui/MenuHubLogPage.cs" id="5_log_page"]
+[ext_resource type="Script" path="res://scripts/ui/MenuHubDebugRoomPage.cs" id="6_debug_room_page"]
+[ext_resource type="Resource" path="res://resources/debug/debug_room_catalog.tres" id="7_debug_room_catalog"]
 
 [node name="MenuHub" type="CanvasLayer"]
 layer = 200
@@ -509,6 +511,111 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 2
 
+[node name="DebugPage" type="Control" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("6_debug_room_page")
+Catalog = ExtResource("7_debug_room_catalog")
+
+[node name="Margin" type="MarginContainer" parent="Root/DebugPage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 72
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="Root/DebugPage/Margin"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Debug Room Launcher"
+
+[node name="RoomRow" type="HBoxContainer" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RoomLabel" type="Label" parent="Root/DebugPage/Margin/VBox/RoomRow"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "Room"
+
+[node name="RoomSelector" type="OptionButton" parent="Root/DebugPage/Margin/VBox/RoomRow"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ContentRow" type="HBoxContainer" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ContentLabel" type="Label" parent="Root/DebugPage/Margin/VBox/ContentRow"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "Content"
+
+[node name="ContentSelector" type="OptionButton" parent="Root/DebugPage/Margin/VBox/ContentRow"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="KeepInstanceToggle" type="CheckBox" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+text = "Keep instance"
+
+[node name="EnterButton" type="Button" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+text = "Enter Room"
+
+[node name="RetainedSeparator" type="HSeparator" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+
+[node name="RetainedLabel" type="Label" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+text = "Retained instance: none"
+
+[node name="RetainedRow" type="HBoxContainer" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ReenterButton" type="Button" parent="Root/DebugPage/Margin/VBox/RetainedRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Re-enter"
+
+[node name="FreeButton" type="Button" parent="Root/DebugPage/Margin/VBox/RetainedRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Free"
+
+[node name="SessionSeparator" type="HSeparator" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+
+[node name="ReturnButton" type="Button" parent="Root/DebugPage/Margin/VBox"]
+visible = false
+layout_mode = 2
+text = "Return"
+
 [node name="NavRow" type="HBoxContainer" parent="Root"]
 layout_mode = 1
 anchors_preset = 10
@@ -551,6 +658,11 @@ text = "Game Menu"
 layout_mode = 2
 focus_mode = 0
 text = "Log"
+
+[node name="DebugButton" type="Button" parent="Root/NavRow"]
+layout_mode = 2
+focus_mode = 0
+text = "Debug"
 
 [node name="NextButton" type="Button" parent="Root/NavRow"]
 layout_mode = 2

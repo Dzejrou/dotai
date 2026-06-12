@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" uid="uid://belxu0qkq53ti" path="res://scenes/world/rooms/entrance_hall_room.tscn" id="3_entrance_hall_room"]
 [ext_resource type="PackedScene" uid="uid://cqwa3wd6p5g6t" path="res://scenes/world/rooms/courtyard_room.tscn" id="4_courtyard_room"]
 [ext_resource type="PackedScene" uid="uid://ccyfthojw57t7" path="res://scenes/world/rooms/testing_void_room.tscn" id="5_testing_void_room"]
-[ext_resource type="PackedScene" uid="uid://dbld31u62o1rn" path="res://scenes/world/rooms/timed_dungeon_room.tscn" id="6_timed_dungeon_room"]
 
 [sub_resource type="Resource" id="Resource_room_registry_entry_entrance_hall"]
 script = ExtResource("2_room_registry_entry_script")
@@ -22,11 +21,6 @@ script = ExtResource("2_room_registry_entry_script")
 ScreenId = &"testing_void"
 RoomScene = ExtResource("5_testing_void_room")
 
-[sub_resource type="Resource" id="Resource_room_registry_entry_timed_dungeon_test"]
-script = ExtResource("2_room_registry_entry_script")
-ScreenId = &"timed_dungeon_test"
-RoomScene = ExtResource("6_timed_dungeon_room")
-
 [resource]
 script = ExtResource("1_room_registry_script")
-Entries = Array[ExtResource("2_room_registry_entry_script")]([SubResource("Resource_room_registry_entry_entrance_hall"), SubResource("Resource_room_registry_entry_courtyard"), SubResource("Resource_room_registry_entry_testing_void"), SubResource("Resource_room_registry_entry_timed_dungeon_test")])
+Entries = Array[ExtResource("2_room_registry_entry_script")]([SubResource("Resource_room_registry_entry_entrance_hall"), SubResource("Resource_room_registry_entry_courtyard"), SubResource("Resource_room_registry_entry_testing_void")])

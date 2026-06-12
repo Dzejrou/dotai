@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
+[ext_resource type="PackedScene" uid="uid://c8qcan8jddo8k" path="res://scenes/world/rooms/special_dungeon_room.tscn" id="2_special_dungeon_room"]
+
+[resource]
+script = ExtResource("1_room_template_definition_script")
+Id = &"special_dungeon"
+DisplayName = "Special Dungeon Room"
+RoomScene = ExtResource("2_special_dungeon_room")

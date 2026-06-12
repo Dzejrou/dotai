@@ -119,6 +119,7 @@ public partial class Main : Node2D
             _menuHubRoot.SetInventoryPageWorldDropHandlers(OnInventoryItemDroppedToWorld, OnGearDroppedToWorld);
             _menuHubRoot.BindCharacterPage(_player, equipmentController);
             _menuHubRoot.BindSpellBookPage(_player);
+            _menuHubRoot.BindDebugRoomPage(_world, CloseMenuHub);
         }
 
         TryLoadFromSave();

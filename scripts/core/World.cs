@@ -79,7 +79,22 @@ public partial class World : Node2D
     private float _transitionCooldownRemaining;
     private readonly Dictionary<StringName, Room> _persistentRoomsById = new();
 
+    private Room _debugRoom;
+    private bool _debugKeepInstance;
+    private string _debugRoomLabel;
+    private Room _retainedDebugRoom;
+    private string _retainedDebugRoomLabel;
+    private RoomReturnLocation _debugReturnLocation;
+
     public Room ActiveRoom => GodotObject.IsInstanceValid(_activeRoom) ? _activeRoom : null;
+
+    public bool IsDebugRoomSessionActive =>
+        _debugRoom != null && GodotObject.IsInstanceValid(_debugRoom) && _activeRoom == _debugRoom;
+
+    public bool HasRetainedDebugRoom =>
+        _retainedDebugRoom != null && GodotObject.IsInstanceValid(_retainedDebugRoom);
+
+    public string RetainedDebugRoomLabel => HasRetainedDebugRoom ? _retainedDebugRoomLabel : null;
 
     public override void _Ready()
     {
@@ -114,6 +129,7 @@ public partial class World : Node2D
         DisconnectActiveRoom();
         FreeDetachedCachedRooms();
         _persistentRoomsById.Clear();
+        ReleaseDebugRoomStateOnTeardown();
 
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied))))
@@ -216,9 +232,15 @@ public partial class World : Node2D
         if (nextRoom == null)
             return false;
 
+        var leavingDebugSession = IsDebugRoomSessionActive;
+
         DisconnectActiveRoom();
         CallActiveRoomExit();
         DetachOrFreeActiveRoom();
+
+        // Any ordinary transition out of a debug room ends the debug session.
+        if (leavingDebugSession)
+            _debugReturnLocation = null;
 
         _activeRoom = nextRoom;
         AttachActiveRoom();
@@ -228,6 +250,203 @@ public partial class World : Node2D
         ApplyRoomCameraBounds(_activeRoom);
         _activeRoom.OnEnter();
         return true;
+    }
+
+    public bool TryEnterDebugRoom(RoomTemplateDefinition definition, RoomContentOption contentOption, bool useExternalContent, bool keepInstance)
+    {
+        if (definition?.RoomScene == null)
+        {
+            GD.PushWarning($"{nameof(World)} cannot enter a debug room without a room scene.");
+            return false;
+        }
+
+        var roomInstance = definition.RoomScene.Instantiate();
+        if (roomInstance is not Room room)
+        {
+            GD.PushError($"{nameof(World)} debug room definition '{definition.GetLabel()}' did not instantiate a {nameof(Room)} root.");
+            roomInstance?.QueueFree();
+            return false;
+        }
+
+        // Inject before the room enters the tree so _Ready sees the content.
+        // A null content option is an intentional Empty selection.
+        if (useExternalContent && !room.TryInjectContent(contentOption?.ContentScene))
+        {
+            room.QueueFree();
+            return false;
+        }
+
+        return EnterDebugRoomInstance(room, ComposeDebugRoomLabel(definition, contentOption, useExternalContent), keepInstance);
+    }
+
+    public bool TryReenterRetainedDebugRoom()
+    {
+        if (!HasRetainedDebugRoom)
+        {
+            _retainedDebugRoom = null;
+            _retainedDebugRoomLabel = null;
+            return false;
+        }
+
+        if (_activeRoom == _retainedDebugRoom)
+            return true;
+
+        return EnterDebugRoomInstance(_retainedDebugRoom, _retainedDebugRoomLabel, keepInstance: true);
+    }
+
+    public bool TryReturnFromDebugRoom()
+    {
+        if (!IsDebugRoomSessionActive || _debugReturnLocation == null)
+            return false;
+
+        var returnLocation = _debugReturnLocation;
+        if (!TransitionToRoom(returnLocation.ScreenId, default))
+            return false;
+
+        _debugReturnLocation = null;
+        if (returnLocation.PlayerPosition is Vector2 playerPosition &&
+            _player != null &&
+            GodotObject.IsInstanceValid(_player))
+        {
+            _player.GlobalPosition = playerPosition;
+            _player.Velocity = Vector2.Zero;
+        }
+
+        return true;
+    }
+
+    public void FreeRetainedDebugRoom()
+    {
+        var retainedRoom = _retainedDebugRoom;
+        _retainedDebugRoom = null;
+        _retainedDebugRoomLabel = null;
+
+        if (retainedRoom == null || !GodotObject.IsInstanceValid(retainedRoom))
+            return;
+
+        // The player is standing in it; just stop retaining it so it is freed
+        // like a temporary instance when left.
+        if (retainedRoom == _activeRoom)
+        {
+            _debugKeepInstance = false;
+            return;
+        }
+
+        retainedRoom.QueueFree();
+    }
+
+    private bool EnterDebugRoomInstance(Room room, string label, bool keepInstance)
+    {
+        if (room == null || !GodotObject.IsInstanceValid(room))
+            return false;
+
+        CaptureDebugReturnLocation();
+
+        DisconnectActiveRoom();
+        CallActiveRoomExit();
+        DetachOrFreeActiveRoom();
+
+        _activeRoom = room;
+        _debugRoom = room;
+        _debugKeepInstance = keepInstance;
+        _debugRoomLabel = label;
+
+        AttachActiveRoom();
+        _activeRoom.TransitionTriggered += OnTransitionTriggered;
+
+        PlacePlayerAtRoomEntry(_activeRoom, default);
+        ApplyRoomCameraBounds(_activeRoom);
+        _activeRoom.OnEnter();
+        return true;
+    }
+
+    private void CaptureDebugReturnLocation()
+    {
+        // Entering a debug room from within a debug session keeps the original
+        // launch location so Return always restores the true origin.
+        if (_debugReturnLocation != null)
+            return;
+
+        var screenId = _activeRoom != null && GodotObject.IsInstanceValid(_activeRoom)
+            ? _activeRoom.ScreenId
+            : default;
+
+        // Origins the registry cannot rebuild (e.g. generated dungeon rooms)
+        // fall back to the initial room instead of leaving Return broken.
+        if (!HasValue(screenId) || RoomRegistry?.TryGetRoomScene(screenId, out _) != true)
+        {
+            _debugReturnLocation = new RoomReturnLocation(InitialScreenId, null);
+            return;
+        }
+
+        var playerPosition = _player != null && GodotObject.IsInstanceValid(_player)
+            ? _player.GlobalPosition
+            : (Vector2?)null;
+        _debugReturnLocation = new RoomReturnLocation(screenId, playerPosition);
+    }
+
+    private void ReleaseActiveDebugRoom()
+    {
+        var room = _debugRoom;
+        _debugRoom = null;
+
+        if (room == null || !GodotObject.IsInstanceValid(room))
+            return;
+
+        var parent = room.GetParent();
+        parent?.RemoveChild(room);
+
+        if (_debugKeepInstance)
+        {
+            if (_retainedDebugRoom != room)
+            {
+                FreeRetainedDebugRoom();
+                _retainedDebugRoom = room;
+            }
+
+            _retainedDebugRoomLabel = _debugRoomLabel;
+        }
+        else if (room != _retainedDebugRoom)
+        {
+            room.QueueFree();
+        }
+
+        _debugRoomLabel = null;
+    }
+
+    private void ReleaseDebugRoomStateOnTeardown()
+    {
+        if (_retainedDebugRoom != null &&
+            GodotObject.IsInstanceValid(_retainedDebugRoom) &&
+            _retainedDebugRoom.GetParent() == null)
+        {
+            _retainedDebugRoom.QueueFree();
+        }
+
+        _retainedDebugRoom = null;
+        _retainedDebugRoomLabel = null;
+        _debugRoom = null;
+        _debugRoomLabel = null;
+        _debugReturnLocation = null;
+    }
+
+    private static string ComposeDebugRoomLabel(RoomTemplateDefinition definition, RoomContentOption contentOption, bool useExternalContent)
+    {
+        var roomName = !string.IsNullOrWhiteSpace(definition.DisplayName)
+            ? definition.DisplayName
+            : definition.GetLabel();
+
+        string contentName;
+        if (!useExternalContent)
+            contentName = "Built-in content";
+        else if (contentOption == null)
+            contentName = "Empty";
+        else if (!string.IsNullOrWhiteSpace(contentOption.DisplayName))
+            contentName = contentOption.DisplayName;
+        else
+            contentName = contentOption.Id != null && !contentOption.Id.IsEmpty ? contentOption.Id : "Unnamed content";
+
+        return $"{roomName} ({contentName})";
     }
 
     private Room InstantiateRoom(StringName screenId, StringName entryExitId, RoomTransition sourceTransition)
@@ -280,6 +499,13 @@ public partial class World : Node2D
     {
         if (_activeRoom == null || !GodotObject.IsInstanceValid(_activeRoom))
         {
+            _activeRoom = null;
+            return;
+        }
+
+        if (_activeRoom == _debugRoom)
+        {
+            ReleaseActiveDebugRoom();
             _activeRoom = null;
             return;
         }
