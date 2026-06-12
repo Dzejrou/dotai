@@ -108,8 +108,6 @@ Direction = &"south"
 position = Vector2(83, 92)
 IsLocked = true
 ExitId = &"north_west"
-TargetScreenId = &"timed_dungeon_test"
-TargetExitId = &"south_return"
 Direction = &"north"
 
 [node name="LevelUnlockInteraction" type="Node" parent="Scaled/Exits/NorthWestDoor" unique_id=1314545740]

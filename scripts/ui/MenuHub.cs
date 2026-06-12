@@ -9,6 +9,7 @@ public enum MenuHubPage
     Character,
     SpellBook,
     Log,
+    Debug,
 }
 
 [GlobalClass]
@@ -49,6 +50,9 @@ public partial class MenuHub : Control
 
     [Export]
     public NodePath LogPagePath { get; set; } = new NodePath("LogPage");
+
+    [Export]
+    public NodePath DebugRoomPagePath { get; set; } = new NodePath("DebugPage");
 
     [Export]
     public NodePath GameMenuPagePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage");
@@ -128,6 +132,9 @@ public partial class MenuHub : Control
     [Export]
     public NodePath NavLogButtonPath { get; set; } = new NodePath("NavRow/LogButton");
 
+    [Export]
+    public NodePath NavDebugButtonPath { get; set; } = new NodePath("NavRow/DebugButton");
+
     private static readonly MenuHubPage[] PageOrder =
     {
         MenuHubPage.Character,
@@ -135,6 +142,7 @@ public partial class MenuHub : Control
         MenuHubPage.SpellBook,
         MenuHubPage.GameMenu,
         MenuHubPage.Log,
+        MenuHubPage.Debug,
     };
 
     private static readonly Color ActiveNavTint = new(1.0f, 0.85f, 0.35f);
@@ -146,6 +154,7 @@ public partial class MenuHub : Control
     private MenuHubCharacterPage _characterPage;
     private MenuHubSpellBookPage _spellBookPage;
     private MenuHubLogPage _logPage;
+    private MenuHubDebugRoomPage _debugRoomPage;
     private Control _gameMenuPage;
     private Control _mainView;
     private Control _settingsView;
@@ -172,6 +181,7 @@ public partial class MenuHub : Control
     private Button _navSpellBookButton;
     private Button _navGameMenuButton;
     private Button _navLogButton;
+    private Button _navDebugButton;
     private int _windowPresetIndex;
 
     public bool IsOpen => Visible;
@@ -186,6 +196,8 @@ public partial class MenuHub : Control
 
     public MenuHubLogPage LogPage => _logPage;
 
+    public MenuHubDebugRoomPage DebugRoomPage => _debugRoomPage;
+
     public override void _Ready()
     {
         ProcessMode = ProcessModeEnum.Always;
@@ -197,6 +209,7 @@ public partial class MenuHub : Control
         _characterPage = GetNodeOrNull<MenuHubCharacterPage>(CharacterPagePath);
         _spellBookPage = GetNodeOrNull<MenuHubSpellBookPage>(SpellBookPagePath);
         _logPage = GetNodeOrNull<MenuHubLogPage>(LogPagePath);
+        _debugRoomPage = GetNodeOrNull<MenuHubDebugRoomPage>(DebugRoomPagePath);
         _gameMenuPage = GetNodeOrNull<Control>(GameMenuPagePath);
         _mainView = GetNodeOrNull<Control>(MainViewPath);
         _settingsView = GetNodeOrNull<Control>(SettingsViewPath);
@@ -223,6 +236,7 @@ public partial class MenuHub : Control
         _navSpellBookButton = GetNodeOrNull<Button>(NavSpellBookButtonPath);
         _navGameMenuButton = GetNodeOrNull<Button>(NavGameMenuButtonPath);
         _navLogButton = GetNodeOrNull<Button>(NavLogButtonPath);
+        _navDebugButton = GetNodeOrNull<Button>(NavDebugButtonPath);
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
@@ -311,6 +325,9 @@ public partial class MenuHub : Control
         if (_navLogButton != null)
             _navLogButton.Pressed += OnNavLogPressed;
 
+        if (_navDebugButton != null)
+            _navDebugButton.Pressed += OnNavDebugPressed;
+
         InitializeWindowPreset();
         RefreshWindowSizeView();
 
@@ -385,6 +402,9 @@ public partial class MenuHub : Control
 
         if (_navLogButton != null)
             _navLogButton.Pressed -= OnNavLogPressed;
+
+        if (_navDebugButton != null)
+            _navDebugButton.Pressed -= OnNavDebugPressed;
     }
 
     public override void _Input(InputEvent @event)
@@ -443,6 +463,11 @@ public partial class MenuHub : Control
     public void BindSpellBookPage(Player player)
     {
         _spellBookPage?.Bind(player);
+    }
+
+    public void BindDebugRoomPage(World world, Action roomEntered)
+    {
+        _debugRoomPage?.Bind(world, roomEntered);
     }
 
     public void SetInventoryPageWorldDropHandlers(Action<int, int> inventoryDrop, Action<GearInstance> gearDrop)
@@ -614,6 +639,9 @@ public partial class MenuHub : Control
         if (_logPage != null)
             _logPage.Visible = page == MenuHubPage.Log;
 
+        if (_debugRoomPage != null)
+            _debugRoomPage.Visible = page == MenuHubPage.Debug;
+
         if (page == MenuHubPage.Inventory)
             _inventoryPage?.OnPageEntered();
 
@@ -625,6 +653,9 @@ public partial class MenuHub : Control
 
         if (page == MenuHubPage.Log)
             _logPage?.OnPageEntered();
+
+        if (page == MenuHubPage.Debug)
+            _debugRoomPage?.OnPageEntered();
 
         UpdateNavHighlight();
     }
@@ -651,6 +682,7 @@ public partial class MenuHub : Control
         ApplyNavTint(_navSpellBookButton, CurrentPage == MenuHubPage.SpellBook);
         ApplyNavTint(_navGameMenuButton, CurrentPage == MenuHubPage.GameMenu);
         ApplyNavTint(_navLogButton, CurrentPage == MenuHubPage.Log);
+        ApplyNavTint(_navDebugButton, CurrentPage == MenuHubPage.Debug);
     }
 
     private static void ApplyNavTint(Button button, bool active)
@@ -694,6 +726,11 @@ public partial class MenuHub : Control
     private void OnNavLogPressed()
     {
         SwitchTo(MenuHubPage.Log);
+    }
+
+    private void OnNavDebugPressed()
+    {
+        SwitchTo(MenuHubPage.Debug);
     }
 
     private void ShowMainView()
