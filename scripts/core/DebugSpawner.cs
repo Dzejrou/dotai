@@ -438,6 +438,12 @@ public partial class DebugSpawner : Node2D
             return null;
 
         var omniSprite = spawnedNode.GetNodeOrNull<OmniSprite>("OmniSprite");
+
+        // Lazy-visual actors resolve their SpriteFrames by convention in _Ready, which
+        // never runs for these off-tree preview instances. Force the lookup so they still
+        // produce a thumbnail; it is a no-op for actors with embedded SpriteFrames.
+        omniSprite?.RefreshConventionalSpriteFrames();
+
         var animatedSprite = omniSprite?.AnimatedSprite ?? spawnedNode.GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
         if (animatedSprite?.SpriteFrames != null)
         {
