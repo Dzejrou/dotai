@@ -6,6 +6,7 @@ using System;
 public partial class MeleeAttackController : Node, ICombatActionController
 {
     private float _cooldownTimer;
+    private bool _hasPendingAttack;
 
     [Export]
     public float PreferredRange { get; set; } = 18.0f;
@@ -20,6 +21,10 @@ public partial class MeleeAttackController : Node, ICombatActionController
     public float AnimationSpeedMultiplier { get; set; } = 1.0f;
 
     public float MinimumRange => 0.0f;
+
+    // Busy only while a swing animation is in flight; an instant (missing-art)
+    // attack resolves within StartAction and never holds ownership.
+    public bool IsBusy => _hasPendingAttack;
 
     public override void _Ready()
     {
@@ -68,10 +73,9 @@ public partial class MeleeAttackController : Node, ICombatActionController
         actor.SetState(CombatUnitState.Attacking);
         _cooldownTimer = actor.ApplyHasteToDuration(AttackCooldown);
 
-        if (!actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.AttackSpeedMultiplier)))
-        {
+        _hasPendingAttack = actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.AttackSpeedMultiplier));
+        if (!_hasPendingAttack)
             actor.SetState(CombatUnitState.PursuingTarget);
-        }
 
         var damagePayload = Damage.DuplicateFrom(this);
         if (damagePayload != null)
@@ -86,6 +90,7 @@ public partial class MeleeAttackController : Node, ICombatActionController
         if (!animationName.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
             return false;
 
+        _hasPendingAttack = false;
         actor.FinishAttackState();
         return true;
     }
@@ -93,5 +98,6 @@ public partial class MeleeAttackController : Node, ICombatActionController
     public void Cancel(Actor actor)
     {
         _cooldownTimer = 0.0f;
+        _hasPendingAttack = false;
     }
 }

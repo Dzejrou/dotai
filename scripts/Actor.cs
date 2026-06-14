@@ -123,7 +123,10 @@ public abstract partial class Actor : CombatCharacter
         if (!IsStructurallyValidTarget(Target))
             ClearTarget();
 
-        if (CurrentState == CombatUnitState.Attacking)
+        // Suppress behavior and movement while an action-owned operation is in
+        // flight (attack swing, or a timer-driven cast/release). The controller's
+        // Update already ran above, so cast timers keep advancing while suppressed.
+        if (CurrentState == CombatUnitState.Attacking || (PrimaryActionController?.IsBusy ?? false))
         {
             Velocity = Vector2.Zero;
             return;
@@ -160,9 +163,13 @@ public abstract partial class Actor : CombatCharacter
         CurrentState = state;
     }
 
+    // Returns the actor to normal AI after an action-owned operation completes.
+    // Covers melee/ranged swings (Attacking) and enemy casts (Casting/Channeling).
     public void FinishAttackState()
     {
-        if (CurrentState != CombatUnitState.Attacking)
+        if (CurrentState != CombatUnitState.Attacking &&
+            CurrentState != CombatUnitState.Casting &&
+            CurrentState != CombatUnitState.Channeling)
             return;
 
         SetState(Target != null ? CombatUnitState.PursuingTarget : CombatUnitState.Idle);
@@ -308,12 +315,25 @@ public abstract partial class Actor : CombatCharacter
         {
             CleanupNavigationForInactiveState();
             ResetCombatState();
+            // Cancel any in-flight action so a pending cast cannot execute after
+            // the caster dies (no delayed Ring of Fire after the Demon is killed).
+            ResetPrimaryActionController();
         }
     }
 
     protected void ResetPrimaryActionController()
     {
         PrimaryActionController?.Cancel(this);
+    }
+
+    // Reset/restoration (e.g. timed-room restart) must cancel any in-flight cast
+    // and drop the actor out of an action state so it cannot resume a stale cast.
+    public override void RestoreCombatState(bool clearStatusEffects = true)
+    {
+        base.RestoreCombatState(clearStatusEffects);
+        ResetPrimaryActionController();
+        if (CurrentState is CombatUnitState.Attacking or CombatUnitState.Casting or CombatUnitState.Channeling)
+            SetState(CombatUnitState.Idle);
     }
 
     protected void PrepareForRemoval()

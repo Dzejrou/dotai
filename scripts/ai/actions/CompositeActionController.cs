@@ -45,6 +45,9 @@ public partial class CompositeActionController : Node, ICombatActionController
     public float MinimumRange => ResolveRangeSource()?.MinimumRange ?? 0.0f;
     public float PreferredRange => ResolveRangeSource()?.PreferredRange ?? 0.0f;
 
+    // The composite is busy while its active child owns an in-flight operation.
+    public bool IsBusy => _activeController?.IsBusy ?? false;
+
     public override void _Ready()
     {
         ResolveConfiguration();
@@ -58,6 +61,13 @@ public partial class CompositeActionController : Node, ICombatActionController
         // when another child is the one acting this frame.
         foreach (var child in _updateChildren)
             child.Update(actor, delta);
+
+        // A timer-driven cast can finish inside a child's Update without any
+        // animation-finished callback (e.g. the Demon's missing 'cast' release
+        // art). Release ownership as soon as the active child is no longer busy
+        // so a finished cast cannot leave the composite permanently active.
+        if (_activeController != null && !_activeController.IsBusy)
+            _activeController = null;
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
@@ -82,11 +92,12 @@ public partial class CompositeActionController : Node, ICombatActionController
         _activeController = controller;
         controller.StartAction(actor, target);
 
-        // When the child completed instantly (no attack animation is pending) the actor
-        // is no longer Attacking, so no animation-finished callback will arrive. Release
-        // ownership now so a missing/failed action animation cannot leave the composite
-        // permanently active.
-        if (actor.CurrentState != CombatUnitState.Attacking)
+        // When the child completed instantly (no lasting operation began) it never
+        // becomes busy, so no animation-finished callback will arrive. Release
+        // ownership now so a missing/failed action animation cannot leave the
+        // composite permanently active. Casts that began a windup, or instant casts
+        // whose release art is playing, stay busy and retain ownership.
+        if (!_activeController.IsBusy)
             _activeController = null;
     }
 

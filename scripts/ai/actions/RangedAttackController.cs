@@ -53,6 +53,10 @@ public partial class RangedAttackController : Node, ICombatActionController
     [Export]
     public float AnimationSpeedMultiplier { get; set; } = 2.0f;
 
+    // Busy only while a shot animation is in flight; an instant (missing-art)
+    // shot launches within StartAction and never holds ownership.
+    public bool IsBusy => _hasPendingProjectileShot;
+
     public override void _Ready()
     {
         MinimumRange = Math.Max(0.0f, MinimumRange);

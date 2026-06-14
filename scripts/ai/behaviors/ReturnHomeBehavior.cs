@@ -40,6 +40,9 @@ public partial class ReturnHomeBehavior : Node, IActorBehavior, IActorDamageInte
         if (actor == null)
             return;
 
+        // Leashing must abandon any in-flight cast so it cannot fire after the
+        // actor turns to walk home.
+        actor.PrimaryActionController?.Cancel(actor);
         actor.ClearTarget();
         actor.Combat.ExitCombat();
         actor.SetState(MoveState);
