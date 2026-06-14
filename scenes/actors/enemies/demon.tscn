@@ -1,9 +1,10 @@
 [gd_scene format=3 uid="uid://bq7g2x87i1wcl"]
 
-[ext_resource type="Script" path="res://scripts/actors/enemies/Demon.cs" id="1_demon"]
+[ext_resource type="Script" uid="uid://dsfht880iolli" path="res://scripts/actors/enemies/Demon.cs" id="1_demon"]
 [ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="2_omni_sprite"]
 [ext_resource type="PackedScene" path="res://scenes/ui/actor_hud.tscn" id="3_actor_hud"]
 [ext_resource type="Script" uid="uid://cw8iah53nefxn" path="res://scripts/ai/behaviors/AcquireHostileTargetBehavior.cs" id="4_acquire_hostile"]
+[ext_resource type="SpriteFrames" uid="uid://7ruph001eflv" path="res://resources/animations/demon_spriteframes.tres" id="4_e5hxh"]
 [ext_resource type="Script" uid="uid://b2fyidq83tn5q" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="5_target_combat"]
 [ext_resource type="Script" uid="uid://bfd5avqcou43i" path="res://scripts/ai/behaviors/ReturnHomeBehavior.cs" id="6_return_home"]
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="7_wander_behavior"]
@@ -16,12 +17,12 @@
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="14_damage"]
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="15_melee_action"]
 [ext_resource type="Script" uid="uid://81lj2bds5kdy" path="res://scripts/ai/actions/SpellCastActionController.cs" id="16_spell_cast_action"]
-[ext_resource type="Script" path="res://scripts/ai/actions/CompositeActionController.cs" id="17_composite_action"]
-[ext_resource type="Script" path="res://scripts/ai/actions/CompositeActionEntry.cs" id="18_composite_entry"]
+[ext_resource type="Script" uid="uid://bpr55gyf2xf26" path="res://scripts/ai/actions/CompositeActionController.cs" id="17_composite_action"]
+[ext_resource type="Script" uid="uid://pq1e6eit0mof" path="res://scripts/ai/actions/CompositeActionEntry.cs" id="18_composite_entry"]
 [ext_resource type="Script" uid="uid://cda1gppcwjn21" path="res://scripts/ai/actions/AiSpellOption.cs" id="19_ai_spell_option"]
 [ext_resource type="Script" uid="uid://dtc0do7tcpgct" path="res://scripts/spells/RingOfFireSpell.cs" id="20_ring_of_fire_spell"]
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="21_ring_of_fire_area"]
-[ext_resource type="Resource" path="res://resources/loot_tables/demon_loot_table.tres" id="22_demon_loot_table"]
+[ext_resource type="Resource" uid="uid://dswv5j5kfplms" path="res://resources/loot_tables/demon_loot_table.tres" id="22_demon_loot_table"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_demon"]
 radius = 5.0
@@ -53,6 +54,8 @@ AssetKey = "demon"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=647450479]
 scale = Vector2(0.8, 0.8)
+sprite_frames = ExtResource("4_e5hxh")
+animation = &"idle_south"
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=362672607]
 avoidance_enabled = true
