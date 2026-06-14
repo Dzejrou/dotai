@@ -642,7 +642,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("80_ccv3y")
 }],
-"loop": false,
+"loop": true,
 "name": &"casting_east",
 "speed": 5.0
 }, {
@@ -674,7 +674,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("89_lei4i")
 }],
-"loop": false,
+"loop": true,
 "name": &"casting_north",
 "speed": 5.0
 }, {
@@ -706,7 +706,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("98_hi4hi")
 }],
-"loop": false,
+"loop": true,
 "name": &"casting_north-east",
 "speed": 5.0
 }, {
@@ -738,7 +738,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("107_84dvx")
 }],
-"loop": false,
+"loop": true,
 "name": &"casting_north-west",
 "speed": 5.0
 }, {
@@ -770,7 +770,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("116_v3gjp")
 }],
-"loop": false,
+"loop": true,
 "name": &"casting_south",
 "speed": 5.0
 }, {
@@ -802,7 +802,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("125_7cc4i")
 }],
-"loop": false,
+"loop": true,
 "name": &"casting_south-east",
 "speed": 5.0
 }, {
@@ -834,7 +834,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("134_hg7kd")
 }],
-"loop": false,
+"loop": true,
 "name": &"casting_south-west",
 "speed": 5.0
 }, {
@@ -866,7 +866,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("143_vsobi")
 }],
-"loop": false,
+"loop": true,
 "name": &"casting_west",
 "speed": 5.0
 }, {

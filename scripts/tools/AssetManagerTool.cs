@@ -1296,6 +1296,9 @@ public partial class AssetManagerTool : Control
         {
             "idle" => true,
             "walk" => true,
+            // The cast windup loops for the whole timer-driven cast time, so the
+            // generator must regenerate casting_* as looping (see SpellCastActionController).
+            "casting" => true,
             _ => false,
         };
     }

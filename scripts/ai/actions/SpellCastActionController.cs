@@ -6,6 +6,21 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class SpellCastActionController : Node, ICombatActionController
 {
+    private enum CastPhase
+    {
+        // No cast in flight.
+        None,
+
+        // Counting down the haste-adjusted cast time before execution. The timer
+        // here is the sole timing authority; the looping windup animation is
+        // presentation only.
+        Windup,
+
+        // Spell already executed once; waiting for the optional release ('cast')
+        // animation to finish before returning control to the AI.
+        Release,
+    }
+
     private readonly struct SpellOptionCandidate
     {
         public SpellOptionCandidate(int optionIndex, AiSpellOption option, Spell spell)
@@ -29,20 +44,37 @@ public partial class SpellCastActionController : Node, ICombatActionController
     private SpellCastRequest _pendingRequest;
     private float[] _optionCooldownRemaining = Array.Empty<float>();
 
+    private CastPhase _castPhase = CastPhase.None;
+    private float _castElapsed;
+    private float _castDuration;
+    private string _activeReleaseAnimation;
+
     [Export]
     public float MinimumRange { get; set; } = 70.0f;
 
     [Export]
     public float PreferredRange { get; set; } = 120.0f;
 
+    // Release/recovery animation requested once after the spell executes.
     [Export]
     public StringName AttackAnimation { get; set; } = "cast";
+
+    // Looping windup animation played for the whole cast time. It is presentation
+    // only: a missing animation shows the lazy fallback but never shortens or
+    // skips the configured, timer-driven cast time.
+    [Export]
+    public StringName CastingAnimation { get; set; } = "casting";
 
     [Export]
     public float AnimationSpeedMultiplier { get; set; } = 1.0f;
 
     [Export]
     public Godot.Collections.Array<AiSpellOption> SpellOptions { get; set; } = new();
+
+    // Busy from cast start until the release animation finishes (or until an
+    // instant/missing-art cast finishes within the same frame). The actor stays
+    // suppressed and a composite owner retains this controller while busy.
+    public bool IsBusy => _castPhase != CastPhase.None;
 
     public override void _Ready()
     {
@@ -61,10 +93,17 @@ public partial class SpellCastActionController : Node, ICombatActionController
             if (_optionCooldownRemaining[i] > 0.0f)
                 _optionCooldownRemaining[i] = Math.Max(0.0f, _optionCooldownRemaining[i] - (float)delta);
         }
+
+        if (_castPhase == CastPhase.Windup)
+            AdvanceWindup(actor, delta);
     }
 
     public bool CanStartAction(Actor actor, Node2D target)
     {
+        // Refuse to begin another cast while one is already in flight.
+        if (_castPhase != CastPhase.None)
+            return false;
+
         if (actor is not ISpellCaster caster)
             return false;
 
@@ -74,7 +113,7 @@ public partial class SpellCastActionController : Node, ICombatActionController
 
     public void StartAction(Actor actor, Node2D target)
     {
-        if (actor is not ISpellCaster caster)
+        if (_castPhase != CastPhase.None || actor is not ISpellCaster caster)
             return;
 
         var request = CreateSpellCastRequest(actor, target);
@@ -91,37 +130,144 @@ public partial class SpellCastActionController : Node, ICombatActionController
         if (toTarget != Vector2.Zero)
             actor.SetFacingDirection(toTarget);
 
-        actor.SetState(CombatUnitState.Attacking);
+        // Lock the request (and its ground-target snapshot) at cast start so the
+        // spell lands where the target was when the cast began, even if it moves.
+        _pendingOptionIndex = candidate.OptionIndex;
+        _pendingSpell = candidate.Spell;
+        _pendingRequest = request;
 
-        if (actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), AnimationSpeedMultiplier * Math.Max(0.0f, actor.CastSpeedMultiplier)))
+        actor.SetState(CombatUnitState.Casting);
+        actor.Velocity = Vector2.Zero;
+
+        _castElapsed = 0.0f;
+        _castDuration = Math.Max(0.0f, actor.ApplyHasteToDuration(candidate.Spell.CastTimeDuration));
+
+        if (_castDuration <= 0.0f)
         {
-            _pendingOptionIndex = candidate.OptionIndex;
-            _pendingSpell = candidate.Spell;
-            _pendingRequest = request;
+            // Instant cast: still runs through the shared completion path so
+            // revalidation/release/ownership behave identically.
+            _castPhase = CastPhase.Windup;
+            CompleteCast(actor);
             return;
         }
 
-        TryCast(actor, candidate.OptionIndex, candidate.Option, candidate.Spell, request);
-        actor.FinishAttackState();
+        _castPhase = CastPhase.Windup;
+        actor.TryPlayDirectionalAnimation(CastingAnimation.ToString(), Math.Max(0.0f, actor.CastSpeedMultiplier));
     }
 
     public bool HandleAnimationFinished(Actor actor, StringName animationName)
     {
-        if (!animationName.ToString().StartsWith(AttackAnimation.ToString(), StringComparison.Ordinal))
+        // Animation completion is never the timing authority for execution. The
+        // only thing a finished animation does is end the release presentation.
+        if (_castPhase != CastPhase.Release ||
+            _activeReleaseAnimation == null ||
+            animationName.ToString() != _activeReleaseAnimation)
+        {
             return false;
+        }
 
-        if (_pendingOptionIndex >= 0 && _pendingSpell != null)
-            TryCast(actor, _pendingOptionIndex, GetSpellOption(_pendingOptionIndex), _pendingSpell, _pendingRequest);
-
-        ClearPendingCast();
-
-        actor.FinishAttackState();
+        _castPhase = CastPhase.None;
+        _activeReleaseAnimation = null;
+        actor?.FinishAttackState();
         return true;
     }
 
     public void Cancel(Actor actor)
     {
+        CancelCast();
+    }
+
+    private void AdvanceWindup(Actor actor, double delta)
+    {
+        if (actor == null || actor.IsDead)
+        {
+            CancelCast();
+            return;
+        }
+
+        _castElapsed += Math.Max(0.0f, (float)delta);
+        if (_castElapsed < _castDuration)
+            return;
+
+        CompleteCast(actor);
+    }
+
+    private void CompleteCast(Actor actor)
+    {
+        var optionIndex = _pendingOptionIndex;
+        var spell = _pendingSpell;
+        var request = _pendingRequest;
+        var option = GetSpellOption(optionIndex);
+
+        // Revalidate before executing so a stale pending cast cannot fire at a
+        // dead/invalid target or without resources (closes #60). The captured
+        // ground position survives, but caster/target validity and spell
+        // availability must still hold.
+        var executed = RevalidateForExecution(actor, option, spell, request) &&
+                       TryCast(actor, optionIndex, option, spell, request);
+
         ClearPendingCast();
+
+        // Present the release/recovery animation only after a real execution.
+        // If the art is missing, the lazy fallback shows and we resume at once;
+        // no animation callback is required to leave the cast.
+        if (executed && TryPlayReleaseAnimation(actor))
+        {
+            _castPhase = CastPhase.Release;
+            return;
+        }
+
+        _castPhase = CastPhase.None;
+        _activeReleaseAnimation = null;
+        actor?.FinishAttackState();
+    }
+
+    private bool RevalidateForExecution(Actor actor, AiSpellOption option, Spell spell, SpellCastRequest request)
+    {
+        if (actor == null || actor.IsDead || !actor.IsInsideTree())
+            return false;
+
+        if (actor is not ISpellCaster caster || !caster.CanCastSpells)
+            return false;
+
+        if (option == null || spell == null || !GodotObject.IsInstanceValid(spell))
+            return false;
+
+        // Range is intentionally not re-checked: a captured ground-target cast
+        // keeps its snapshot even if the target left the original range. Relation
+        // and structural validity must still hold, so a dead/removed target cancels.
+        if (!IsTargetValidForRelation(actor, request?.TargetNode, option.TargetRelation))
+            return false;
+
+        return spell.CanCast(caster, request ?? SpellCastRequest.Empty);
+    }
+
+    private bool TryPlayReleaseAnimation(Actor actor)
+    {
+        if (actor == null)
+            return false;
+
+        // Resolve first so HandleAnimationFinished can match the exact playing
+        // name; a missing release animation returns false (lazy fallback shown).
+        var resolved = actor.ResolveDirectionalAnimationName(AttackAnimation.ToString());
+        var speed = AnimationSpeedMultiplier * Math.Max(0.0f, actor.CastSpeedMultiplier);
+        if (!actor.TryPlayDirectionalAnimation(AttackAnimation.ToString(), speed))
+        {
+            _activeReleaseAnimation = null;
+            return false;
+        }
+
+        _activeReleaseAnimation = resolved;
+        return true;
+    }
+
+    private void CancelCast()
+    {
+        ClearPendingCast();
+        _castPhase = CastPhase.None;
+        _castElapsed = 0.0f;
+        _castDuration = 0.0f;
+        _activeReleaseAnimation = null;
     }
 
     private void ClearPendingCast()
