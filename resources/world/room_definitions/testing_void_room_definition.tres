@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3]
+[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3 uid="uid://c15bea7iasp0m"]
 
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
+[ext_resource type="Script" uid="uid://s0jdevbppgan" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
+[ext_resource type="Script" uid="uid://bfuc2gwmlgr3m" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
 [ext_resource type="PackedScene" uid="uid://ccyfthojw57t7" path="res://scenes/world/rooms/testing_void_room.tscn" id="3_testing_void_room"]
 [ext_resource type="PackedScene" uid="uid://dwochr8ocdyfl" path="res://scenes/world/rooms/contents/testing_void_chests_content.tscn" id="4_void_chests_content"]
 

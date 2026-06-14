@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bq7g2x87i1wcl"]
 
 [ext_resource type="Script" path="res://scripts/actors/enemies/Demon.cs" id="1_demon"]
 [ext_resource type="Script" uid="uid://b5ahda2c4pbj4" path="res://scripts/OmniSprite.cs" id="2_omni_sprite"]
@@ -12,7 +12,7 @@
 [ext_resource type="Script" uid="uid://7xa12rxtuta" path="res://scripts/combat/FactionState.cs" id="10_faction_state"]
 [ext_resource type="Script" uid="uid://bemjlfoynelnc" path="res://scripts/combat/ManaState.cs" id="11_mana_state"]
 [ext_resource type="Script" uid="uid://bnqq4yv1eab8r" path="res://scripts/status/StatusEffectController.cs" id="12_status_effect_controller"]
-[ext_resource type="Script" path="res://scripts/stats/Stats.cs" id="13_stats"]
+[ext_resource type="Script" uid="uid://b84ktu5cuj172" path="res://scripts/stats/Stats.cs" id="13_stats"]
 [ext_resource type="Script" uid="uid://bj4h5qc8thal5" path="res://scripts/combat/Damage.cs" id="14_damage"]
 [ext_resource type="Script" uid="uid://2jkxir2gs1j3" path="res://scripts/ai/actions/MeleeAttackController.cs" id="15_melee_action"]
 [ext_resource type="Script" uid="uid://81lj2bds5kdy" path="res://scripts/ai/actions/SpellCastActionController.cs" id="16_spell_cast_action"]
@@ -27,77 +27,69 @@
 radius = 5.0
 height = 26.0
 
-[sub_resource type="Resource" id="Resource_ring_of_fire_option"]
-script = ExtResource("19_ai_spell_option")
-SpellId = &"ring_of_fire"
-TargetRelation = 0
-Priority = 0
-Weight = 1.0
-MinRange = 0.0
-MaxRange = 160.0
-CooldownSeconds = 0.0
-
 [sub_resource type="Resource" id="Resource_entry_melee"]
 script = ExtResource("18_composite_entry")
 Controller = NodePath("MeleeAttackController")
-Priority = 0
 Weight = 3.0
 
 [sub_resource type="Resource" id="Resource_entry_ring_of_fire"]
 script = ExtResource("18_composite_entry")
 Controller = NodePath("RingOfFireCast")
-Priority = 0
-Weight = 1.0
 
-[node name="Demon" type="CharacterBody2D"]
+[sub_resource type="Resource" id="Resource_ring_of_fire_option"]
+script = ExtResource("19_ai_spell_option")
+SpellId = &"ring_of_fire"
+MaxRange = 160.0
+
+[node name="Demon" type="CharacterBody2D" unique_id=1711392331]
 z_index = -1
 script = ExtResource("1_demon")
 LootTable = ExtResource("22_demon_loot_table")
 
-[node name="OmniSprite" type="Node2D" parent="."]
+[node name="OmniSprite" type="Node2D" parent="." unique_id=121222990]
 script = ExtResource("2_omni_sprite")
 UseConventionalAnimationLookup = true
 AssetKey = "demon"
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="OmniSprite" unique_id=647450479]
 scale = Vector2(0.8, 0.8)
 
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=362672607]
 avoidance_enabled = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1662357384]
 position = Vector2(0, 12)
 shape = SubResource("CapsuleShape2D_demon")
 
-[node name="ActorHUD" parent="." instance=ExtResource("3_actor_hud")]
+[node name="ActorHUD" parent="." unique_id=1379694520 instance=ExtResource("3_actor_hud")]
 DisplayName = "Demon"
 VerticalOffset = -60.0
 
-[node name="CombatState" type="Node" parent="."]
+[node name="CombatState" type="Node" parent="." unique_id=1628865525]
 script = ExtResource("8_combat_state")
 
-[node name="HealthState" type="Node" parent="."]
+[node name="HealthState" type="Node" parent="." unique_id=1120997562]
 script = ExtResource("9_health_state")
 
-[node name="FactionState" type="Node" parent="."]
+[node name="FactionState" type="Node" parent="." unique_id=1939590760]
 script = ExtResource("10_faction_state")
 
-[node name="StatusEffectController" type="Node" parent="."]
+[node name="StatusEffectController" type="Node" parent="." unique_id=760921459]
 script = ExtResource("12_status_effect_controller")
 
-[node name="ManaState" type="Node" parent="."]
+[node name="ManaState" type="Node" parent="." unique_id=1808993163]
 script = ExtResource("11_mana_state")
 
-[node name="Stats" type="Node" parent="."]
+[node name="Stats" type="Node" parent="." unique_id=1227118864]
 script = ExtResource("13_stats")
 MaxHealth = 40
 MaxMana = 50
 MP5 = 12
 Power = 7.0
 
-[node name="Spells" type="Node" parent="."]
+[node name="Spells" type="Node" parent="." unique_id=607846737]
 
-[node name="RingOfFire" type="Node" parent="Spells"]
+[node name="RingOfFire" type="Node" parent="Spells" unique_id=1947266600]
 script = ExtResource("20_ring_of_fire_spell")
 SpellId = "ring_of_fire"
 School = 1
@@ -105,56 +97,54 @@ ManaCost = 15
 Cooldown = 5.0
 CastTimeSeconds = 2.0
 
-[node name="RingOfFireArea" parent="Spells/RingOfFire" instance=ExtResource("21_ring_of_fire_area")]
+[node name="RingOfFireArea" parent="Spells/RingOfFire" unique_id=951642534 instance=ExtResource("21_ring_of_fire_area")]
 visible = false
 EffectLifetime = 16.0
 TickInterval = 4.0
 ApplyOnEnter = true
 
-[node name="PrimaryActionController" type="Node" parent="."]
+[node name="PrimaryActionController" type="Node" parent="." unique_id=1869261793]
 script = ExtResource("17_composite_action")
 Entries = Array[ExtResource("18_composite_entry")]([SubResource("Resource_entry_melee"), SubResource("Resource_entry_ring_of_fire")])
 FallbackMovementController = NodePath("MeleeAttackController")
 
-[node name="MeleeAttackController" type="Node" parent="PrimaryActionController"]
+[node name="MeleeAttackController" type="Node" parent="PrimaryActionController" unique_id=1852028786]
 script = ExtResource("15_melee_action")
 PreferredRange = 48.0
 AttackCooldown = 1.2
 
-[node name="Damage" type="Node" parent="PrimaryActionController/MeleeAttackController"]
+[node name="Damage" type="Node" parent="PrimaryActionController/MeleeAttackController" unique_id=2043300656]
 script = ExtResource("14_damage")
-PowerScale = 1.0
-FlatDamage = 0
 
-[node name="RingOfFireCast" type="Node" parent="PrimaryActionController"]
+[node name="RingOfFireCast" type="Node" parent="PrimaryActionController" unique_id=2101993462]
 script = ExtResource("16_spell_cast_action")
 MinimumRange = 0.0
 PreferredRange = 160.0
 SpellOptions = Array[ExtResource("19_ai_spell_option")]([SubResource("Resource_ring_of_fire_option")])
 
-[node name="Behaviors" type="Node" parent="."]
+[node name="Behaviors" type="Node" parent="." unique_id=2046006241]
 
-[node name="Tier10_Targeting" type="Node" parent="Behaviors"]
+[node name="Tier10_Targeting" type="Node" parent="Behaviors" unique_id=1160277210]
 
-[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting"]
+[node name="AcquireHostileTargetBehavior" type="Node" parent="Behaviors/Tier10_Targeting" unique_id=1527628636]
 script = ExtResource("4_acquire_hostile")
 InitialTargetPath = NodePath("../Player")
 DebugActorName = "Demon"
 
-[node name="Tier50_Combat" type="Node" parent="Behaviors"]
+[node name="Tier50_Combat" type="Node" parent="Behaviors" unique_id=978138855]
 
-[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat"]
+[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat" unique_id=1759724791]
 script = ExtResource("5_target_combat")
 
-[node name="Tier80_ReturnHome" type="Node" parent="Behaviors"]
+[node name="Tier80_ReturnHome" type="Node" parent="Behaviors" unique_id=1892255507]
 
-[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome"]
+[node name="ReturnHomeBehavior" type="Node" parent="Behaviors/Tier80_ReturnHome" unique_id=1841419962]
 script = ExtResource("6_return_home")
 ReturnHomeTriggerDistance = 256.0
 
-[node name="Tier90_Recovery" type="Node" parent="Behaviors"]
+[node name="Tier90_Recovery" type="Node" parent="Behaviors" unique_id=399288462]
 
-[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery"]
+[node name="WanderBehavior" type="Node" parent="Behaviors/Tier90_Recovery" unique_id=816965834]
 script = ExtResource("7_wander_behavior")
 WanderRadius = 54.0
 MoveDurationMin = 0.9
