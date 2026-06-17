@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public abstract partial class Actor : CombatCharacter
 {
     private const string DefaultCorpseScenePath = "res://scenes/world/corpse.tscn";
+    private const string BehaviorNodePhasePath = "Behaviors/Tier05_Phase";
     private const string BehaviorNodeTargetingPath = "Behaviors/Tier10_Targeting";
     private const string BehaviorNodeCombatPath = "Behaviors/Tier50_Combat";
     private const string BehaviorNodeReturnHomePath = "Behaviors/Tier80_ReturnHome";
@@ -288,6 +289,10 @@ public abstract partial class Actor : CombatCharacter
         _tickBehaviors.Clear();
         _damageInterceptors.Clear();
 
+        // Highest-priority tier: boss phase/transition control runs ahead of
+        // targeting and combat so it can take over the actor during a transition.
+        // Most actors have no such tier node; collection is then a no-op.
+        AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodePhasePath));
         AppendBehaviorNodes(GetNodeOrNull<Node>(BehaviorNodeTargetingPath));
 
         foreach (var behavior in behaviors)
@@ -420,6 +425,9 @@ public abstract partial class Actor : CombatCharacter
 
             if (!string.IsNullOrEmpty(decision.FloatingText))
                 ShowFloatingDamageNumber(decision.FloatingText, decision.FloatingTextColor);
+
+            if (decision.ReportAbsorbed)
+                ReportAbsorbedHit(decision.AbsorbedAmount);
 
             if (decision.RetargetTo != null && IsStructurallyValidTarget(decision.RetargetTo))
                 SetTarget(decision.RetargetTo);

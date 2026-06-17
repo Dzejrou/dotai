@@ -26,6 +26,7 @@
 [ext_resource type="Script" uid="uid://dj1w43i7akv4s" path="res://scripts/ai/behaviors/WanderBehavior.cs" id="31_fari3"]
 [ext_resource type="Script" uid="uid://b84ktu5cuj172" path="res://scripts/stats/Stats.cs" id="32_stats"]
 [ext_resource type="PackedScene" uid="uid://iagrd4uy7h2c" path="res://scenes/actors/npcs/merchant.tscn" id="33_merchant"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/demon_boss.tscn" id="34_demon_boss"]
 
 [sub_resource type="NavigationPolygon" id="1_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -242,3 +243,6 @@ position = Vector2(1298.8608, 334.64896)
 
 [node name="PatrolNode7" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=164955460]
 position = Vector2(1439.5033, 291.0013)
+
+[node name="DemonBoss" parent="." instance=ExtResource("34_demon_boss")]
+position = Vector2(1000, 700)

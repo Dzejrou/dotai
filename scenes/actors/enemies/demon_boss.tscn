@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/demon.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/BossPhaseController.cs" id="2_phase"]
+
+[node name="Demon" instance=ExtResource("1_base")]
+Rank = 2
+
+[node name="ActorHUD" parent="."]
+DisplayName = "Demon Boss"
+
+[node name="Stats" parent="."]
+MaxHealth = 120
+
+[node name="Tier05_Phase" type="Node" parent="Behaviors"]
+
+[node name="BossPhaseController" type="Node" parent="Behaviors/Tier05_Phase"]
+script = ExtResource("2_phase")
+Phase2HealthThreshold = 0.75
