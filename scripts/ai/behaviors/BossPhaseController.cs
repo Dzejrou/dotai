@@ -7,60 +7,37 @@ using System.Collections.Generic;
 // behavior (see Actor.ConfigureBehaviors): it then outranks targeting and combat
 // while a transition is in flight.
 //
-// This controller owns threshold detection, phase state, invulnerability and
-// sequencing. The transition itself is described by ordered child
-// BossTransitionAction nodes (move to anchor, channel a spell, ...): the controller
-// runs them in order and only activates phase 2 once every action has completed.
-// Adding phases or different action sequences is a scene-level change; the control
-// flow here does not need to change.
+// The controller owns phase state, invulnerability and threshold evaluation, but it
+// is not hardcoded to any particular phases or sequence. Each phase change is a child
+// BossPhaseTransition node carrying its own HP threshold, destination phase,
+// invulnerability setting and ordered BossTransitionAction children. The controller
+// arms the highest crossed, not-yet-triggered transition, runs its actions, then
+// advances to that transition's destination phase. Adding a later transition (e.g. a
+// 25% phase with a different sequence) is purely a scene change.
 [GlobalClass]
 public partial class BossPhaseController : Node, IActorBehavior, IActorTickBehavior, IActorDamageInterceptor
 {
-    private enum Phase
-    {
-        Phase1,
-        Transitioning,
-        Phase2,
-    }
+    private readonly List<BossPhaseTransition> _transitions = new();
+    private bool _transitionsResolved;
+    private BossPhaseTransition _active;
+    private int _currentPhase = 1;
 
-    [Export(PropertyHint.Range, "0.0,1.0,0.01")]
-    public float Phase2HealthThreshold { get; set; } = 0.75f;
+    public bool IsTransitioning => _active != null;
 
-    // Invulnerable for the entire transition sequence (movement and channel). On by
-    // default so the Demon boss cannot be damaged through any part of its transition.
-    [Export]
-    public bool InvulnerableDuringTransition { get; set; } = true;
+    // Invulnerable for the whole active transition when that transition asks for it.
+    public bool IsInvulnerable => _active != null && _active.InvulnerableDuringTransition;
 
-    // Combat-log line emitted once phase 2 begins. Blank uses "<name> enters Phase 2.".
-    [Export]
-    public string Phase2AnnouncementText { get; set; } = string.Empty;
+    public int CurrentPhase => _currentPhase;
 
-    private Phase _phase = Phase.Phase1;
-    private readonly List<BossTransitionAction> _actions = new();
-    private bool _actionsResolved;
-    private int _activeActionIndex = -1;
-
-    public bool IsTransitioning => _phase == Phase.Transitioning;
-
-    // Invulnerable for the whole transition: from the threshold crossing until the
-    // final action completes and phase 2 begins.
-    public bool IsInvulnerable => _phase == Phase.Transitioning && InvulnerableDuringTransition;
-
-    public int CurrentPhase => _phase == Phase.Phase2 ? 2 : 1;
-
-    // Highest-priority behavior: while transitioning, the active action takes the
-    // actor over so normal combat AI/action selection is suppressed.
+    // Highest-priority behavior: while a transition runs, it takes the actor over so
+    // normal combat AI/action selection is suppressed.
     public bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent)
     {
         intent = ActorIntent.None;
-        if (actor == null || _phase != Phase.Transitioning)
+        if (actor == null || _active == null)
             return false;
 
-        var action = ActiveAction;
-        if (action == null)
-            return false;
-
-        intent = action.BuildIntent(actor);
+        intent = _active.BuildIntent(actor);
         return true;
     }
 
@@ -69,147 +46,127 @@ public partial class BossPhaseController : Node, IActorBehavior, IActorTickBehav
         if (actor == null)
             return;
 
-        switch (_phase)
+        if (_active == null)
         {
-            case Phase.Phase1:
-                // Detect the crossing promptly even if the player stops attacking
-                // right at the threshold.
-                if (ShouldEnterTransition(actor))
-                    BeginTransition(actor);
-                break;
-            case Phase.Transitioning:
-                AdvanceTransition(actor, delta);
-                break;
+            // Detect a crossing promptly even if the player stops attacking right at
+            // the threshold.
+            var next = SelectTransition(actor);
+            if (next != null)
+                BeginTransition(actor, next);
+            return;
         }
+
+        _active.Update(actor, delta);
+        if (_active.IsComplete)
+            CompleteTransition(actor);
     }
 
     public bool TryHandleIncomingDamage(Actor actor, Damage damageInfo, out IncomingDamageDecision decision)
     {
         decision = default;
-        if (actor == null || _phase == Phase.Phase2)
+        if (actor == null)
             return false;
 
-        if (_phase == Phase.Phase1)
+        if (_active == null)
         {
-            // The hit that first crosses the threshold still lands normally; this
-            // interceptor only fires once a prior hit has already dropped the boss
-            // to/below the threshold. Begin the transition synchronously here so
-            // invulnerability is in effect before this hit (and any further hits in
-            // the boss's current action) can push damage through.
-            if (!ShouldEnterTransition(actor))
+            // The hit that first crosses a threshold still lands normally; this only
+            // fires once a prior hit has already dropped the boss to/below it. Arming
+            // the transition synchronously here means invulnerability is in effect
+            // before this hit (and any further hits in the current action) land.
+            var next = SelectTransition(actor);
+            if (next == null)
                 return false;
 
-            BeginTransition(actor);
+            BeginTransition(actor, next);
         }
 
-        if (!InvulnerableDuringTransition)
+        if (_active == null || !_active.InvulnerableDuringTransition)
             return false;
 
         decision = IncomingDamageDecision.Absorb(damageInfo?.Amount ?? 0);
         return true;
     }
 
-    // Extension seams for later slices (kept intentionally minimal for now).
-    protected virtual void OnTransitionStarted(Actor actor) { }
-
-    protected virtual void OnPhaseActivated(Actor actor, int phase) { }
-
-    private BossTransitionAction ActiveAction =>
-        _activeActionIndex >= 0 && _activeActionIndex < _actions.Count ? _actions[_activeActionIndex] : null;
-
-    private bool ShouldEnterTransition(Actor actor)
+    // Picks the highest crossed, not-yet-triggered transition so earlier phases (e.g.
+    // 75%) always run before later ones (e.g. 25%), even if a single hit crosses both.
+    private BossPhaseTransition SelectTransition(Actor actor)
     {
-        if (_phase != Phase.Phase1 || actor.IsDead)
-            return false;
+        EnsureTransitionsResolved();
+        if (actor.IsDead)
+            return null;
 
         var max = actor.MaxHealthValue;
         if (max <= 0)
-            return false;
+            return null;
 
-        return (float)actor.CurrentHealth / max <= Phase2HealthThreshold;
+        var fraction = (float)actor.CurrentHealth / max;
+        BossPhaseTransition best = null;
+        foreach (var transition in _transitions)
+        {
+            if (transition.HasTriggered || fraction > transition.HealthThreshold)
+                continue;
+
+            if (best == null || transition.HealthThreshold > best.HealthThreshold)
+                best = transition;
+        }
+
+        return best;
     }
 
-    private void BeginTransition(Actor actor)
+    private void BeginTransition(Actor actor, BossPhaseTransition transition)
     {
-        if (_phase != Phase.Phase1)
-            return;
-
-        _phase = Phase.Transitioning;
-        EnsureActionsResolved();
+        _active = transition;
 
         // Cancel any in-flight swing/cast through the existing action-controller API
         // and drop out of the action-owned state so behavior resolution (the active
-        // transition action's intent) resumes.
+        // transition's intent) resumes.
         actor.PrimaryActionController?.Cancel(actor);
         actor.SetState(CombatUnitState.Transitioning);
 
-        OnTransitionStarted(actor);
+        transition.Begin(actor);
 
-        _activeActionIndex = -1;
-        if (!TryBeginNextAction(actor))
-            CompleteTransition(actor); // no actions configured: go straight to phase 2
-    }
-
-    private void AdvanceTransition(Actor actor, double delta)
-    {
-        var action = ActiveAction;
-        if (action == null)
-        {
+        // A transition with no actions just changes phase.
+        if (transition.IsComplete)
             CompleteTransition(actor);
-            return;
-        }
-
-        action.Update(actor, delta);
-        if (action.IsComplete && !TryBeginNextAction(actor))
-            CompleteTransition(actor);
-    }
-
-    private bool TryBeginNextAction(Actor actor)
-    {
-        _activeActionIndex++;
-        var action = ActiveAction;
-        if (action == null)
-            return false;
-
-        action.Begin(actor);
-        return true;
     }
 
     private void CompleteTransition(Actor actor)
     {
-        if (_phase != Phase.Transitioning)
+        var transition = _active;
+        if (transition == null)
             return;
 
-        _phase = Phase.Phase2;
-        _activeActionIndex = -1;
+        _active = null;
+        _currentPhase = transition.TargetPhase;
 
-        // Clearing the transition state (and IsInvulnerable) lets normal combat
+        // Clearing the active transition (and IsInvulnerable) lets normal combat
         // resume from the next behavior resolution.
         actor.SetState(actor.Target != null ? CombatUnitState.PursuingTarget : CombatUnitState.Idle);
 
-        CombatLog.System(ResolveAnnouncement(actor));
-        OnPhaseActivated(actor, 2);
+        CombatLog.System(ResolveAnnouncement(actor, transition));
     }
 
-    private void EnsureActionsResolved()
+    private void EnsureTransitionsResolved()
     {
-        if (_actionsResolved)
+        if (_transitionsResolved)
             return;
 
-        _actionsResolved = true;
+        _transitionsResolved = true;
         foreach (var child in GetChildren())
         {
-            if (child is BossTransitionAction action)
-                _actions.Add(action);
+            if (child is BossPhaseTransition transition)
+                _transitions.Add(transition);
         }
     }
 
-    private string ResolveAnnouncement(Actor actor)
+    private static string ResolveAnnouncement(Actor actor, BossPhaseTransition transition)
     {
-        if (!string.IsNullOrWhiteSpace(Phase2AnnouncementText))
-            return Phase2AnnouncementText;
+        if (!string.IsNullOrWhiteSpace(transition.AnnouncementText))
+            return transition.AnnouncementText;
 
         var name = CombatLog.ResolveName(actor);
-        return string.IsNullOrWhiteSpace(name) ? "Boss enters Phase 2." : $"{name} enters Phase 2.";
+        return string.IsNullOrWhiteSpace(name)
+            ? $"Boss enters Phase {transition.TargetPhase}."
+            : $"{name} enters Phase {transition.TargetPhase}.";
     }
 }

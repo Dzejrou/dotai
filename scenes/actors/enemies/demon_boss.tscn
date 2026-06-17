@@ -1,7 +1,8 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/demon.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/BossPhaseController.cs" id="2_phase"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/BossPhaseTransition.cs" id="9_transition"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/MoveToAnchorTransitionAction.cs" id="3_move_action"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/ChannelSpellTransitionAction.cs" id="4_channel_action"]
 [ext_resource type="Script" path="res://scripts/spells/FireBallSpell.cs" id="5_fireball"]
@@ -22,18 +23,22 @@ MaxHealth = 120
 
 [node name="BossPhaseController" type="Node" parent="Behaviors/Tier05_Phase"]
 script = ExtResource("2_phase")
-Phase2HealthThreshold = 0.75
 
-[node name="MoveToAnchor" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController"]
+[node name="Phase2Transition" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController"]
+script = ExtResource("9_transition")
+HealthThreshold = 0.75
+TargetPhase = 2
+
+[node name="MoveToAnchor" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController/Phase2Transition"]
 script = ExtResource("3_move_action")
 
-[node name="FireBarrage" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController"]
+[node name="FireBarrage" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController/Phase2Transition"]
 script = ExtResource("4_channel_action")
 Duration = 10.0
 TickInterval = 0.5
 ChannelName = "Fire Barrage"
 
-[node name="FireBall" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController/FireBarrage"]
+[node name="FireBall" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController/Phase2Transition/FireBarrage"]
 script = ExtResource("5_fireball")
 ProjectileScene = ExtResource("7_projectile")
 ProjectileVisualScale = 0.5
@@ -42,7 +47,7 @@ SpellId = "fire_barrage"
 ManaCost = 0
 Cooldown = 0.0
 
-[node name="Damage" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController/FireBarrage/FireBall"]
+[node name="Damage" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController/Phase2Transition/FireBarrage/FireBall"]
 script = ExtResource("6_damage")
 PowerScale = 0.8
 MinDamageMultiplier = 0.9
