@@ -211,9 +211,8 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
             {
                 var origin = fullyAbsorbingAbsorber is Node2D absorberNode && GodotObject.IsInstanceValid(absorberNode)
                     ? absorberNode
-                    : this;
-                FloatingText.ShowNeutral("ABSORB", origin);
-                CombatLog.Absorb(this, preAbsorptionAmount);
+                    : null;
+                ReportAbsorbedHit(preAbsorptionAmount, origin);
             }
             return false;
         }
@@ -227,6 +226,15 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         }
 
         return appliedDamage > 0;
+    }
+
+    // Shared "fully prevented" feedback path: shows the ABSORB floating text and a
+    // combat-log entry instead of a damage number. Reused by shield/absorb effects
+    // and by boss transition invulnerability so prevented hits are never silent.
+    protected void ReportAbsorbedHit(int amount, Node2D origin = null)
+    {
+        FloatingText.ShowNeutral("ABSORB", origin ?? this);
+        CombatLog.Absorb(this, amount);
     }
 
     private void EnsureModelChangeSubscriptions()

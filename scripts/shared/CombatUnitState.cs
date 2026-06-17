@@ -8,4 +8,5 @@ public enum CombatUnitState
     Casting,
     Channeling,
     Attacking,
+    Transitioning,
 }
