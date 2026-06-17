@@ -1,77 +1,43 @@
 using Godot;
 
-using System;
+using System.Collections.Generic;
 
 // Reusable boss phase/transition foundation. Attach it under a boss actor at
 // "Behaviors/Tier05_Phase/<this>" so the actor collects it as the highest-priority
 // behavior (see Actor.ConfigureBehaviors): it then outranks targeting and combat
 // while a transition is in flight.
 //
-// Lifecycle for this slice: the boss is damaged to/below the phase-2 HP threshold,
-// becomes invulnerable, navigates back to a transition anchor, then resumes combat
-// in phase 2 (which is a placeholder identical to phase 1 for now). Later slices
-// specialize phase behavior - phase-2 ranged AI, minion spawners, enrage - by
-// overriding OnTransitionStarted / OnPhaseActivated without touching this control
-// flow, or by raising additional thresholds.
+// The controller owns phase state, invulnerability and threshold evaluation, but it
+// is not hardcoded to any particular phases or sequence. Each phase change is a child
+// BossPhaseTransition node carrying its own HP threshold, destination phase,
+// invulnerability setting and ordered BossTransitionAction children. The controller
+// arms the highest crossed, not-yet-triggered transition, runs its actions, then
+// advances to that transition's destination phase. Adding a later transition (e.g. a
+// 25% phase with a different sequence) is purely a scene change.
 [GlobalClass]
 public partial class BossPhaseController : Node, IActorBehavior, IActorTickBehavior, IActorDamageInterceptor
 {
-    private enum Phase
-    {
-        Phase1,
-        Transitioning,
-        Phase2,
-    }
+    private readonly List<BossPhaseTransition> _transitions = new();
+    private bool _transitionsResolved;
+    private BossPhaseTransition _active;
+    private int _currentPhase = 1;
 
-    [Export(PropertyHint.Range, "0.0,1.0,0.01")]
-    public float Phase2HealthThreshold { get; set; } = 0.75f;
+    public bool IsTransitioning => _active != null;
 
-    // Optional fixed world marker the boss walks back to during the transition,
-    // resolved relative to the owning actor. When unset, the boss returns to its
-    // initial spawn position (Actor.HomePosition).
-    [Export]
-    public NodePath TransitionAnchorPath { get; set; } = new NodePath();
+    // Invulnerable for the whole active transition when that transition asks for it.
+    public bool IsInvulnerable => _active != null && _active.InvulnerableDuringTransition;
 
-    [Export]
-    public float TransitionSpeedMultiplier { get; set; } = 1.0f;
+    public int CurrentPhase => _currentPhase;
 
-    [Export]
-    public float AnchorArrivalTolerance { get; set; } = 8.0f;
-
-    // Combat-log line emitted once phase 2 begins. Blank uses "<name> enters Phase 2.".
-    [Export]
-    public string Phase2AnnouncementText { get; set; } = string.Empty;
-
-    private Phase _phase = Phase.Phase1;
-    private Node2D _resolvedAnchor;
-    private bool _anchorResolved;
-
-    public bool IsTransitioning => _phase == Phase.Transitioning;
-
-    // Invulnerable for the whole transition: from the threshold crossing until the
-    // boss reaches the anchor and phase 2 begins.
-    public bool IsInvulnerable => _phase == Phase.Transitioning;
-
-    public int CurrentPhase => _phase == Phase.Phase2 ? 2 : 1;
-
-    // Highest-priority behavior: while transitioning, take the actor over with a
-    // move-to-anchor intent so normal combat AI/action selection is suppressed.
+    // Highest-priority behavior: while a transition runs, it takes the actor over so
+    // normal combat AI/action selection is suppressed.
     public bool TryCreateIntent(Actor actor, double delta, out ActorIntent intent)
     {
         intent = ActorIntent.None;
-        if (actor == null || _phase != Phase.Transitioning)
+        if (actor == null || _active == null)
             return false;
 
-        var anchor = ResolveAnchorPosition(actor);
-        if (HasReachedAnchor(actor, anchor))
-        {
-            // Arrival completes in Update (which runs first each frame); hold here as
-            // a one-frame safety so the boss never drifts past the anchor.
-            intent = ActorIntent.Hold(CombatUnitState.Transitioning);
-            return true;
-        }
-
-        intent = ActorIntent.MoveTo(anchor, CombatUnitState.Transitioning, Math.Max(0.0f, TransitionSpeedMultiplier));
+        intent = _active.BuildIntent(actor);
         return true;
     }
 
@@ -80,123 +46,127 @@ public partial class BossPhaseController : Node, IActorBehavior, IActorTickBehav
         if (actor == null)
             return;
 
-        switch (_phase)
+        if (_active == null)
         {
-            case Phase.Phase1:
-                // Detect the crossing promptly even if the player stops attacking
-                // right at the threshold.
-                if (ShouldEnterTransition(actor))
-                    BeginTransition(actor);
-                break;
-            case Phase.Transitioning:
-                if (HasReachedAnchor(actor, ResolveAnchorPosition(actor)))
-                    CompleteTransition(actor);
-                break;
+            // Detect a crossing promptly even if the player stops attacking right at
+            // the threshold.
+            var next = SelectTransition(actor);
+            if (next != null)
+                BeginTransition(actor, next);
+            return;
         }
+
+        _active.Update(actor, delta);
+        if (_active.IsComplete)
+            CompleteTransition(actor);
     }
 
     public bool TryHandleIncomingDamage(Actor actor, Damage damageInfo, out IncomingDamageDecision decision)
     {
         decision = default;
-        if (actor == null || _phase == Phase.Phase2)
+        if (actor == null)
             return false;
 
-        if (_phase == Phase.Phase1)
+        if (_active == null)
         {
-            // The hit that first crosses the threshold still lands normally; this
-            // interceptor only fires once a prior hit has already dropped the boss
-            // to/below the threshold. Begin the transition synchronously here so
-            // invulnerability is in effect before this hit (and any further hits in
-            // the boss's current action) can push damage through.
-            if (!ShouldEnterTransition(actor))
+            // The hit that first crosses a threshold still lands normally; this only
+            // fires once a prior hit has already dropped the boss to/below it. Arming
+            // the transition synchronously here means invulnerability is in effect
+            // before this hit (and any further hits in the current action) land.
+            var next = SelectTransition(actor);
+            if (next == null)
                 return false;
 
-            BeginTransition(actor);
+            BeginTransition(actor, next);
         }
+
+        if (_active == null || !_active.InvulnerableDuringTransition)
+            return false;
 
         decision = IncomingDamageDecision.Absorb(damageInfo?.Amount ?? 0);
         return true;
     }
 
-    // Extension seams for later slices (kept intentionally minimal for now).
-    protected virtual void OnTransitionStarted(Actor actor) { }
-
-    protected virtual void OnPhaseActivated(Actor actor, int phase) { }
-
-    private bool ShouldEnterTransition(Actor actor)
+    // Picks the highest crossed, not-yet-triggered transition so earlier phases (e.g.
+    // 75%) always run before later ones (e.g. 25%), even if a single hit crosses both.
+    private BossPhaseTransition SelectTransition(Actor actor)
     {
-        if (_phase != Phase.Phase1 || actor.IsDead)
-            return false;
+        EnsureTransitionsResolved();
+        if (actor.IsDead)
+            return null;
 
         var max = actor.MaxHealthValue;
         if (max <= 0)
-            return false;
+            return null;
 
-        return (float)actor.CurrentHealth / max <= Phase2HealthThreshold;
+        var fraction = (float)actor.CurrentHealth / max;
+        BossPhaseTransition best = null;
+        foreach (var transition in _transitions)
+        {
+            if (transition.HasTriggered || fraction > transition.HealthThreshold)
+                continue;
+
+            if (best == null || transition.HealthThreshold > best.HealthThreshold)
+                best = transition;
+        }
+
+        return best;
     }
 
-    private void BeginTransition(Actor actor)
+    private void BeginTransition(Actor actor, BossPhaseTransition transition)
     {
-        if (_phase != Phase.Phase1)
-            return;
-
-        _phase = Phase.Transitioning;
+        _active = transition;
 
         // Cancel any in-flight swing/cast through the existing action-controller API
-        // and drop out of the action-owned state so behavior resolution (this
-        // controller's move intent) resumes and the boss turns to walk back.
+        // and drop out of the action-owned state so behavior resolution (the active
+        // transition's intent) resumes.
         actor.PrimaryActionController?.Cancel(actor);
         actor.SetState(CombatUnitState.Transitioning);
 
-        OnTransitionStarted(actor);
+        transition.Begin(actor);
+
+        // A transition with no actions just changes phase.
+        if (transition.IsComplete)
+            CompleteTransition(actor);
     }
 
     private void CompleteTransition(Actor actor)
     {
-        if (_phase != Phase.Transitioning)
+        var transition = _active;
+        if (transition == null)
             return;
 
-        _phase = Phase.Phase2;
+        _active = null;
+        _currentPhase = transition.TargetPhase;
 
-        // Clearing the transition state (and IsInvulnerable) lets normal combat
+        // Clearing the active transition (and IsInvulnerable) lets normal combat
         // resume from the next behavior resolution.
         actor.SetState(actor.Target != null ? CombatUnitState.PursuingTarget : CombatUnitState.Idle);
 
-        CombatLog.System(ResolveAnnouncement(actor));
-        OnPhaseActivated(actor, 2);
+        CombatLog.System(ResolveAnnouncement(actor, transition));
     }
 
-    private string ResolveAnnouncement(Actor actor)
+    private void EnsureTransitionsResolved()
     {
-        if (!string.IsNullOrWhiteSpace(Phase2AnnouncementText))
-            return Phase2AnnouncementText;
+        if (_transitionsResolved)
+            return;
+
+        _transitionsResolved = true;
+        foreach (var child in GetChildren())
+        {
+            if (child is BossPhaseTransition transition)
+                _transitions.Add(transition);
+        }
+    }
+
+    private static string ResolveAnnouncement(Actor actor, BossPhaseTransition transition)
+    {
+        if (!string.IsNullOrWhiteSpace(transition.AnnouncementText))
+            return transition.AnnouncementText;
 
         var name = CombatLog.ResolveName(actor);
-        return string.IsNullOrWhiteSpace(name) ? "Boss enters Phase 2." : $"{name} enters Phase 2.";
-    }
-
-    private bool HasReachedAnchor(Actor actor, Vector2 anchor)
-    {
-        return actor.GlobalPosition.DistanceTo(anchor) <= Math.Max(0.0f, AnchorArrivalTolerance);
-    }
-
-    private Vector2 ResolveAnchorPosition(Actor actor)
-    {
-        var anchor = ResolveAnchorNode(actor);
-        return anchor != null && GodotObject.IsInstanceValid(anchor)
-            ? anchor.GlobalPosition
-            : actor.HomePosition;
-    }
-
-    private Node2D ResolveAnchorNode(Actor actor)
-    {
-        if (_anchorResolved)
-            return _resolvedAnchor;
-
-        _anchorResolved = true;
-        if (TransitionAnchorPath != null && !TransitionAnchorPath.IsEmpty && actor.HasNode(TransitionAnchorPath))
-            _resolvedAnchor = actor.GetNodeOrNull<Node2D>(TransitionAnchorPath);
-
-        return _resolvedAnchor;
+        return string.IsNullOrWhiteSpace(name)
+            ? $"Boss enters Phase {transition.TargetPhase}."
+            : $"{name} enters Phase {transition.TargetPhase}.";
     }
 }
