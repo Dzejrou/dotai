@@ -679,7 +679,9 @@ public abstract partial class Actor : CombatCharacter
             SetState(intent.State);
             ResetNavigationPathState();
             Velocity = Vector2.Zero;
-            if (CurrentState != CombatUnitState.Attacking)
+            // Action-owned states (attack swing, cast/channel) drive their own
+            // animation, so holding in one must not stomp it with idle.
+            if (!IsActionOwnedAnimationState(CurrentState))
                 PlayIdleIfAvailable();
             return;
         }
@@ -835,6 +837,14 @@ public abstract partial class Actor : CombatCharacter
         var maxDistance = Mathf.Max(minDistance, DropSpreadDistanceMax);
         var distance = LootRandom.RandfRange(minDistance, maxDistance);
         return Vector2.Right.Rotated(angle) * distance;
+    }
+
+    // States whose animation is owned by an in-flight action (attack swing or a
+    // cast/channel). While in one of these, automatic idle playback is suppressed so
+    // the owning action's looping animation is not interrupted.
+    private static bool IsActionOwnedAnimationState(CombatUnitState state)
+    {
+        return state is CombatUnitState.Attacking or CombatUnitState.Casting or CombatUnitState.Channeling;
     }
 
     private void StopAndIdle()
