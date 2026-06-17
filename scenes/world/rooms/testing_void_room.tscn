@@ -244,5 +244,6 @@ position = Vector2(1298.8608, 334.64896)
 [node name="PatrolNode7" type="Marker2D" parent="Skeleton/PatrolPath" unique_id=164955460]
 position = Vector2(1439.5033, 291.0013)
 
-[node name="DemonBoss" parent="." instance=ExtResource("34_demon_boss")]
-position = Vector2(1000, 700)
+[node name="DemonBoss" parent="." unique_id=1249916384 instance=ExtResource("34_demon_boss")]
+position = Vector2(130, 556)
+Level = 10
