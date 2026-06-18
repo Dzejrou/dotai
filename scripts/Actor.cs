@@ -37,12 +37,19 @@ public abstract partial class Actor : CombatCharacter
     public Vector2 HomePosition { get; private set; }
     public ICombatActionController PrimaryActionController { get; private set; }
 
+    // Phase state from the actor's phase provider (e.g. BossPhaseController), discovered
+    // and cached during ConfigureBehaviors. Actors without a provider are always phase 1
+    // and never transitioning.
+    public int CurrentPhase => _phaseState?.CurrentPhase ?? 1;
+    public bool IsTransitioning => _phaseState?.IsTransitioning ?? false;
+
     [Export]
     public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
     private readonly List<IActorBehavior> _behaviors = new();
     private readonly List<IActorTickBehavior> _tickBehaviors = new();
     private readonly List<IActorDamageInterceptor> _damageInterceptors = new();
+    private IActorPhaseState _phaseState;
     private bool _hasNavigationDestination;
     private Vector2 _lastNavigationDestination;
     private ActorHUD _actorHud;
@@ -263,12 +270,34 @@ public abstract partial class Actor : CombatCharacter
     private void AppendBehaviorNodesRecursive(Node node)
     {
         AppendBehavior(node as IActorBehavior);
+        RegisterPhaseStateProvider(node as IActorPhaseState);
+
+        // An opaque behavior container owns and forwards to its own children, so
+        // behavior discovery must not also descend into them; doing so would collect
+        // and execute those children twice (once directly, once via the container).
+        if (node is IActorBehaviorContainer)
+            return;
 
         foreach (var child in node.GetChildren())
         {
             if (child is Node childNode)
                 AppendBehaviorNodesRecursive(childNode);
         }
+    }
+
+    private void RegisterPhaseStateProvider(IActorPhaseState provider)
+    {
+        if (provider == null || ReferenceEquals(_phaseState, provider))
+            return;
+
+        if (_phaseState != null)
+        {
+            GD.PushWarning(
+                $"{GetPath()}: multiple {nameof(IActorPhaseState)} providers found; keeping '{(_phaseState as Node)?.Name}' and ignoring '{(provider as Node)?.Name}'.");
+            return;
+        }
+
+        _phaseState = provider;
     }
 
     private void AppendBehavior(IActorBehavior behavior)
@@ -288,6 +317,7 @@ public abstract partial class Actor : CombatCharacter
         _behaviors.Clear();
         _tickBehaviors.Clear();
         _damageInterceptors.Clear();
+        _phaseState = null;
 
         // Highest-priority tier: boss phase/transition control runs ahead of
         // targeting and combat so it can take over the actor during a transition.
