@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/demon.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/BossPhaseController.cs" id="2_phase"]
@@ -9,6 +9,39 @@
 [ext_resource type="Script" path="res://scripts/combat/Damage.cs" id="6_damage"]
 [ext_resource type="PackedScene" path="res://scenes/projectiles/projectile.tscn" id="7_projectile"]
 [ext_resource type="SpriteFrames" path="res://resources/animations/fire_ball_spriteframes.tres" id="8_fire_ball_frames"]
+[ext_resource type="Script" path="res://scripts/ai/actions/CompositeActionEntry.cs" id="10_composite_entry"]
+[ext_resource type="Script" path="res://scripts/ai/actions/SpellCastActionController.cs" id="11_spell_cast_action"]
+[ext_resource type="Script" path="res://scripts/ai/actions/AiSpellOption.cs" id="12_ai_spell_option"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/PhaseGroup.cs" id="13_phase_group"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="14_target_combat"]
+
+[sub_resource type="Resource" id="Resource_entry_melee_p1"]
+script = ExtResource("10_composite_entry")
+Controller = NodePath("MeleeAttackController")
+Weight = 3.0
+ActivePhases = PackedInt32Array(1)
+
+[sub_resource type="Resource" id="Resource_entry_ring"]
+script = ExtResource("10_composite_entry")
+Controller = NodePath("RingOfFireCast")
+Weight = 1.0
+
+[sub_resource type="Resource" id="Resource_entry_fireball"]
+script = ExtResource("10_composite_entry")
+Controller = NodePath("FireballCast")
+Weight = 4.0
+ActivePhases = PackedInt32Array(2, 3)
+
+[sub_resource type="Resource" id="Resource_ring_option_boss"]
+script = ExtResource("12_ai_spell_option")
+SpellId = &"ring_of_fire"
+MaxRange = 240.0
+CooldownSeconds = 6.0
+
+[sub_resource type="Resource" id="Resource_fireball_option"]
+script = ExtResource("12_ai_spell_option")
+SpellId = &"fireball"
+MaxRange = 400.0
 
 [node name="Demon" instance=ExtResource("1_base")]
 Rank = 2
@@ -18,6 +51,51 @@ DisplayName = "Demon Boss"
 
 [node name="Stats" parent="."]
 MaxHealth = 120
+
+[node name="Fireball" type="Node" parent="Spells"]
+script = ExtResource("5_fireball")
+ProjectileScene = ExtResource("7_projectile")
+ProjectileVisualScale = 0.5
+ProjectileVisualFrames = ExtResource("8_fire_ball_frames")
+SpellId = "fireball"
+School = 1
+ManaCost = 0
+Cooldown = 1.0
+CastTimeSeconds = 1.5
+
+[node name="Damage" type="Node" parent="Spells/Fireball"]
+script = ExtResource("6_damage")
+PowerScale = 0.8
+MinDamageMultiplier = 0.9
+MaxDamageMultiplier = 1.1
+School = 1
+
+[node name="PrimaryActionController" parent="."]
+Entries = Array[ExtResource("10_composite_entry")]([SubResource("Resource_entry_melee_p1"), SubResource("Resource_entry_ring"), SubResource("Resource_entry_fireball")])
+
+[node name="RingOfFireCast" parent="PrimaryActionController"]
+SpellOptions = Array[ExtResource("12_ai_spell_option")]([SubResource("Resource_ring_option_boss")])
+
+[node name="FireballCast" type="Node" parent="PrimaryActionController"]
+script = ExtResource("11_spell_cast_action")
+MinimumRange = 0.0
+PreferredRange = 150.0
+SpellOptions = Array[ExtResource("12_ai_spell_option")]([SubResource("Resource_fireball_option")])
+
+[node name="Phase2Combat" type="Node" parent="Behaviors/Tier50_Combat"]
+script = ExtResource("13_phase_group")
+ActivePhases = PackedInt32Array(2, 3)
+
+[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat/Phase2Combat"]
+script = ExtResource("14_target_combat")
+UseExplicitCombatRange = true
+MinimumDistance = 100.0
+PreferredDistance = 150.0
+MaximumDistance = 240.0
+RetreatBelowMinimum = true
+RetreatStuckTimeoutSeconds = 1.0
+RetreatProgressEpsilon = 4.0
+CorneredHoldSeconds = 2.5
 
 [node name="Tier05_Phase" type="Node" parent="Behaviors"]
 
