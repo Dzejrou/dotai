@@ -41,6 +41,7 @@ public partial class WanderBehavior : Node, IActorBehavior
 
         if (actor == null ||
             actor.IsDead ||
+            actor.IsEncounterControlled ||
             actor.Target != null ||
             actor.InCombat ||
             actor.CurrentState == CombatUnitState.ReturningHome ||

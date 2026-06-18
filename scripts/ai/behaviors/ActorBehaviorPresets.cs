@@ -11,7 +11,13 @@ public static class ActorBehaviorPresets
         Action<Actor> onPursuitStuck = null,
         params IActorBehavior[] extraBehaviors)
     {
-        var pursuitStuckCallback = onPursuitStuck ?? (actor => ReturnHomeBehavior.ResolveFor(actor)?.BeginReturnHome(actor));
+        var pursuitStuckCallback = onPursuitStuck ?? (actor =>
+        {
+            // Encounter-owned actors do not leash, so a stuck pursuit must not send them
+            // home; the encounter keeps them engaged.
+            if (!actor.IsEncounterControlled)
+                ReturnHomeBehavior.ResolveFor(actor)?.BeginReturnHome(actor);
+        });
         var behaviors = new List<IActorBehavior>
         {
             new PursuitStuckRecoveryBehavior(

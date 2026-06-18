@@ -38,6 +38,11 @@ public partial class AcquireHostileTargetBehavior : Node, IActorBehavior
     {
         intent = ActorIntent.None;
 
+        // Encounter-owned actors never autonomously acquire targets; the encounter
+        // assigns their target explicitly.
+        if (actor == null || actor.IsEncounterControlled)
+            return false;
+
         if (actor.Target != null)
             return false;
 

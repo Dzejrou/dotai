@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
+[ext_resource type="Script" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/boss_room.tscn" id="3_boss_room"]
+[ext_resource type="PackedScene" path="res://scenes/world/rooms/contents/demon_boss_content.tscn" id="4_demon_boss_content"]
+
+[sub_resource type="Resource" id="Resource_demon_boss_content_option"]
+script = ExtResource("2_room_content_option_script")
+Id = &"demon_boss_content"
+DisplayName = "Demon Boss"
+ContentScene = ExtResource("4_demon_boss_content")
+
+[resource]
+script = ExtResource("1_room_template_definition_script")
+Id = &"boss_room"
+DisplayName = "Boss Room"
+RoomScene = ExtResource("3_boss_room")
+ContentOptions = Array[ExtResource("2_room_content_option_script")]([SubResource("Resource_demon_boss_content_option")])

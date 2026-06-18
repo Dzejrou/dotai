@@ -52,7 +52,9 @@ public partial class ReturnHomeBehavior : Node, IActorBehavior, IActorDamageInte
     {
         intent = ActorIntent.None;
 
-        if (actor == null || actor.InCombat)
+        // Encounter-owned actors never leash/return home; the encounter governs when
+        // they leave combat.
+        if (actor == null || actor.InCombat || actor.IsEncounterControlled)
             return false;
 
         var isReturningHome = actor.CurrentState == MoveState;
@@ -77,6 +79,7 @@ public partial class ReturnHomeBehavior : Node, IActorBehavior, IActorDamageInte
         decision = default;
 
         if (actor == null ||
+            actor.IsEncounterControlled ||
             damageInfo.Source is not Node2D sourceNode ||
             !actor.IsHostileTo(sourceNode) ||
             sourceNode is not ITargetable targetable ||

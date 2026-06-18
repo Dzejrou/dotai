@@ -20,6 +20,9 @@ public partial class MenuHubDebugRoomPage : Control
     public NodePath ContentSelectorPath { get; set; } = new("Margin/VBox/ContentRow/ContentSelector");
 
     [Export]
+    public NodePath LevelSpinBoxPath { get; set; } = new("Margin/VBox/LevelRow/LevelSpinBox");
+
+    [Export]
     public NodePath KeepInstanceTogglePath { get; set; } = new("Margin/VBox/KeepInstanceToggle");
 
     [Export]
@@ -39,6 +42,8 @@ public partial class MenuHubDebugRoomPage : Control
 
     private OptionButton _roomSelector;
     private OptionButton _contentSelector;
+    private SpinBox _levelSpinBox;
+    private int _selectedRoomLevel = 1;
     private BaseButton _keepInstanceToggle;
     private Button _enterButton;
     private Label _retainedLabel;
@@ -57,6 +62,7 @@ public partial class MenuHubDebugRoomPage : Control
 
         _roomSelector = GetNodeOrNull<OptionButton>(RoomSelectorPath);
         _contentSelector = GetNodeOrNull<OptionButton>(ContentSelectorPath);
+        _levelSpinBox = GetNodeOrNull<SpinBox>(LevelSpinBoxPath);
         _keepInstanceToggle = GetNodeOrNull<BaseButton>(KeepInstanceTogglePath);
         _enterButton = GetNodeOrNull<Button>(EnterButtonPath);
         _retainedLabel = GetNodeOrNull<Label>(RetainedLabelPath);
@@ -66,6 +72,18 @@ public partial class MenuHubDebugRoomPage : Control
 
         if (_roomSelector != null)
             _roomSelector.ItemSelected += OnRoomSelected;
+
+        // Mirrors the Debug Tray character-level SpinBox: integer 1-100, default 1. The
+        // value is owned here and stays stable across page refreshes/room selection.
+        if (_levelSpinBox != null)
+        {
+            _levelSpinBox.MinValue = 1;
+            _levelSpinBox.MaxValue = 100;
+            _levelSpinBox.Step = 1;
+            _levelSpinBox.Rounded = true;
+            _levelSpinBox.Value = _selectedRoomLevel;
+            _levelSpinBox.ValueChanged += OnLevelChanged;
+        }
 
         if (_enterButton != null)
             _enterButton.Pressed += OnEnterPressed;
@@ -86,6 +104,9 @@ public partial class MenuHubDebugRoomPage : Control
     {
         if (_roomSelector != null)
             _roomSelector.ItemSelected -= OnRoomSelected;
+
+        if (_levelSpinBox != null)
+            _levelSpinBox.ValueChanged -= OnLevelChanged;
 
         if (_enterButton != null)
             _enterButton.Pressed -= OnEnterPressed;
@@ -245,6 +266,11 @@ public partial class MenuHubDebugRoomPage : Control
         RebuildContentOptions();
     }
 
+    private void OnLevelChanged(double value)
+    {
+        _selectedRoomLevel = Math.Max(1, (int)value);
+    }
+
     private void OnEnterPressed()
     {
         if (_world == null || !GodotObject.IsInstanceValid(_world))
@@ -259,7 +285,8 @@ public partial class MenuHubDebugRoomPage : Control
             entry.Definition,
             entry.UsesBuiltInContent ? null : GetSelectedContentOption(),
             useExternalContent: !entry.UsesBuiltInContent,
-            keepInstance);
+            keepInstance,
+            _selectedRoomLevel);
 
         RefreshRetainedView();
         RefreshSessionView();
