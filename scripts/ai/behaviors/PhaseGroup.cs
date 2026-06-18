@@ -30,13 +30,21 @@ public partial class PhaseGroup : Node, IActorBehavior, IActorTickBehavior, IAct
         if (!IsActive(actor))
             return false;
 
-        // Mirror Actor.TryResolveBehaviorIntent: a child may emit a target change with
-        // no execution directive; apply it and keep going so later children act on the
-        // updated target. Only an intent with an execution directive ends resolution.
+        // Mirror Actor.TryResolveBehaviorIntent exactly. A child with an execution
+        // directive wins: return its candidate unchanged so Actor applies any target
+        // change on it once. A child with only a target change is applied here (Actor
+        // never sees this intermediate candidate) and evaluation continues so later
+        // children act on the updated target.
         foreach (var behavior in _behaviors)
         {
             if (!behavior.TryCreateIntent(actor, delta, out var candidate))
                 continue;
+
+            if (candidate.HasExecutionDirective)
+            {
+                intent = candidate;
+                return true;
+            }
 
             if (candidate.ChangeTarget)
             {
@@ -45,12 +53,6 @@ public partial class PhaseGroup : Node, IActorBehavior, IActorTickBehavior, IAct
                 else
                     actor.SetTarget(candidate.Target);
             }
-
-            if (!candidate.HasExecutionDirective)
-                continue;
-
-            intent = candidate;
-            return true;
         }
 
         return false;
