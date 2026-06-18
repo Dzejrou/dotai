@@ -252,7 +252,7 @@ public partial class World : Node2D
         return true;
     }
 
-    public bool TryEnterDebugRoom(RoomTemplateDefinition definition, RoomContentOption contentOption, bool useExternalContent, bool keepInstance)
+    public bool TryEnterDebugRoom(RoomTemplateDefinition definition, RoomContentOption contentOption, bool useExternalContent, bool keepInstance, int level)
     {
         if (definition?.RoomScene == null)
         {
@@ -267,6 +267,11 @@ public partial class World : Node2D
             roomInstance?.QueueFree();
             return false;
         }
+
+        // Apply the requested level before the room enters the tree (and before content
+        // spawns) so room-level actor rolls use it. The Room setter clamps to >= 1. A
+        // retained instance keeps the level it was created with; re-entry never reapplies.
+        room.Level = level;
 
         // Inject before the room enters the tree so _Ready sees the content.
         // A null content option is an intentional Empty selection.

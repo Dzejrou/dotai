@@ -233,11 +233,14 @@ public partial class BossEncounter : Content, IRoomEncounter
 
     private void ReleaseAllLocks()
     {
+        // Encounter teardown: discard any residual timeout so boss death/abandonment ends
+        // combat immediately instead of lingering for the timeout the killing blow just
+        // refreshed. Independent lock owners (none here today) are still respected.
         if (_boss != null && GodotObject.IsInstanceValid(_boss))
-            _boss.Combat?.ReleaseCombatLock(this);
+            _boss.Combat?.ReleaseCombatLock(this, exitCombatWhenLast: true);
 
         if (_playerCombat != null && GodotObject.IsInstanceValid(_playerCombat))
-            _playerCombat.ReleaseCombatLock(this);
+            _playerCombat.ReleaseCombatLock(this, exitCombatWhenLast: true);
 
         _playerCombat = null;
     }

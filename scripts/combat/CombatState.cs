@@ -114,11 +114,14 @@ public partial class CombatState : Node
             EmitSignal(SignalName.CombatStateChanged, InCombat);
     }
 
-    // Release a previously acquired lock. Releasing a non-final lock, or releasing while
-    // the ordinary timeout is still active, leaves the state in combat. Releasing the
-    // final lock with no timeout remaining exits combat cleanly (clearing the target).
-    // Emits CombatStateChanged only on a real state transition.
-    public void ReleaseCombatLock(GodotObject owner)
+    // Release a previously acquired lock. By default an active ordinary timeout still
+    // keeps the state in combat after the final lock is released (ordinary behavior).
+    // When exitCombatWhenLast is set (explicit encounter teardown), releasing the final
+    // lock also discards any residual timeout and target so the actor leaves combat
+    // immediately - the killing blow may have just refreshed that timeout. A lock held by
+    // another owner is always respected and never force-exited. Emits CombatStateChanged
+    // only on a real state transition.
+    public void ReleaseCombatLock(GodotObject owner, bool exitCombatWhenLast = false)
     {
         if (owner == null)
             return;
@@ -127,12 +130,19 @@ public partial class CombatState : Node
         if (!_combatLockOwners.Remove(owner.GetInstanceId()))
             return;
 
-        // Other locks or an active timeout still hold the state in combat.
-        if (HasCombatLock || _combatTimeRemaining > 0.0f)
+        // Another lock owner still holds the state in combat; never force-exit for them.
+        // Removing a non-final lock cannot flip InCombat, so no transition occurs here.
+        if (HasCombatLock)
             return;
 
-        // Final lock gone and no timeout remaining: return cleanly to out-of-combat.
+        // Ordinary release: an active timeout keeps the state in combat until it expires.
+        if (!exitCombatWhenLast && _combatTimeRemaining > 0.0f)
+            return;
+
+        // Leave combat now: clear the target and any residual timeout, emitting the
+        // transition if this actually flipped the state.
         ClearTarget();
+        _combatTimeRemaining = 0.0f;
         if (wasInCombat != InCombat)
             EmitSignal(SignalName.CombatStateChanged, InCombat);
     }
