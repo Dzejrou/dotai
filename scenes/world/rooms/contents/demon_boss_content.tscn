@@ -1,0 +1,70 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/BossEncounter.cs" id="1_boss_encounter"]
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/ActorSpawner.cs" id="2_actor_spawner"]
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/RandomActorSpawnOption.cs" id="3_spawn_option"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/demon_boss.tscn" id="4_demon_boss"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemies/skeleton.tscn" id="5_skeleton"]
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/ContentGuidance.cs" id="6_guidance"]
+[ext_resource type="Texture2D" path="res://assets/world/dungeon/basic_room_1_door.png" id="7_room_texture"]
+
+[sub_resource type="Resource" id="Resource_boss_option"]
+script = ExtResource("3_spawn_option")
+ActorScene = ExtResource("4_demon_boss")
+
+[sub_resource type="Resource" id="Resource_skeleton_option"]
+script = ExtResource("3_spawn_option")
+ActorScene = ExtResource("5_skeleton")
+ClearLootTable = true
+
+[node name="DemonBossContent" type="Node2D"]
+script = ExtResource("1_boss_encounter")
+AggressiveOnStart = true
+Phase2SummonCount = 2
+
+[node name="BossSpawner" type="Marker2D" parent="."]
+position = Vector2(400, 280)
+script = ExtResource("2_actor_spawner")
+Options = Array[ExtResource("3_spawn_option")]([SubResource("Resource_boss_option")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+Rank = 2
+
+[node name="Summons" type="Node2D" parent="."]
+
+[node name="SummonNorthWest" type="Marker2D" parent="Summons"]
+position = Vector2(220, 230)
+script = ExtResource("2_actor_spawner")
+Options = Array[ExtResource("3_spawn_option")]([SubResource("Resource_skeleton_option")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="SummonNorthEast" type="Marker2D" parent="Summons"]
+position = Vector2(580, 230)
+script = ExtResource("2_actor_spawner")
+Options = Array[ExtResource("3_spawn_option")]([SubResource("Resource_skeleton_option")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="SummonSouthWest" type="Marker2D" parent="Summons"]
+position = Vector2(220, 430)
+script = ExtResource("2_actor_spawner")
+Options = Array[ExtResource("3_spawn_option")]([SubResource("Resource_skeleton_option")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="SummonSouthEast" type="Marker2D" parent="Summons"]
+position = Vector2(580, 430)
+script = ExtResource("2_actor_spawner")
+Options = Array[ExtResource("3_spawn_option")]([SubResource("Resource_skeleton_option")])
+RandomizeOnRespawn = false
+RandomizeInactivity = false
+
+[node name="Guidance" type="Node2D" parent="."]
+scale = Vector2(2, 2)
+script = ExtResource("6_guidance")
+
+[node name="RoomSprite" type="Sprite2D" parent="Guidance"]
+z_index = -10
+texture = ExtResource("7_room_texture")
+centered = false

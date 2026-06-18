@@ -43,6 +43,11 @@ public abstract partial class Actor : CombatCharacter
     public int CurrentPhase => _phaseState?.CurrentPhase ?? 1;
     public bool IsTransitioning => _phaseState?.IsTransitioning ?? false;
 
+    // When true an external owner (a room encounter) drives this actor's target and
+    // combat membership: ordinary proximity aggro, wandering and leash/return-home are
+    // suppressed. Explicit boss phase-transition movement is unaffected.
+    public bool IsEncounterControlled { get; private set; }
+
     [Export]
     public CombatUnitState CurrentState { get; private set; } = CombatUnitState.Idle;
 
@@ -169,6 +174,11 @@ public abstract partial class Actor : CombatCharacter
     public void SetState(CombatUnitState state)
     {
         CurrentState = state;
+    }
+
+    public void SetEncounterControlled(bool value)
+    {
+        IsEncounterControlled = value;
     }
 
     // Returns the actor to normal AI after an action-owned operation completes.

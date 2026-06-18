@@ -6,6 +6,7 @@
 [ext_resource type="Resource" uid="uid://bmomkkn4vlrq" path="res://resources/world/room_definitions/timed_dungeon_room_definition.tres" id="4_timed_room_definition"]
 [ext_resource type="Resource" uid="uid://c15bea7iasp0m" path="res://resources/world/room_definitions/testing_void_room_definition.tres" id="5_testing_void_room_definition"]
 [ext_resource type="Resource" path="res://resources/world/room_definitions/special_dungeon_room_definition.tres" id="6_special_room_definition"]
+[ext_resource type="Resource" path="res://resources/world/room_definitions/boss_room_definition.tres" id="7_boss_room_definition"]
 
 [sub_resource type="Resource" id="Resource_debug_room_entry_combat"]
 script = ExtResource("2_debug_room_catalog_entry_script")
@@ -24,6 +25,10 @@ script = ExtResource("2_debug_room_catalog_entry_script")
 Definition = ExtResource("6_special_room_definition")
 UsesBuiltInContent = true
 
+[sub_resource type="Resource" id="Resource_debug_room_entry_boss"]
+script = ExtResource("2_debug_room_catalog_entry_script")
+Definition = ExtResource("7_boss_room_definition")
+
 [resource]
 script = ExtResource("1_debug_room_catalog_script")
-Entries = Array[ExtResource("2_debug_room_catalog_entry_script")]([SubResource("Resource_debug_room_entry_combat"), SubResource("Resource_debug_room_entry_timed"), SubResource("Resource_debug_room_entry_testing_void"), SubResource("Resource_debug_room_entry_special")])
+Entries = Array[ExtResource("2_debug_room_catalog_entry_script")]([SubResource("Resource_debug_room_entry_combat"), SubResource("Resource_debug_room_entry_timed"), SubResource("Resource_debug_room_entry_testing_void"), SubResource("Resource_debug_room_entry_special"), SubResource("Resource_debug_room_entry_boss")])

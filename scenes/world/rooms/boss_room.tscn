@@ -1,0 +1,105 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/world/dungeon/basic_room_1_door.png" id="1_room_texture"]
+[ext_resource type="Script" path="res://scripts/world/rooms/BossRoom.cs" id="2_boss_room_script"]
+[ext_resource type="PackedScene" path="res://scenes/world/doors/door.tscn" id="3_door_scene"]
+
+[sub_resource type="NavigationPolygon" id="1_navigation"]
+vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+
+[sub_resource type="RectangleShape2D" id="2_wall_north"]
+size = Vector2(336, 18)
+
+[sub_resource type="RectangleShape2D" id="3_wall_south"]
+size = Vector2(342, 24)
+
+[sub_resource type="RectangleShape2D" id="4_wall_vertical"]
+size = Vector2(18, 301.375)
+
+[node name="Room" type="Node2D"]
+script = ExtResource("2_boss_room_script")
+ScreenId = &"dungeon_boss"
+DisplayName = "Boss Room"
+Theme = &"dungeon"
+RoomType = &"boss"
+RoomSize = &"single_screen"
+
+[node name="Scaled" type="Node2D" parent="."]
+scale = Vector2(2, 2)
+
+[node name="Visual" type="Node2D" parent="Scaled"]
+
+[node name="RoomSprite" type="Sprite2D" parent="Scaled/Visual"]
+z_index = -10
+texture = ExtResource("1_room_texture")
+centered = false
+
+[node name="Navigation" type="Node2D" parent="Scaled"]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="Scaled/Navigation"]
+visible = false
+navigation_polygon = SubResource("1_navigation")
+
+[node name="Collision" type="Node2D" parent="Scaled"]
+
+[node name="NorthWall" type="StaticBody2D" parent="Scaled/Collision"]
+position = Vector2(200, 53)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/NorthWall"]
+position = Vector2(-2, -13)
+shape = SubResource("2_wall_north")
+
+[node name="SouthWall" type="StaticBody2D" parent="Scaled/Collision"]
+position = Vector2(200, 347)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/SouthWall"]
+position = Vector2(2, 22)
+shape = SubResource("3_wall_south")
+
+[node name="WestWall" type="StaticBody2D" parent="Scaled/Collision"]
+position = Vector2(25, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/WestWall"]
+position = Vector2(-3, 4.625)
+shape = SubResource("4_wall_vertical")
+
+[node name="EastWall" type="StaticBody2D" parent="Scaled/Collision"]
+position = Vector2(375, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Scaled/Collision/EastWall"]
+position = Vector2(2, 2.3125)
+shape = SubResource("4_wall_vertical")
+
+[node name="Exits" type="Node2D" parent="Scaled"]
+
+[node name="NorthCenterDoor" parent="Scaled/Exits" instance=ExtResource("3_door_scene")]
+position = Vector2(197, 53)
+ShowUnlockedIndicator = true
+IsLocked = true
+ExitId = &"north_center"
+TargetScreenId = &"entrance_hall"
+TargetExitId = &"north_west"
+Direction = &"north"
+
+[node name="SouthReturnDoor" parent="Scaled/Exits" instance=ExtResource("3_door_scene")]
+position = Vector2(197, 359)
+IsLocked = true
+ExitId = &"south_return"
+Direction = &"south"
+
+[node name="Markers" type="Node2D" parent="Scaled"]
+
+[node name="PlayerStart" type="Marker2D" parent="Scaled/Markers"]
+position = Vector2(200, 286)
+
+[node name="CameraAnchor" type="Marker2D" parent="Scaled/Markers"]
+position = Vector2(200, 200)
+
+[node name="Ephemeral" type="Node" parent="Scaled"]
+
+[node name="Unscaled" type="Node2D" parent="."]
+
+[node name="Ephemeral" type="Node" parent="Unscaled"]
+
+[node name="ContentRoot" type="Node2D" parent="Unscaled"]
