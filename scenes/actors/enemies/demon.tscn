@@ -23,6 +23,7 @@
 [ext_resource type="Script" uid="uid://dtc0do7tcpgct" path="res://scripts/spells/RingOfFireSpell.cs" id="20_ring_of_fire_spell"]
 [ext_resource type="PackedScene" uid="uid://4htpl8qavb75" path="res://scenes/effects/ring_of_fire_area.tscn" id="21_ring_of_fire_area"]
 [ext_resource type="Resource" uid="uid://dswv5j5kfplms" path="res://resources/loot_tables/demon_loot_table.tres" id="22_demon_loot_table"]
+[ext_resource type="Script" uid="uid://sb67gg1x0nek" path="res://scripts/ai/behaviors/PhaseGroup.cs" id="23_phase_group"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_demon"]
 radius = 5.0
@@ -136,7 +137,11 @@ DebugActorName = "Demon"
 
 [node name="Tier50_Combat" type="Node" parent="Behaviors" unique_id=978138855]
 
-[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat" unique_id=1759724791]
+[node name="Phase1Combat" type="Node" parent="Behaviors/Tier50_Combat"]
+script = ExtResource("23_phase_group")
+ActivePhases = PackedInt32Array(1)
+
+[node name="TargetCombatBehavior" type="Node" parent="Behaviors/Tier50_Combat/Phase1Combat" unique_id=1759724791]
 script = ExtResource("5_target_combat")
 
 [node name="Tier80_ReturnHome" type="Node" parent="Behaviors" unique_id=1892255507]

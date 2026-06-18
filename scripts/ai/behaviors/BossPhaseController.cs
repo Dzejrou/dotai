@@ -15,8 +15,15 @@ using System.Collections.Generic;
 // advances to that transition's destination phase. Adding a later transition (e.g. a
 // 25% phase with a different sequence) is purely a scene change.
 [GlobalClass]
-public partial class BossPhaseController : Node, IActorBehavior, IActorTickBehavior, IActorDamageInterceptor
+public partial class BossPhaseController : Node, IActorBehavior, IActorTickBehavior, IActorDamageInterceptor, IActorPhaseState
 {
+    // Fired exactly once when a configured transition completes, after CurrentPhase has
+    // already advanced to the destination phase. Never fired for the initial phase 1 on
+    // spawn. Room content (e.g. a future encounter controller) can listen to drive
+    // phase-entry effects without the boss scene referencing them.
+    [Signal]
+    public delegate void PhaseEnteredEventHandler(int phase);
+
     private readonly List<BossPhaseTransition> _transitions = new();
     private bool _transitionsResolved;
     private BossPhaseTransition _active;
@@ -144,6 +151,9 @@ public partial class BossPhaseController : Node, IActorBehavior, IActorTickBehav
         actor.SetState(actor.Target != null ? CombatUnitState.PursuingTarget : CombatUnitState.Idle);
 
         CombatLog.System(ResolveAnnouncement(actor, transition));
+
+        // Emit after CurrentPhase is updated so listeners observe the new phase.
+        EmitSignal(SignalName.PhaseEntered, _currentPhase);
     }
 
     private void EnsureTransitionsResolved()
