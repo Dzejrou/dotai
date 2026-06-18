@@ -1,5 +1,10 @@
 using Godot;
 
+// TODO(fire-barrage-spell): Fire Barrage currently exists only as phase-transition
+// infrastructure (a ChannelSpellTransitionAction repeatedly casting a nested FireBallSpell),
+// not as a standalone castable spell. Once a real Fire Barrage spell exists, replace
+// Ring of Fire with Fire Barrage in the Demon boss's phase-3 combat action pool
+// (the RingOfFireCast entry in demon_boss.tscn).
 [GlobalClass]
 public partial class Demon : Actor, IAttackable, ITargetable, ISpellCaster
 {

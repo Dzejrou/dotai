@@ -52,6 +52,18 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
 
         return clamped / (1.0f + ResolvedHastePercent);
     }
+
+    // Adds a flat amount (may be negative) to the base Haste stat. Temporary hook for the
+    // boss Enrage transition: once a buff/status system exists, transient Haste should be
+    // an (undispellable) buff rather than a base-stat mutation. Bosses are re-instantiated
+    // per encounter, so a mutation here never leaks across encounters.
+    public void AddBaseHaste(int amount)
+    {
+        if (StatsNode == null || amount == 0)
+            return;
+
+        StatsNode.Haste = Math.Max(0, StatsNode.Haste + amount);
+    }
     public float ResolveDamageBonus(DamageSchool school) =>
         (StatsNode?.ResolveDamageBonus(school) ?? 0.0f)
         + GetEquipmentBonus(EquipmentStatIds.DamageBonusFor(school))
