@@ -12,16 +12,20 @@ public partial class CompositeActionController : Node, ICombatActionController
 {
     private readonly struct ResolvedEntry
     {
-        public ResolvedEntry(ICombatActionController controller, int priority, float weight)
+        public ResolvedEntry(ICombatActionController controller, int priority, float weight, int[] activePhases)
         {
             Controller = controller;
             Priority = priority;
             Weight = weight;
+            ActivePhases = activePhases;
         }
 
         public ICombatActionController Controller { get; }
         public int Priority { get; }
         public float Weight { get; }
+
+        // Phases in which this entry can be selected. Null/empty means every phase.
+        public int[] ActivePhases { get; }
     }
 
     private readonly RandomNumberGenerator _random = new();
@@ -138,10 +142,16 @@ public partial class CompositeActionController : Node, ICombatActionController
         // Keep only entries whose controller can act right now, tracking the highest
         // priority seen among them.
         _selectionScratch.Clear();
+        var currentPhase = actor.CurrentPhase;
         var highestPriority = int.MinValue;
         foreach (var entry in _entries)
         {
             if (entry.Controller == null || !(entry.Weight > 0.0f))
+                continue;
+
+            // An entry inactive for the actor's current phase is never selected, even
+            // though its controller keeps ticking its own cooldowns via _updateChildren.
+            if (!IsActiveForPhase(entry.ActivePhases, currentPhase))
                 continue;
 
             if (!entry.Controller.CanStartAction(actor, target))
@@ -179,6 +189,16 @@ public partial class CompositeActionController : Node, ICombatActionController
         }
 
         return chosen;
+    }
+
+    // Empty/null phase list means the entry is selectable in every phase, so entries
+    // authored before phase filtering existed keep their original behavior.
+    private static bool IsActiveForPhase(int[] activePhases, int currentPhase)
+    {
+        if (activePhases == null || activePhases.Length == 0)
+            return true;
+
+        return Array.IndexOf(activePhases, currentPhase) >= 0;
     }
 
     private void EnsureResolved()
@@ -219,7 +239,7 @@ public partial class CompositeActionController : Node, ICombatActionController
                 if (!_updateChildren.Contains(controller))
                     _updateChildren.Add(controller);
 
-                _entries.Add(new ResolvedEntry(controller, entry.Priority, Math.Max(0.0f, entry.Weight)));
+                _entries.Add(new ResolvedEntry(controller, entry.Priority, Math.Max(0.0f, entry.Weight), entry.ActivePhases));
             }
         }
 
