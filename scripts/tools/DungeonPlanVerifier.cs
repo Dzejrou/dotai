@@ -63,6 +63,17 @@ public partial class DungeonPlanVerifier : Node
         Check("missing required content fails without a partial plan", MissingContentFailsCleanly(rules));
 
         Check("a rollable room kind without selectable content fails cleanly", RollableKindWithoutContentFailsCleanly(rules));
+
+        // Runtime-independent traversal/selection coverage (shared with the live Dungeon).
+        Check("first entry resolves plan node 0", FirstEntryResolvesNodeZero(planA));
+
+        Check("each exit id resolves its edge's destination node", EveryEdgeResolves(planA));
+
+        Check("both combat edges resolve independently to the same next node", CombatEdgesResolveIndependently(planA));
+
+        Check("invalid and terminal exits resolve to no destination", InvalidExitsResolveToNull(planA));
+
+        Check("preselected level and content are fixed per node", PreselectionIsFixed(planA));
     }
 
     private DungeonRunPlan RequirePlan(DungeonGenerationRules rules, ulong seed)
@@ -222,6 +233,92 @@ public partial class DungeonPlanVerifier : Node
 
         var result = _generator.Generate(brokenRules, 1);
         return !result.Succeeded && result.Plan == null && !string.IsNullOrEmpty(result.Error);
+    }
+
+    private static bool FirstEntryResolvesNodeZero(DungeonRunPlan plan)
+    {
+        if (plan == null || plan.Length == 0)
+            return false;
+
+        var first = plan.Nodes[0];
+        return first.Index == 0 && plan.GetNodeById(first.Id) == first;
+    }
+
+    private static bool EveryEdgeResolves(DungeonRunPlan plan)
+    {
+        if (plan == null)
+            return false;
+
+        foreach (var node in plan.Nodes)
+        {
+            foreach (var edge in node.Edges)
+            {
+                var destination = DungeonTraversal.ResolveDestination(plan, node, edge.SourceExitId, out var matched);
+                if (matched != edge || destination == null || destination.Id != edge.DestinationNodeId)
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool CombatEdgesResolveIndependently(DungeonRunPlan plan)
+    {
+        if (plan == null)
+            return false;
+
+        var sawCombat = false;
+        foreach (var node in plan.Nodes)
+        {
+            if (node.Kind != DungeonRoomKind.Combat)
+                continue;
+
+            sawCombat = true;
+            var left = DungeonTraversal.ResolveDestination(plan, node, "north_west", out var leftEdge);
+            var right = DungeonTraversal.ResolveDestination(plan, node, "north_east", out var rightEdge);
+
+            // Distinct edges, resolved independently, currently to the same immediate next node.
+            if (leftEdge == null || rightEdge == null || ReferenceEquals(leftEdge, rightEdge))
+                return false;
+            if (left == null || right == null || left.Id != right.Id || left.Index != node.Index + 1)
+                return false;
+        }
+
+        return sawCombat;
+    }
+
+    private static bool InvalidExitsResolveToNull(DungeonRunPlan plan)
+    {
+        if (plan == null || plan.Length == 0)
+            return false;
+
+        var bogusResolvesToNull = DungeonTraversal.ResolveDestination(plan, plan.Nodes[0], "definitely_not_a_real_exit", out _) == null;
+
+        var boss = plan.Nodes[plan.Length - 1];
+        var bossIsTerminal = boss.Kind == DungeonRoomKind.Boss &&
+            boss.Edges.Count == 0 &&
+            DungeonTraversal.ResolveDestination(plan, boss, "north_center", out _) == null;
+
+        return bogusResolvesToNull && bossIsTerminal;
+    }
+
+    private static bool PreselectionIsFixed(DungeonRunPlan plan)
+    {
+        if (plan == null)
+            return false;
+
+        for (var i = 0; i < plan.Length; i++)
+        {
+            var node = plan.Nodes[i];
+            // Level accumulates from the starting level by the per-edge delta, and every plan
+            // room here carries preselected content the runtime injects as-is (no reroll).
+            if (node.Level != 1 + i)
+                return false;
+            if (node.ContentOption?.ContentScene == null)
+                return false;
+        }
+
+        return true;
     }
 
     private static string OrdinaryKindSequence(DungeonRunPlan plan)

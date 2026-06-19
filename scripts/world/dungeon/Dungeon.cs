@@ -2,67 +2,50 @@ using Godot;
 
 using System.Collections.Generic;
 
+// Drives a live dungeon run entirely from one deterministic DungeonRunPlan. A run is
+// generated once on the first transition into the dungeon, then rooms are instantiated and
+// traversed strictly from the plan's nodes, edges, levels and preselected content. No room
+// kind, definition or content is ever rerolled while entering rooms.
 [GlobalClass]
 public partial class Dungeon : Node
 {
-    private enum DungeonRoomKind
-    {
-        Combat,
-        Special,
-        Timed,
-    }
-
-    private sealed class DungeonRoomDescriptor
-    {
-        public DungeonRoomDescriptor(DungeonRoomKind kind)
-        {
-            Kind = kind;
-        }
-
-        public DungeonRoomKind Kind { get; }
-    }
-
     private static readonly StringName DungeonRuntimeScreenId = "dungeon_runtime";
-    private static readonly StringName DungeonEntryExitId = "south_return";
+    private static readonly StringName SouthReturnExitId = "south_return";
     private static readonly StringName EntranceHallScreenId = "entrance_hall";
     private static readonly StringName EntranceHallReturnExitId = "north_center";
-    private static readonly StringName CombatTopLeftExitId = "north_west";
-    private static readonly StringName CombatTopRightExitId = "north_east";
-    private static readonly StringName SpecialTopExitId = "north_center";
 
-    // Data-driven generation rules for the seeded run-plan model. Wired here now so it is
-    // editable in the inspector, but the live progression below intentionally still uses the
-    // legacy exports/behavior; consuming the plan is the next slice.
+    // The only generation source: the plan is produced from this resource. The legacy
+    // live-random exports were removed in favor of plan-driven traversal.
     [Export]
     public DungeonGenerationRules GenerationRules { get; set; }
 
-    [Export]
-    public Godot.Collections.Array<RoomTemplateDefinition> CombatRoomDefinitions { get; set; } = new();
+    private readonly DungeonRunPlanGenerator _generator = new();
+    private readonly RandomNumberGenerator _seedRng = new();
 
-    [Export]
-    public Godot.Collections.Array<PackedScene> SpecialRoomTemplates { get; set; } = new();
+    // Plan rooms instantiated lazily on first entry and retained by stable node id for the
+    // lifetime of the run, so re-entering a node returns its existing instance.
+    private readonly Dictionary<StringName, Room> _roomsByNodeId = new();
 
-    [Export]
-    public Godot.Collections.Array<RoomTemplateDefinition> TimedRoomDefinitions { get; set; } = new();
+    private DungeonRunPlan _activePlan;
+    private StringName _activeNodeId;
+    private ulong _runSeed;
 
-    [Export(PropertyHint.Range, "0,1,0.01")]
-    public float SpecialRoomChance { get; set; } = 0.2f;
-
-    [Export(PropertyHint.Range, "0,1,0.01")]
-    public float TimedRoomChance { get; set; } = 0.15f;
-
-    [Export(PropertyHint.Range, "0,20,1")]
-    public int SpecialRoomPity { get; set; } = 3;
-
-    private readonly RandomNumberGenerator _random = new();
-    private readonly Dictionary<StringName, DungeonRoomDescriptor> _activeProgressionDoors = new();
-
-    private Room _activeDungeonRoom;
-    private int _consecutiveNonSpecialRooms;
+    // Read-only run state, suitable for a future Dungeon HUB / debug display.
+    public bool HasActiveRun => _activePlan != null;
+    public DungeonRunPlan ActivePlan => _activePlan;
+    public StringName ActiveNodeId => _activeNodeId;
+    public ulong RunSeed => _runSeed;
+    public DungeonRoomNode ActiveNode => _activePlan?.GetNodeById(_activeNodeId);
 
     public override void _Ready()
     {
-        _random.Randomize();
+        // Seed source for run seeds only; plan decisions use the per-run seed, never Randomize.
+        _seedRng.Randomize();
+    }
+
+    public override void _ExitTree()
+    {
+        EndRun();
     }
 
     public bool TryCreateRoom(StringName screenId, Room currentRoom, RoomTransition sourceTransition, StringName entryExitId, out Room room)
@@ -71,262 +54,252 @@ public partial class Dungeon : Node
         if (screenId != DungeonRuntimeScreenId)
             return false;
 
-        var roomKind = ResolveRequestedRoomKind(currentRoom, sourceTransition);
-        if (!TryInstantiateDungeonRoom(roomKind, out room))
+        // The first transition into the dungeon from outside starts a fresh, randomly seeded
+        // run. A generation failure refuses the transition and leaves no partial active run.
+        if (_activePlan == null && !TryStartRun(NextRunSeed(), null, null, out var startError))
         {
+            GD.PushError(startError);
             return false;
         }
 
-        if (!IsDungeonRoom(currentRoom))
-            StartNewRun();
+        if (!TryResolveTargetNode(sourceTransition, out var targetNode, out var resolveError))
+        {
+            GD.PushError(resolveError);
+            return false;
+        }
 
-        RegisterEnteredDungeonRoom(roomKind);
-        SetActiveDungeonRoom(room);
-        ConfigureDungeonRoom(room, roomKind);
+        if (!TryGetOrCreatePlanRoom(targetNode, out var targetRoom))
+            return false;
+
+        // Advance only after the room exists: an invalid node/type/content never moves the run.
+        _activeNodeId = targetNode.Id;
+        ConfigureRoomDoors(targetRoom, targetNode);
+        room = targetRoom;
         return true;
     }
 
     public void OnTransitionCompleted(Room previousRoom, RoomTransition usedTransition, Room nextRoom)
     {
-        if (IsDungeonRoom(previousRoom) && !IsDungeonRoom(nextRoom))
+        // Leaving a plan room for anything the run does not own (entrance hall via south_return
+        // or the boss's post-victory north door) ends the run.
+        if (HasActiveRun && IsManagedRoom(previousRoom) && !IsManagedRoom(nextRoom))
             EndRun();
     }
 
-    private void ConfigureDungeonRoom(Room room, DungeonRoomKind roomKind)
+    // True for rooms this Dungeon instantiated for the active run and still owns. World uses
+    // this to detach (rather than free) a cached room during another dungeon transition.
+    public bool IsManagedRoom(Room room)
     {
-        _activeProgressionDoors.Clear();
-
-        switch (roomKind)
-        {
-            case DungeonRoomKind.Combat:
-                ConfigureCombatRoom((CombatDungeonRoom)room);
-                break;
-            case DungeonRoomKind.Special:
-                ConfigureSpecialRoom((SpecialDungeonRoom)room);
-                break;
-            case DungeonRoomKind.Timed:
-                ConfigureTimedRoom((TimedDungeonRoom)room);
-                break;
-        }
-    }
-
-    private void ConfigureCombatRoom(CombatDungeonRoom room)
-    {
-        room.ConfigureProgressionDoors(DungeonRuntimeScreenId, DungeonEntryExitId);
-        room.ConfigureReturnDoor(EntranceHallScreenId, EntranceHallReturnExitId);
-    }
-
-    private void ConfigureSpecialRoom(SpecialDungeonRoom room)
-    {
-        room.ConfigureProgressionDoor(DungeonRuntimeScreenId, DungeonEntryExitId);
-        room.ConfigureReturnDoor(EntranceHallScreenId, EntranceHallReturnExitId);
-        SetProgressionDoor(SpecialTopExitId, DungeonRoomKind.Combat);
-    }
-
-    private void ConfigureTimedRoom(TimedDungeonRoom room)
-    {
-        room.ConfigureProgressionDoor(DungeonRuntimeScreenId, DungeonEntryExitId);
-    }
-
-    private void OnActiveRoomCleared()
-    {
-        if (_activeDungeonRoom is not CombatDungeonRoom)
-            return;
-
-        if (TryResolveForcedCombatProgressionKind(out var forcedRoomKind))
-        {
-            SetProgressionDoor(CombatTopLeftExitId, forcedRoomKind);
-            SetProgressionDoor(CombatTopRightExitId, forcedRoomKind);
-            return;
-        }
-
-        SetProgressionDoor(CombatTopLeftExitId, RollCombatProgressionRoomKind());
-        SetProgressionDoor(CombatTopRightExitId, RollCombatProgressionRoomKind());
-    }
-
-    private void StartNewRun()
-    {
-        EndRun();
-    }
-
-    private void EndRun()
-    {
-        _activeProgressionDoors.Clear();
-        _consecutiveNonSpecialRooms = 0;
-        SetActiveDungeonRoom(null);
-    }
-
-    private void SetActiveDungeonRoom(Room room)
-    {
-        if (_activeDungeonRoom is CombatDungeonRoom previousCombatRoom &&
-            GodotObject.IsInstanceValid(previousCombatRoom))
-        {
-            previousCombatRoom.RoomCleared -= OnActiveRoomCleared;
-        }
-
-        _activeDungeonRoom = room;
-
-        if (_activeDungeonRoom is CombatDungeonRoom activeCombatRoom)
-            activeCombatRoom.RoomCleared += OnActiveRoomCleared;
-    }
-
-    private DungeonRoomKind ResolveRequestedRoomKind(Room currentRoom, RoomTransition sourceTransition)
-    {
-        if (!IsDungeonRoom(currentRoom))
-            return DungeonRoomKind.Combat;
-
-        if (sourceTransition != null &&
-            HasValue(sourceTransition.ExitId) &&
-            _activeProgressionDoors.TryGetValue(sourceTransition.ExitId, out var descriptor))
-        {
-            return descriptor.Kind;
-        }
-
-        return currentRoom is SpecialDungeonRoom
-            ? DungeonRoomKind.Combat
-            : RollCombatProgressionRoomKind();
-    }
-
-    private bool TryInstantiateDungeonRoom(DungeonRoomKind roomKind, out Room room)
-    {
-        return roomKind == DungeonRoomKind.Special
-            ? TryInstantiateSpecialDungeonRoom(out room)
-            : TryInstantiateDefinedDungeonRoom(roomKind, out room);
-    }
-
-    private bool TryInstantiateSpecialDungeonRoom(out Room room)
-    {
-        room = null;
-
-        var template = ChooseSpecialRoomTemplate();
-        if (template == null)
-        {
-            GD.PushError($"{nameof(Dungeon)} has no configured {DungeonRoomKind.Special} room templates.");
-            return false;
-        }
-
-        room = template.Instantiate<Room>();
         if (room == null)
+            return false;
+
+        foreach (var cached in _roomsByNodeId.Values)
         {
-            GD.PushError($"{nameof(Dungeon)} could not instantiate a dungeon room for {DungeonRoomKind.Special}.");
+            if (cached == room)
+                return true;
+        }
+
+        return false;
+    }
+
+    // Run-start entry point kept structured so a future Dungeon HUB can supply the seed,
+    // ordinary-room count and starting level without changing traversal. Null overrides fall
+    // back to the configured GenerationRules defaults.
+    public bool TryStartRun(ulong seed, int? ordinaryRoomCount, int? startingRoomLevel, out string error)
+    {
+        error = null;
+        EndRun();
+
+        if (GenerationRules == null)
+        {
+            error = $"{nameof(Dungeon)} cannot start a run without a {nameof(GenerationRules)} resource.";
+            return false;
+        }
+
+        var result = _generator.Generate(GenerationRules, seed, ordinaryRoomCount, startingRoomLevel);
+        if (!result.Succeeded)
+        {
+            error = $"{nameof(Dungeon)} run-plan generation failed: {result.Error}";
+            return false;
+        }
+
+        _activePlan = result.Plan;
+        _runSeed = seed;
+        _activeNodeId = null;
+        return true;
+    }
+
+    public void EndRun()
+    {
+        foreach (var cached in _roomsByNodeId.Values)
+        {
+            if (cached == null || !GodotObject.IsInstanceValid(cached))
+                continue;
+
+            // Free only instances this Dungeon still solely owns (already detached). An
+            // attached room is owned by World/the tree and freed there, so this never
+            // double-frees the currently attached room.
+            if (cached.GetParent() != null)
+                continue;
+
+            cached.QueueFree();
+        }
+
+        _roomsByNodeId.Clear();
+        _activePlan = null;
+        _activeNodeId = null;
+        _runSeed = 0;
+    }
+
+    private bool TryResolveTargetNode(RoomTransition sourceTransition, out DungeonRoomNode targetNode, out string error)
+    {
+        targetNode = null;
+        error = null;
+
+        // First room of the run is always plan node 0.
+        if (_activeNodeId == null)
+        {
+            if (_activePlan.Length == 0)
+            {
+                error = $"{nameof(Dungeon)} run plan has no nodes.";
+                return false;
+            }
+
+            targetNode = _activePlan.Nodes[0];
+            return true;
+        }
+
+        var activeNode = _activePlan.GetNodeById(_activeNodeId);
+        if (activeNode == null)
+        {
+            error = $"{nameof(Dungeon)} active node '{_activeNodeId}' is not present in the run plan.";
+            return false;
+        }
+
+        // Select the matching edge by the used door's exit id, then resolve the stable
+        // destination node id through the plan. Combat's two doors resolve independently.
+        var exitId = sourceTransition?.ExitId;
+        targetNode = DungeonTraversal.ResolveDestination(_activePlan, activeNode, exitId, out _);
+        if (targetNode == null)
+        {
+            error = $"{nameof(Dungeon)} could not resolve a destination from node '{activeNode.Id}' via exit '{exitId}'.";
             return false;
         }
 
         return true;
     }
 
-    private bool TryInstantiateDefinedDungeonRoom(DungeonRoomKind roomKind, out Room room)
+    private bool TryGetOrCreatePlanRoom(DungeonRoomNode node, out Room room)
     {
         room = null;
 
-        var definition = ChooseRoomDefinition(roomKind);
-        if (definition == null)
+        if (_roomsByNodeId.TryGetValue(node.Id, out var cached))
         {
-            GD.PushError($"{nameof(Dungeon)} has no configured {roomKind} room definitions.");
-            return false;
-        }
-
-        var roomInstance = definition.RoomScene.Instantiate();
-        if (roomInstance is not Room definedRoom)
-        {
-            GD.PushError($"{nameof(Dungeon)} room definition '{definition.GetLabel()}' did not instantiate a {nameof(Room)} root for {roomKind}.");
-            roomInstance?.QueueFree();
-            return false;
-        }
-
-        var contentOption = definition.PickContentOption(_random);
-        definedRoom.TryInjectContent(contentOption?.ContentScene);
-        room = definedRoom;
-        return true;
-    }
-
-    private RoomTemplateDefinition ChooseRoomDefinition(DungeonRoomKind roomKind)
-    {
-        var definitions = roomKind switch
-        {
-            DungeonRoomKind.Combat => CombatRoomDefinitions,
-            DungeonRoomKind.Timed => TimedRoomDefinitions,
-            _ => null,
-        };
-
-        var validDefinitions = new List<RoomTemplateDefinition>();
-        if (definitions != null)
-        {
-            foreach (var definition in definitions)
+            if (GodotObject.IsInstanceValid(cached))
             {
-                if (definition?.RoomScene != null)
-                    validDefinitions.Add(definition);
+                room = cached;
+                return true;
             }
+
+            _roomsByNodeId.Remove(node.Id);
         }
 
-        if (validDefinitions.Count == 0)
-            return null;
-
-        return validDefinitions[_random.RandiRange(0, validDefinitions.Count - 1)];
-    }
-
-    private PackedScene ChooseSpecialRoomTemplate()
-    {
-        var validTemplates = new List<PackedScene>();
-        foreach (var template in SpecialRoomTemplates)
-        {
-            if (template != null)
-                validTemplates.Add(template);
-        }
-
-        if (validTemplates.Count == 0)
-            return null;
-
-        return validTemplates[_random.RandiRange(0, validTemplates.Count - 1)];
-    }
-
-    private DungeonRoomKind RollCombatProgressionRoomKind()
-    {
-        var timedChance = Mathf.Clamp(TimedRoomChance, 0.0f, 1.0f);
-        if (_random.Randf() < timedChance)
-            return DungeonRoomKind.Timed;
-
-        var specialChance = Mathf.Clamp(SpecialRoomChance, 0.0f, 1.0f);
-        return _random.Randf() < specialChance
-            ? DungeonRoomKind.Special
-            : DungeonRoomKind.Combat;
-    }
-
-    private void RegisterEnteredDungeonRoom(DungeonRoomKind roomKind)
-    {
-        _consecutiveNonSpecialRooms = roomKind == DungeonRoomKind.Special
-            ? 0
-            : _consecutiveNonSpecialRooms + 1;
-    }
-
-    private bool TryResolveForcedCombatProgressionKind(out DungeonRoomKind forcedRoomKind)
-    {
-        forcedRoomKind = default;
-
-        if (SpecialRoomPity <= 0)
+        if (!TryInstantiatePlanRoom(node, out var created))
             return false;
 
-        var pityThreshold = Mathf.Max(1, SpecialRoomPity);
-        if (_consecutiveNonSpecialRooms < pityThreshold)
-            return false;
-
-        forcedRoomKind = DungeonRoomKind.Special;
+        _roomsByNodeId[node.Id] = created;
+        room = created;
         return true;
     }
 
-    private void SetProgressionDoor(StringName exitId, DungeonRoomKind roomKind)
+    private bool TryInstantiatePlanRoom(DungeonRoomNode node, out Room room)
     {
-        _activeProgressionDoors[exitId] = new DungeonRoomDescriptor(roomKind);
+        room = null;
+
+        if (node.Definition?.RoomScene == null)
+        {
+            GD.PushError($"{nameof(Dungeon)} node '{node.Id}' has no room scene to instantiate.");
+            return false;
+        }
+
+        var instance = node.Definition.RoomScene.Instantiate();
+        if (instance is not Room instantiatedRoom)
+        {
+            GD.PushError($"{nameof(Dungeon)} node '{node.Id}' room scene did not instantiate a {nameof(Room)} root.");
+            instance?.QueueFree();
+            return false;
+        }
+
+        if (!RoomTypeMatchesKind(instantiatedRoom, node.Kind))
+        {
+            GD.PushError($"{nameof(Dungeon)} node '{node.Id}' instantiated '{instantiatedRoom.GetType().Name}', which does not match kind '{node.Kind}'.");
+            instantiatedRoom.QueueFree();
+            return false;
+        }
+
+        // Level and content are fixed by the plan and applied before the room enters the tree
+        // so content spawns at the planned level. No randomness is consumed here.
+        instantiatedRoom.Level = node.Level;
+        if (!instantiatedRoom.TryInjectContent(node.ContentOption?.ContentScene))
+        {
+            GD.PushError($"{nameof(Dungeon)} node '{node.Id}' failed to inject its preselected content.");
+            instantiatedRoom.QueueFree();
+            return false;
+        }
+
+        room = instantiatedRoom;
+        return true;
     }
 
-    private static bool IsDungeonRoom(Room room)
+    private void ConfigureRoomDoors(Room room, DungeonRoomNode node)
     {
-        return room is CombatDungeonRoom || room is SpecialDungeonRoom || room is TimedDungeonRoom;
+        // Progression doors come straight from the node's edges: each edge's door routes back
+        // into the Dungeon, which resolves the actual destination node when the door is used.
+        foreach (var edge in node.Edges)
+        {
+            if (edge != null && HasValue(edge.SourceExitId))
+                ConfigureDoorTarget(room, edge.SourceExitId, DungeonRuntimeScreenId, SouthReturnExitId);
+        }
+
+        // Return door: preserve the existing abandonment wiring for the room types that have
+        // one (Combat, Special). Timed rooms have no return door, and the Boss room keeps its
+        // own scene door (post-victory return to the entrance hall).
+        if (room is CombatDungeonRoom || room is SpecialDungeonRoom)
+            ConfigureDoorTarget(room, SouthReturnExitId, EntranceHallScreenId, EntranceHallReturnExitId);
+    }
+
+    private static void ConfigureDoorTarget(Room room, StringName exitId, StringName targetScreenId, StringName targetExitId)
+    {
+        var door = room.GetDoor(exitId);
+        if (door == null)
+            return;
+
+        door.TargetScreenId = targetScreenId;
+        door.TargetExitId = targetExitId;
+    }
+
+    private static bool RoomTypeMatchesKind(Room room, DungeonRoomKind kind)
+    {
+        return kind switch
+        {
+            DungeonRoomKind.Combat => room is CombatDungeonRoom,
+            DungeonRoomKind.Timed => room is TimedDungeonRoom,
+            DungeonRoomKind.Special => room is SpecialDungeonRoom,
+            DungeonRoomKind.Boss => room is BossRoom,
+            _ => false,
+        };
+    }
+
+    private ulong NextRunSeed()
+    {
+        // Combine two 32-bit draws into a full 64-bit run seed.
+        var high = (ulong)_seedRng.Randi();
+        var low = (ulong)_seedRng.Randi();
+        return (high << 32) | low;
     }
 
     private static bool HasValue(StringName value)
     {
         return value != null && !value.IsEmpty;
     }
-
 }
