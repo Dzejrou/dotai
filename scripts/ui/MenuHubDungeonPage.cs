@@ -54,6 +54,12 @@ public partial class MenuHubDungeonPage : Control
     [Export]
     public NodePath ResumeButtonPath { get; set; } = new("Margin/VBox/ActiveView/ResumeButton");
 
+    [Export]
+    public NodePath GiveUpButtonPath { get; set; } = new("Margin/VBox/ActiveView/GiveUpButton");
+
+    [Export]
+    public NodePath ActiveStatusLabelPath { get; set; } = new("Margin/VBox/ActiveView/ActiveStatusLabel");
+
     private Control _configView;
     private SpinBox _roomsSpinBox;
     private SpinBox _startingLevelSpinBox;
@@ -66,6 +72,8 @@ public partial class MenuHubDungeonPage : Control
     private Label _progressLabel;
     private Label _activeLevelLabel;
     private Button _resumeButton;
+    private Button _giveUpButton;
+    private Label _activeStatusLabel;
 
     private readonly RandomNumberGenerator _seedRng = new();
     private World _world;
@@ -73,6 +81,8 @@ public partial class MenuHubDungeonPage : Control
     private Action _resume;
     // Returns null/empty on success, or an actionable error to display while the HUB stays open.
     private Func<ulong, int, int, string> _startDungeon;
+    // Returns null/empty on success, or an actionable error to display while the HUB stays open.
+    private Func<string> _giveUp;
     private bool _entranceAuthorized;
     private bool _rulesDefaultsInitialized;
     private bool _dungeonAnywhereSubscribed;
@@ -93,6 +103,8 @@ public partial class MenuHubDungeonPage : Control
         _progressLabel = GetNodeOrNull<Label>(ProgressLabelPath);
         _activeLevelLabel = GetNodeOrNull<Label>(ActiveLevelLabelPath);
         _resumeButton = GetNodeOrNull<Button>(ResumeButtonPath);
+        _giveUpButton = GetNodeOrNull<Button>(GiveUpButtonPath);
+        _activeStatusLabel = GetNodeOrNull<Label>(ActiveStatusLabelPath);
 
         ConfigureRoomsSpinBox();
         ConfigureStartingLevelSpinBox();
@@ -112,6 +124,9 @@ public partial class MenuHubDungeonPage : Control
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
+
+        if (_giveUpButton != null)
+            _giveUpButton.Pressed += OnGiveUpPressed;
 
         GameSettings.DungeonAnywhereChanged += OnDungeonAnywhereChanged;
         _dungeonAnywhereSubscribed = true;
@@ -133,6 +148,9 @@ public partial class MenuHubDungeonPage : Control
         if (_resumeButton != null)
             _resumeButton.Pressed -= OnResumePressed;
 
+        if (_giveUpButton != null)
+            _giveUpButton.Pressed -= OnGiveUpPressed;
+
         if (_dungeonAnywhereSubscribed)
         {
             GameSettings.DungeonAnywhereChanged -= OnDungeonAnywhereChanged;
@@ -142,13 +160,14 @@ public partial class MenuHubDungeonPage : Control
         DisconnectDungeonSignal();
     }
 
-    public void Bind(World world, Action resume, Func<ulong, int, int, string> startDungeon)
+    public void Bind(World world, Action resume, Func<ulong, int, int, string> startDungeon, Func<string> giveUp)
     {
         DisconnectDungeonSignal();
 
         _world = world;
         _resume = resume;
         _startDungeon = startDungeon;
+        _giveUp = giveUp;
 
         ConnectDungeonSignal();
         Refresh();
@@ -207,6 +226,8 @@ public partial class MenuHubDungeonPage : Control
 
     private void RefreshActiveView()
     {
+        SetActiveStatus(string.Empty, isError: false);
+
         var dungeon = ResolveDungeon();
         if (dungeon == null || !dungeon.HasActiveRun)
             return;
@@ -265,6 +286,28 @@ public partial class MenuHubDungeonPage : Control
     private void OnResumePressed()
     {
         _resume?.Invoke();
+    }
+
+    private void OnGiveUpPressed()
+    {
+        if (_giveUp == null)
+        {
+            SetActiveStatus("Give Up is unavailable.", isError: true);
+            return;
+        }
+
+        var error = _giveUp.Invoke();
+        if (!string.IsNullOrEmpty(error))
+        {
+            // Failed abandon: keep the HUB open and surface the error. The active run and return
+            // origin are preserved by World, so the player is not stranded.
+            SetActiveStatus(error, isError: true);
+            return;
+        }
+
+        // Success: Main closes the HUB after the return transition. Refresh so a later reopen
+        // shows the no-run configuration view.
+        Refresh();
     }
 
     private void OnRandomizeSeedPressed()
@@ -364,6 +407,15 @@ public partial class MenuHubDungeonPage : Control
 
         _statusLabel.Text = text ?? string.Empty;
         _statusLabel.Modulate = isError ? new Color(1.0f, 0.6f, 0.6f) : Colors.White;
+    }
+
+    private void SetActiveStatus(string text, bool isError)
+    {
+        if (_activeStatusLabel == null)
+            return;
+
+        _activeStatusLabel.Text = text ?? string.Empty;
+        _activeStatusLabel.Modulate = isError ? new Color(1.0f, 0.6f, 0.6f) : Colors.White;
     }
 
     private ulong NextRandomSeed()

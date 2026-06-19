@@ -121,7 +121,7 @@ public partial class Main : Node2D
             _menuHubRoot.BindCharacterPage(_player, equipmentController);
             _menuHubRoot.BindSpellBookPage(_player);
             _menuHubRoot.BindDebugRoomPage(_world, CloseMenuHub);
-            _menuHubRoot.BindDungeonPage(_world, CloseMenuHub, TryStartDungeonRunFromHub);
+            _menuHubRoot.BindDungeonPage(_world, CloseMenuHub, TryStartDungeonRunFromHub, TryGiveUpDungeonRunFromHub);
         }
 
         TryLoadFromSave();
@@ -175,7 +175,12 @@ public partial class Main : Node2D
 
     public override void _Input(InputEvent @event)
     {
-        if (TryHandleNavigationDebugInput(@event))
+        // While a HUB text field (the dungeon seed) is focused, single-key global shortcuts must
+        // not fire so the keys (including letters and digits) reach the field. Esc is still
+        // handled below so the HUB can always be closed/cancelled.
+        var textFieldFocused = IsHubTextFieldFocused();
+
+        if (!textFieldFocused && TryHandleNavigationDebugInput(@event))
             return;
 
         if (_gameOverActive && !_restartingFromGameOver)
@@ -186,16 +191,25 @@ public partial class Main : Node2D
             return;
         }
 
-        if (TryHandleSpellBookInput(@event))
+        if (!textFieldFocused && TryHandleSpellBookInput(@event))
             return;
 
-        if (TryHandleInventoryInput(@event))
+        if (!textFieldFocused && TryHandleInventoryInput(@event))
             return;
 
-        if (TryHandleCharacterWindowInput(@event))
+        if (!textFieldFocused && TryHandleCharacterWindowInput(@event))
             return;
 
-        TryHandleMenuHubInput(@event);
+        TryHandleMenuHubInput(@event, textFieldFocused);
+    }
+
+    // A focused, visible LineEdit means the player is typing in the HUB (the dungeon seed). The
+    // visibility check keeps a hidden-but-still-focused field (closed HUB / other page) from
+    // suppressing normal gameplay shortcuts.
+    private bool IsHubTextFieldFocused()
+    {
+        var focusOwner = GetViewport()?.GuiGetFocusOwner();
+        return focusOwner is LineEdit lineEdit && lineEdit.IsVisibleInTree();
     }
 
     public override void _Process(double delta)
@@ -264,6 +278,21 @@ public partial class Main : Node2D
             return string.IsNullOrEmpty(error) ? "Failed to start the dungeon run." : error;
 
         _menuHubRoot?.ConsumeDungeonEntranceAuthorization();
+        CloseMenuHub();
+        return null;
+    }
+
+    // Bridges the Dungeon page Give Up request to World. Returns null on success, or an actionable
+    // error the page shows while the HUB stays open. The HUB is closed/unpaused only once the run
+    // has been abandoned through the captured-origin return and the run is cleared.
+    private string TryGiveUpDungeonRunFromHub()
+    {
+        if (_world == null || !GodotObject.IsInstanceValid(_world))
+            return "Dungeon runtime is unavailable.";
+
+        if (!_world.TryGiveUpDungeonRun(out var error))
+            return string.IsNullOrEmpty(error) ? "Failed to give up the dungeon run." : error;
+
         CloseMenuHub();
         return null;
     }
@@ -495,20 +524,26 @@ public partial class Main : Node2D
         _interactionPrompt.GlobalPosition = promptPosition;
     }
 
-    private bool TryHandleMenuHubInput(InputEvent @event)
+    private bool TryHandleMenuHubInput(InputEvent @event, bool textFieldFocused)
     {
         if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
             return false;
 
         if (keyEvent.PhysicalKeycode == Key.P)
         {
+            // Typing into a HUB text field takes the key.
+            if (textFieldFocused)
+                return false;
+
+            // P is an unrelated global shortcut: while the HUB is open it must not close the HUB
+            // or open the debug tray. It only toggles the debug tray when the HUB is closed.
+            if (_menuHubOpen)
+                return true;
+
             if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
                 CloseDebugTray();
             else
-            {
-                CloseMenuHub();
                 OpenDebugTray();
-            }
 
             return true;
         }

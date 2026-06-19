@@ -561,6 +561,15 @@ text = "Level: -"
 layout_mode = 2
 text = "Resume"
 
+[node name="GiveUpButton" type="Button" parent="Root/DungeonPage/Margin/VBox/ActiveView"]
+layout_mode = 2
+text = "Give Up"
+
+[node name="ActiveStatusLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ActiveView"]
+custom_minimum_size = Vector2(480, 0)
+layout_mode = 2
+autowrap_mode = 3
+
 [node name="LogPage" type="Control" parent="Root"]
 visible = false
 layout_mode = 1

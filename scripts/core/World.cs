@@ -321,6 +321,28 @@ public partial class World : Node2D
         return true;
     }
 
+    // Gives up an active run from the HUB. Uses the same captured-origin return flow as a
+    // successful boss exit (no encounter completion or rewards). On failure the active run and
+    // return origin are preserved so the caller can keep the HUB open and surface the error.
+    public bool TryGiveUpDungeonRun(out string error)
+    {
+        error = null;
+
+        if (_dungeon == null || !GodotObject.IsInstanceValid(_dungeon) || !_dungeon.HasActiveRun)
+        {
+            error = "There is no active dungeon run to give up.";
+            return false;
+        }
+
+        if (!TryReturnFromDungeon())
+        {
+            error = "Could not return from the dungeon; the run is still active.";
+            return false;
+        }
+
+        return true;
+    }
+
     // Resolves a dungeon return/abandonment door: transitions to the captured launch origin
     // (entrance-hall fallback), restores the exact launch position, then ends the run.
     private bool TryReturnFromDungeon()

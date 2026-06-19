@@ -452,9 +452,9 @@ public partial class MenuHub : Control
         if (!Visible)
             return;
 
-        // While a text field (the dungeon seed) is focused, let A/D edit the text instead of
-        // hijacking it for page navigation.
-        if (GetViewport().GuiGetFocusOwner() is LineEdit)
+        // While a visible text field (the dungeon seed) is focused, let A/D edit the text instead
+        // of hijacking it for page navigation.
+        if (GetViewport().GuiGetFocusOwner() is LineEdit lineEdit && lineEdit.IsVisibleInTree())
             return;
 
         if (@event.IsActionPressed("move_left"))
@@ -537,9 +537,9 @@ public partial class MenuHub : Control
         _debugRoomPage?.Bind(world, roomEntered);
     }
 
-    public void BindDungeonPage(World world, Action resume, Func<ulong, int, int, string> startDungeon)
+    public void BindDungeonPage(World world, Action resume, Func<ulong, int, int, string> startDungeon, Func<string> giveUp)
     {
-        _dungeonPage?.Bind(world, resume, startDungeon);
+        _dungeonPage?.Bind(world, resume, startDungeon, giveUp);
         _dungeonPage?.SetEntranceAuthorized(_dungeonEntranceAuthorized);
     }
 
