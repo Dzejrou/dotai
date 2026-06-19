@@ -23,7 +23,6 @@ Definition = ExtResource("5_testing_void_room_definition")
 [sub_resource type="Resource" id="Resource_debug_room_entry_special"]
 script = ExtResource("2_debug_room_catalog_entry_script")
 Definition = ExtResource("6_special_room_definition")
-UsesBuiltInContent = true
 
 [sub_resource type="Resource" id="Resource_debug_room_entry_boss"]
 script = ExtResource("2_debug_room_catalog_entry_script")
