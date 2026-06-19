@@ -515,6 +515,20 @@ public partial class World : Node2D
             return;
         }
 
+        // Dungeon-owned plan rooms are retained by the Dungeon for the lifetime of the run, so
+        // re-entry returns the same instance. Detach (don't free) here; the Dungeon frees them
+        // on EndRun. This keeps room ownership between World and Dungeon explicit and avoids
+        // double-freeing a still-cached room.
+        if (_dungeon != null && _dungeon.IsManagedRoom(_activeRoom))
+        {
+            var dungeonParent = _activeRoom.GetParent();
+            if (dungeonParent != null)
+                dungeonParent.RemoveChild(_activeRoom);
+
+            _activeRoom = null;
+            return;
+        }
+
         if (ShouldPersistRoom(_activeRoom))
         {
             var parent = _activeRoom.GetParent();
