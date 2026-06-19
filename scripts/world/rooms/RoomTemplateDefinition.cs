@@ -26,13 +26,13 @@ public partial class RoomTemplateDefinition : Resource
         var totalWeight = 0.0f;
         foreach (var option in ContentOptions)
         {
-            if (option?.IsConfigured == true)
+            if (option?.IsRandomlySelectable == true)
                 totalWeight += option.Weight;
         }
 
         if (!(totalWeight > 0.0f))
         {
-            GD.PushWarning($"{nameof(RoomTemplateDefinition)} '{GetLabel()}' has no valid content options configured.");
+            GD.PushWarning($"{nameof(RoomTemplateDefinition)} '{GetLabel()}' has no randomly-selectable content options configured.");
             return null;
         }
 
@@ -41,7 +41,7 @@ public partial class RoomTemplateDefinition : Resource
         RoomContentOption fallbackOption = null;
         foreach (var option in ContentOptions)
         {
-            if (option?.IsConfigured != true)
+            if (option?.IsRandomlySelectable != true)
                 continue;
 
             cumulativeWeight += option.Weight;
@@ -51,6 +51,22 @@ public partial class RoomTemplateDefinition : Resource
         }
 
         return fallbackOption;
+    }
+
+    // Finds a content option by its id regardless of weight, so a guaranteed placement (e.g.
+    // the zero-weight Pre-Boss option) can be resolved explicitly.
+    public RoomContentOption FindContentOption(StringName id)
+    {
+        if (id == null || id.IsEmpty)
+            return null;
+
+        foreach (var option in ContentOptions)
+        {
+            if (option != null && option.Id == id)
+                return option;
+        }
+
+        return null;
     }
 
     public string GetLabel()

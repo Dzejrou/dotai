@@ -24,6 +24,7 @@ script = ExtResource("2_room_content_option_script")
 Id = &"pre_boss"
 DisplayName = "Pre-Boss"
 ContentScene = ExtResource("6_pre_boss_content")
+Weight = 0.0
 
 [resource]
 script = ExtResource("1_room_template_definition_script")

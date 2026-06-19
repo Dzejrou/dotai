@@ -30,6 +30,12 @@ public partial class Dungeon : Node
     private static readonly StringName CombatTopRightExitId = "north_east";
     private static readonly StringName SpecialTopExitId = "north_center";
 
+    // Data-driven generation rules for the seeded run-plan model. Wired here now so it is
+    // editable in the inspector, but the live progression below intentionally still uses the
+    // legacy exports/behavior; consuming the plan is the next slice.
+    [Export]
+    public DungeonGenerationRules GenerationRules { get; set; }
+
     [Export]
     public Godot.Collections.Array<RoomTemplateDefinition> CombatRoomDefinitions { get; set; } = new();
 
