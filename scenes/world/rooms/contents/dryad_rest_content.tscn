@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/Content.cs" id="1_content"]
+[ext_resource type="PackedScene" path="res://scenes/actors/neutrals/dryad.tscn" id="2_dryad"]
+[ext_resource type="Script" path="res://scripts/world/rooms/contents/ContentGuidance.cs" id="3_guidance"]
+[ext_resource type="Texture2D" path="res://assets/world/dungeon/rest_stop.png" id="4_room_texture"]
+
+[node name="DryadRestContent" type="Node2D"]
+script = ExtResource("1_content")
+
+[node name="Actors" type="Node2D" parent="."]
+
+[node name="Dryad" parent="Actors" instance=ExtResource("2_dryad")]
+position = Vector2(332, 436)
+
+[node name="Guidance" type="Node2D" parent="."]
+scale = Vector2(2, 2)
+script = ExtResource("3_guidance")
+
+[node name="RoomSprite" type="Sprite2D" parent="Guidance"]
+z_index = -10
+texture = ExtResource("4_room_texture")
+centered = false

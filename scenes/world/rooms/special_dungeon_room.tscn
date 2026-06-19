@@ -3,8 +3,6 @@
 [ext_resource type="Texture2D" uid="uid://bbhxv2xptxlik" path="res://assets/world/dungeon/rest_stop.png" id="2_p0bqp"]
 [ext_resource type="Script" uid="uid://c6yen6g77fali" path="res://scripts/world/rooms/SpecialDungeonRoom.cs" id="2_special_dungeon_room"]
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
-[ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="4_dryad"]
-[ext_resource type="PackedScene" uid="uid://cfh2mxlabwyir" path="res://scenes/world/altar.tscn" id="5_altar"]
 
 [sub_resource type="NavigationPolygon" id="1_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -99,9 +97,4 @@ position = Vector2(200, 200)
 
 [node name="Ephemeral" type="Node" parent="Unscaled"]
 
-[node name="Dryad" parent="Unscaled" unique_id=1021416576 instance=ExtResource("4_dryad")]
-position = Vector2(332, 436)
-
-[node name="PoisonCleansingAltar" parent="Unscaled" unique_id=1749872232 instance=ExtResource("5_altar")]
-position = Vector2(664, 650)
-scale = Vector2(0.6, 0.6)
+[node name="ContentRoot" type="Node2D" parent="Unscaled"]
