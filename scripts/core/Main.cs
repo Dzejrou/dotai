@@ -180,9 +180,6 @@ public partial class Main : Node2D
         // handled below so the HUB can always be closed/cancelled.
         var textFieldFocused = IsHubTextFieldFocused();
 
-        if (!textFieldFocused && TryHandleNavigationDebugInput(@event))
-            return;
-
         if (_gameOverActive && !_restartingFromGameOver)
         {
             if (@event is InputEventKey keyEvent && keyEvent.Pressed)
@@ -657,19 +654,6 @@ public partial class Main : Node2D
         }
 
         OpenMenuHub(MenuHubPage.Character);
-        return true;
-    }
-
-    private bool TryHandleNavigationDebugInput(InputEvent @event)
-    {
-        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
-            return false;
-
-        if (keyEvent.PhysicalKeycode != Key.Key8)
-            return false;
-
-        var enabled = NavigationDebugSettings.Toggle();
-        GD.Print($"Navigation debug {(enabled ? "enabled" : "disabled")}");
         return true;
     }
 
