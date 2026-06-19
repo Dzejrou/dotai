@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/actors/enemies/demon.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/BossPhaseController.cs" id="2_phase"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://scripts/ai/actions/AiSpellOption.cs" id="12_ai_spell_option"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/PhaseGroup.cs" id="13_phase_group"]
 [ext_resource type="Script" path="res://scripts/ai/behaviors/TargetCombatBehavior.cs" id="14_target_combat"]
+[ext_resource type="Script" path="res://scripts/ai/behaviors/ApplyHasteTransitionAction.cs" id="15_haste_action"]
 
 [sub_resource type="Resource" id="Resource_entry_melee_p1"]
 script = ExtResource("10_composite_entry")
@@ -131,3 +132,14 @@ PowerScale = 0.8
 MinDamageMultiplier = 0.9
 MaxDamageMultiplier = 1.1
 School = 1
+
+[node name="Phase3Transition" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController"]
+script = ExtResource("9_transition")
+HealthThreshold = 0.25
+TargetPhase = 3
+InvulnerableDuringTransition = false
+AnnouncementText = "Demon Boss enrages."
+
+[node name="Enrage" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController/Phase3Transition"]
+script = ExtResource("15_haste_action")
+HasteAmount = 1000

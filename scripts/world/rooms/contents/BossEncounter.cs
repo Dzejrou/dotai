@@ -93,9 +93,8 @@ public partial class BossEncounter : Content, IRoomEncounter
     }
 
     // Activates up to `count` not-yet-activated summon spawners chosen at random, each
-    // spawning its configured summon once. Exposed (with ActivateAllSpawners) so the
-    // later phase-3 slice can activate the remaining spawners without reworking this
-    // content.
+    // spawning its configured summon once. Exposed (with EnsureAllSpawnersOccupied) so the
+    // phase-3 slice can fill the arena without reworking this content.
     public void ActivateRandomSpawners(int count)
     {
         if (count <= 0)
@@ -118,9 +117,21 @@ public partial class BossEncounter : Content, IRoomEncounter
         }
     }
 
-    public void ActivateAllSpawners()
+    // Ensures every configured summon spawner has one living summon. Spawners that already
+    // hold a living summon are left untouched (never duplicated); every empty spawner -
+    // whether it was never activated, or its summon has since died - (re)spawns one summon.
+    // Used on phase-3 entry to bring the arena up to one summon per spawner. Generic and
+    // spawner-name agnostic so other encounters/phases can reuse it.
+    public void EnsureAllSpawnersOccupied()
     {
-        ActivateRandomSpawners(_summonSpawners.Count);
+        foreach (var spawner in _summonSpawners)
+        {
+            if (spawner == null || !GodotObject.IsInstanceValid(spawner) || spawner.IsOccupied())
+                continue;
+
+            _activatedSpawners.Add(spawner);
+            spawner.Respawn();
+        }
     }
 
     private void Engage()
@@ -192,8 +203,12 @@ public partial class BossEncounter : Content, IRoomEncounter
 
     private void OnBossPhaseEntered(int phase)
     {
+        // Phase 2 seeds the arena with a random subset of spawners; phase 3 (Enrage) tops
+        // it up so every spawner ends with a living summon, refilling any that died.
         if (phase == 2)
             ActivateRandomSpawners(Phase2SummonCount);
+        else if (phase == 3)
+            EnsureAllSpawnersOccupied();
     }
 
     private void TeardownEncounter()
