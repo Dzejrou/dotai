@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://mkei3m50g1tr" path="res://scripts/world/merchants/MerchantDefinition.cs" id="1_merchant_definition_script"]
 [ext_resource type="Script" uid="uid://dwv88tg75medu" path="res://scripts/world/merchants/MerchantOfferRule.cs" id="2_merchant_offer_rule_script"]
 [ext_resource type="Resource" uid="uid://crob7w31xg2we" path="res://resources/inventory/items/arcane_crystal.tres" id="3_arcane_crystal_item"]
+[ext_resource type="Resource" uid="uid://cy2blig0k7fue" path="res://resources/inventory/items/pie.tres" id="4_pie_item"]
+[ext_resource type="Resource" uid="uid://bvjdt8lcseefg" path="res://resources/inventory/items/beer.tres" id="5_beer_item"]
 
 [sub_resource type="Resource" id="Resource_offer_dynamic_boots_common"]
 script = ExtResource("2_merchant_offer_rule_script")
@@ -49,9 +51,21 @@ StackItem = ExtResource("3_arcane_crystal_item")
 StackQuantity = 5
 Price = 30
 
+[sub_resource type="Resource" id="Resource_offer_static_pie"]
+script = ExtResource("2_merchant_offer_rule_script")
+StackItem = ExtResource("4_pie_item")
+StackQuantity = 5
+Price = 25
+
+[sub_resource type="Resource" id="Resource_offer_static_beer"]
+script = ExtResource("2_merchant_offer_rule_script")
+StackItem = ExtResource("5_beer_item")
+StackQuantity = 5
+Price = 25
+
 [resource]
 script = ExtResource("1_merchant_definition_script")
 DisplayName = "Wandering Merchant"
 RefreshCost = 5
-StaticOffers = Array[ExtResource("2_merchant_offer_rule_script")]([SubResource("Resource_offer_static_arcane_crystal")])
+StaticOffers = Array[ExtResource("2_merchant_offer_rule_script")]([SubResource("Resource_offer_static_arcane_crystal"), SubResource("Resource_offer_static_pie"), SubResource("Resource_offer_static_beer")])
 DynamicOffers = Array[ExtResource("2_merchant_offer_rule_script")]([SubResource("Resource_offer_dynamic_boots_common"), SubResource("Resource_offer_dynamic_ring_uncommon"), SubResource("Resource_offer_dynamic_torso_rare"), SubResource("Resource_jv073"), SubResource("Resource_a83an")])

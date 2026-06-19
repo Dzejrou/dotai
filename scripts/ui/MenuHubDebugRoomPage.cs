@@ -207,7 +207,9 @@ public partial class MenuHubDebugRoomPage : Control
         {
             foreach (var option in entry.Definition.ContentOptions)
             {
-                if (option?.ContentScene == null)
+                // Any option with a scene is explicitly selectable here, including zero-weight
+                // options (e.g. Pre-Boss) that are excluded only from random weighted draws.
+                if (option == null || !option.IsConfigured)
                     continue;
 
                 _contentOptions.Add(option);
