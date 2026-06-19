@@ -59,6 +59,7 @@ public partial class Main : Node2D
         {
             _world.Connect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
             _world.Connect(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested)));
+            _world.Connect(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested)));
         }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
@@ -120,6 +121,7 @@ public partial class Main : Node2D
             _menuHubRoot.BindCharacterPage(_player, equipmentController);
             _menuHubRoot.BindSpellBookPage(_player);
             _menuHubRoot.BindDebugRoomPage(_world, CloseMenuHub);
+            _menuHubRoot.BindDungeonPage(_world, CloseMenuHub, TryStartDungeonRunFromHub);
         }
 
         TryLoadFromSave();
@@ -137,6 +139,10 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_world) &&
             _world.IsConnected(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested))))
             _world.Disconnect(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested)));
+
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested))))
+            _world.Disconnect(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested)));
 
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
@@ -233,6 +239,33 @@ public partial class Main : Node2D
             return;
 
         _merchantWindow.Open(_inventoryController, stock);
+    }
+
+    private void OnDungeonEntranceInteractionRequested(Player player)
+    {
+        if (_gameOverActive)
+            return;
+
+        // Interaction-driven entry: open the HUB straight on the Dungeon page and authorize Start
+        // for this HUB session. No run is started here.
+        OpenMenuHub(MenuHubPage.Dungeon);
+        _menuHubRoot?.GrantDungeonEntranceAuthorization();
+    }
+
+    // Bridges the Dungeon page Start request to World. Returns null on success, or an actionable
+    // error string the page shows while the HUB stays open. On success the single-use entrance
+    // authorization is consumed and the HUB is closed/unpaused only after the run actually starts.
+    private string TryStartDungeonRunFromHub(ulong seed, int ordinaryRoomCount, int startingRoomLevel)
+    {
+        if (_world == null || !GodotObject.IsInstanceValid(_world))
+            return "Dungeon runtime is unavailable.";
+
+        if (!_world.TryStartDungeonRun(seed, ordinaryRoomCount, startingRoomLevel, out var error))
+            return string.IsNullOrEmpty(error) ? "Failed to start the dungeon run." : error;
+
+        _menuHubRoot?.ConsumeDungeonEntranceAuthorization();
+        CloseMenuHub();
+        return null;
     }
 
     private void RestartFromGameOver()
@@ -503,9 +536,18 @@ public partial class Main : Node2D
         if (_menuHubOpen)
             CloseMenuHub();
         else
-            OpenMenuHub(MenuHubPage.GameMenu);
+            OpenMenuHub(ResolveEscapeMenuPage());
 
         return true;
+    }
+
+    // Inside an active dungeon run Esc lands on the Dungeon page; otherwise it opens the Game
+    // Menu as before. Spell-cancel keeps priority because it is handled earlier in this method.
+    private MenuHubPage ResolveEscapeMenuPage()
+    {
+        return _world != null && GodotObject.IsInstanceValid(_world) && _world.HasActiveDungeonRun
+            ? MenuHubPage.Dungeon
+            : MenuHubPage.GameMenu;
     }
 
     private bool TryHandleSpellBookInput(InputEvent @event)

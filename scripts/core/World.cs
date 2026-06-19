@@ -57,6 +57,9 @@ public partial class World : Node2D
     [Signal]
     public delegate void MerchantInteractionRequestedEventHandler(MerchantStock stock, Player player);
 
+    [Signal]
+    public delegate void DungeonEntranceInteractionRequestedEventHandler(Player player);
+
     public void RequestMerchantInteraction(MerchantStock stock, Player player)
     {
         if (stock == null || !GodotObject.IsInstanceValid(stock))
@@ -65,6 +68,17 @@ public partial class World : Node2D
             return;
 
         EmitSignal(SignalName.MerchantInteractionRequested, stock, player);
+    }
+
+    // Interaction-only entry point: the entrance-hall dungeon entrance dispatches here when the
+    // player interacts with it. World simply relays the request; Main opens the Dungeon HUB page
+    // and grants entrance authorization. No run is started until the player presses Start.
+    public void RequestDungeonEntranceInteraction(Player player)
+    {
+        if (player == null || !GodotObject.IsInstanceValid(player))
+            return;
+
+        EmitSignal(SignalName.DungeonEntranceInteractionRequested, player);
     }
 
     private Player _player;
@@ -86,7 +100,16 @@ public partial class World : Node2D
     private string _retainedDebugRoomLabel;
     private RoomReturnLocation _debugReturnLocation;
 
+    // Memory-only origin captured when a dungeon run is launched from the HUB, so abandoning or
+    // completing the run restores the exact room/position the player started from.
+    private RoomReturnLocation _dungeonReturnLocation;
+
     public Room ActiveRoom => GodotObject.IsInstanceValid(_activeRoom) ? _activeRoom : null;
+
+    // Read-only access for the Dungeon HUB page (run state, current node, generation defaults).
+    public Dungeon Dungeon => _dungeon != null && GodotObject.IsInstanceValid(_dungeon) ? _dungeon : null;
+
+    public bool HasActiveDungeonRun => Dungeon?.HasActiveRun == true;
 
     public bool IsDebugRoomSessionActive =>
         _debugRoom != null && GodotObject.IsInstanceValid(_debugRoom) && _activeRoom == _debugRoom;
@@ -218,6 +241,16 @@ public partial class World : Node2D
             return;
         }
 
+        // Dungeon return/abandonment doors target a sentinel screen id rather than a concrete
+        // room: resolve it to the captured launch origin, restore position and end the run.
+        if (transition.TargetScreenId == global::Dungeon.ReturnScreenId)
+        {
+            if (TryReturnFromDungeon())
+                _transitionCooldownRemaining = TransitionCooldownSeconds;
+
+            return;
+        }
+
         var previousRoom = _activeRoom;
         if (!TransitionToRoom(transition.TargetScreenId, transition.TargetExitId, transition))
             return;
@@ -250,6 +283,96 @@ public partial class World : Node2D
         ApplyRoomCameraBounds(_activeRoom);
         _activeRoom.OnEnter();
         return true;
+    }
+
+    // Launches a plan-driven dungeon run from the HUB. Captures the current room/position as the
+    // return origin, starts the run on the requested seed/overrides, then enters plan node 0 via
+    // the normal dungeon_runtime transition. The caller only closes the HUB once this returns
+    // true; on failure nothing moves and no return origin is retained.
+    public bool TryStartDungeonRun(ulong seed, int ordinaryRoomCount, int startingRoomLevel, out string error)
+    {
+        error = null;
+
+        if (_dungeon == null || !GodotObject.IsInstanceValid(_dungeon))
+        {
+            error = "Dungeon runtime is unavailable.";
+            return false;
+        }
+
+        // Capture the origin before any state changes so a failed launch leaves it untouched.
+        var returnLocation = CaptureDungeonReturnLocation();
+
+        if (!_dungeon.TryStartRun(seed, ordinaryRoomCount, startingRoomLevel, out error))
+            return false;
+
+        // Enter plan node 0 through the standard dungeon transition. TryCreateRoom reuses the run
+        // just started (it only auto-generates when no plan is active), so the selected settings
+        // are honored exactly and no second random plan is created.
+        if (!TransitionToRoom(global::Dungeon.RuntimeScreenId, default))
+        {
+            // Discard the half-started run so a later stray transition cannot reuse a partial
+            // plan or silently generate a replacement.
+            _dungeon.EndRun();
+            error = "Dungeon run generated but its first room could not be entered.";
+            return false;
+        }
+
+        _dungeonReturnLocation = returnLocation;
+        return true;
+    }
+
+    // Resolves a dungeon return/abandonment door: transitions to the captured launch origin
+    // (entrance-hall fallback), restores the exact launch position, then ends the run.
+    private bool TryReturnFromDungeon()
+    {
+        var returnLocation = _dungeonReturnLocation;
+        var screenId = ResolveDungeonReturnScreenId(returnLocation);
+
+        var previousRoom = _activeRoom;
+        if (!TransitionToRoom(screenId, default))
+            return false;
+
+        // Restore the exact captured position only when returning to the captured origin; an
+        // entrance-hall fallback uses that room's normal spawn instead.
+        if (returnLocation?.PlayerPosition is Vector2 playerPosition &&
+            screenId == returnLocation.ScreenId &&
+            _player != null &&
+            GodotObject.IsInstanceValid(_player))
+        {
+            _player.GlobalPosition = playerPosition;
+            _player.Velocity = Vector2.Zero;
+        }
+
+        // End and clear the run only now that the return transition has succeeded.
+        _dungeon?.OnTransitionCompleted(previousRoom, null, _activeRoom);
+        _dungeonReturnLocation = null;
+        return true;
+    }
+
+    private RoomReturnLocation CaptureDungeonReturnLocation()
+    {
+        var screenId = _activeRoom != null && GodotObject.IsInstanceValid(_activeRoom)
+            ? _activeRoom.ScreenId
+            : default;
+
+        // Origins the registry cannot rebuild (e.g. a transient generated room) fall back to the
+        // entrance hall with no stored position rather than trapping the player on return.
+        if (!HasValue(screenId) || RoomRegistry?.TryGetRoomScene(screenId, out _) != true)
+            return new RoomReturnLocation(InitialScreenId, null);
+
+        var playerPosition = _player != null && GodotObject.IsInstanceValid(_player)
+            ? _player.GlobalPosition
+            : (Vector2?)null;
+        return new RoomReturnLocation(screenId, playerPosition);
+    }
+
+    private StringName ResolveDungeonReturnScreenId(RoomReturnLocation returnLocation)
+    {
+        var screenId = returnLocation?.ScreenId;
+        if (HasValue(screenId) && RoomRegistry?.TryGetRoomScene(screenId, out _) == true)
+            return screenId;
+
+        return InitialScreenId;
     }
 
     public bool TryEnterDebugRoom(RoomTemplateDefinition definition, RoomContentOption contentOption, bool useExternalContent, bool keepInstance, int level)

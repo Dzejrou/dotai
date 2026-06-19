@@ -11,6 +11,7 @@ public static class GameSettings
     public const bool DefaultLockCombatLogPosition = true;
     public const bool DefaultGodMode = false;
     public const bool DefaultOneHitKill = false;
+    public const bool DefaultDungeonAnywhere = false;
     public static readonly Vector2 DefaultCombatLogPosition = Vector2.Zero;
 
     private static bool _showActorNames = DefaultShowActorNames;
@@ -20,6 +21,7 @@ public static class GameSettings
     private static bool _lockCombatLogPosition = DefaultLockCombatLogPosition;
     private static bool _godMode = DefaultGodMode;
     private static bool _oneHitKill = DefaultOneHitKill;
+    private static bool _dungeonAnywhere = DefaultDungeonAnywhere;
     private static Vector2 _combatLogPosition = DefaultCombatLogPosition;
     private static bool _combatLogPositionCustomized;
 
@@ -30,6 +32,7 @@ public static class GameSettings
     public static bool LockCombatLogPosition => _lockCombatLogPosition;
     public static bool GodMode => _godMode;
     public static bool OneHitKill => _oneHitKill;
+    public static bool DungeonAnywhere => _dungeonAnywhere;
     public static Vector2 CombatLogPosition => _combatLogPosition;
     public static bool CombatLogPositionCustomized => _combatLogPositionCustomized;
 
@@ -40,6 +43,7 @@ public static class GameSettings
     public static event Action<bool> LockCombatLogPositionChanged;
     public static event Action<bool> GodModeChanged;
     public static event Action<bool> OneHitKillChanged;
+    public static event Action<bool> DungeonAnywhereChanged;
     public static event Action<Vector2> CombatLogPositionChanged;
 
     public static void SetShowActorNames(bool value)
@@ -103,6 +107,15 @@ public static class GameSettings
 
         _oneHitKill = value;
         OneHitKillChanged?.Invoke(value);
+    }
+
+    public static void SetDungeonAnywhere(bool value)
+    {
+        if (_dungeonAnywhere == value)
+            return;
+
+        _dungeonAnywhere = value;
+        DungeonAnywhereChanged?.Invoke(value);
     }
 
     public static void SetCombatLogPosition(Vector2 value, bool customized)

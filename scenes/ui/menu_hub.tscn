@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/MenuHub.cs" id="1_menu_hub"]
 [ext_resource type="Script" path="res://scripts/ui/MenuHubInventoryPage.cs" id="2_inventory_page"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/ui/MenuHubLogPage.cs" id="5_log_page"]
 [ext_resource type="Script" path="res://scripts/ui/MenuHubDebugRoomPage.cs" id="6_debug_room_page"]
 [ext_resource type="Resource" path="res://resources/debug/debug_room_catalog.tres" id="7_debug_room_catalog"]
+[ext_resource type="Script" path="res://scripts/ui/MenuHubDungeonPage.cs" id="8_dungeon_page"]
 
 [node name="MenuHub" type="CanvasLayer"]
 layer = 200
@@ -430,6 +431,136 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "Save"
 
+[node name="DungeonPage" type="Control" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("8_dungeon_page")
+
+[node name="Margin" type="MarginContainer" parent="Root/DungeonPage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 72
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="Root/DungeonPage/Margin"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Root/DungeonPage/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Dungeon"
+
+[node name="ConfigView" type="VBoxContainer" parent="Root/DungeonPage/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RoomsRow" type="HBoxContainer" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RoomsLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ConfigView/RoomsRow"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "Rooms"
+
+[node name="RoomsSpinBox" type="SpinBox" parent="Root/DungeonPage/Margin/VBox/ConfigView/RoomsRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+max_value = 100.0
+rounded = true
+
+[node name="StartingLevelRow" type="HBoxContainer" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StartingLevelLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ConfigView/StartingLevelRow"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "Starting Level"
+
+[node name="StartingLevelSpinBox" type="SpinBox" parent="Root/DungeonPage/Margin/VBox/ConfigView/StartingLevelRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+min_value = 1.0
+max_value = 100.0
+value = 1.0
+rounded = true
+
+[node name="SeedRow" type="HBoxContainer" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SeedLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ConfigView/SeedRow"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "Seed"
+
+[node name="SeedLineEdit" type="LineEdit" parent="Root/DungeonPage/Margin/VBox/ConfigView/SeedRow"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "0 - 18446744073709551615"
+
+[node name="SeedButtonsRow" type="HBoxContainer" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RandomizeSeedButton" type="Button" parent="Root/DungeonPage/Margin/VBox/ConfigView/SeedButtonsRow"]
+layout_mode = 2
+text = "Randomize Seed"
+
+[node name="StartButton" type="Button" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
+layout_mode = 2
+text = "Start Dungeon"
+
+[node name="StatusLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
+custom_minimum_size = Vector2(480, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "Ready to start."
+
+[node name="ActiveView" type="VBoxContainer" parent="Root/DungeonPage/Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ActiveSeedLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ActiveView"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Seed: -"
+
+[node name="ProgressLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ActiveView"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Room - / -"
+
+[node name="ActiveLevelLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ActiveView"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Level: -"
+
+[node name="ResumeButton" type="Button" parent="Root/DungeonPage/Margin/VBox/ActiveView"]
+layout_mode = 2
+text = "Resume"
+
 [node name="LogPage" type="Control" parent="Root"]
 visible = false
 layout_mode = 1
@@ -549,6 +680,10 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Debug Room Launcher"
 
+[node name="DungeonAnywhereToggle" type="CheckBox" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+text = "Dungeon Anywhere"
+
 [node name="RoomRow" type="HBoxContainer" parent="Root/DebugPage/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
@@ -665,6 +800,11 @@ text = "Inventory & Equipment"
 layout_mode = 2
 focus_mode = 0
 text = "Spell Book"
+
+[node name="DungeonButton" type="Button" parent="Root/NavRow"]
+layout_mode = 2
+focus_mode = 0
+text = "Dungeon"
 
 [node name="GameMenuButton" type="Button" parent="Root/NavRow"]
 layout_mode = 2

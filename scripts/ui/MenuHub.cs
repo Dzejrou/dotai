@@ -8,6 +8,7 @@ public enum MenuHubPage
     Inventory,
     Character,
     SpellBook,
+    Dungeon,
     Log,
     Debug,
 }
@@ -53,6 +54,14 @@ public partial class MenuHub : Control
 
     [Export]
     public NodePath DebugRoomPagePath { get; set; } = new NodePath("DebugPage");
+
+    [Export]
+    public NodePath DungeonPagePath { get; set; } = new NodePath("DungeonPage");
+
+    // The Dungeon Anywhere checkbox lives on the Debug page, but it is wired here so the
+    // MenuHub-owned GameConfigStore stays the single persistence owner for all settings.
+    [Export]
+    public NodePath DungeonAnywhereTogglePath { get; set; } = new NodePath("DebugPage/Margin/VBox/DungeonAnywhereToggle");
 
     [Export]
     public NodePath GameMenuPagePath { get; set; } = new NodePath("Center/Panel/Pages/GameMenuPage");
@@ -127,6 +136,9 @@ public partial class MenuHub : Control
     public NodePath NavSpellBookButtonPath { get; set; } = new NodePath("NavRow/SpellBookButton");
 
     [Export]
+    public NodePath NavDungeonButtonPath { get; set; } = new NodePath("NavRow/DungeonButton");
+
+    [Export]
     public NodePath NavGameMenuButtonPath { get; set; } = new NodePath("NavRow/GameMenuButton");
 
     [Export]
@@ -140,6 +152,7 @@ public partial class MenuHub : Control
         MenuHubPage.Character,
         MenuHubPage.Inventory,
         MenuHubPage.SpellBook,
+        MenuHubPage.Dungeon,
         MenuHubPage.GameMenu,
         MenuHubPage.Log,
         MenuHubPage.Debug,
@@ -155,6 +168,7 @@ public partial class MenuHub : Control
     private MenuHubSpellBookPage _spellBookPage;
     private MenuHubLogPage _logPage;
     private MenuHubDebugRoomPage _debugRoomPage;
+    private MenuHubDungeonPage _dungeonPage;
     private Control _gameMenuPage;
     private Control _mainView;
     private Control _settingsView;
@@ -179,10 +193,16 @@ public partial class MenuHub : Control
     private Button _navCharacterButton;
     private Button _navInventoryButton;
     private Button _navSpellBookButton;
+    private Button _navDungeonButton;
     private Button _navGameMenuButton;
     private Button _navLogButton;
     private Button _navDebugButton;
+    private BaseButton _dungeonAnywhereToggle;
     private int _windowPresetIndex;
+
+    // Per-HUB-session entrance authorization, granted by the entrance interaction. It survives
+    // page navigation, is cleared whenever the HUB closes, and is consumed on a successful start.
+    private bool _dungeonEntranceAuthorized;
 
     public bool IsOpen => Visible;
 
@@ -198,6 +218,8 @@ public partial class MenuHub : Control
 
     public MenuHubDebugRoomPage DebugRoomPage => _debugRoomPage;
 
+    public MenuHubDungeonPage DungeonPage => _dungeonPage;
+
     public override void _Ready()
     {
         ProcessMode = ProcessModeEnum.Always;
@@ -210,6 +232,7 @@ public partial class MenuHub : Control
         _spellBookPage = GetNodeOrNull<MenuHubSpellBookPage>(SpellBookPagePath);
         _logPage = GetNodeOrNull<MenuHubLogPage>(LogPagePath);
         _debugRoomPage = GetNodeOrNull<MenuHubDebugRoomPage>(DebugRoomPagePath);
+        _dungeonPage = GetNodeOrNull<MenuHubDungeonPage>(DungeonPagePath);
         _gameMenuPage = GetNodeOrNull<Control>(GameMenuPagePath);
         _mainView = GetNodeOrNull<Control>(MainViewPath);
         _settingsView = GetNodeOrNull<Control>(SettingsViewPath);
@@ -234,9 +257,11 @@ public partial class MenuHub : Control
         _navCharacterButton = GetNodeOrNull<Button>(NavCharacterButtonPath);
         _navInventoryButton = GetNodeOrNull<Button>(NavInventoryButtonPath);
         _navSpellBookButton = GetNodeOrNull<Button>(NavSpellBookButtonPath);
+        _navDungeonButton = GetNodeOrNull<Button>(NavDungeonButtonPath);
         _navGameMenuButton = GetNodeOrNull<Button>(NavGameMenuButtonPath);
         _navLogButton = GetNodeOrNull<Button>(NavLogButtonPath);
         _navDebugButton = GetNodeOrNull<Button>(NavDebugButtonPath);
+        _dungeonAnywhereToggle = GetNodeOrNull<BaseButton>(DungeonAnywhereTogglePath);
 
         if (_resumeButton != null)
             _resumeButton.Pressed += OnResumePressed;
@@ -298,6 +323,12 @@ public partial class MenuHub : Control
             _oneHitKillToggle.Toggled += OnOneHitKillToggled;
         }
 
+        if (_dungeonAnywhereToggle != null)
+        {
+            _dungeonAnywhereToggle.ButtonPressed = GameSettings.DungeonAnywhere;
+            _dungeonAnywhereToggle.Toggled += OnDungeonAnywhereToggled;
+        }
+
         if (_windowSizeSmallerButton != null)
             _windowSizeSmallerButton.Pressed += OnWindowSizeSmallerPressed;
 
@@ -318,6 +349,9 @@ public partial class MenuHub : Control
 
         if (_navSpellBookButton != null)
             _navSpellBookButton.Pressed += OnNavSpellBookPressed;
+
+        if (_navDungeonButton != null)
+            _navDungeonButton.Pressed += OnNavDungeonPressed;
 
         if (_navGameMenuButton != null)
             _navGameMenuButton.Pressed += OnNavGameMenuPressed;
@@ -376,6 +410,9 @@ public partial class MenuHub : Control
         if (_oneHitKillToggle != null)
             _oneHitKillToggle.Toggled -= OnOneHitKillToggled;
 
+        if (_dungeonAnywhereToggle != null)
+            _dungeonAnywhereToggle.Toggled -= OnDungeonAnywhereToggled;
+
         if (_windowSizeSmallerButton != null)
             _windowSizeSmallerButton.Pressed -= OnWindowSizeSmallerPressed;
 
@@ -397,6 +434,9 @@ public partial class MenuHub : Control
         if (_navSpellBookButton != null)
             _navSpellBookButton.Pressed -= OnNavSpellBookPressed;
 
+        if (_navDungeonButton != null)
+            _navDungeonButton.Pressed -= OnNavDungeonPressed;
+
         if (_navGameMenuButton != null)
             _navGameMenuButton.Pressed -= OnNavGameMenuPressed;
 
@@ -410,6 +450,11 @@ public partial class MenuHub : Control
     public override void _Input(InputEvent @event)
     {
         if (!Visible)
+            return;
+
+        // While a text field (the dungeon seed) is focused, let A/D edit the text instead of
+        // hijacking it for page navigation.
+        if (GetViewport().GuiGetFocusOwner() is LineEdit)
             return;
 
         if (@event.IsActionPressed("move_left"))
@@ -436,6 +481,28 @@ public partial class MenuHub : Control
     {
         Visible = false;
         _inventoryPage?.OnHubClosed();
+
+        // Closing the HUB without starting clears entrance authorization, so reopening it
+        // elsewhere (e.g. via Esc) never carries stale permission to start.
+        SetDungeonEntranceAuthorized(false);
+    }
+
+    // Granted by the entrance interaction (relayed through Main) for the current HUB session.
+    public void GrantDungeonEntranceAuthorization()
+    {
+        SetDungeonEntranceAuthorized(true);
+    }
+
+    // Consumed by Main on a successful start so the permission is single-use.
+    public void ConsumeDungeonEntranceAuthorization()
+    {
+        SetDungeonEntranceAuthorized(false);
+    }
+
+    private void SetDungeonEntranceAuthorized(bool authorized)
+    {
+        _dungeonEntranceAuthorized = authorized;
+        _dungeonPage?.SetEntranceAuthorized(authorized);
     }
 
     public void SwitchTo(MenuHubPage page)
@@ -468,6 +535,12 @@ public partial class MenuHub : Control
     public void BindDebugRoomPage(World world, Action roomEntered)
     {
         _debugRoomPage?.Bind(world, roomEntered);
+    }
+
+    public void BindDungeonPage(World world, Action resume, Func<ulong, int, int, string> startDungeon)
+    {
+        _dungeonPage?.Bind(world, resume, startDungeon);
+        _dungeonPage?.SetEntranceAuthorized(_dungeonEntranceAuthorized);
     }
 
     public void SetInventoryPageWorldDropHandlers(Action<int, int> inventoryDrop, Action<GearInstance> gearDrop)
@@ -548,6 +621,14 @@ public partial class MenuHub : Control
     private void OnOneHitKillToggled(bool pressed)
     {
         GameSettings.SetOneHitKill(pressed);
+        PersistSettings();
+    }
+
+    private void OnDungeonAnywhereToggled(bool pressed)
+    {
+        // Persist immediately through the single MenuHub-owned config store. The Dungeon page
+        // refreshes its own Start availability via GameSettings.DungeonAnywhereChanged.
+        GameSettings.SetDungeonAnywhere(pressed);
         PersistSettings();
     }
 
@@ -636,6 +717,9 @@ public partial class MenuHub : Control
         if (_spellBookPage != null)
             _spellBookPage.Visible = page == MenuHubPage.SpellBook;
 
+        if (_dungeonPage != null)
+            _dungeonPage.Visible = page == MenuHubPage.Dungeon;
+
         if (_logPage != null)
             _logPage.Visible = page == MenuHubPage.Log;
 
@@ -650,6 +734,9 @@ public partial class MenuHub : Control
 
         if (page == MenuHubPage.SpellBook)
             _spellBookPage?.OnPageEntered();
+
+        if (page == MenuHubPage.Dungeon)
+            _dungeonPage?.OnPageEntered();
 
         if (page == MenuHubPage.Log)
             _logPage?.OnPageEntered();
@@ -680,6 +767,7 @@ public partial class MenuHub : Control
         ApplyNavTint(_navCharacterButton, CurrentPage == MenuHubPage.Character);
         ApplyNavTint(_navInventoryButton, CurrentPage == MenuHubPage.Inventory);
         ApplyNavTint(_navSpellBookButton, CurrentPage == MenuHubPage.SpellBook);
+        ApplyNavTint(_navDungeonButton, CurrentPage == MenuHubPage.Dungeon);
         ApplyNavTint(_navGameMenuButton, CurrentPage == MenuHubPage.GameMenu);
         ApplyNavTint(_navLogButton, CurrentPage == MenuHubPage.Log);
         ApplyNavTint(_navDebugButton, CurrentPage == MenuHubPage.Debug);
@@ -716,6 +804,11 @@ public partial class MenuHub : Control
     private void OnNavSpellBookPressed()
     {
         SwitchTo(MenuHubPage.SpellBook);
+    }
+
+    private void OnNavDungeonPressed()
+    {
+        SwitchTo(MenuHubPage.Dungeon);
     }
 
     private void OnNavGameMenuPressed()
