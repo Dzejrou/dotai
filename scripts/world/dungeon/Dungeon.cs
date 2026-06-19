@@ -9,10 +9,18 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class Dungeon : Node
 {
-    private static readonly StringName DungeonRuntimeScreenId = "dungeon_runtime";
+    // Screen id that routes a transition into plan-driven dungeon traversal.
+    public static readonly StringName RuntimeScreenId = "dungeon_runtime";
+
+    // Sentinel screen id used by dungeon return/abandonment doors. World resolves it to the
+    // captured launch-origin room (with an entrance-hall fallback) and ends the run.
+    public static readonly StringName ReturnScreenId = "dungeon_return";
+
     private static readonly StringName SouthReturnExitId = "south_return";
-    private static readonly StringName EntranceHallScreenId = "entrance_hall";
-    private static readonly StringName EntranceHallReturnExitId = "north_center";
+    private static readonly StringName BossReturnExitId = "north_center";
+
+    [Signal]
+    public delegate void RunStateChangedEventHandler();
 
     // The only generation source: the plan is produced from this resource. The legacy
     // live-random exports were removed in favor of plan-driven traversal.
@@ -51,7 +59,7 @@ public partial class Dungeon : Node
     public bool TryCreateRoom(StringName screenId, Room currentRoom, RoomTransition sourceTransition, StringName entryExitId, out Room room)
     {
         room = null;
-        if (screenId != DungeonRuntimeScreenId)
+        if (screenId != RuntimeScreenId)
             return false;
 
         // The first transition into the dungeon from outside starts a fresh, randomly seeded
@@ -75,6 +83,7 @@ public partial class Dungeon : Node
         _activeNodeId = targetNode.Id;
         ConfigureRoomDoors(targetRoom, targetNode);
         room = targetRoom;
+        EmitSignal(SignalName.RunStateChanged);
         return true;
     }
 
@@ -126,11 +135,14 @@ public partial class Dungeon : Node
         _activePlan = result.Plan;
         _runSeed = seed;
         _activeNodeId = null;
+        EmitSignal(SignalName.RunStateChanged);
         return true;
     }
 
     public void EndRun()
     {
+        var hadActiveRun = _activePlan != null;
+
         foreach (var cached in _roomsByNodeId.Values)
         {
             if (cached == null || !GodotObject.IsInstanceValid(cached))
@@ -149,6 +161,9 @@ public partial class Dungeon : Node
         _activePlan = null;
         _activeNodeId = null;
         _runSeed = 0;
+
+        if (hadActiveRun)
+            EmitSignal(SignalName.RunStateChanged);
     }
 
     private bool TryResolveTargetNode(RoomTransition sourceTransition, out DungeonRoomNode targetNode, out string error)
@@ -258,14 +273,19 @@ public partial class Dungeon : Node
         foreach (var edge in node.Edges)
         {
             if (edge != null && HasValue(edge.SourceExitId))
-                ConfigureDoorTarget(room, edge.SourceExitId, DungeonRuntimeScreenId, SouthReturnExitId);
+                ConfigureDoorTarget(room, edge.SourceExitId, RuntimeScreenId, SouthReturnExitId);
         }
 
-        // Return door: preserve the existing abandonment wiring for the room types that have
-        // one (Combat, Special). Timed rooms have no return door, and the Boss room keeps its
-        // own scene door (post-victory return to the entrance hall).
+        // Return/abandonment doors route to the dungeon-return sentinel so World restores the
+        // captured launch origin (and exact player position) and then ends the run:
+        //  - Combat/Special abandon through their south_return door.
+        //  - The Boss room's post-victory north_center door returns the same way instead of
+        //    always going back to the entrance hall.
+        // Timed rooms have no abandonment door, so they are intentionally left untouched.
         if (room is CombatDungeonRoom || room is SpecialDungeonRoom)
-            ConfigureDoorTarget(room, SouthReturnExitId, EntranceHallScreenId, EntranceHallReturnExitId);
+            ConfigureDoorTarget(room, SouthReturnExitId, ReturnScreenId, default);
+        else if (room is BossRoom)
+            ConfigureDoorTarget(room, BossReturnExitId, ReturnScreenId, default);
     }
 
     private static void ConfigureDoorTarget(Room room, StringName exitId, StringName targetScreenId, StringName targetExitId)

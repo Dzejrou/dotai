@@ -18,6 +18,7 @@ public sealed class GameConfigStore
     private const string LockCombatLogPositionFieldName = "lockCombatLogPosition";
     private const string GodModeFieldName = "godMode";
     private const string OneHitKillFieldName = "oneHitKill";
+    private const string DungeonAnywhereFieldName = "dungeonAnywhere";
     private const string CombatLogPositionFieldName = "combatLogPosition";
     private const string CombatLogPositionXFieldName = "x";
     private const string CombatLogPositionYFieldName = "y";
@@ -138,6 +139,7 @@ public sealed class GameConfigStore
         var lockCombatLogPosition = GameSettings.DefaultLockCombatLogPosition;
         var godMode = GameSettings.DefaultGodMode;
         var oneHitKill = GameSettings.DefaultOneHitKill;
+        var dungeonAnywhere = GameSettings.DefaultDungeonAnywhere;
         var combatLogPosition = GameSettings.DefaultCombatLogPosition;
         var combatLogPositionCustomized = false;
 
@@ -152,6 +154,9 @@ public sealed class GameConfigStore
             lockCombatLogPosition = ReadBoolSetting(settingsObject, LockCombatLogPositionFieldName, lockCombatLogPosition);
             godMode = ReadBoolSetting(settingsObject, GodModeFieldName, godMode);
             oneHitKill = ReadBoolSetting(settingsObject, OneHitKillFieldName, oneHitKill);
+            // Additive optional field: configs written before Dungeon Anywhere existed simply
+            // lack it and fall back to the default. No config schema version bump is needed.
+            dungeonAnywhere = ReadBoolSetting(settingsObject, DungeonAnywhereFieldName, dungeonAnywhere);
             combatLogPositionCustomized = TryReadVector2Setting(
                 settingsObject, CombatLogPositionFieldName, out var parsedPosition);
             if (combatLogPositionCustomized)
@@ -170,6 +175,7 @@ public sealed class GameConfigStore
         GameSettings.SetLockCombatLogPosition(lockCombatLogPosition);
         GameSettings.SetGodMode(godMode);
         GameSettings.SetOneHitKill(oneHitKill);
+        GameSettings.SetDungeonAnywhere(dungeonAnywhere);
         GameSettings.SetCombatLogPosition(combatLogPosition, combatLogPositionCustomized);
     }
 
@@ -197,6 +203,7 @@ public sealed class GameConfigStore
             [LockCombatLogPositionFieldName] = GameSettings.LockCombatLogPosition,
             [GodModeFieldName] = GameSettings.GodMode,
             [OneHitKillFieldName] = GameSettings.OneHitKill,
+            [DungeonAnywhereFieldName] = GameSettings.DungeonAnywhere,
         };
 
         if (GameSettings.CombatLogPositionCustomized)

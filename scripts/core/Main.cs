@@ -59,6 +59,7 @@ public partial class Main : Node2D
         {
             _world.Connect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
             _world.Connect(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested)));
+            _world.Connect(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested)));
         }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
@@ -120,6 +121,7 @@ public partial class Main : Node2D
             _menuHubRoot.BindCharacterPage(_player, equipmentController);
             _menuHubRoot.BindSpellBookPage(_player);
             _menuHubRoot.BindDebugRoomPage(_world, CloseMenuHub);
+            _menuHubRoot.BindDungeonPage(_world, CloseMenuHub, TryStartDungeonRunFromHub, TryGiveUpDungeonRunFromHub);
         }
 
         TryLoadFromSave();
@@ -137,6 +139,10 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_world) &&
             _world.IsConnected(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested))))
             _world.Disconnect(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested)));
+
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested))))
+            _world.Disconnect(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested)));
 
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
@@ -169,7 +175,12 @@ public partial class Main : Node2D
 
     public override void _Input(InputEvent @event)
     {
-        if (TryHandleNavigationDebugInput(@event))
+        // While a HUB text field (the dungeon seed) is focused, single-key global shortcuts must
+        // not fire so the keys (including letters and digits) reach the field. Esc is still
+        // handled below so the HUB can always be closed/cancelled.
+        var textFieldFocused = IsHubTextFieldFocused();
+
+        if (!textFieldFocused && TryHandleNavigationDebugInput(@event))
             return;
 
         if (_gameOverActive && !_restartingFromGameOver)
@@ -180,16 +191,25 @@ public partial class Main : Node2D
             return;
         }
 
-        if (TryHandleSpellBookInput(@event))
+        if (!textFieldFocused && TryHandleSpellBookInput(@event))
             return;
 
-        if (TryHandleInventoryInput(@event))
+        if (!textFieldFocused && TryHandleInventoryInput(@event))
             return;
 
-        if (TryHandleCharacterWindowInput(@event))
+        if (!textFieldFocused && TryHandleCharacterWindowInput(@event))
             return;
 
-        TryHandleMenuHubInput(@event);
+        TryHandleMenuHubInput(@event, textFieldFocused);
+    }
+
+    // A focused, visible LineEdit means the player is typing in the HUB (the dungeon seed). The
+    // visibility check keeps a hidden-but-still-focused field (closed HUB / other page) from
+    // suppressing normal gameplay shortcuts.
+    private bool IsHubTextFieldFocused()
+    {
+        var focusOwner = GetViewport()?.GuiGetFocusOwner();
+        return focusOwner is LineEdit lineEdit && lineEdit.IsVisibleInTree();
     }
 
     public override void _Process(double delta)
@@ -233,6 +253,48 @@ public partial class Main : Node2D
             return;
 
         _merchantWindow.Open(_inventoryController, stock);
+    }
+
+    private void OnDungeonEntranceInteractionRequested(Player player)
+    {
+        if (_gameOverActive)
+            return;
+
+        // Interaction-driven entry: open the HUB straight on the Dungeon page and authorize Start
+        // for this HUB session. No run is started here.
+        OpenMenuHub(MenuHubPage.Dungeon);
+        _menuHubRoot?.GrantDungeonEntranceAuthorization();
+    }
+
+    // Bridges the Dungeon page Start request to World. Returns null on success, or an actionable
+    // error string the page shows while the HUB stays open. On success the single-use entrance
+    // authorization is consumed and the HUB is closed/unpaused only after the run actually starts.
+    private string TryStartDungeonRunFromHub(ulong seed, int ordinaryRoomCount, int startingRoomLevel)
+    {
+        if (_world == null || !GodotObject.IsInstanceValid(_world))
+            return "Dungeon runtime is unavailable.";
+
+        if (!_world.TryStartDungeonRun(seed, ordinaryRoomCount, startingRoomLevel, out var error))
+            return string.IsNullOrEmpty(error) ? "Failed to start the dungeon run." : error;
+
+        _menuHubRoot?.ConsumeDungeonEntranceAuthorization();
+        CloseMenuHub();
+        return null;
+    }
+
+    // Bridges the Dungeon page Give Up request to World. Returns null on success, or an actionable
+    // error the page shows while the HUB stays open. The HUB is closed/unpaused only once the run
+    // has been abandoned through the captured-origin return and the run is cleared.
+    private string TryGiveUpDungeonRunFromHub()
+    {
+        if (_world == null || !GodotObject.IsInstanceValid(_world))
+            return "Dungeon runtime is unavailable.";
+
+        if (!_world.TryGiveUpDungeonRun(out var error))
+            return string.IsNullOrEmpty(error) ? "Failed to give up the dungeon run." : error;
+
+        CloseMenuHub();
+        return null;
     }
 
     private void RestartFromGameOver()
@@ -462,20 +524,26 @@ public partial class Main : Node2D
         _interactionPrompt.GlobalPosition = promptPosition;
     }
 
-    private bool TryHandleMenuHubInput(InputEvent @event)
+    private bool TryHandleMenuHubInput(InputEvent @event, bool textFieldFocused)
     {
         if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
             return false;
 
         if (keyEvent.PhysicalKeycode == Key.P)
         {
+            // Typing into a HUB text field takes the key.
+            if (textFieldFocused)
+                return false;
+
+            // P is an unrelated global shortcut: while the HUB is open it must not close the HUB
+            // or open the debug tray. It only toggles the debug tray when the HUB is closed.
+            if (_menuHubOpen)
+                return true;
+
             if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
                 CloseDebugTray();
             else
-            {
-                CloseMenuHub();
                 OpenDebugTray();
-            }
 
             return true;
         }
@@ -503,9 +571,18 @@ public partial class Main : Node2D
         if (_menuHubOpen)
             CloseMenuHub();
         else
-            OpenMenuHub(MenuHubPage.GameMenu);
+            OpenMenuHub(ResolveEscapeMenuPage());
 
         return true;
+    }
+
+    // Inside an active dungeon run Esc lands on the Dungeon page; otherwise it opens the Game
+    // Menu as before. Spell-cancel keeps priority because it is handled earlier in this method.
+    private MenuHubPage ResolveEscapeMenuPage()
+    {
+        return _world != null && GodotObject.IsInstanceValid(_world) && _world.HasActiveDungeonRun
+            ? MenuHubPage.Dungeon
+            : MenuHubPage.GameMenu;
     }
 
     private bool TryHandleSpellBookInput(InputEvent @event)

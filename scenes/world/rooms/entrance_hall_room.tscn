@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://cwll3jdh81fn4" path="res://scenes/world/doors/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://bvpoidanjqur5" path="res://scenes/actors/neutrals/dryad.tscn" id="4_dryad"]
 [ext_resource type="Script" uid="uid://by68ickcdy8vn" path="res://scripts/world/interactions/LevelUnlockInteraction.cs" id="5_lvlul"]
+[ext_resource type="Script" uid="uid://g7v1fkjiq04s" path="res://scripts/world/DungeonEntrance.cs" id="6_dungeon_entrance"]
+[ext_resource type="Script" uid="uid://trlyi2vvrkfd" path="res://scripts/world/interactions/DungeonEntranceInteraction.cs" id="7_dungeon_entrance_interaction"]
 
 [sub_resource type="NavigationPolygon" id="9_room_navigation"]
 vertices = PackedVector2Array(0, 0, 400, 0, 400, 400, 0, 400)
@@ -90,12 +92,12 @@ shape = SubResource("8_plinth")
 
 [node name="Exits" type="Node2D" parent="Scaled" unique_id=66040200]
 
-[node name="NorthCenterDoor" parent="Scaled/Exits" unique_id=1157858098 instance=ExtResource("3_door")]
+[node name="DungeonEntrance" type="Node2D" parent="Scaled/Exits"]
 position = Vector2(200, 91)
-ExitId = &"north_center"
-TargetScreenId = &"dungeon_runtime"
-TargetExitId = &"south_return"
-Direction = &"north"
+script = ExtResource("6_dungeon_entrance")
+
+[node name="DungeonEntranceInteraction" type="Node" parent="Scaled/Exits/DungeonEntrance"]
+script = ExtResource("7_dungeon_entrance_interaction")
 
 [node name="SouthCenterDoor" parent="Scaled/Exits" unique_id=1881665610 instance=ExtResource("3_door")]
 position = Vector2(200, 321)
