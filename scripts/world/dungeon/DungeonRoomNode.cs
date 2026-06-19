@@ -23,7 +23,9 @@ public sealed class DungeonRoomNode
         Definition = definition;
         ContentOption = contentOption;
         Level = level;
-        Edges = edges ?? Array.Empty<DungeonRoomEdge>();
+        // Defensive copy behind a genuinely read-only wrapper: the caller's list can keep
+        // mutating after construction, and a downcast of Edges must not reach a mutable list.
+        Edges = new List<DungeonRoomEdge>(edges ?? Array.Empty<DungeonRoomEdge>()).AsReadOnly();
     }
 
     // Stable identity, independent of position so future graph routes can reference nodes

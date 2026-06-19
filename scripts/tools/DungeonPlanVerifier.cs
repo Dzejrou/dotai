@@ -61,6 +61,8 @@ public partial class DungeonPlanVerifier : Node
         Check("requested overrides change ordinary-room count", OverrideChangesCount(rules));
 
         Check("missing required content fails without a partial plan", MissingContentFailsCleanly(rules));
+
+        Check("a rollable room kind without selectable content fails cleanly", RollableKindWithoutContentFailsCleanly(rules));
     }
 
     private DungeonRunPlan RequirePlan(DungeonGenerationRules rules, ulong seed)
@@ -199,6 +201,27 @@ public partial class DungeonPlanVerifier : Node
         var emptyCase = !empty.Succeeded && empty.Plan == null && !string.IsNullOrEmpty(empty.Error);
 
         return bossCase && emptyCase;
+    }
+
+    private bool RollableKindWithoutContentFailsCleanly(DungeonGenerationRules rules)
+    {
+        // A combat definition with a room scene but no positive-weight content option must
+        // fail generation rather than produce a plan with an empty combat encounter.
+        PackedScene combatScene = null;
+        if (rules.CombatRoomDefinitions != null && rules.CombatRoomDefinitions.Count > 0)
+            combatScene = rules.CombatRoomDefinitions[0]?.RoomScene;
+
+        var emptyCombatDefinition = new RoomTemplateDefinition { RoomScene = combatScene };
+        var brokenRules = new DungeonGenerationRules
+        {
+            SpecialRoomDefinition = rules.SpecialRoomDefinition,
+            BossRoomDefinition = rules.BossRoomDefinition,
+            TimedRoomDefinitions = rules.TimedRoomDefinitions,
+            CombatRoomDefinitions = new Godot.Collections.Array<RoomTemplateDefinition> { emptyCombatDefinition },
+        };
+
+        var result = _generator.Generate(brokenRules, 1);
+        return !result.Succeeded && result.Plan == null && !string.IsNullOrEmpty(result.Error);
     }
 
     private static string OrdinaryKindSequence(DungeonRunPlan plan)

@@ -15,7 +15,10 @@ public sealed class DungeonRunPlan
     public DungeonRunPlan(ulong seed, IReadOnlyList<DungeonRoomNode> nodes)
     {
         Seed = seed;
+        // Defensive copy behind a genuinely read-only wrapper so the plan cannot be mutated
+        // through Nodes (e.g. by downcasting to List) after construction.
         _nodes = nodes != null ? new List<DungeonRoomNode>(nodes) : new List<DungeonRoomNode>();
+        Nodes = _nodes.AsReadOnly();
 
         foreach (var node in _nodes)
         {
@@ -27,7 +30,7 @@ public sealed class DungeonRunPlan
     // Seed the plan was generated from; enough (with the rules) to reproduce it.
     public ulong Seed { get; }
 
-    public IReadOnlyList<DungeonRoomNode> Nodes => _nodes;
+    public IReadOnlyList<DungeonRoomNode> Nodes { get; }
 
     public int Length => _nodes.Count;
 

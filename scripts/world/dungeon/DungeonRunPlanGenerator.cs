@@ -122,6 +122,12 @@ public sealed class DungeonRunPlanGenerator
                 }
 
                 var content = definition.PickContentOption(rng);
+                if (content == null)
+                {
+                    error = $"Combat room at index {index} has no positive-weight content option.";
+                    return false;
+                }
+
                 var edges = new List<DungeonRoomEdge>
                 {
                     new(CombatTopLeftExitId, nextNodeId, levelDelta),
@@ -141,6 +147,12 @@ public sealed class DungeonRunPlanGenerator
                 }
 
                 var content = definition.PickContentOption(rng);
+                if (content == null)
+                {
+                    error = $"Timed room at index {index} has no positive-weight content option.";
+                    return false;
+                }
+
                 node = new DungeonRoomNode(NodeId(index), index, kind, definition, content, level, SingleProgressionEdge(nextNodeId, levelDelta));
                 return true;
             }
@@ -235,7 +247,9 @@ public sealed class DungeonRunPlanGenerator
         {
             foreach (var definition in definitions)
             {
-                if (definition?.RoomScene != null)
+                // Only draw definitions that can actually yield a populated room, so a node
+                // can never end up with null content.
+                if (IsFullyUsableDefinition(definition))
                     valid.Add(definition);
             }
         }
@@ -291,12 +305,13 @@ public sealed class DungeonRunPlanGenerator
         if (ordinaryRoomCount <= 0)
             return;
 
-        // Combat is the base/fallback ordinary kind, so it must always be satisfiable.
-        if (!HasValidDefinition(rules.CombatRoomDefinitions))
-            errors.Add("No valid combat room definition is configured for ordinary rooms.");
+        // Combat is the base/fallback ordinary kind, so it must always be satisfiable with a
+        // room scene and at least one positive-weight content option.
+        if (!HasFullyUsableDefinition(rules.CombatRoomDefinitions))
+            errors.Add("No combat room definition with a room scene and a positive-weight content option is configured for ordinary rooms.");
 
-        if (Math.Max(0.0f, rules.TimedWeight) > 0.0f && !HasValidDefinition(rules.TimedRoomDefinitions))
-            errors.Add("Timed room weight is positive but no valid timed room definition is configured.");
+        if (Math.Max(0.0f, rules.TimedWeight) > 0.0f && !HasFullyUsableDefinition(rules.TimedRoomDefinitions))
+            errors.Add("Timed room weight is positive but no timed room definition with a room scene and a positive-weight content option is configured.");
 
         // An ordinary Special can occur either by weight or because pity forces one within
         // this run length; if so the Special definition needs a positive-weight option.
@@ -306,14 +321,21 @@ public sealed class DungeonRunPlanGenerator
             errors.Add("Ordinary Special rooms can occur but the Special room definition has no positive-weight content option.");
     }
 
-    private static bool HasValidDefinition(Godot.Collections.Array<RoomTemplateDefinition> definitions)
+    // A definition the generator can actually produce a populated room from: it has a room
+    // scene and at least one positive-weight (randomly selectable) content option.
+    private static bool IsFullyUsableDefinition(RoomTemplateDefinition definition)
+    {
+        return definition?.RoomScene != null && HasRandomlySelectableOption(definition);
+    }
+
+    private static bool HasFullyUsableDefinition(Godot.Collections.Array<RoomTemplateDefinition> definitions)
     {
         if (definitions == null)
             return false;
 
         foreach (var definition in definitions)
         {
-            if (definition?.RoomScene != null)
+            if (IsFullyUsableDefinition(definition))
                 return true;
         }
 
