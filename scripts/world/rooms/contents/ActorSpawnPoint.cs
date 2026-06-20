@@ -5,6 +5,12 @@ public abstract partial class ActorSpawnPoint : Marker2D
     [Signal]
     public delegate void OccupancyChangedEventHandler(bool occupied);
 
+    // Raised once when the tracked spawned CombatCharacter dies, carrying the dead actor so an
+    // owner (e.g. Dungeon) can attribute the death authoritatively from the spawn lifecycle
+    // instead of scanning the tree. Fires for actors spawned later too (summons/boss).
+    [Signal]
+    public delegate void TrackedActorDiedEventHandler(CombatCharacter actor);
+
     private const string PatrolPathNodeName = "PatrolPath";
 
     private Node2D _currentSpawnedActor;
@@ -191,7 +197,11 @@ public abstract partial class ActorSpawnPoint : Marker2D
 
     private void OnTrackedCombatCharacterDied()
     {
+        var actor = _trackedCombatCharacter;
         SetOccupied(false);
+
+        if (actor != null && GodotObject.IsInstanceValid(actor))
+            EmitSignal(SignalName.TrackedActorDied, actor);
     }
 
     private void OnTrackedActorTreeExited()
