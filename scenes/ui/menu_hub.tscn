@@ -693,6 +693,10 @@ text = "Debug Room Launcher"
 layout_mode = 2
 text = "Dungeon Anywhere"
 
+[node name="NavigationDebugToggle" type="CheckBox" parent="Root/DebugPage/Margin/VBox"]
+layout_mode = 2
+text = "Navigation Debug"
+
 [node name="RoomRow" type="HBoxContainer" parent="Root/DebugPage/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8

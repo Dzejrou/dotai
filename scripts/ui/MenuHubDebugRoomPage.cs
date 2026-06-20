@@ -40,6 +40,9 @@ public partial class MenuHubDebugRoomPage : Control
     [Export]
     public NodePath ReturnButtonPath { get; set; } = new("Margin/VBox/ReturnButton");
 
+    [Export]
+    public NodePath NavigationDebugTogglePath { get; set; } = new("Margin/VBox/NavigationDebugToggle");
+
     private OptionButton _roomSelector;
     private OptionButton _contentSelector;
     private SpinBox _levelSpinBox;
@@ -50,6 +53,7 @@ public partial class MenuHubDebugRoomPage : Control
     private Button _reenterButton;
     private Button _freeButton;
     private Button _returnButton;
+    private BaseButton _navigationDebugToggle;
 
     private World _world;
     private Action _roomEntered;
@@ -69,6 +73,7 @@ public partial class MenuHubDebugRoomPage : Control
         _reenterButton = GetNodeOrNull<Button>(ReenterButtonPath);
         _freeButton = GetNodeOrNull<Button>(FreeButtonPath);
         _returnButton = GetNodeOrNull<Button>(ReturnButtonPath);
+        _navigationDebugToggle = GetNodeOrNull<BaseButton>(NavigationDebugTogglePath);
 
         if (_roomSelector != null)
             _roomSelector.ItemSelected += OnRoomSelected;
@@ -97,6 +102,14 @@ public partial class MenuHubDebugRoomPage : Control
         if (_returnButton != null)
             _returnButton.Pressed += OnReturnPressed;
 
+        // Runtime-only debug toggle (no config persistence): initialize from the current setting
+        // before subscribing so the initial sync does not re-enter the handler.
+        if (_navigationDebugToggle != null)
+        {
+            _navigationDebugToggle.ButtonPressed = NavigationDebugSettings.Enabled;
+            _navigationDebugToggle.Toggled += OnNavigationDebugToggled;
+        }
+
         RefreshAll();
     }
 
@@ -119,6 +132,9 @@ public partial class MenuHubDebugRoomPage : Control
 
         if (_returnButton != null)
             _returnButton.Pressed -= OnReturnPressed;
+
+        if (_navigationDebugToggle != null)
+            _navigationDebugToggle.Toggled -= OnNavigationDebugToggled;
     }
 
     public void Bind(World world, Action roomEntered)
@@ -138,6 +154,19 @@ public partial class MenuHubDebugRoomPage : Control
         RebuildRoomOptions();
         RefreshRetainedView();
         RefreshSessionView();
+        RefreshNavigationDebugToggle();
+    }
+
+    private void RefreshNavigationDebugToggle()
+    {
+        // Reflect the current setting whenever the page opens, without re-entering the handler.
+        _navigationDebugToggle?.SetPressedNoSignal(NavigationDebugSettings.Enabled);
+    }
+
+    private void OnNavigationDebugToggled(bool pressed)
+    {
+        // Explicit API so every subscribed actor updates its navigation-line rendering now.
+        NavigationDebugSettings.SetEnabled(pressed);
     }
 
     private void RebuildRoomOptions()
