@@ -13,8 +13,18 @@ public partial class Dungeon : Node
     public static readonly StringName RuntimeScreenId = "dungeon_runtime";
 
     // Sentinel screen id used by dungeon return/abandonment doors. World resolves it to the
-    // captured launch-origin room (with an entrance-hall fallback) and ends the run.
+    // captured launch-origin room (with an entrance-hall fallback) and finalizes the run as
+    // GaveUp.
     public static readonly StringName ReturnScreenId = "dungeon_return";
+
+    // Sentinel screen id used only by the terminal Boss room's post-victory exit. It returns the
+    // player the same captured-origin way as ReturnScreenId, but makes completion structurally
+    // distinct so the run finalizes as Completed without inspecting boss rank or assuming any
+    // boss is terminal.
+    public static readonly StringName CompletionScreenId = "dungeon_complete";
+
+    // Newest-first in-memory finalized-run history is trimmed to this many records.
+    private const int MaxHistoryRecords = 100;
 
     private static readonly StringName SouthReturnExitId = "south_return";
     private static readonly StringName BossReturnExitId = "north_center";
@@ -38,12 +48,31 @@ public partial class Dungeon : Node
     private StringName _activeNodeId;
     private ulong _runSeed;
 
+    // Authoritative live statistics for the active run. Mutated only here; null when no run is
+    // active. Rooms are counted at most once each through this set of cleared node ids.
+    private DungeonRunStats _activeStats;
+    private readonly HashSet<StringName> _clearedNodeIds = new();
+
+    // Spawn points in managed rooms whose TrackedActorDied signal this Dungeon is observing for
+    // hostile-death counting; disconnected when the run is cleared.
+    private readonly List<ActorSpawnPoint> _deathTrackedSpawnPoints = new();
+
+    // Newest-first finalized-run records, in memory only for this slice. Survives subsequent runs
+    // while this Dungeon node lives, but is not persisted (lost on scene reload).
+    private readonly List<DungeonRunRecord> _history = new();
+
     // Read-only run state, suitable for a future Dungeon HUB / debug display.
     public bool HasActiveRun => _activePlan != null;
     public DungeonRunPlan ActivePlan => _activePlan;
     public StringName ActiveNodeId => _activeNodeId;
     public ulong RunSeed => _runSeed;
     public DungeonRoomNode ActiveNode => _activePlan?.GetNodeById(_activeNodeId);
+
+    // Read-only live statistics for the active run (null when no run is active).
+    public DungeonRunStats ActiveStats => _activeStats;
+
+    // Read-only newest-first finalized history, for the later persistence/UI slices.
+    public IReadOnlyList<DungeonRunRecord> History => _history;
 
     public override void _Ready()
     {
@@ -79,8 +108,11 @@ public partial class Dungeon : Node
         if (!TryGetOrCreatePlanRoom(targetNode, out var targetRoom))
             return false;
 
+        var sourceNode = _activeNodeId != null ? _activePlan.GetNodeById(_activeNodeId) : null;
+
         // Advance only after the room exists: an invalid node/type/content never moves the run.
         _activeNodeId = targetNode.Id;
+        RegisterForwardProgress(sourceNode, targetNode);
         ConfigureRoomDoors(targetRoom, targetNode);
         room = targetRoom;
         EmitSignal(SignalName.RunStateChanged);
@@ -135,13 +167,65 @@ public partial class Dungeon : Node
         _activePlan = result.Plan;
         _runSeed = seed;
         _activeNodeId = null;
+        _clearedNodeIds.Clear();
+
+        // Starting level is the first plan node's level (StartingRoomLevel before any edge delta).
+        var startingLevel = _activePlan.Length > 0 ? _activePlan.Nodes[0].Level : startingRoomLevel ?? 1;
+        _activeStats = new DungeonRunStats(seed, startingLevel, _activePlan.Length);
+
         EmitSignal(SignalName.RunStateChanged);
         return true;
     }
 
+    // Raw teardown: clears the active run without recording anything. Used for replacement,
+    // _ExitTree and the defensive abandon path. History records are produced only by FinalizeRun.
     public void EndRun()
     {
+        ClearActiveRun();
+    }
+
+    // Builds exactly one immutable record for the active run, prepends it to the newest-first
+    // in-memory history (trimmed to MaxHistoryRecords), then clears the run. Idempotent: with no
+    // active run it records nothing and returns null, so repeated callbacks cannot duplicate a
+    // record. Boss death never calls this; completion is routed explicitly by World.
+    public DungeonRunRecord FinalizeRun(DungeonRunOutcome outcome)
+    {
+        if (_activePlan == null || _activeStats == null)
+            return null;
+
+        var record = new DungeonRunRecord(_activeStats, outcome);
+        _history.Insert(0, record);
+        if (_history.Count > MaxHistoryRecords)
+            _history.RemoveRange(MaxHistoryRecords, _history.Count - MaxHistoryRecords);
+
+        ClearActiveRun();
+        return record;
+    }
+
+    // Counts the active room as cleared once (used for the terminal Boss room when its completion
+    // exit is traversed). Idempotent per node via the cleared-node set.
+    public void MarkActiveNodeCleared()
+    {
+        if (MarkNodeCleared(ActiveNode))
+            EmitSignal(SignalName.RunStateChanged);
+    }
+
+    // Counts a player death for the active run. Game-over/reload may discard the run right after,
+    // but the death is modeled regardless. No-op without an active run.
+    public void RegisterPlayerDeath()
+    {
+        if (_activeStats == null)
+            return;
+
+        _activeStats.IncrementPlayerDeaths();
+        EmitSignal(SignalName.RunStateChanged);
+    }
+
+    private void ClearActiveRun()
+    {
         var hadActiveRun = _activePlan != null;
+
+        DisconnectDeathTracking();
 
         foreach (var cached in _roomsByNodeId.Values)
         {
@@ -161,9 +245,104 @@ public partial class Dungeon : Node
         _activePlan = null;
         _activeNodeId = null;
         _runSeed = 0;
+        _activeStats = null;
+        _clearedNodeIds.Clear();
 
         if (hadActiveRun)
             EmitSignal(SignalName.RunStateChanged);
+    }
+
+    // On a forward transition (advancing to a higher-index node) counts the source room as cleared
+    // once. Return/abandonment exits never reach here, so they never clear the current room. Also
+    // records the furthest room reached for the live stats.
+    private void RegisterForwardProgress(DungeonRoomNode sourceNode, DungeonRoomNode targetNode)
+    {
+        if (sourceNode != null && targetNode != null && targetNode.Index > sourceNode.Index)
+            MarkNodeCleared(sourceNode);
+
+        if (targetNode != null)
+            _activeStats?.RecordRoomReached(targetNode.Index + 1, targetNode.Level);
+    }
+
+    // Adds a node to the cleared set and increments RoomsCleared the first time. Returns true only
+    // when the node was newly counted, so callers can decide whether to emit a state change.
+    private bool MarkNodeCleared(DungeonRoomNode node)
+    {
+        if (_activeStats == null || node?.Id == null || node.Id.IsEmpty)
+            return false;
+
+        if (!_clearedNodeIds.Add(node.Id))
+            return false;
+
+        _activeStats.IncrementRoomsCleared();
+        return true;
+    }
+
+    // Subscribes to every ActorSpawnPoint in a freshly instantiated managed room, including boss
+    // and summon spawners that spawn their actors later, so hostile deaths are counted from the
+    // authoritative spawn lifecycle rather than per-frame tree scans.
+    private void TrackRoomDeaths(Node root)
+    {
+        var callable = new Callable(this, nameof(OnManagedActorDied));
+        foreach (var spawnPoint in FindSpawnPoints(root))
+        {
+            if (spawnPoint.IsConnected(ActorSpawnPoint.SignalName.TrackedActorDied, callable))
+                continue;
+
+            spawnPoint.Connect(ActorSpawnPoint.SignalName.TrackedActorDied, callable);
+            _deathTrackedSpawnPoints.Add(spawnPoint);
+        }
+    }
+
+    private void DisconnectDeathTracking()
+    {
+        var callable = new Callable(this, nameof(OnManagedActorDied));
+        foreach (var spawnPoint in _deathTrackedSpawnPoints)
+        {
+            if (spawnPoint != null &&
+                GodotObject.IsInstanceValid(spawnPoint) &&
+                spawnPoint.IsConnected(ActorSpawnPoint.SignalName.TrackedActorDied, callable))
+            {
+                spawnPoint.Disconnect(ActorSpawnPoint.SignalName.TrackedActorDied, callable);
+            }
+        }
+
+        _deathTrackedSpawnPoints.Clear();
+    }
+
+    // Counts a hostile actor death in a managed room. Never counts the player or friendly/allied/
+    // neutral actors (e.g. shop NPCs). A boss counts toward both EnemiesKilled and BossesDefeated;
+    // rank is used only for the counter, never to infer completion.
+    private void OnManagedActorDied(CombatCharacter actor)
+    {
+        if (_activeStats == null || actor == null || !GodotObject.IsInstanceValid(actor) || actor is Player)
+            return;
+
+        var faction = actor.Faction;
+        if (faction == null || !faction.IsHostileTo(Factions.Allies))
+            return;
+
+        _activeStats.IncrementEnemiesKilled();
+
+        if (actor is Actor rankedActor && rankedActor.Rank == ActorRank.Boss)
+            _activeStats.IncrementBossesDefeated();
+
+        EmitSignal(SignalName.RunStateChanged);
+    }
+
+    private static IEnumerable<ActorSpawnPoint> FindSpawnPoints(Node root)
+    {
+        if (root == null)
+            yield break;
+
+        foreach (var child in root.GetChildren())
+        {
+            if (child is ActorSpawnPoint spawnPoint)
+                yield return spawnPoint;
+
+            foreach (var nested in FindSpawnPoints(child))
+                yield return nested;
+        }
     }
 
     private bool TryResolveTargetNode(RoomTransition sourceTransition, out DungeonRoomNode targetNode, out string error)
@@ -262,6 +441,10 @@ public partial class Dungeon : Node
             return false;
         }
 
+        // Observe spawn-point deaths in this managed room (including summon/boss spawners that
+        // spawn later) so hostile kills accrue to the run's live statistics.
+        TrackRoomDeaths(instantiatedRoom);
+
         room = instantiatedRoom;
         return true;
     }
@@ -277,15 +460,16 @@ public partial class Dungeon : Node
         }
 
         // Return/abandonment doors route to the dungeon-return sentinel so World restores the
-        // captured launch origin (and exact player position) and then ends the run:
-        //  - Combat/Special abandon through their south_return door.
-        //  - The Boss room's post-victory north_center door returns the same way instead of
-        //    always going back to the entrance hall.
+        // captured launch origin (and exact player position) and then finalizes the run:
+        //  - Combat/Special abandon through their south_return door (GaveUp).
+        //  - The Boss room's post-victory north_center door instead targets the completion
+        //    sentinel so the same captured-origin return finalizes the run as Completed. Reaching
+        //    completion is structural (this exit), never inferred from the boss dying.
         // Timed rooms have no abandonment door, so they are intentionally left untouched.
         if (room is CombatDungeonRoom || room is SpecialDungeonRoom)
             ConfigureDoorTarget(room, SouthReturnExitId, ReturnScreenId, default);
         else if (room is BossRoom)
-            ConfigureDoorTarget(room, BossReturnExitId, ReturnScreenId, default);
+            ConfigureDoorTarget(room, BossReturnExitId, CompletionScreenId, default);
     }
 
     private static void ConfigureDoorTarget(Room room, StringName exitId, StringName targetScreenId, StringName targetExitId)

@@ -214,6 +214,9 @@ public partial class World : Node2D
         if (_isGameOver)
             return;
 
+        // Count the death for the active run before the game-over/reload flow may discard it.
+        _dungeon?.RegisterPlayerDeath();
+
         _isGameOver = true;
         EmitSignal(SignalName.PlayerDied);
     }
@@ -242,10 +245,19 @@ public partial class World : Node2D
         }
 
         // Dungeon return/abandonment doors target a sentinel screen id rather than a concrete
-        // room: resolve it to the captured launch origin, restore position and end the run.
+        // room: resolve it to the captured launch origin, restore position and finalize the run.
+        // The boss completion exit uses a distinct sentinel so it finalizes as Completed.
         if (transition.TargetScreenId == global::Dungeon.ReturnScreenId)
         {
-            if (TryReturnFromDungeon())
+            if (TryFinishDungeonRun(DungeonRunOutcome.GaveUp))
+                _transitionCooldownRemaining = TransitionCooldownSeconds;
+
+            return;
+        }
+
+        if (transition.TargetScreenId == global::Dungeon.CompletionScreenId)
+        {
+            if (TryFinishDungeonRun(DungeonRunOutcome.Completed))
                 _transitionCooldownRemaining = TransitionCooldownSeconds;
 
             return;
@@ -322,8 +334,9 @@ public partial class World : Node2D
     }
 
     // Gives up an active run from the HUB. Uses the same captured-origin return flow as a
-    // successful boss exit (no encounter completion or rewards). On failure the active run and
-    // return origin are preserved so the caller can keep the HUB open and surface the error.
+    // successful boss exit (no encounter completion or rewards), finalizing as GaveUp. On failure
+    // the active run and return origin are preserved so the caller can keep the HUB open and
+    // surface the error.
     public bool TryGiveUpDungeonRun(out string error)
     {
         error = null;
@@ -334,7 +347,7 @@ public partial class World : Node2D
             return false;
         }
 
-        if (!TryReturnFromDungeon())
+        if (!TryFinishDungeonRun(DungeonRunOutcome.GaveUp))
         {
             error = "Could not return from the dungeon; the run is still active.";
             return false;
@@ -343,14 +356,16 @@ public partial class World : Node2D
         return true;
     }
 
-    // Resolves a dungeon return/abandonment door: transitions to the captured launch origin
-    // (entrance-hall fallback), restores the exact launch position, then ends the run.
-    private bool TryReturnFromDungeon()
+    // Resolves a dungeon completion/return/abandonment exit: transitions to the captured launch
+    // origin (entrance-hall fallback), restores the exact launch position, then finalizes the run
+    // with the supplied outcome. Order is deliberate: a failed transition returns false and leaves
+    // the run active and unfinalized; finalization (which records and clears the run) happens only
+    // after the return succeeds.
+    private bool TryFinishDungeonRun(DungeonRunOutcome outcome)
     {
         var returnLocation = _dungeonReturnLocation;
         var screenId = ResolveDungeonReturnScreenId(returnLocation);
 
-        var previousRoom = _activeRoom;
         if (!TransitionToRoom(screenId, default))
             return false;
 
@@ -365,8 +380,13 @@ public partial class World : Node2D
             _player.Velocity = Vector2.Zero;
         }
 
-        // End and clear the run only now that the return transition has succeeded.
-        _dungeon?.OnTransitionCompleted(previousRoom, null, _activeRoom);
+        // A successful completion exit clears the terminal Boss room before the run is recorded.
+        if (outcome == DungeonRunOutcome.Completed)
+            _dungeon?.MarkActiveNodeCleared();
+
+        // Record exactly one finalized run and clear it. FinalizeRun is idempotent, so a stray
+        // repeat (e.g. cooldown race) cannot append a duplicate.
+        _dungeon?.FinalizeRun(outcome);
         _dungeonReturnLocation = null;
         return true;
     }

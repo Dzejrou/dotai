@@ -557,6 +557,14 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Level: -"
 
+[node name="StatsLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ActiveView"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Rooms Cleared: 0
+Enemies Killed: 0
+Deaths: 0
+Bosses Defeated: 0"
+
 [node name="ResumeButton" type="Button" parent="Root/DungeonPage/Margin/VBox/ActiveView"]
 layout_mode = 2
 text = "Resume"

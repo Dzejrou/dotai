@@ -52,6 +52,9 @@ public partial class MenuHubDungeonPage : Control
     public NodePath ActiveLevelLabelPath { get; set; } = new("Margin/VBox/ActiveView/ActiveLevelLabel");
 
     [Export]
+    public NodePath StatsLabelPath { get; set; } = new("Margin/VBox/ActiveView/StatsLabel");
+
+    [Export]
     public NodePath ResumeButtonPath { get; set; } = new("Margin/VBox/ActiveView/ResumeButton");
 
     [Export]
@@ -71,6 +74,7 @@ public partial class MenuHubDungeonPage : Control
     private Label _activeSeedLabel;
     private Label _progressLabel;
     private Label _activeLevelLabel;
+    private Label _statsLabel;
     private Button _resumeButton;
     private Button _giveUpButton;
     private Label _activeStatusLabel;
@@ -102,6 +106,7 @@ public partial class MenuHubDungeonPage : Control
         _activeSeedLabel = GetNodeOrNull<Label>(ActiveSeedLabelPath);
         _progressLabel = GetNodeOrNull<Label>(ProgressLabelPath);
         _activeLevelLabel = GetNodeOrNull<Label>(ActiveLevelLabelPath);
+        _statsLabel = GetNodeOrNull<Label>(StatsLabelPath);
         _resumeButton = GetNodeOrNull<Button>(ResumeButtonPath);
         _giveUpButton = GetNodeOrNull<Button>(GiveUpButtonPath);
         _activeStatusLabel = GetNodeOrNull<Label>(ActiveStatusLabelPath);
@@ -244,6 +249,17 @@ public partial class MenuHubDungeonPage : Control
 
         if (_activeLevelLabel != null)
             _activeLevelLabel.Text = $"Level: {(node?.Level ?? 0)}";
+
+        if (_statsLabel != null)
+        {
+            var stats = dungeon.ActiveStats;
+            _statsLabel.Text = stats != null
+                ? $"Rooms Cleared: {stats.RoomsCleared}\n" +
+                  $"Enemies Killed: {stats.EnemiesKilled}\n" +
+                  $"Deaths: {stats.PlayerDeaths}\n" +
+                  $"Bosses Defeated: {stats.BossesDefeated}"
+                : string.Empty;
+        }
     }
 
     private void OnStartPressed()
