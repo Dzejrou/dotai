@@ -30,6 +30,7 @@ public partial class DungeonHistorySaveVerifier : Node
         Check("history is trimmed to the newest 100 on save and on load", TrimsToHundredOnSaveAndLoad());
         Check("ReplaceHistory replaces rather than appends and caps at 100", ReplaceHistoryReplacesAndCaps());
         Check("malformed history entries are skipped while neighbors and core survive", MalformedEntriesSkippedCoreSurvives());
+        Check("missing or impossible identity/progress values are skipped", MissingOrImpossibleValuesSkipped());
 
         GD.Print(_failures == 0
             ? "All dungeon history save checks passed."
@@ -210,6 +211,38 @@ public partial class DungeonHistorySaveVerifier : Node
 
         var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
         return records.Count == 2 && skipped == 3 && records[0].Seed == 11UL && records[1].Seed == 44UL;
+    }
+
+    private static bool MissingOrImpossibleValuesSkipped()
+    {
+        // Valid neighbors (seeds 100, 104) surround three impossible records: missing required
+        // values (numeric fields default to 0, so it reads as level-0/zero-length), a furthest
+        // index beyond the planned length, and rooms cleared beyond the rooms reached.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""Player"": { ""Level"": 8, ""CurrentExperience"": 5 },
+            ""Inventory"": { ""Gold"": 21, ""GearXp"": 3 },
+            ""Equipment"": {},
+            ""DungeonHistory"": [
+                { ""Outcome"": ""Completed"", ""Seed"": 100, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 12, ""RoomsCleared"": 12, ""EnemiesKilled"": 10, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 12, ""FurthestRoomLevel"": 12 },
+                { ""Outcome"": ""Completed"", ""Seed"": 101 },
+                { ""Outcome"": ""GaveUp"", ""Seed"": 102, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 8, ""RoomsCleared"": 2, ""EnemiesKilled"": 4, ""PlayerDeaths"": 0, ""BossesDefeated"": 0, ""FurthestRoomIndex"": 20, ""FurthestRoomLevel"": 3 },
+                { ""Outcome"": ""Completed"", ""Seed"": 103, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 8, ""RoomsCleared"": 50, ""EnemiesKilled"": 4, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 4, ""FurthestRoomLevel"": 4 },
+                { ""Outcome"": ""GaveUp"", ""Seed"": 104, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 6, ""RoomsCleared"": 6, ""EnemiesKilled"": 9, ""PlayerDeaths"": 1, ""BossesDefeated"": 0, ""FurthestRoomIndex"": 6, ""FurthestRoomLevel"": 6 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        // The impossible history entries did not break the root save: core data survives.
+        if (parsed.Player?.Level != 8 || parsed.Inventory?.Gold != 21)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return records.Count == 2 && skipped == 3 && records[0].Seed == 100UL && records[1].Seed == 104UL;
     }
 
     private static DungeonRunRecord MakeRecord(DungeonRunOutcome outcome, ulong seed)

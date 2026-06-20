@@ -34,8 +34,8 @@ public sealed class DungeonRunRecordSaveData
     }
 
     // Validates this entry independently and rebuilds the runtime record. Returns false (so the
-    // caller skips this record and preserves its neighbors) for an unknown outcome or any
-    // impossible negative value.
+    // caller skips this record and preserves its neighbors) for an unknown outcome, a missing
+    // required value, or any impossible value.
     public bool TryToRecord(out DungeonRunRecord record)
     {
         record = null;
@@ -46,14 +46,27 @@ public sealed class DungeonRunRecordSaveData
             return false;
         }
 
-        if (StartingRoomLevel < 0 ||
-            PlannedRunLength < 0 ||
-            RoomsCleared < 0 ||
-            EnemiesKilled < 0 ||
+        // Required identity/progress values must be present and possible. Missing numeric fields
+        // deserialize to 0, so this also rejects a record like { "Outcome": "Completed" } rather
+        // than admitting a bogus level-0, zero-length run. The furthest room reached cannot lie
+        // beyond the planned run.
+        if (StartingRoomLevel < 1 ||
+            PlannedRunLength < 1 ||
+            FurthestRoomLevel < 1 ||
+            FurthestRoomIndex < 1 ||
+            FurthestRoomIndex > PlannedRunLength)
+        {
+            return false;
+        }
+
+        // Kill/death/boss counters and Seed may legitimately be 0, but none may be negative, and
+        // rooms cleared cannot exceed the rooms reached (nor the planned length).
+        if (EnemiesKilled < 0 ||
             PlayerDeaths < 0 ||
             BossesDefeated < 0 ||
-            FurthestRoomIndex < 0 ||
-            FurthestRoomLevel < 0)
+            RoomsCleared < 0 ||
+            RoomsCleared > FurthestRoomIndex ||
+            RoomsCleared > PlannedRunLength)
         {
             return false;
         }
