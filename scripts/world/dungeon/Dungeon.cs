@@ -74,6 +74,31 @@ public partial class Dungeon : Node
     // Read-only newest-first finalized history, for the later persistence/UI slices.
     public IReadOnlyList<DungeonRunRecord> History => _history;
 
+    // Replaces the in-memory finalized history with loaded records (e.g. from a save), preserving
+    // newest-first order and the cap without exposing a mutable collection. Replacement, never
+    // append, so loading cannot duplicate existing records. Deliberately leaves the active run and
+    // its live stats untouched, matching the save system's partial world-state load semantics.
+    public void ReplaceHistory(IEnumerable<DungeonRunRecord> records)
+    {
+        _history.Clear();
+
+        if (records != null)
+        {
+            foreach (var record in records)
+            {
+                if (record == null)
+                    continue;
+
+                if (_history.Count >= MaxHistoryRecords)
+                    break;
+
+                _history.Add(record);
+            }
+        }
+
+        EmitSignal(SignalName.RunStateChanged);
+    }
+
     public override void _Ready()
     {
         // Seed source for run seeds only; plan decisions use the per-run seed, never Randomize.

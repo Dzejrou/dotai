@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 public sealed class SaveGameData
 {
@@ -8,6 +9,12 @@ public sealed class SaveGameData
     public PlayerSaveData Player { get; set; }
     public InventorySaveData Inventory { get; set; }
     public Dictionary<string, GearInstanceSaveData> Equipment { get; set; } = new();
+
+    // Optional, additive at schema version 1: finalized dungeon run history, newest first. Absent in
+    // older saves (stays an empty list). A custom converter reads it tolerantly so a malformed entry
+    // never fails the whole save; the load step validates and caps the entries.
+    [JsonConverter(typeof(DungeonHistorySaveConverter))]
+    public List<DungeonRunRecordSaveData> DungeonHistory { get; set; } = new();
 }
 
 public sealed class PlayerSaveData
