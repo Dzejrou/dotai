@@ -1,11 +1,18 @@
 using System;
+using System.Globalization;
 
 // Plain, serializable save representation of one finalized DungeonRunRecord. Conversion to/from
 // the runtime record is explicit so runtime objects are never serialized directly. Outcome is
-// stored as its enum name for forward-compatible, human-readable saves.
+// stored as its enum name and FinishedAt as a round-trip ISO 8601 string, both forward-compatible
+// and human-readable.
 public sealed class DungeonRunRecordSaveData
 {
     public string Outcome { get; set; }
+
+    // Round-trip ("o") timestamp of when the run was finalized, or null/absent for legacy entries
+    // saved before timestamps existed (loaded as an unknown finish time, never dropped).
+    public string FinishedAt { get; set; }
+
     public ulong Seed { get; set; }
     public int StartingRoomLevel { get; set; }
     public int PlannedRunLength { get; set; }
@@ -21,6 +28,7 @@ public sealed class DungeonRunRecordSaveData
         return new DungeonRunRecordSaveData
         {
             Outcome = record.Outcome.ToString(),
+            FinishedAt = record.FinishedAt?.ToString("o", CultureInfo.InvariantCulture),
             Seed = record.Seed,
             StartingRoomLevel = record.StartingRoomLevel,
             PlannedRunLength = record.PlannedRunLength,
@@ -71,8 +79,22 @@ public sealed class DungeonRunRecordSaveData
             return false;
         }
 
+        // The timestamp is secondary display data: a missing or unparseable value loads as an
+        // unknown finish time (null) rather than dropping an otherwise valid record.
+        DateTimeOffset? finishedAt = null;
+        if (!string.IsNullOrEmpty(FinishedAt) &&
+            DateTimeOffset.TryParse(
+                FinishedAt,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind,
+                out var parsedFinishedAt))
+        {
+            finishedAt = parsedFinishedAt;
+        }
+
         record = new DungeonRunRecord(
             outcome,
+            finishedAt,
             Seed,
             StartingRoomLevel,
             PlannedRunLength,

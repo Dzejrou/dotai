@@ -527,6 +527,7 @@ public partial class MenuHubDungeonPage : Control
         if (_historyDetailsLabel != null)
         {
             _historyDetailsLabel.Text =
+                $"Finished: {FormatFinishedAt(record.FinishedAt)}\n" +
                 $"Seed: {record.Seed.ToString(CultureInfo.InvariantCulture)}\n" +
                 $"Starting Room Level: {record.StartingRoomLevel}\n" +
                 $"Planned Run Length: {record.PlannedRunLength}\n" +
@@ -541,8 +542,17 @@ public partial class MenuHubDungeonPage : Control
 
     private static string FormatHistoryRow(DungeonRunRecord record)
     {
-        var seed = record.Seed.ToString(CultureInfo.InvariantCulture);
-        return $"{OutcomeText(record.Outcome)}  ·  Seed {seed}  ·  {record.RoomsCleared}/{record.PlannedRunLength}";
+        return $"{OutcomeText(record.Outcome)}  ·  {FormatFinishedAt(record.FinishedAt)}  ·  {record.RoomsCleared}/{record.PlannedRunLength}";
+    }
+
+    // Concise player-facing local date/time for a finalized run. Legacy records saved before
+    // timestamps existed have none and show a fallback instead.
+    private static string FormatFinishedAt(DateTimeOffset? finishedAt)
+    {
+        if (finishedAt == null)
+            return "Unknown date";
+
+        return finishedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
     }
 
     private static string OutcomeText(DungeonRunOutcome outcome)
