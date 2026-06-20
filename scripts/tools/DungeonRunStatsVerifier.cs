@@ -1,5 +1,7 @@
 using Godot;
 
+using System;
+
 // Headless developer tool that exercises the pure live-statistics and finalization behavior added
 // for live dungeon stats: DungeonRunStats counters, the immutable DungeonRunRecord snapshot, and
 // Dungeon.FinalizeRun (record creation, explicit outcome, idempotency, newest-first ordering, the
@@ -46,6 +48,7 @@ public partial class DungeonRunStatsVerifier : Node
 
         Check("start populates seed, starting level and planned length", StartPopulatesIdentity(rules));
         Check("finalize records exactly one run and clears it", FinalizeRecordsAndClears(rules));
+        Check("finalize stamps the run with a finish time", FinalizeStampsFinishTime(rules));
         Check("finalize is idempotent with no active run", FinalizeIsIdempotent(rules));
         Check("outcome is recorded as supplied", OutcomeIsRecorded(rules));
         Check("EndRun clears without recording", EndRunDoesNotRecord(rules));
@@ -87,13 +90,15 @@ public partial class DungeonRunStatsVerifier : Node
         stats.IncrementEnemiesKilled();
         stats.RecordRoomReached(4, 5);
 
-        var record = new DungeonRunRecord(stats, DungeonRunOutcome.Completed);
+        var finishedAt = new DateTimeOffset(2026, 6, 20, 13, 45, 0, TimeSpan.FromHours(2));
+        var record = new DungeonRunRecord(stats, DungeonRunOutcome.Completed, finishedAt);
 
         // Mutating the live stats after the snapshot must not change the record.
         stats.IncrementEnemiesKilled();
         stats.IncrementBossesDefeated();
 
         return record.Outcome == DungeonRunOutcome.Completed &&
+            record.FinishedAt == finishedAt &&
             record.Seed == 7UL &&
             record.StartingRoomLevel == 2 &&
             record.PlannedRunLength == 9 &&
@@ -142,6 +147,29 @@ public partial class DungeonRunStatsVerifier : Node
                 ReferenceEquals(dungeon.History[0], record) &&
                 !dungeon.HasActiveRun &&
                 dungeon.ActiveStats == null;
+        }
+        finally
+        {
+            dungeon.Free();
+        }
+    }
+
+    private bool FinalizeStampsFinishTime(DungeonGenerationRules rules)
+    {
+        var dungeon = new Dungeon { GenerationRules = rules };
+        try
+        {
+            var before = DateTimeOffset.Now;
+            if (!dungeon.TryStartRun(1UL, null, null, out _))
+                return false;
+
+            var record = dungeon.FinalizeRun(DungeonRunOutcome.Completed);
+            var after = DateTimeOffset.Now;
+
+            // A freshly finalized run always carries a finish time, captured at finalization.
+            return record?.FinishedAt != null &&
+                record.FinishedAt.Value >= before &&
+                record.FinishedAt.Value <= after;
         }
         finally
         {

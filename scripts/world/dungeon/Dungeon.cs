@@ -1,5 +1,6 @@
 using Godot;
 
+using System;
 using System.Collections.Generic;
 
 // Drives a live dungeon run entirely from one deterministic DungeonRunPlan. A run is
@@ -218,7 +219,7 @@ public partial class Dungeon : Node
         if (_activePlan == null || _activeStats == null)
             return null;
 
-        var record = new DungeonRunRecord(_activeStats, outcome);
+        var record = new DungeonRunRecord(_activeStats, outcome, DateTimeOffset.Now);
         _history.Insert(0, record);
         if (_history.Count > MaxHistoryRecords)
             _history.RemoveRange(MaxHistoryRecords, _history.Count - MaxHistoryRecords);

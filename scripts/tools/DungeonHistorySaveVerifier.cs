@@ -1,5 +1,6 @@
 using Godot;
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -18,6 +19,11 @@ public partial class DungeonHistorySaveVerifier : Node
 {
     private static readonly JsonSerializerOptions WriteOptions = new() { WriteIndented = true };
 
+    // Distinct finalization timestamps (with non-UTC offsets) used to prove timestamps survive the
+    // save round-trip without losing their instant or offset.
+    private static readonly DateTimeOffset FirstFinishedAt = new(2026, 6, 20, 13, 45, 0, TimeSpan.FromHours(2));
+    private static readonly DateTimeOffset SecondFinishedAt = new(2026, 6, 19, 9, 5, 30, TimeSpan.FromHours(-5));
+
     private int _failures;
 
     public override void _Ready()
@@ -25,6 +31,9 @@ public partial class DungeonHistorySaveVerifier : Node
         GD.Print("Dungeon history save verification:");
 
         Check("history round-trips through the save DTO", HistoryRoundTrips());
+        Check("finish timestamps round-trip with instant and offset intact", TimestampRoundTrips());
+        Check("a history entry without a timestamp loads as unknown but survives", MissingTimestampLoadsAsUnknown());
+        Check("a history entry with an unparseable timestamp loads as unknown but survives", UnparseableTimestampLoadsAsUnknown());
         Check("legacy version-1 save without history loads as empty", LegacySaveWithoutHistoryLoads());
         Check("newest-first ordering is preserved across save/load", NewestFirstOrderPreserved());
         Check("history is trimmed to the newest 100 on save and on load", TrimsToHundredOnSaveAndLoad());
@@ -46,8 +55,8 @@ public partial class DungeonHistorySaveVerifier : Node
             Inventory = new InventorySaveData { Gold = 50, GearXp = 9 },
             DungeonHistory = DungeonHistorySaveSerializer.CreateSnapshot(new List<DungeonRunRecord>
             {
-                new(DungeonRunOutcome.Completed, 111UL, 2, 12, 12, 40, 0, 1, 12, 13),
-                new(DungeonRunOutcome.GaveUp, 222UL, 1, 8, 3, 10, 1, 0, 4, 4),
+                new(DungeonRunOutcome.Completed, FirstFinishedAt, 111UL, 2, 12, 12, 40, 0, 1, 12, 13),
+                new(DungeonRunOutcome.GaveUp, SecondFinishedAt, 222UL, 1, 8, 3, 10, 1, 0, 4, 4),
             }),
         };
 
@@ -67,6 +76,7 @@ public partial class DungeonHistorySaveVerifier : Node
         var first = records[0];
         var second = records[1];
         return first.Outcome == DungeonRunOutcome.Completed &&
+            first.FinishedAt == FirstFinishedAt &&
             first.Seed == 111UL &&
             first.StartingRoomLevel == 2 &&
             first.PlannedRunLength == 12 &&
@@ -77,7 +87,69 @@ public partial class DungeonHistorySaveVerifier : Node
             first.FurthestRoomIndex == 12 &&
             first.FurthestRoomLevel == 13 &&
             second.Outcome == DungeonRunOutcome.GaveUp &&
+            second.FinishedAt == SecondFinishedAt &&
             second.Seed == 222UL;
+    }
+
+    private static bool TimestampRoundTrips()
+    {
+        var history = new List<DungeonRunRecord>
+        {
+            new(DungeonRunOutcome.Completed, FirstFinishedAt, 111UL, 2, 12, 12, 40, 0, 1, 12, 13),
+        };
+
+        var json = JsonSerializer.Serialize(
+            new SaveGameData { DungeonHistory = DungeonHistorySaveSerializer.CreateSnapshot(history) },
+            WriteOptions);
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+
+        if (skipped != 0 || records.Count != 1)
+            return false;
+
+        var finishedAt = records[0].FinishedAt;
+        // Both the instant (== compares instants) and the stored offset must survive the round-trip.
+        return finishedAt == FirstFinishedAt && finishedAt.Value.Offset == FirstFinishedAt.Offset;
+    }
+
+    private static bool MissingTimestampLoadsAsUnknown()
+    {
+        // A valid entry whose object simply omits the FinishedAt field (e.g. saved before timestamps
+        // existed) must load with a null finish time rather than being skipped.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""DungeonHistory"": [
+                { ""Outcome"": ""Completed"", ""Seed"": 7, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 12, ""RoomsCleared"": 12, ""EnemiesKilled"": 30, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 12, ""FurthestRoomLevel"": 12 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return skipped == 0 && records.Count == 1 && records[0].Seed == 7UL && records[0].FinishedAt == null;
+    }
+
+    private static bool UnparseableTimestampLoadsAsUnknown()
+    {
+        // A non-empty but unparseable FinishedAt is treated as an unknown finish time; the otherwise
+        // valid record is still kept.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""DungeonHistory"": [
+                { ""Outcome"": ""GaveUp"", ""FinishedAt"": ""not-a-date"", ""Seed"": 8, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 8, ""RoomsCleared"": 3, ""EnemiesKilled"": 10, ""PlayerDeaths"": 1, ""BossesDefeated"": 0, ""FurthestRoomIndex"": 4, ""FurthestRoomLevel"": 4 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return skipped == 0 && records.Count == 1 && records[0].Seed == 8UL && records[0].FinishedAt == null;
     }
 
     private static bool LegacySaveWithoutHistoryLoads()
@@ -247,7 +319,7 @@ public partial class DungeonHistorySaveVerifier : Node
 
     private static DungeonRunRecord MakeRecord(DungeonRunOutcome outcome, ulong seed)
     {
-        return new DungeonRunRecord(outcome, seed, 1, 12, 5, 20, 0, 1, 6, 6);
+        return new DungeonRunRecord(outcome, FirstFinishedAt, seed, 1, 12, 5, 20, 0, 1, 6, 6);
     }
 
     private void Check(string description, bool passed)
