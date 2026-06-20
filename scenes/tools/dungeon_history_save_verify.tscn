@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/tools/DungeonHistorySaveVerifier.cs" id="1_history_save_verifier"]
+
+[node name="DungeonHistorySaveVerify" type="Node"]
+script = ExtResource("1_history_save_verifier")

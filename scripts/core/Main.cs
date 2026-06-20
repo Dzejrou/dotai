@@ -352,6 +352,9 @@ public partial class Main : Node2D
             Player = _player.CreateSaveSnapshot(),
             Inventory = _inventoryController.CreateSaveSnapshot(),
             Equipment = equipmentController.CreateSaveSnapshot(),
+            // Only previously finalized history is persisted; live stats and any active plan are
+            // never part of the snapshot.
+            DungeonHistory = DungeonHistorySaveSerializer.CreateSnapshot(_world?.Dungeon?.History),
         };
 
         if (_saveGameStore.TrySave(data, out var message))
@@ -416,8 +419,29 @@ public partial class Main : Node2D
             _player.ApplyLoadedQuickConsumables(data.Player.QuickFoodItemId, data.Player.QuickDrinkItemId);
         }
 
+        ApplyLoadedDungeonHistory(data);
+
         GD.Print($"Loaded save from {SaveGameStore.SaveFilePath}.");
         return LoadAttemptResult.Applied;
+    }
+
+    // Replaces the in-memory finalized dungeon history from the save, leaving any active runtime run
+    // untouched (partial world-state load semantics). Malformed history entries are skipped with a
+    // concise warning and never block the core save data applied above.
+    private void ApplyLoadedDungeonHistory(SaveGameData data)
+    {
+        var dungeon = _world?.Dungeon;
+        if (dungeon == null)
+            return;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(data.DungeonHistory, out var skipped);
+        if (skipped > 0)
+        {
+            GD.PushWarning(
+                $"Skipped {skipped} malformed dungeon history record(s) while loading {SaveGameStore.SaveFilePath}.");
+        }
+
+        dungeon.ReplaceHistory(records);
     }
 
     private void OnDebugTrayPlayerStatsRequested()
