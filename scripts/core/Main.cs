@@ -188,6 +188,14 @@ public partial class Main : Node2D
             return;
         }
 
+        // While a nested HUB subview (Dungeon History) locks navigation, suppress page/global
+        // shortcuts; only Esc (handled by the HUB to step back out) and spell-cancel still act.
+        if (_menuHubOpen && _menuHubRoot != null && _menuHubRoot.IsNavigationLocked)
+        {
+            TryHandleMenuHubInput(@event, textFieldFocused);
+            return;
+        }
+
         if (!textFieldFocused && TryHandleSpellBookInput(@event))
             return;
 
@@ -578,6 +586,11 @@ public partial class Main : Node2D
         {
             return true;
         }
+
+        // Let an open nested HUB subview (e.g. Dungeon History) consume Esc to step back to its
+        // page without closing the HUB. Mirrors the DebugTray.HandleEscape() hook below.
+        if (_menuHubOpen && _menuHubRoot != null && _menuHubRoot.TryHandleEscape())
+            return true;
 
         if (_debugTrayRoot != null && _debugTrayRoot.TrayVisible)
         {

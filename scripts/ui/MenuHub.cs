@@ -147,6 +147,9 @@ public partial class MenuHub : Control
     [Export]
     public NodePath NavDebugButtonPath { get; set; } = new NodePath("NavRow/DebugButton");
 
+    [Export]
+    public NodePath NavRowPath { get; set; } = new NodePath("NavRow");
+
     private static readonly MenuHubPage[] PageOrder =
     {
         MenuHubPage.Character,
@@ -198,13 +201,21 @@ public partial class MenuHub : Control
     private Button _navLogButton;
     private Button _navDebugButton;
     private BaseButton _dungeonAnywhereToggle;
+    private Control _navRow;
     private int _windowPresetIndex;
+
+    // True while the current page exposes a nested modal subview (today only the Dungeon History
+    // view). The top navigation row is hidden and A/D cycling is suppressed until it closes.
+    private bool _navigationLocked;
 
     // Per-HUB-session entrance authorization, granted by the entrance interaction. It survives
     // page navigation, is cleared whenever the HUB closes, and is consumed on a successful start.
     private bool _dungeonEntranceAuthorized;
 
     public bool IsOpen => Visible;
+
+    // Queried by Main to suppress page/global shortcuts while a nested subview owns the page.
+    public bool IsNavigationLocked => _navigationLocked;
 
     public MenuHubPage CurrentPage { get; private set; } = MenuHubPage.GameMenu;
 
@@ -261,6 +272,7 @@ public partial class MenuHub : Control
         _navGameMenuButton = GetNodeOrNull<Button>(NavGameMenuButtonPath);
         _navLogButton = GetNodeOrNull<Button>(NavLogButtonPath);
         _navDebugButton = GetNodeOrNull<Button>(NavDebugButtonPath);
+        _navRow = GetNodeOrNull<Control>(NavRowPath);
         _dungeonAnywhereToggle = GetNodeOrNull<BaseButton>(DungeonAnywhereTogglePath);
 
         if (_resumeButton != null)
@@ -362,6 +374,9 @@ public partial class MenuHub : Control
         if (_navDebugButton != null)
             _navDebugButton.Pressed += OnNavDebugPressed;
 
+        if (_dungeonPage != null)
+            _dungeonPage.NestedViewChanged += OnDungeonNestedViewChanged;
+
         InitializeWindowPreset();
         RefreshWindowSizeView();
 
@@ -445,11 +460,18 @@ public partial class MenuHub : Control
 
         if (_navDebugButton != null)
             _navDebugButton.Pressed -= OnNavDebugPressed;
+
+        if (_dungeonPage != null)
+            _dungeonPage.NestedViewChanged -= OnDungeonNestedViewChanged;
     }
 
     public override void _Input(InputEvent @event)
     {
         if (!Visible)
+            return;
+
+        // A nested subview (Dungeon History) suppresses A/D page cycling entirely.
+        if (_navigationLocked)
             return;
 
         // While a visible text field (the dungeon seed) is focused, let A/D edit the text instead
@@ -482,6 +504,9 @@ public partial class MenuHub : Control
         Visible = false;
         _inventoryPage?.OnHubClosed();
 
+        // Reset any nested Dungeon History view so reopening the HUB shows the normal Dungeon view.
+        _dungeonPage?.CloseHistory();
+
         // Closing the HUB without starting clears entrance authorization, so reopening it
         // elsewhere (e.g. via Esc) never carries stale permission to start.
         SetDungeonEntranceAuthorized(false);
@@ -511,6 +536,27 @@ public partial class MenuHub : Control
             return;
 
         ShowPage(page);
+    }
+
+    // Page-level escape hook used by Main: forwards Esc to the active page's nested subview (only
+    // the Dungeon page has one today) so it can step back without closing the HUB. Returns true
+    // when the subview consumed the event.
+    public bool TryHandleEscape()
+    {
+        if (CurrentPage == MenuHubPage.Dungeon && _dungeonPage != null)
+            return _dungeonPage.TryHandleEscape();
+
+        return false;
+    }
+
+    private void OnDungeonNestedViewChanged(bool open)
+    {
+        _navigationLocked = open;
+
+        // Hide the top navigation row (including its prev/next arrows) while a nested subview owns
+        // the page; restore it when the subview closes.
+        if (_navRow != null)
+            _navRow.Visible = !open;
     }
 
     public void BindInventoryPage(Player player, InventoryController inventory, EquipmentController equipment)

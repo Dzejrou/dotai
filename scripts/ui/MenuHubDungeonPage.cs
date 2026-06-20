@@ -1,6 +1,7 @@
 using Godot;
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 // Dungeon HUB page: the launch surface for dungeon runs. With no active run it presents the
@@ -14,6 +15,15 @@ using System.Globalization;
 [GlobalClass]
 public partial class MenuHubDungeonPage : Control
 {
+    // Raised when the nested History view opens (true) or closes (false). The HUB uses it to hide
+    // its top navigation row and lock page navigation while History is shown.
+    [Signal]
+    public delegate void NestedViewChangedEventHandler(bool open);
+
+    // Outcome row/detail colors. Red is intentionally reserved for a future failed/death outcome.
+    private static readonly Color CompletedOutcomeColor = new(0.40f, 0.85f, 0.45f);
+    private static readonly Color GaveUpOutcomeColor = new(0.95f, 0.65f, 0.25f);
+
     private const string ReadyStatusText = "Ready to start.";
     private const string EntranceRequiredStatusText =
         "Interact with the dungeon entrance to start, or enable Dungeon Anywhere on the Debug page.";
@@ -63,6 +73,27 @@ public partial class MenuHubDungeonPage : Control
     [Export]
     public NodePath ActiveStatusLabelPath { get; set; } = new("Margin/VBox/ActiveView/ActiveStatusLabel");
 
+    [Export]
+    public NodePath HistoryButtonPath { get; set; } = new("Margin/VBox/HistoryButton");
+
+    [Export]
+    public NodePath HistoryViewPath { get; set; } = new("Margin/VBox/HistoryView");
+
+    [Export]
+    public NodePath HistoryBackButtonPath { get; set; } = new("Margin/VBox/HistoryView/LeftColumn/BackButton");
+
+    [Export]
+    public NodePath HistoryListPath { get; set; } = new("Margin/VBox/HistoryView/LeftColumn/RunList");
+
+    [Export]
+    public NodePath HistoryEmptyLabelPath { get; set; } = new("Margin/VBox/HistoryView/LeftColumn/EmptyLabel");
+
+    [Export]
+    public NodePath HistoryOutcomeLabelPath { get; set; } = new("Margin/VBox/HistoryView/RightColumn/OutcomeLabel");
+
+    [Export]
+    public NodePath HistoryDetailsLabelPath { get; set; } = new("Margin/VBox/HistoryView/RightColumn/DetailsLabel");
+
     private Control _configView;
     private SpinBox _roomsSpinBox;
     private SpinBox _startingLevelSpinBox;
@@ -78,6 +109,16 @@ public partial class MenuHubDungeonPage : Control
     private Button _resumeButton;
     private Button _giveUpButton;
     private Label _activeStatusLabel;
+    private Button _historyButton;
+    private Control _historyView;
+    private Button _historyBackButton;
+    private ItemList _historyList;
+    private Label _historyEmptyLabel;
+    private Label _historyOutcomeLabel;
+    private Label _historyDetailsLabel;
+
+    private bool _historyOpen;
+    private DungeonRunRecord _selectedRecord;
 
     private readonly RandomNumberGenerator _seedRng = new();
     private World _world;
@@ -110,6 +151,13 @@ public partial class MenuHubDungeonPage : Control
         _resumeButton = GetNodeOrNull<Button>(ResumeButtonPath);
         _giveUpButton = GetNodeOrNull<Button>(GiveUpButtonPath);
         _activeStatusLabel = GetNodeOrNull<Label>(ActiveStatusLabelPath);
+        _historyButton = GetNodeOrNull<Button>(HistoryButtonPath);
+        _historyView = GetNodeOrNull<Control>(HistoryViewPath);
+        _historyBackButton = GetNodeOrNull<Button>(HistoryBackButtonPath);
+        _historyList = GetNodeOrNull<ItemList>(HistoryListPath);
+        _historyEmptyLabel = GetNodeOrNull<Label>(HistoryEmptyLabelPath);
+        _historyOutcomeLabel = GetNodeOrNull<Label>(HistoryOutcomeLabelPath);
+        _historyDetailsLabel = GetNodeOrNull<Label>(HistoryDetailsLabelPath);
 
         ConfigureRoomsSpinBox();
         ConfigureStartingLevelSpinBox();
@@ -133,6 +181,15 @@ public partial class MenuHubDungeonPage : Control
         if (_giveUpButton != null)
             _giveUpButton.Pressed += OnGiveUpPressed;
 
+        if (_historyButton != null)
+            _historyButton.Pressed += OnHistoryPressed;
+
+        if (_historyBackButton != null)
+            _historyBackButton.Pressed += OnHistoryBackPressed;
+
+        if (_historyList != null)
+            _historyList.ItemSelected += OnHistoryItemSelected;
+
         GameSettings.DungeonAnywhereChanged += OnDungeonAnywhereChanged;
         _dungeonAnywhereSubscribed = true;
 
@@ -155,6 +212,15 @@ public partial class MenuHubDungeonPage : Control
 
         if (_giveUpButton != null)
             _giveUpButton.Pressed -= OnGiveUpPressed;
+
+        if (_historyButton != null)
+            _historyButton.Pressed -= OnHistoryPressed;
+
+        if (_historyBackButton != null)
+            _historyBackButton.Pressed -= OnHistoryBackPressed;
+
+        if (_historyList != null)
+            _historyList.ItemSelected -= OnHistoryItemSelected;
 
         if (_dungeonAnywhereSubscribed)
         {
@@ -198,10 +264,22 @@ public partial class MenuHubDungeonPage : Control
         var active = _world != null && GodotObject.IsInstanceValid(_world) && _world.HasActiveDungeonRun;
 
         if (_configView != null)
-            _configView.Visible = !active;
+            _configView.Visible = !_historyOpen && !active;
 
         if (_activeView != null)
-            _activeView.Visible = active;
+            _activeView.Visible = !_historyOpen && active;
+
+        if (_historyButton != null)
+            _historyButton.Visible = !_historyOpen;
+
+        if (_historyView != null)
+            _historyView.Visible = _historyOpen;
+
+        if (_historyOpen)
+        {
+            RefreshHistory();
+            return;
+        }
 
         if (active)
             RefreshActiveView();
@@ -324,6 +402,178 @@ public partial class MenuHubDungeonPage : Control
         // Success: Main closes the HUB after the return transition. Refresh so a later reopen
         // shows the no-run configuration view.
         Refresh();
+    }
+
+    // History (nested secondary view) -------------------------------------------------------------
+
+    public bool IsHistoryOpen => _historyOpen;
+
+    // Page-level escape hook used by the HUB/Main: while History is open, Esc steps back to the
+    // ordinary Dungeon view instead of closing the HUB. Returns true when it consumed the event.
+    public bool TryHandleEscape()
+    {
+        if (!_historyOpen)
+            return false;
+
+        CloseHistory();
+        return true;
+    }
+
+    // Closes the nested History view, e.g. via Back, Esc, or when the HUB closes through an
+    // external lifecycle event so reopening Dungeon shows its normal configuration/active view.
+    public void CloseHistory()
+    {
+        if (!_historyOpen)
+            return;
+
+        _historyOpen = false;
+        _selectedRecord = null;
+        EmitSignal(SignalName.NestedViewChanged, false);
+        Refresh();
+    }
+
+    private void OnHistoryPressed()
+    {
+        if (_historyOpen)
+            return;
+
+        // Start each open fresh so the newest record is auto-selected.
+        _historyOpen = true;
+        _selectedRecord = null;
+        EmitSignal(SignalName.NestedViewChanged, true);
+        Refresh();
+    }
+
+    private void OnHistoryBackPressed()
+    {
+        CloseHistory();
+    }
+
+    private void OnHistoryItemSelected(long index)
+    {
+        var history = ResolveDungeon()?.History;
+        if (history == null || index < 0 || index >= history.Count)
+            return;
+
+        _selectedRecord = history[(int)index];
+        ShowRecordDetails(_selectedRecord);
+    }
+
+    private void RefreshHistory()
+    {
+        if (_historyList == null)
+            return;
+
+        var history = ResolveDungeon()?.History;
+
+        if (history == null || history.Count == 0)
+        {
+            // No stale selection or details once history is empty.
+            _historyList.Clear();
+            _historyList.Visible = false;
+            _selectedRecord = null;
+            if (_historyEmptyLabel != null)
+                _historyEmptyLabel.Visible = true;
+            ShowRecordDetails(null);
+            return;
+        }
+
+        if (_historyEmptyLabel != null)
+            _historyEmptyLabel.Visible = false;
+        _historyList.Visible = true;
+
+        // Rebuild the newest-first list from the authoritative history.
+        _historyList.Clear();
+        for (var i = 0; i < history.Count; i++)
+        {
+            var record = history[i];
+            _historyList.AddItem(FormatHistoryRow(record));
+            _historyList.SetItemCustomFgColor(i, OutcomeColor(record.Outcome));
+        }
+
+        // Preserve the current selection if its record still exists; otherwise select the newest.
+        var selectedIndex = _selectedRecord != null ? IndexOfRecord(history, _selectedRecord) : -1;
+        if (selectedIndex < 0)
+            selectedIndex = 0;
+
+        _selectedRecord = history[selectedIndex];
+        _historyList.Select(selectedIndex);
+        _historyList.EnsureCurrentIsVisible();
+        ShowRecordDetails(_selectedRecord);
+    }
+
+    private void ShowRecordDetails(DungeonRunRecord record)
+    {
+        if (record == null)
+        {
+            if (_historyOutcomeLabel != null)
+            {
+                _historyOutcomeLabel.Text = string.Empty;
+                _historyOutcomeLabel.Modulate = Colors.White;
+            }
+
+            if (_historyDetailsLabel != null)
+                _historyDetailsLabel.Text = string.Empty;
+
+            return;
+        }
+
+        if (_historyOutcomeLabel != null)
+        {
+            _historyOutcomeLabel.Text = $"Outcome: {OutcomeText(record.Outcome)}";
+            _historyOutcomeLabel.Modulate = OutcomeColor(record.Outcome);
+        }
+
+        if (_historyDetailsLabel != null)
+        {
+            _historyDetailsLabel.Text =
+                $"Seed: {record.Seed.ToString(CultureInfo.InvariantCulture)}\n" +
+                $"Starting Room Level: {record.StartingRoomLevel}\n" +
+                $"Planned Run Length: {record.PlannedRunLength}\n" +
+                $"Rooms Cleared: {record.RoomsCleared}\n" +
+                $"Enemies Killed: {record.EnemiesKilled}\n" +
+                $"Player Deaths: {record.PlayerDeaths}\n" +
+                $"Bosses Defeated: {record.BossesDefeated}\n" +
+                $"Furthest Room Reached: {record.FurthestRoomIndex}\n" +
+                $"Furthest Room Level: {record.FurthestRoomLevel}";
+        }
+    }
+
+    private static string FormatHistoryRow(DungeonRunRecord record)
+    {
+        var seed = record.Seed.ToString(CultureInfo.InvariantCulture);
+        return $"{OutcomeText(record.Outcome)}  ·  Seed {seed}  ·  {record.RoomsCleared}/{record.PlannedRunLength}";
+    }
+
+    private static string OutcomeText(DungeonRunOutcome outcome)
+    {
+        return outcome switch
+        {
+            DungeonRunOutcome.Completed => "Completed",
+            DungeonRunOutcome.GaveUp => "Gave Up",
+            _ => outcome.ToString(),
+        };
+    }
+
+    private static Color OutcomeColor(DungeonRunOutcome outcome)
+    {
+        return outcome switch
+        {
+            DungeonRunOutcome.Completed => CompletedOutcomeColor,
+            DungeonRunOutcome.GaveUp => GaveUpOutcomeColor,
+            _ => Colors.White,
+        };
+    }
+
+    private static int IndexOfRecord(IReadOnlyList<DungeonRunRecord> history, DungeonRunRecord record)
+    {
+        for (var i = 0; i < history.Count; i++)
+        {
+            if (ReferenceEquals(history[i], record))
+                return i;
+        }
+
+        return -1;
     }
 
     private void OnRandomizeSeedPressed()
