@@ -43,16 +43,21 @@ public sealed class DungeonRunPlanGenerator
         var nodes = new List<DungeonRoomNode>();
         var rng = new RandomNumberGenerator { Seed = seed };
         var consecutiveNonSpecial = 0;
+        // Content id of the immediately preceding node when it was Special; null otherwise. It
+        // is excluded from the next adjacent Special node's weighted draw so identical Special
+        // content never lands in two neighbouring rooms.
+        StringName previousSpecialContentId = null;
 
         for (var index = 0; index < ordinaryRoomCount; index++)
         {
             var kind = ResolveOrdinaryKind(rng, rules, consecutiveNonSpecial);
             consecutiveNonSpecial = kind == DungeonRoomKind.Special ? 0 : consecutiveNonSpecial + 1;
 
-            if (!TryBuildOrdinaryNode(rng, rules, index, kind, startingLevel, levelDelta, out var node, out var error))
+            if (!TryBuildOrdinaryNode(rng, rules, index, kind, startingLevel, levelDelta, previousSpecialContentId, out var node, out var error))
                 return DungeonRunPlanResult.Failure(error);
 
             nodes.Add(node);
+            previousSpecialContentId = kind == DungeonRoomKind.Special ? node.ContentOption?.Id : null;
         }
 
         var preBossIndex = ordinaryRoomCount;
@@ -101,6 +106,7 @@ public sealed class DungeonRunPlanGenerator
         DungeonRoomKind kind,
         int startingLevel,
         int levelDelta,
+        StringName previousSpecialContentId,
         out DungeonRoomNode node,
         out string error)
     {
@@ -167,8 +173,10 @@ public sealed class DungeonRunPlanGenerator
                 }
 
                 // Weighted selection draws only positive-weight options, so the zero-weight
-                // Pre-Boss option can never land in an ordinary Special slot.
-                var content = definition.PickContentOption(rng);
+                // Pre-Boss option can never land in an ordinary Special slot. Excluding the
+                // previous adjacent Special's content keeps neighbouring Special rooms distinct
+                // while still allowing a sole option when no alternative exists.
+                var content = definition.PickContentOption(rng, previousSpecialContentId);
                 if (content == null)
                 {
                     error = $"Special room at index {index} has no positive-weight content option.";

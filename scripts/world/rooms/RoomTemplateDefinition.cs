@@ -53,6 +53,51 @@ public partial class RoomTemplateDefinition : Resource
         return fallbackOption;
     }
 
+    // Weighted selection that excludes a single content id from the draw, used to stop the
+    // generator placing the same option in two adjacent rooms. The remaining positive weights
+    // are renormalized via one roll (no rerolling). If excluding the id would leave nothing
+    // selectable - or no id is supplied - this falls back to the ordinary weighted draw, so a
+    // sole configured option is still placed rather than failing.
+    public RoomContentOption PickContentOption(RandomNumberGenerator random, StringName excludedId)
+    {
+        if (random == null)
+        {
+            GD.PushWarning($"{nameof(RoomTemplateDefinition)} '{GetLabel()}' cannot pick a content option without a random number generator.");
+            return null;
+        }
+
+        if (excludedId == null || excludedId.IsEmpty)
+            return PickContentOption(random);
+
+        var totalWeight = 0.0f;
+        foreach (var option in ContentOptions)
+        {
+            if (option?.IsRandomlySelectable == true && option.Id != excludedId)
+                totalWeight += option.Weight;
+        }
+
+        // No alternative positive-weight option survives the exclusion: allow the only option
+        // (the excluded one) rather than failing, by deferring to the ordinary draw.
+        if (!(totalWeight > 0.0f))
+            return PickContentOption(random);
+
+        var roll = random.Randf() * totalWeight;
+        var cumulativeWeight = 0.0f;
+        RoomContentOption fallbackOption = null;
+        foreach (var option in ContentOptions)
+        {
+            if (option?.IsRandomlySelectable != true || option.Id == excludedId)
+                continue;
+
+            cumulativeWeight += option.Weight;
+            fallbackOption = option;
+            if (roll < cumulativeWeight)
+                return option;
+        }
+
+        return fallbackOption;
+    }
+
     // Finds a content option by its id regardless of weight, so a guaranteed placement (e.g.
     // the zero-weight Pre-Boss option) can be resolved explicitly.
     public RoomContentOption FindContentOption(StringName id)

@@ -54,6 +54,13 @@ public partial class DungeonPlanVerifier : Node
 
         Check("Pre-Boss never appears in ordinary weighted Special slots", PreBossNeverOrdinary(rules));
 
+        // Adjacent SpecialRoom de-duplication (#184).
+        Check("adjacent ordinary Special rooms never share content when alternatives exist", AdjacentOrdinarySpecialsNeverRepeat(rules));
+
+        Check("a single eligible Special option still generates and may repeat", SingleEligibleSpecialOptionStillGenerates(rules));
+
+        Check("pity still forces a Special at the configured threshold", PityForcesSpecialAtThreshold(rules));
+
         Check("both combat edges target the same next node and carry +1", CombatEdgesConsistent(planA, expectedDelta: 1));
 
         Check("levels progress from 1 by +1", LevelsProgress(planA, expectedStart: 1, expectedDelta: 1));
@@ -141,6 +148,166 @@ public partial class DungeonPlanVerifier : Node
         }
 
         return true;
+    }
+
+    private bool AdjacentOrdinarySpecialsNeverRepeat(DungeonGenerationRules rules)
+    {
+        // Force every ordinary room to be Special so adjacent Special pairs are guaranteed,
+        // then confirm neighbouring Special rooms never share a content id while at least two
+        // eligible options exist (the default Special definition has two).
+        var specialHeavy = CloneRules(rules);
+        specialHeavy.CombatWeight = 0.0f;
+        specialHeavy.TimedWeight = 0.0f;
+        specialHeavy.SpecialWeight = 1.0f;
+        specialHeavy.SpecialRoomPity = 0;
+
+        var sawAdjacentSpecials = false;
+        for (ulong seed = 1; seed <= 32; seed++)
+        {
+            var result = _generator.Generate(specialHeavy, seed);
+            if (!result.Succeeded)
+                return false;
+
+            var plan = result.Plan;
+            var ordinaryCount = plan.Length - 2;
+            for (var i = 0; i + 1 < ordinaryCount; i++)
+            {
+                var current = plan.Nodes[i];
+                var next = plan.Nodes[i + 1];
+                if (current.Kind != DungeonRoomKind.Special || next.Kind != DungeonRoomKind.Special)
+                    continue;
+
+                sawAdjacentSpecials = true;
+                if (current.ContentOption?.Id == next.ContentOption?.Id)
+                    return false;
+            }
+        }
+
+        // The check is only meaningful if adjacent Special rooms were actually produced.
+        return sawAdjacentSpecials;
+    }
+
+    private bool SingleEligibleSpecialOptionStillGenerates(DungeonGenerationRules rules)
+    {
+        var special = rules.SpecialRoomDefinition;
+        if (special?.RoomScene == null)
+            return false;
+
+        // Keep exactly one positive-weight option plus the zero-weight Pre-Boss option, so the
+        // adjacency rule has no alternative and must allow the sole option to repeat.
+        RoomContentOption sole = null;
+        foreach (var option in special.ContentOptions)
+        {
+            if (option?.IsRandomlySelectable == true)
+            {
+                sole = option;
+                break;
+            }
+        }
+
+        var preBoss = special.FindContentOption(rules.PreBossContentId);
+        if (sole == null || preBoss == null)
+            return false;
+
+        var singleOptionSpecial = new RoomTemplateDefinition
+        {
+            Id = special.Id,
+            DisplayName = special.DisplayName,
+            RoomScene = special.RoomScene,
+            ContentOptions = new Godot.Collections.Array<RoomContentOption> { sole, preBoss },
+        };
+
+        var singleOptionRules = CloneRules(rules);
+        singleOptionRules.SpecialRoomDefinition = singleOptionSpecial;
+        singleOptionRules.CombatWeight = 0.0f;
+        singleOptionRules.TimedWeight = 0.0f;
+        singleOptionRules.SpecialWeight = 1.0f;
+        singleOptionRules.SpecialRoomPity = 0;
+
+        var sawConsecutiveSole = false;
+        for (ulong seed = 1; seed <= 8; seed++)
+        {
+            var result = _generator.Generate(singleOptionRules, seed);
+            if (!result.Succeeded)
+                return false;
+
+            var plan = result.Plan;
+            var ordinaryCount = plan.Length - 2;
+            for (var i = 0; i < ordinaryCount; i++)
+            {
+                var node = plan.Nodes[i];
+                // Every ordinary room is the sole option; adjacent repeats are expected here.
+                if (node.Kind != DungeonRoomKind.Special || node.ContentOption?.Id != sole.Id)
+                    return false;
+                if (i > 0)
+                    sawConsecutiveSole = true;
+            }
+        }
+
+        return sawConsecutiveSole;
+    }
+
+    private bool PityForcesSpecialAtThreshold(DungeonGenerationRules rules)
+    {
+        var pity = rules.SpecialRoomPity;
+        if (pity <= 0)
+            return true;
+
+        // Special never rolls by weight here, so any Special is purely pity-forced. Over a run
+        // long enough to trip pity twice, a Special must appear exactly once the configured run
+        // of non-Special rooms is reached - never earlier, never later.
+        var pityOnly = CloneRules(rules);
+        pityOnly.CombatWeight = 1.0f;
+        pityOnly.TimedWeight = 0.0f;
+        pityOnly.SpecialWeight = 0.0f;
+        pityOnly.OrdinaryRoomCount = (pity * 2) + 2;
+
+        var result = _generator.Generate(pityOnly, 1);
+        if (!result.Succeeded)
+            return false;
+
+        var plan = result.Plan;
+        var ordinaryCount = plan.Length - 2;
+        var sawForcedSpecial = false;
+        var consecutiveNonSpecial = 0;
+        for (var i = 0; i < ordinaryCount; i++)
+        {
+            if (plan.Nodes[i].Kind == DungeonRoomKind.Special)
+            {
+                if (consecutiveNonSpecial != pity)
+                    return false;
+                sawForcedSpecial = true;
+                consecutiveNonSpecial = 0;
+            }
+            else
+            {
+                consecutiveNonSpecial++;
+                if (consecutiveNonSpecial > pity)
+                    return false;
+            }
+        }
+
+        return sawForcedSpecial;
+    }
+
+    private static DungeonGenerationRules CloneRules(DungeonGenerationRules rules)
+    {
+        return new DungeonGenerationRules
+        {
+            OrdinaryRoomCount = rules.OrdinaryRoomCount,
+            StartingRoomLevel = rules.StartingRoomLevel,
+            LevelIncreasePerRoom = rules.LevelIncreasePerRoom,
+            CombatWeight = rules.CombatWeight,
+            TimedWeight = rules.TimedWeight,
+            SpecialWeight = rules.SpecialWeight,
+            SpecialRoomPity = rules.SpecialRoomPity,
+            CombatRoomDefinitions = rules.CombatRoomDefinitions,
+            TimedRoomDefinitions = rules.TimedRoomDefinitions,
+            SpecialRoomDefinition = rules.SpecialRoomDefinition,
+            BossRoomDefinition = rules.BossRoomDefinition,
+            PreBossContentId = rules.PreBossContentId,
+            BossContentId = rules.BossContentId,
+        };
     }
 
     private static bool CombatEdgesConsistent(DungeonRunPlan plan, int expectedDelta)

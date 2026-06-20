@@ -90,10 +90,10 @@ public partial class DungeonGenerationRules : Resource
     private int _ordinaryRoomCount = 10;
     private int _startingRoomLevel = 1;
     private int _levelIncreasePerRoom = 1;
-    private float _combatWeight = 65.0f;
+    private float _combatWeight = 75.0f;
     private float _timedWeight = 15.0f;
-    private float _specialWeight = 20.0f;
-    private int _specialRoomPity = 3;
+    private float _specialWeight = 10.0f;
+    private int _specialRoomPity = 5;
 
     private static float NonNegative(float value)
     {
