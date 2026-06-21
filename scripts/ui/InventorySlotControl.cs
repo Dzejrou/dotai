@@ -41,6 +41,10 @@ public partial class InventorySlotControl : PanelContainer
     // The owning page resolves what's in the buffer and how to restore it.
     public Action<int> TrashDropReceived { get; set; }
 
+    // Invoked when an equipped bag is dropped onto this inventory slot to unequip it.
+    // Args: (bagSlotIndex, targetInventorySlot).
+    public Action<int, int> BagDropReceived { get; set; }
+
     // Invoked on any left mouse press over this slot so the owning window can move to front.
     public Action FocusRequested { get; set; }
 
@@ -131,6 +135,9 @@ public partial class InventorySlotControl : PanelContainer
         if (TryReadEquipmentPayload(data, out _))
             return Inventory != null && Inventory.IsSlotEmpty(SlotIndex);
 
+        if (MenuHubBagSlotControl.TryReadBagPayload(data, out var bagSlot))
+            return Inventory != null && Inventory.CanUnequipBagToInventory(bagSlot, SlotIndex);
+
         if (MenuHubUtilitySlot.IsTrashPayload(data))
             return TrashDropReceived != null;
 
@@ -148,6 +155,12 @@ public partial class InventorySlotControl : PanelContainer
         if (TryReadEquipmentPayload(data, out var equipmentSlot))
         {
             EquipmentDropReceived?.Invoke(equipmentSlot, SlotIndex);
+            return;
+        }
+
+        if (MenuHubBagSlotControl.TryReadBagPayload(data, out var bagSlot))
+        {
+            BagDropReceived?.Invoke(bagSlot, SlotIndex);
             return;
         }
 

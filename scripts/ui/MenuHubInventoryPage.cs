@@ -34,6 +34,9 @@ public partial class MenuHubInventoryPage : Control
     public NodePath SlotGridPath { get; set; } = new("Margin/VBox/BottomRow/InventoryColumn/SlotGrid");
 
     [Export]
+    public NodePath BagColumnPath { get; set; } = new("Margin/VBox/BottomRow/BagColumn");
+
+    [Export]
     public NodePath UtilityColumnPath { get; set; } = new("Margin/VBox/BottomRow/UtilityColumn");
 
     [Export]
@@ -51,7 +54,9 @@ public partial class MenuHubInventoryPage : Control
     private readonly List<InventorySlotControl> _slotControls = new();
     private readonly List<TextureRect> _slotIcons = new();
     private readonly List<Label> _slotQuantityLabels = new();
+    private readonly List<Panel> _slotHighlights = new();
     private readonly Dictionary<EquipmentSlot, EquipmentSlotView> _equipmentSlotViews = new();
+    private readonly List<BagSlotView> _bagSlotViews = new();
 
     private static readonly EquipmentSlot[] SlotOrder =
     {
@@ -85,6 +90,7 @@ public partial class MenuHubInventoryPage : Control
     private Control _levelingArea;
     private Container _amountRow;
     private GridContainer _slotGrid;
+    private VBoxContainer _bagColumn;
     private VBoxContainer _utilityColumn;
     private Label _summaryLabel;
     private SpinBox _amountSpinBox;
@@ -104,6 +110,11 @@ public partial class MenuHubInventoryPage : Control
     private int _activeDragAmount = MaxAmountResolved;
     private bool _dragConsumed;
 
+    // Bag slot whose owned inventory segment is currently previewed via the hover highlight,
+    // or -1 when none. Deferred rebuild flag covers capacity changes that land mid-drag.
+    private int _hoveredBagIndex = -1;
+    private bool _pendingCapacityRebuild;
+
     private InventoryEntry _trashBuffer;
 
     public override void _Ready()
@@ -114,6 +125,7 @@ public partial class MenuHubInventoryPage : Control
         _levelingArea = GetNodeOrNull<Control>(LevelingAreaPath);
         _amountRow = GetNodeOrNull<Container>(AmountSpinBoxParentPath);
         _slotGrid = GetNodeOrNull<GridContainer>(SlotGridPath);
+        _bagColumn = GetNodeOrNull<VBoxContainer>(BagColumnPath);
         _utilityColumn = GetNodeOrNull<VBoxContainer>(UtilityColumnPath);
         _summaryLabel = GetNodeOrNull<Label>(SummaryLabelPath);
 
@@ -121,6 +133,7 @@ public partial class MenuHubInventoryPage : Control
         BuildLevelingPanel();
         BuildAmountControl();
         BuildSlotGrid();
+        BuildBagColumn();
         BuildUtilityColumn();
 
         InventorySlotControl.DragConsumed += OnExternalDragConsumed;
@@ -188,10 +201,15 @@ public partial class MenuHubInventoryPage : Control
         foreach (var view in _quickConsumableSlots.Values)
             view.Root.Inventory = _inventory;
 
+        foreach (var view in _bagSlotViews)
+            view.Root.Inventory = _inventory;
+
         _levelingPanel?.Bind(_inventory, _equipment);
 
         BindQuickConsumableLoadout();
 
+        // Rebinding to a different inventory invalidates any in-flight hover preview.
+        _hoveredBagIndex = -1;
         RebuildSlotsForCapacity();
         Refresh();
     }
@@ -240,7 +258,9 @@ public partial class MenuHubInventoryPage : Control
     public void OnHubClosed()
     {
         _trashBuffer = null;
+        _hoveredBagIndex = -1;
         RefreshTrashSlot();
+        ClearBagHighlight();
         ResetAmountToMax();
     }
 
@@ -249,6 +269,7 @@ public partial class MenuHubInventoryPage : Control
     // and resets the amount selector to MAX, matching the old InventoryWindow.
     public void OnPageEntered()
     {
+        _hoveredBagIndex = -1;
         RebuildSlotsForCapacity();
         ResetAmountToMax();
         Refresh();
@@ -377,12 +398,25 @@ public partial class MenuHubInventoryPage : Control
         RebuildSlotsForCapacity();
     }
 
+    // Rebuilds the grid to the current effective capacity, deferring while a drag is in
+    // progress (a bag equip/unequip changes capacity mid-drag; freeing slot controls then
+    // would disrupt the active drag). The deferred rebuild is flushed on drag end.
     private void RebuildSlotsForCapacity()
     {
-        if (_slotGrid == null)
+        if (_activeDragSlot >= 0 || (GetViewport()?.GuiIsDragging() ?? false))
+        {
+            _pendingCapacityRebuild = true;
             return;
+        }
 
-        if (_activeDragSlot >= 0)
+        RebuildSlotsForCapacityNow();
+    }
+
+    private void RebuildSlotsForCapacityNow()
+    {
+        _pendingCapacityRebuild = false;
+
+        if (_slotGrid == null)
             return;
 
         foreach (var control in _slotControls)
@@ -394,6 +428,7 @@ public partial class MenuHubInventoryPage : Control
         _slotControls.Clear();
         _slotIcons.Clear();
         _slotQuantityLabels.Clear();
+        _slotHighlights.Clear();
 
         var slotCount = _inventory != null && GodotObject.IsInstanceValid(_inventory)
             ? _inventory.GetSlotCount()
@@ -419,6 +454,7 @@ public partial class MenuHubInventoryPage : Control
             slotControl.EquipmentDropReceived = (equipmentSlot, to) => OnEquipmentDropReceivedOnInventorySlot(equipmentSlot, to);
             slotControl.UseRequested = OnSlotUseRequested;
             slotControl.TrashDropReceived = OnTrashDropReceivedOnInventorySlot;
+            slotControl.BagDropReceived = (bagSlot, to) => OnBagDropReceivedOnInventorySlot(bagSlot, to);
 
             var margin = new MarginContainer { MouseFilter = MouseFilterEnum.Ignore };
             margin.AddThemeConstantOverride("margin_left", 5);
@@ -455,10 +491,96 @@ public partial class MenuHubInventoryPage : Control
             quantityLabel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             overlay.AddChild(quantityLabel);
 
+            // Border overlay for the bag capacity-contribution preview. Drawn over the slot
+            // but keeps the icon/quantity visible so empty and occupied slots stay distinct.
+            var highlight = new Panel
+            {
+                MouseFilter = MouseFilterEnum.Ignore,
+                Visible = false,
+            };
+            highlight.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            highlight.AddThemeStyleboxOverride("panel", BuildTailHighlightStyleBox());
+            slotControl.AddChild(highlight);
+
             _slotGrid.AddChild(slotControl);
             _slotControls.Add(slotControl);
             _slotIcons.Add(iconRect);
             _slotQuantityLabels.Add(quantityLabel);
+            _slotHighlights.Add(highlight);
+        }
+
+        // A capacity change can land mid-drag; once rebuilt, reapply any active hover preview.
+        ApplyBagHoverHighlight();
+    }
+
+    private static StyleBoxFlat BuildTailHighlightStyleBox()
+    {
+        return new StyleBoxFlat
+        {
+            BgColor = new Color(1.0f, 0.84f, 0.2f, 0.12f),
+            BorderColor = new Color(1.0f, 0.84f, 0.2f, 0.95f),
+            BorderWidthLeft = 2,
+            BorderWidthRight = 2,
+            BorderWidthTop = 2,
+            BorderWidthBottom = 2,
+        };
+    }
+
+    private void BuildBagColumn()
+    {
+        if (_bagColumn == null)
+            return;
+
+        _bagSlotViews.Clear();
+
+        for (var i = 0; i < InventoryController.BagSlotCount; i++)
+        {
+            var bagIndex = i;
+            var slot = new MenuHubBagSlotControl
+            {
+                Name = $"BagSlot{i + 1}",
+                BagIndex = bagIndex,
+                Inventory = _inventory,
+                MouseFilter = MouseFilterEnum.Stop,
+                CustomMinimumSize = new Vector2(UtilitySlotSize, UtilitySlotSize),
+            };
+            slot.InventoryDropReceived = (inventorySlot, bag) => OnInventoryDropOnBagSlot(inventorySlot, bag);
+            slot.HoverStarted = OnBagHoverStarted;
+            slot.HoverEnded = OnBagHoverEnded;
+            slot.DragEnded = OnBagSlotDragEnded;
+
+            var overlay = new Control { MouseFilter = MouseFilterEnum.Ignore };
+            overlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            slot.AddChild(overlay);
+
+            var icon = new TextureRect
+            {
+                MouseFilter = MouseFilterEnum.Ignore,
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+                Visible = false,
+            };
+            icon.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            icon.OffsetLeft = 4;
+            icon.OffsetTop = 4;
+            icon.OffsetRight = -4;
+            icon.OffsetBottom = -4;
+            overlay.AddChild(icon);
+
+            var placeholder = new Label
+            {
+                Text = $"BAG {i + 1}",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                MouseFilter = MouseFilterEnum.Ignore,
+                Modulate = new Color(1.0f, 1.0f, 1.0f, 0.55f),
+            };
+            placeholder.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            overlay.AddChild(placeholder);
+
+            _bagColumn.AddChild(slot);
+            _bagSlotViews.Add(new BagSlotView(slot, icon, placeholder));
         }
     }
 
@@ -604,6 +726,14 @@ public partial class MenuHubInventoryPage : Control
 
     private void OnInventoryChanged()
     {
+        // Effective capacity may have changed (bag equip/unequip), so resize the grid before
+        // repainting. RebuildSlotsForCapacity self-defers if a drag is still in progress.
+        var slotCount = _inventory != null && GodotObject.IsInstanceValid(_inventory)
+            ? _inventory.GetSlotCount()
+            : 0;
+        if (slotCount != _slotControls.Count)
+            RebuildSlotsForCapacity();
+
         Refresh();
     }
 
@@ -617,8 +747,10 @@ public partial class MenuHubInventoryPage : Control
     {
         RefreshSlots();
         RefreshEquipmentSlots();
+        RefreshBagSlots();
         RefreshTrashSlot();
         RefreshQuickConsumableSlots();
+        ApplyBagHoverHighlight();
         _levelingPanel?.RefreshPanel();
     }
 
@@ -679,6 +811,97 @@ public partial class MenuHubInventoryPage : Control
             view.Root.TooltipText = hasGear ? GearTooltipBuilder.Build(gear) : slot.ToString();
             view.Root.Modulate = Colors.White;
         }
+    }
+
+    private void RefreshBagSlots()
+    {
+        for (var i = 0; i < _bagSlotViews.Count; i++)
+        {
+            var view = _bagSlotViews[i];
+            var bag = _inventory != null && GodotObject.IsInstanceValid(_inventory)
+                ? _inventory.GetBag(i)
+                : null;
+            var hasBag = bag != null;
+
+            view.IconRect.Texture = hasBag ? bag.Icon : null;
+            view.IconRect.Visible = hasBag && bag.Icon != null;
+            view.IconRect.Modulate = Colors.White;
+            view.Placeholder.Visible = !hasBag;
+            view.Root.TooltipText = hasBag
+                ? $"{bag.DisplayName}\nAdds {bag.AdditionalSlots} inventory slots"
+                : $"BAG {i + 1}";
+            view.Root.Modulate = Colors.White;
+        }
+    }
+
+    private void OnBagHoverStarted(int bagIndex)
+    {
+        _hoveredBagIndex = bagIndex;
+        ApplyBagHoverHighlight();
+    }
+
+    private void OnBagHoverEnded(int bagIndex)
+    {
+        if (_hoveredBagIndex != bagIndex)
+            return;
+
+        _hoveredBagIndex = -1;
+        ClearBagHighlight();
+    }
+
+    // Highlights the exact inventory segment owned by the hovered equipped bag, the slots that
+    // unequipping it would remove. Clears when nothing equipped is hovered.
+    private void ApplyBagHoverHighlight()
+    {
+        if (_hoveredBagIndex < 0 ||
+            _inventory == null ||
+            !GodotObject.IsInstanceValid(_inventory) ||
+            !_inventory.TryGetBagSegment(_hoveredBagIndex, out var start, out var length))
+        {
+            ClearBagHighlight();
+            return;
+        }
+
+        HighlightSegment(start, length);
+    }
+
+    private void HighlightSegment(int start, int length)
+    {
+        var end = start + length;
+        for (var i = 0; i < _slotHighlights.Count; i++)
+        {
+            var highlight = _slotHighlights[i];
+            if (GodotObject.IsInstanceValid(highlight))
+                highlight.Visible = i >= start && i < end;
+        }
+    }
+
+    private void ClearBagHighlight()
+    {
+        foreach (var highlight in _slotHighlights)
+        {
+            if (GodotObject.IsInstanceValid(highlight))
+                highlight.Visible = false;
+        }
+    }
+
+    private void OnInventoryDropOnBagSlot(int inventorySlotIndex, int bagSlotIndex)
+    {
+        // The bag came from an inventory slot, so mark that drag consumed to suppress any
+        // drag-end side effects; the capacity rebuild is flushed when the drag ends.
+        _dragConsumed = true;
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return;
+
+        _inventory.TryEquipBagFromInventory(bagSlotIndex, inventorySlotIndex);
+    }
+
+    private void OnBagDropReceivedOnInventorySlot(int bagSlotIndex, int inventorySlotIndex)
+    {
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return;
+
+        _inventory.TryUnequipBagToInventory(bagSlotIndex, inventorySlotIndex);
     }
 
     private void RefreshTrashSlot()
@@ -817,6 +1040,21 @@ public partial class MenuHubInventoryPage : Control
         _activeDragSlot = -1;
         _activeDragAmount = MaxAmountResolved;
         _dragConsumed = false;
+        FlushPendingCapacityRebuild();
+    }
+
+    private void OnBagSlotDragEnded()
+    {
+        FlushPendingCapacityRebuild();
+    }
+
+    private void FlushPendingCapacityRebuild()
+    {
+        if (!_pendingCapacityRebuild)
+            return;
+
+        RebuildSlotsForCapacityNow();
+        Refresh();
     }
 
     private void OnSlotUseRequested(int slotIndex)
@@ -1066,6 +1304,20 @@ public partial class MenuHubInventoryPage : Control
 
         public MenuHubQuickConsumableSlot Root { get; }
         public TextureRect Icon { get; }
+        public Label Placeholder { get; }
+    }
+
+    private sealed class BagSlotView
+    {
+        public BagSlotView(MenuHubBagSlotControl root, TextureRect iconRect, Label placeholder)
+        {
+            Root = root;
+            IconRect = iconRect;
+            Placeholder = placeholder;
+        }
+
+        public MenuHubBagSlotControl Root { get; }
+        public TextureRect IconRect { get; }
         public Label Placeholder { get; }
     }
 }

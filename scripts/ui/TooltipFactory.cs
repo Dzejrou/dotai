@@ -81,6 +81,8 @@ public static class TooltipFactory
         var (panel, vbox) = BuildShell(style, item.DisplayName, ItemQualityColors.GetColor(item.Quality));
 
         AddLine(vbox, $"Quality: {item.Quality}", style);
+        if (item is BagItemDefinition bag)
+            AddLine(vbox, $"Adds {bag.AdditionalSlots} inventory slots", style);
         if (alwaysShowQuantity || quantity > 1)
             AddLine(vbox, $"x{System.Math.Max(0, quantity)}", style);
 

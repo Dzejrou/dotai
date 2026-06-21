@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="InventoryItemCatalog" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="InventoryItemCatalog" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/inventory/InventoryItemCatalog.cs" id="1_catalog_script"]
 [ext_resource type="Resource" path="res://resources/inventory/items/chest_key.tres" id="2_chest_key_item"]
@@ -7,7 +7,10 @@
 [ext_resource type="Resource" path="res://resources/inventory/items/void_crystal.tres" id="5_void_crystal_item"]
 [ext_resource type="Resource" path="res://resources/inventory/items/pie.tres" id="6_pie_item"]
 [ext_resource type="Resource" path="res://resources/inventory/items/beer.tres" id="7_beer_item"]
+[ext_resource type="Resource" path="res://resources/inventory/items/small_bag.tres" id="8_small_bag_item"]
+[ext_resource type="Resource" path="res://resources/inventory/items/medium_bag.tres" id="9_medium_bag_item"]
+[ext_resource type="Resource" path="res://resources/inventory/items/large_bag.tres" id="10_large_bag_item"]
 
 [resource]
 script = ExtResource("1_catalog_script")
-Items = Array[InventoryItemDefinition]([ExtResource("2_chest_key_item"), ExtResource("3_arcane_crystal_item"), ExtResource("4_mystic_crystal_item"), ExtResource("5_void_crystal_item"), ExtResource("6_pie_item"), ExtResource("7_beer_item")])
+Items = Array[InventoryItemDefinition]([ExtResource("2_chest_key_item"), ExtResource("3_arcane_crystal_item"), ExtResource("4_mystic_crystal_item"), ExtResource("5_void_crystal_item"), ExtResource("6_pie_item"), ExtResource("7_beer_item"), ExtResource("8_small_bag_item"), ExtResource("9_medium_bag_item"), ExtResource("10_large_bag_item")])
