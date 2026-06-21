@@ -301,6 +301,10 @@ public partial class Dungeon : Node
             return false;
 
         _activeStats.IncrementRoomsCleared();
+        // Award the selected content's authored completion points at the same once-per-node
+        // boundary that counts the room cleared, so entering or abandoning a room never scores and
+        // a node can never award twice. Zero-point content still counts as a cleared room.
+        _activeStats.AddScore(node.ContentOption?.CompletionPoints ?? 0);
         return true;
     }
 

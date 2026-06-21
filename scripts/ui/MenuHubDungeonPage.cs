@@ -24,6 +24,10 @@ public partial class MenuHubDungeonPage : Control
     private static readonly Color CompletedOutcomeColor = new(0.40f, 0.85f, 0.45f);
     private static readonly Color GaveUpOutcomeColor = new(0.95f, 0.65f, 0.25f);
 
+    // Shown for a record's score fields when it has no score data (a legacy run finalized before
+    // scoring existed), so old entries read clearly instead of pretending their score was 0.
+    private const string LegacyScoreFallback = "—";
+
     private const string ReadyStatusText = "Ready to start.";
     private const string EntranceRequiredStatusText =
         "Interact with the dungeon entrance to start, or enable Dungeon Anywhere on the Debug page.";
@@ -332,7 +336,8 @@ public partial class MenuHubDungeonPage : Control
         {
             var stats = dungeon.ActiveStats;
             _statsLabel.Text = stats != null
-                ? $"Rooms Cleared: {stats.RoomsCleared}\n" +
+                ? $"Score: {stats.BaseScore}\n" +
+                  $"Rooms Cleared: {stats.RoomsCleared}\n" +
                   $"Enemies Killed: {stats.EnemiesKilled}\n" +
                   $"Deaths: {stats.PlayerDeaths}\n" +
                   $"Bosses Defeated: {stats.BossesDefeated}"
@@ -531,6 +536,9 @@ public partial class MenuHubDungeonPage : Control
                 $"Seed: {record.Seed.ToString(CultureInfo.InvariantCulture)}\n" +
                 $"Starting Room Level: {record.StartingRoomLevel}\n" +
                 $"Planned Run Length: {record.PlannedRunLength}\n" +
+                $"Base Score: {FormatScore(record.BaseScore)}\n" +
+                $"Difficulty Multiplier: {FormatMultiplier(record.DifficultyMultiplier)}\n" +
+                $"Final Score: {FormatScore(record.FinalScore)}\n" +
                 $"Rooms Cleared: {record.RoomsCleared}\n" +
                 $"Enemies Killed: {record.EnemiesKilled}\n" +
                 $"Player Deaths: {record.PlayerDeaths}\n" +
@@ -553,6 +561,19 @@ public partial class MenuHubDungeonPage : Control
             return "Unknown date";
 
         return finishedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+    }
+
+    // Score / multiplier text for a record's details. Legacy records saved before scoring existed
+    // carry no score and show the fallback dash rather than a misleading 0; a real zero score shows
+    // as "0".
+    private static string FormatScore(int? score)
+    {
+        return score?.ToString(CultureInfo.InvariantCulture) ?? LegacyScoreFallback;
+    }
+
+    private static string FormatMultiplier(float? multiplier)
+    {
+        return multiplier?.ToString("0.00", CultureInfo.InvariantCulture) ?? LegacyScoreFallback;
     }
 
     private static string OutcomeText(DungeonRunOutcome outcome)

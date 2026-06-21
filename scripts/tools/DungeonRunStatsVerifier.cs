@@ -46,6 +46,10 @@ public partial class DungeonRunStatsVerifier : Node
         Check("furthest reach keeps the highest one-based index and its level", FurthestReachTracksHighest());
         Check("record snapshots stats and is immutable to later mutation", RecordIsImmutableSnapshot());
 
+        Check("base score accumulates and ignores non-positive awards", BaseScoreAccumulates());
+        Check("record snapshots base score, the 1.0 multiplier and final score", RecordSnapshotsScore());
+        Check("a gave-up record retains its accumulated base score", GaveUpRetainsScore());
+
         Check("start populates seed, starting level and planned length", StartPopulatesIdentity(rules));
         Check("finalize records exactly one run and clears it", FinalizeRecordsAndClears(rules));
         Check("finalize stamps the run with a finish time", FinalizeStampsFinishTime(rules));
@@ -106,6 +110,51 @@ public partial class DungeonRunStatsVerifier : Node
             record.BossesDefeated == 0 &&
             record.FurthestRoomIndex == 4 &&
             record.FurthestRoomLevel == 5;
+    }
+
+    private static bool BaseScoreAccumulates()
+    {
+        var stats = new DungeonRunStats(1UL, 1, 5);
+        if (stats.BaseScore != 0)
+            return false;
+
+        stats.AddScore(100);
+        stats.AddScore(150);
+        stats.AddScore(0);    // zero-point content is a no-op
+        stats.AddScore(-50);  // points are never subtracted
+
+        return stats.BaseScore == 250;
+    }
+
+    private static bool RecordSnapshotsScore()
+    {
+        var stats = new DungeonRunStats(5UL, 1, 6);
+        stats.AddScore(100);
+        stats.AddScore(150);
+        stats.AddScore(500);
+
+        var record = new DungeonRunRecord(stats, DungeonRunOutcome.Completed, DateTimeOffset.Now);
+
+        // Mutating the live stats after the snapshot must not change the record's score.
+        stats.AddScore(999);
+
+        // This slice scores at an unmodified 1.0 multiplier, so final score equals base score.
+        return record.BaseScore == 750 &&
+            record.DifficultyMultiplier == 1.0f &&
+            record.FinalScore == 750;
+    }
+
+    private static bool GaveUpRetainsScore()
+    {
+        var stats = new DungeonRunStats(9UL, 1, 6);
+        stats.AddScore(100);
+        stats.AddScore(150);
+
+        var record = new DungeonRunRecord(stats, DungeonRunOutcome.GaveUp, DateTimeOffset.Now);
+
+        return record.Outcome == DungeonRunOutcome.GaveUp &&
+            record.BaseScore == 250 &&
+            record.FinalScore == 250;
     }
 
     private bool StartPopulatesIdentity(DungeonGenerationRules rules)
