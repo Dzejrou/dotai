@@ -23,6 +23,11 @@ public sealed class DungeonRunStats
     public int PlayerDeaths { get; private set; }
     public int BossesDefeated { get; private set; }
 
+    // Running base score: the sum of authored completion points from cleared nodes. The difficulty
+    // multiplier and final score are applied only at finalization (currently a 1.0 multiplier), so
+    // this stays a pure additive sum the room-award lifecycle never has to revisit.
+    public int BaseScore { get; private set; }
+
     // Furthest reach, as a one-based room index and the level of that furthest room.
     public int FurthestRoomIndex { get; private set; }
     public int FurthestRoomLevel { get; private set; }
@@ -34,6 +39,16 @@ public sealed class DungeonRunStats
     public void IncrementPlayerDeaths() => PlayerDeaths++;
 
     public void IncrementBossesDefeated() => BossesDefeated++;
+
+    // Adds authored completion points to the base score. Non-positive awards are ignored, so a
+    // zero-point cleared room never changes the score and points can never be subtracted.
+    public void AddScore(int points)
+    {
+        if (points <= 0)
+            return;
+
+        BaseScore += points;
+    }
 
     // Records reaching a room, keeping the furthest one-based index and that room's level. Levels
     // increase monotonically with index in the current linear plan, so the furthest index also

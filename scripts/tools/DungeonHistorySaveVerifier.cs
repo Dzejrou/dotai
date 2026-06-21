@@ -41,6 +41,11 @@ public partial class DungeonHistorySaveVerifier : Node
         Check("malformed history entries are skipped while neighbors and core survive", MalformedEntriesSkippedCoreSurvives());
         Check("missing or impossible identity/progress values are skipped", MissingOrImpossibleValuesSkipped());
 
+        Check("score round-trips through save/load for Completed and GaveUp", ScoreRoundTrips());
+        Check("a legacy entry without score fields loads with unknown score", LegacyScoreLoadsAsUnknown());
+        Check("a legitimate zero score is distinct from a legacy unknown score", ZeroScoreDistinctFromLegacy());
+        Check("a malformed score field degrades to unknown without dropping the record or neighbors", MalformedScoreDegradesButSurvives());
+
         GD.Print(_failures == 0
             ? "All dungeon history save checks passed."
             : $"{_failures} dungeon history save check(s) failed.");
@@ -315,6 +320,118 @@ public partial class DungeonHistorySaveVerifier : Node
 
         var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
         return records.Count == 2 && skipped == 3 && records[0].Seed == 100UL && records[1].Seed == 104UL;
+    }
+
+    private static bool ScoreRoundTrips()
+    {
+        // A Completed run (base 750) and a GaveUp run (base 200) both carry an explicit 1.0
+        // multiplier and matching final score through serialization and back.
+        var history = new List<DungeonRunRecord>
+        {
+            new(DungeonRunOutcome.Completed, FirstFinishedAt, 111UL, 2, 12, 12, 40, 0, 1, 12, 13, 750, 1.0f, 750),
+            new(DungeonRunOutcome.GaveUp, SecondFinishedAt, 222UL, 1, 8, 3, 10, 1, 0, 4, 4, 200, 1.0f, 200),
+        };
+
+        var json = JsonSerializer.Serialize(
+            new SaveGameData { DungeonHistory = DungeonHistorySaveSerializer.CreateSnapshot(history) },
+            WriteOptions);
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+
+        if (skipped != 0 || records.Count != 2)
+            return false;
+
+        return records[0].BaseScore == 750 &&
+            records[0].DifficultyMultiplier == 1.0f &&
+            records[0].FinalScore == 750 &&
+            records[1].Outcome == DungeonRunOutcome.GaveUp &&
+            records[1].BaseScore == 200 &&
+            records[1].DifficultyMultiplier == 1.0f &&
+            records[1].FinalScore == 200;
+    }
+
+    private static bool LegacyScoreLoadsAsUnknown()
+    {
+        // A valid entry whose object simply omits the score fields (saved before scoring existed)
+        // must load with a null score, not a fabricated zero, and must not be skipped.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""DungeonHistory"": [
+                { ""Outcome"": ""Completed"", ""Seed"": 7, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 12, ""RoomsCleared"": 12, ""EnemiesKilled"": 30, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 12, ""FurthestRoomLevel"": 12 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return skipped == 0 &&
+            records.Count == 1 &&
+            records[0].Seed == 7UL &&
+            records[0].BaseScore == null &&
+            records[0].DifficultyMultiplier == null &&
+            records[0].FinalScore == null;
+    }
+
+    private static bool ZeroScoreDistinctFromLegacy()
+    {
+        // First entry is a legitimate zero-score run (all three fields present and zero/1.0); the
+        // second is a legacy run with no score fields. They must load as distinguishable: explicit
+        // 0 versus null.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""DungeonHistory"": [
+                { ""Outcome"": ""GaveUp"", ""Seed"": 1, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 8, ""RoomsCleared"": 0, ""EnemiesKilled"": 0, ""PlayerDeaths"": 0, ""BossesDefeated"": 0, ""FurthestRoomIndex"": 1, ""FurthestRoomLevel"": 1, ""BaseScore"": 0, ""DifficultyMultiplier"": 1.0, ""FinalScore"": 0 },
+                { ""Outcome"": ""Completed"", ""Seed"": 2, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 12, ""RoomsCleared"": 12, ""EnemiesKilled"": 10, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 12, ""FurthestRoomLevel"": 12 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return skipped == 0 &&
+            records.Count == 2 &&
+            records[0].Seed == 1UL && records[0].BaseScore == 0 && records[0].FinalScore == 0 &&
+            records[1].Seed == 2UL && records[1].BaseScore == null && records[1].FinalScore == null;
+    }
+
+    private static bool MalformedScoreDegradesButSurvives()
+    {
+        // Three valid records; the middle one has impossible score values (negative base). Its core
+        // identity/progress is valid, so the record survives with its score degraded to unknown
+        // while both neighbors load with their real scores. Nothing is skipped.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""Player"": { ""Level"": 3, ""CurrentExperience"": 1 },
+            ""Inventory"": { ""Gold"": 1, ""GearXp"": 0 },
+            ""Equipment"": {},
+            ""DungeonHistory"": [
+                { ""Outcome"": ""Completed"", ""Seed"": 11, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 12, ""RoomsCleared"": 12, ""EnemiesKilled"": 10, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 12, ""FurthestRoomLevel"": 12, ""BaseScore"": 300, ""DifficultyMultiplier"": 1.0, ""FinalScore"": 300 },
+                { ""Outcome"": ""GaveUp"", ""Seed"": 22, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 8, ""RoomsCleared"": 2, ""EnemiesKilled"": 4, ""PlayerDeaths"": 0, ""BossesDefeated"": 0, ""FurthestRoomIndex"": 3, ""FurthestRoomLevel"": 3, ""BaseScore"": -5, ""DifficultyMultiplier"": 1.0, ""FinalScore"": 0 },
+                { ""Outcome"": ""Completed"", ""Seed"": 33, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 6, ""RoomsCleared"": 6, ""EnemiesKilled"": 5, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 6, ""FurthestRoomLevel"": 6, ""BaseScore"": 0, ""DifficultyMultiplier"": 1.0, ""FinalScore"": 0 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        // The malformed score did not break the root save.
+        if (parsed.Player?.Level != 3)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return skipped == 0 &&
+            records.Count == 3 &&
+            records[0].Seed == 11UL && records[0].BaseScore == 300 &&
+            records[1].Seed == 22UL && records[1].BaseScore == null && records[1].FinalScore == null &&
+            records[2].Seed == 33UL && records[2].BaseScore == 0;
     }
 
     private static DungeonRunRecord MakeRecord(DungeonRunOutcome outcome, ulong seed)

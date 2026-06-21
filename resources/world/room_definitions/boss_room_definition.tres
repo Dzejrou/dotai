@@ -10,6 +10,7 @@ script = ExtResource("2_room_content_option_script")
 Id = &"demon_boss_content"
 DisplayName = "Demon Boss"
 ContentScene = ExtResource("4_demon_boss_content")
+CompletionPoints = 500
 
 [resource]
 script = ExtResource("1_room_template_definition_script")

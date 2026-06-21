@@ -10,6 +10,7 @@ script = ExtResource("2_room_content_option_script")
 Id = &"timed_dungeon_ogres"
 DisplayName = "Timed Ogre Encounter"
 ContentScene = ExtResource("4_timed_ogre_content")
+CompletionPoints = 150
 
 [resource]
 script = ExtResource("1_room_template_definition_script")

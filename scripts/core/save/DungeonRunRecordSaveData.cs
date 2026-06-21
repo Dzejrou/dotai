@@ -23,6 +23,13 @@ public sealed class DungeonRunRecordSaveData
     public int FurthestRoomIndex { get; set; }
     public int FurthestRoomLevel { get; set; }
 
+    // Additive score fields. Nullable so they are simply absent from older saves (and serialize as
+    // null), which loads as an unknown score rather than a fabricated zero. A legitimate zero score
+    // is written as an explicit 0 in all three, keeping it distinct from a legacy null.
+    public int? BaseScore { get; set; }
+    public float? DifficultyMultiplier { get; set; }
+    public int? FinalScore { get; set; }
+
     public static DungeonRunRecordSaveData FromRecord(DungeonRunRecord record)
     {
         return new DungeonRunRecordSaveData
@@ -38,6 +45,9 @@ public sealed class DungeonRunRecordSaveData
             BossesDefeated = record.BossesDefeated,
             FurthestRoomIndex = record.FurthestRoomIndex,
             FurthestRoomLevel = record.FurthestRoomLevel,
+            BaseScore = record.BaseScore,
+            DifficultyMultiplier = record.DifficultyMultiplier,
+            FinalScore = record.FinalScore,
         };
     }
 
@@ -92,6 +102,25 @@ public sealed class DungeonRunRecordSaveData
             finishedAt = parsedFinishedAt;
         }
 
+        // Score is additive, secondary data (like FinishedAt). Treat the three fields as an
+        // all-or-nothing group: only when all are present and individually valid is this a real
+        // score snapshot; otherwise it loads as unknown (the legacy fallback) without dropping the
+        // record. This keeps a legitimate zero score distinct from a legacy record that simply has
+        // no score data, and a malformed score never invalidates an otherwise valid record or its
+        // neighbors.
+        int? baseScore = null;
+        float? difficultyMultiplier = null;
+        int? finalScore = null;
+        if (BaseScore.HasValue && DifficultyMultiplier.HasValue && FinalScore.HasValue &&
+            BaseScore.Value >= 0 &&
+            float.IsFinite(DifficultyMultiplier.Value) && DifficultyMultiplier.Value > 0.0f &&
+            FinalScore.Value >= 0)
+        {
+            baseScore = BaseScore.Value;
+            difficultyMultiplier = DifficultyMultiplier.Value;
+            finalScore = FinalScore.Value;
+        }
+
         record = new DungeonRunRecord(
             outcome,
             finishedAt,
@@ -103,7 +132,10 @@ public sealed class DungeonRunRecordSaveData
             PlayerDeaths,
             BossesDefeated,
             FurthestRoomIndex,
-            FurthestRoomLevel);
+            FurthestRoomLevel,
+            baseScore,
+            difficultyMultiplier,
+            finalScore);
         return true;
     }
 }

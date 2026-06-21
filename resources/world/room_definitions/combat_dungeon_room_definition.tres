@@ -11,12 +11,14 @@ script = ExtResource("2_room_content_option_script")
 Id = &"combat_dungeon_content_1"
 DisplayName = "Combat Encounter 1"
 ContentScene = ExtResource("4_combat_content_1")
+CompletionPoints = 100
 
 [sub_resource type="Resource" id="Resource_combat_content_option_2"]
 script = ExtResource("2_room_content_option_script")
 Id = &"combat_dungeon_content_2"
 DisplayName = "Combat Encounter 2"
 ContentScene = ExtResource("5_combat_content_2")
+CompletionPoints = 100
 
 [resource]
 script = ExtResource("1_room_template_definition_script")
