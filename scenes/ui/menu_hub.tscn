@@ -236,6 +236,16 @@ columns = 10
 layout_mode = 2
 text = "0/0 slots occupied"
 
+[node name="BagColumn" type="VBoxContainer" parent="Root/InventoryPage/Margin/VBox/BottomRow"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="BagTitle" type="Label" parent="Root/InventoryPage/Margin/VBox/BottomRow/BagColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Bags"
+
 [node name="UtilityColumn" type="VBoxContainer" parent="Root/InventoryPage/Margin/VBox/BottomRow"]
 layout_mode = 2
 size_flags_vertical = 3

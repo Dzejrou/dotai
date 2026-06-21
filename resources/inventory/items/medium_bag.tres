@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BagItemDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/inventory/BagItemDefinition.cs" id="1_bag_item_definition_script"]
+[ext_resource type="Texture2D" uid="uid://d2sri8lqpmcpt" path="res://assets/drops/medium_bag.png" id="2_medium_bag_texture"]
+
+[resource]
+script = ExtResource("1_bag_item_definition_script")
+Id = "medium_bag"
+DisplayName = "Medium Bag"
+Icon = ExtResource("2_medium_bag_texture")
+MaxStackSize = 1
+Quality = 2
+SellPrice = 40
+AdditionalSlots = 8

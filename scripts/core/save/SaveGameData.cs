@@ -36,6 +36,16 @@ public sealed class InventorySaveData
     public int GearXp { get; set; }
     public int SlotCapacity { get; set; }
     public List<InventorySlotSaveData> Slots { get; set; } = new();
+
+    // Additive: equipped bag slots by stable item reference, index-aligned to the bag slots.
+    // A null entry is an empty bag slot. Absent in old saves (loads as four empty slots).
+    public List<BagSlotSaveData> Bags { get; set; } = new();
+}
+
+public sealed class BagSlotSaveData
+{
+    public string ItemId { get; set; }
+    public string ItemResourcePath { get; set; }
 }
 
 public sealed class InventorySlotSaveData

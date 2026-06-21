@@ -31,6 +31,11 @@ public sealed class InventoryStackEntry : InventoryEntry
         if (a == null || b == null)
             return false;
 
+        // Bags are always unique, non-stackable entries; never merge them even if a
+        // misconfigured definition left MaxStackSize above 1.
+        if (a is BagItemDefinition || b is BagItemDefinition)
+            return false;
+
         if (ReferenceEquals(a, b))
             return true;
 

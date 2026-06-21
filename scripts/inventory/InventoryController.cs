@@ -15,13 +15,20 @@ public partial class InventoryController : Node
     [Signal]
     public delegate void GearXpChangedEventHandler(int totalGearXp);
 
+    // Number of bag slots the player can equip. Bags add to effective capacity on top
+    // of BaseSlotCapacity.
+    public const int BagSlotCount = 4;
+
+    // Editor-configurable base inventory size. Effective capacity is this value plus the
+    // AdditionalSlots of every equipped bag, so the base never gets buried as a UI constant.
     [Export(PropertyHint.Range, "1,500,1")]
-    public int SlotCapacity
+    public int BaseSlotCapacity
     {
-        get => _slotCapacity;
+        get => _baseSlotCapacity;
         set
         {
-            ResizeSlots(Math.Max(1, value), IsInsideTree());
+            _baseSlotCapacity = Math.Max(1, value);
+            RebuildToEffectiveCapacity(IsInsideTree());
         }
     }
 
@@ -35,7 +42,8 @@ public partial class InventoryController : Node
     public GearGenerationRules GearGenerationRules { get; set; }
 
     private readonly List<InventoryEntry> _slots = new();
-    private int _slotCapacity = 50;
+    private readonly BagItemDefinition[] _bagSlots = new BagItemDefinition[BagSlotCount];
+    private int _baseSlotCapacity = 30;
     private bool _startingStacksApplied;
     private int _gold;
     private int _gearXp;
@@ -110,7 +118,7 @@ public partial class InventoryController : Node
 
     public override void _Ready()
     {
-        ResizeSlots(Math.Max(1, _slotCapacity), false);
+        RebuildToEffectiveCapacity(false);
         ApplyStartingStacks();
         EmitInventoryChanged();
     }
@@ -118,6 +126,148 @@ public partial class InventoryController : Node
     public int GetSlotCount()
     {
         return _slots.Count;
+    }
+
+    // Base + sum of equipped bag AdditionalSlots. Kept in lockstep with _slots.Count.
+    public int EffectiveCapacity => _baseSlotCapacity + GetBagAdditionalSlotTotal();
+
+    public BagItemDefinition GetBag(int bagSlotIndex)
+    {
+        return IsValidBagIndex(bagSlotIndex) ? _bagSlots[bagSlotIndex] : null;
+    }
+
+    // True when bagSlotIndex -> inventorySlotIndex is a legal equip/replace. Equip into an
+    // empty bag slot and replace with a larger/equal bag always grow capacity and only need
+    // a bag source. Replace with a smaller bag shrinks capacity, so the displaced bag's
+    // destination (the source slot) must survive and the removed tail slots must be empty.
+    public bool CanEquipBagFromInventory(int bagSlotIndex, int inventorySlotIndex)
+    {
+        if (!IsValidBagIndex(bagSlotIndex))
+            return false;
+        if (inventorySlotIndex < 0 || inventorySlotIndex >= _slots.Count)
+            return false;
+        if (_slots[inventorySlotIndex] is not InventoryStackEntry stackEntry)
+            return false;
+        if (stackEntry.Stack.Item is not BagItemDefinition newBag)
+            return false;
+
+        var oldCapacity = _slots.Count;
+        var newCapacity = _baseSlotCapacity + GetBagAdditionalSlotTotalWith(bagSlotIndex, newBag);
+        if (newCapacity < oldCapacity)
+        {
+            if (inventorySlotIndex >= newCapacity)
+                return false;
+            if (!AreSlotsEmptyInRange(newCapacity, oldCapacity))
+                return false;
+        }
+
+        return true;
+    }
+
+    // Equips the bag stack at inventorySlotIndex into bagSlotIndex. Any bag already there is
+    // displaced into the now-vacated source slot. Rejects (no mutation) when CanEquip fails.
+    public bool TryEquipBagFromInventory(int bagSlotIndex, int inventorySlotIndex)
+    {
+        if (!CanEquipBagFromInventory(bagSlotIndex, inventorySlotIndex))
+            return false;
+
+        var stackEntry = (InventoryStackEntry)_slots[inventorySlotIndex];
+        var newBag = (BagItemDefinition)stackEntry.Stack.Item;
+        var displaced = _bagSlots[bagSlotIndex];
+
+        _bagSlots[bagSlotIndex] = newBag;
+        _slots[inventorySlotIndex] = displaced != null
+            ? new InventoryStackEntry(new InventoryStack(displaced, 1))
+            : null;
+
+        RebuildToEffectiveCapacity(false);
+        EmitInventoryChanged();
+        return true;
+    }
+
+    // True when the equipped bag at bagSlotIndex may be unequipped into inventorySlotIndex.
+    // The destination must be empty and remain within the reduced capacity, and the removed
+    // tail slots must all be empty.
+    public bool CanUnequipBagToInventory(int bagSlotIndex, int inventorySlotIndex)
+    {
+        if (!IsValidBagIndex(bagSlotIndex))
+            return false;
+
+        var bag = _bagSlots[bagSlotIndex];
+        if (bag == null)
+            return false;
+
+        if (inventorySlotIndex < 0 || inventorySlotIndex >= _slots.Count)
+            return false;
+        if (_slots[inventorySlotIndex] != null)
+            return false;
+
+        var oldCapacity = _slots.Count;
+        var newCapacity = oldCapacity - bag.AdditionalSlots;
+        if (inventorySlotIndex >= newCapacity)
+            return false;
+        if (!AreSlotsEmptyInRange(newCapacity, oldCapacity))
+            return false;
+
+        return true;
+    }
+
+    public bool TryUnequipBagToInventory(int bagSlotIndex, int inventorySlotIndex)
+    {
+        if (!CanUnequipBagToInventory(bagSlotIndex, inventorySlotIndex))
+            return false;
+
+        var bag = _bagSlots[bagSlotIndex];
+        _slots[inventorySlotIndex] = new InventoryStackEntry(new InventoryStack(bag, 1));
+        _bagSlots[bagSlotIndex] = null;
+
+        RebuildToEffectiveCapacity(false);
+        EmitInventoryChanged();
+        return true;
+    }
+
+    private bool IsValidBagIndex(int bagSlotIndex)
+    {
+        return bagSlotIndex >= 0 && bagSlotIndex < _bagSlots.Length;
+    }
+
+    private int GetBagAdditionalSlotTotal()
+    {
+        var total = 0;
+        foreach (var bag in _bagSlots)
+        {
+            if (bag != null)
+                total += bag.AdditionalSlots;
+        }
+
+        return total;
+    }
+
+    // Bag additional-slot total assuming bagSlotIndex were set to replacement.
+    private int GetBagAdditionalSlotTotalWith(int bagSlotIndex, BagItemDefinition replacement)
+    {
+        var total = 0;
+        for (var i = 0; i < _bagSlots.Length; i++)
+        {
+            var bag = i == bagSlotIndex ? replacement : _bagSlots[i];
+            if (bag != null)
+                total += bag.AdditionalSlots;
+        }
+
+        return total;
+    }
+
+    private bool AreSlotsEmptyInRange(int startInclusive, int endExclusive)
+    {
+        var from = Math.Max(0, startInclusive);
+        var to = Math.Min(_slots.Count, endExclusive);
+        for (var i = from; i < to; i++)
+        {
+            if (_slots[i] != null)
+                return false;
+        }
+
+        return true;
     }
 
     public bool TryGetEntry(int slotIndex, out InventoryEntry entry)
@@ -517,8 +667,12 @@ public partial class InventoryController : Node
         {
             Gold = _gold,
             GearXp = _gearXp,
+            // Effective capacity is informational/compat only; load derives it from base + bags.
             SlotCapacity = _slots.Count,
         };
+
+        foreach (var bag in _bagSlots)
+            data.Bags.Add(SnapshotBag(bag));
 
         foreach (var slot in _slots)
             data.Slots.Add(SnapshotEntry(slot));
@@ -531,16 +685,22 @@ public partial class InventoryController : Node
         if (data == null)
             return;
 
-        var capacityFromData = data.SlotCapacity > 0
-            ? data.SlotCapacity
-            : data.Slots?.Count ?? _slots.Count;
-        var capacity = Math.Max(1, capacityFromData);
+        // Load equipped bags first so effective capacity is known before sizing the grid.
+        // Saved capacity (legacy 50) is intentionally ignored; we derive from base + bags.
+        for (var i = 0; i < _bagSlots.Length; i++)
+            _bagSlots[i] = null;
+        if (data.Bags != null)
+        {
+            for (var i = 0; i < data.Bags.Count && i < _bagSlots.Length; i++)
+                _bagSlots[i] = RehydrateBag(data.Bags[i], i);
+        }
 
+        var capacity = Math.Max(1, EffectiveCapacity);
         _slots.Clear();
         while (_slots.Count < capacity)
             _slots.Add(null);
-        _slotCapacity = _slots.Count;
 
+        // Load only the inventory slots that fit within the derived capacity.
         if (data.Slots != null)
         {
             for (var i = 0; i < data.Slots.Count && i < _slots.Count; i++)
@@ -553,6 +713,33 @@ public partial class InventoryController : Node
         SetGoldForDebugOrLoad(data.Gold);
         SetGearXpForDebugOrLoad(data.GearXp);
         EmitInventoryChanged();
+    }
+
+    private static BagSlotSaveData SnapshotBag(BagItemDefinition bag)
+    {
+        if (bag == null)
+            return null;
+
+        return new BagSlotSaveData
+        {
+            ItemId = bag.Id ?? string.Empty,
+            ItemResourcePath = bag.ResourcePath ?? string.Empty,
+        };
+    }
+
+    private BagItemDefinition RehydrateBag(BagSlotSaveData bagData, int bagSlotIndex)
+    {
+        if (bagData == null ||
+            (string.IsNullOrEmpty(bagData.ItemId) && string.IsNullOrEmpty(bagData.ItemResourcePath)))
+            return null;
+
+        var item = ItemCatalog?.Resolve(bagData.ItemId, bagData.ItemResourcePath);
+        if (item is BagItemDefinition bag)
+            return bag;
+
+        GD.PushWarning(
+            $"{nameof(InventoryController)}: dropping bag slot {bagSlotIndex}; unknown or non-bag item id='{bagData.ItemId}' path='{bagData.ItemResourcePath}'.");
+        return null;
     }
 
     private static InventorySlotSaveData SnapshotEntry(InventoryEntry entry)
@@ -718,9 +905,11 @@ public partial class InventoryController : Node
         return InventoryStackEntry.DefinitionsMatch(stack.Item, item);
     }
 
-    private void ResizeSlots(int slotCapacity, bool emitChanged)
+    // Resizes _slots to match base + equipped bags. Bag transactions pre-validate that any
+    // removed tail is empty; this still refuses to drop occupied slots as a safety net.
+    private void RebuildToEffectiveCapacity(bool emitChanged)
     {
-        var targetCapacity = Math.Max(1, slotCapacity);
+        var targetCapacity = Math.Max(1, EffectiveCapacity);
 
         if (_slots.Count > targetCapacity)
         {
@@ -740,8 +929,6 @@ public partial class InventoryController : Node
 
         while (_slots.Count < targetCapacity)
             _slots.Add(null);
-
-        _slotCapacity = _slots.Count;
 
         if (emitChanged)
             EmitInventoryChanged();
