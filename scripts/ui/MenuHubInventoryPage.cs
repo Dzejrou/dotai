@@ -110,7 +110,7 @@ public partial class MenuHubInventoryPage : Control
     private int _activeDragAmount = MaxAmountResolved;
     private bool _dragConsumed;
 
-    // Bag slot whose capacity contribution is currently previewed via the tail highlight,
+    // Bag slot whose owned inventory segment is currently previewed via the hover highlight,
     // or -1 when none. Deferred rebuild flag covers capacity changes that land mid-drag.
     private int _hoveredBagIndex = -1;
     private bool _pendingCapacityRebuild;
@@ -260,7 +260,7 @@ public partial class MenuHubInventoryPage : Control
         _trashBuffer = null;
         _hoveredBagIndex = -1;
         RefreshTrashSlot();
-        ClearTailHighlight();
+        ClearBagHighlight();
         ResetAmountToMax();
     }
 
@@ -846,42 +846,37 @@ public partial class MenuHubInventoryPage : Control
             return;
 
         _hoveredBagIndex = -1;
-        ClearTailHighlight();
+        ClearBagHighlight();
     }
 
-    // Highlights the final AdditionalSlots inventory slots of the hovered equipped bag, the
-    // tail that unequipping it would remove. Clears when nothing equipped is hovered.
+    // Highlights the exact inventory segment owned by the hovered equipped bag, the slots that
+    // unequipping it would remove. Clears when nothing equipped is hovered.
     private void ApplyBagHoverHighlight()
     {
-        if (_hoveredBagIndex < 0 || _inventory == null || !GodotObject.IsInstanceValid(_inventory))
+        if (_hoveredBagIndex < 0 ||
+            _inventory == null ||
+            !GodotObject.IsInstanceValid(_inventory) ||
+            !_inventory.TryGetBagSegment(_hoveredBagIndex, out var start, out var length))
         {
-            ClearTailHighlight();
+            ClearBagHighlight();
             return;
         }
 
-        var bag = _inventory.GetBag(_hoveredBagIndex);
-        if (bag == null)
-        {
-            ClearTailHighlight();
-            return;
-        }
-
-        HighlightTailSlots(bag.AdditionalSlots);
+        HighlightSegment(start, length);
     }
 
-    private void HighlightTailSlots(int count)
+    private void HighlightSegment(int start, int length)
     {
-        var total = _slotHighlights.Count;
-        var highlightFrom = Math.Max(0, total - Math.Max(0, count));
-        for (var i = 0; i < total; i++)
+        var end = start + length;
+        for (var i = 0; i < _slotHighlights.Count; i++)
         {
             var highlight = _slotHighlights[i];
             if (GodotObject.IsInstanceValid(highlight))
-                highlight.Visible = i >= highlightFrom;
+                highlight.Visible = i >= start && i < end;
         }
     }
 
-    private void ClearTailHighlight()
+    private void ClearBagHighlight()
     {
         foreach (var highlight in _slotHighlights)
         {

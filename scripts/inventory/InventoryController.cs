@@ -136,10 +136,16 @@ public partial class InventoryController : Node
         return IsValidBagIndex(bagSlotIndex) ? _bagSlots[bagSlotIndex] : null;
     }
 
-    // True when bagSlotIndex -> inventorySlotIndex is a legal equip/replace. Equip into an
-    // empty bag slot and replace with a larger/equal bag always grow capacity and only need
-    // a bag source. Replace with a smaller bag shrinks capacity, so the displaced bag's
-    // destination (the source slot) must survive and the removed tail slots must be empty.
+    // Each bag slot owns a deterministic contiguous segment in the flattened inventory, ordered
+    // base region -> BAG 1 -> BAG 2 -> BAG 3 -> BAG 4 (empty bag slots are zero-length). All bag
+    // mutations insert/resize/remove that bag's own segment in place; List shifting keeps the
+    // other segments' entries intact.
+
+    // True when bagSlotIndex -> inventorySlotIndex is a legal equip/replace. Equipping into an
+    // empty slot and replacing with a larger/equal bag only grow this bag's segment, so they
+    // just require a bag source. Replacing with a smaller bag truncates the suffix of this bag's
+    // own segment, so that suffix must be empty and the source (which receives the displaced bag)
+    // must not be one of the removed slots.
     public bool CanEquipBagFromInventory(int bagSlotIndex, int inventorySlotIndex)
     {
         if (!IsValidBagIndex(bagSlotIndex))
@@ -151,21 +157,22 @@ public partial class InventoryController : Node
         if (stackEntry.Stack.Item is not BagItemDefinition newBag)
             return false;
 
-        var oldCapacity = _slots.Count;
-        var newCapacity = _baseSlotCapacity + GetBagAdditionalSlotTotalWith(bagSlotIndex, newBag);
-        if (newCapacity < oldCapacity)
-        {
-            if (inventorySlotIndex >= newCapacity)
-                return false;
-            if (!AreSlotsEmptyInRange(newCapacity, oldCapacity))
-                return false;
-        }
+        var oldBag = _bagSlots[bagSlotIndex];
+        if (oldBag == null || newBag.AdditionalSlots >= oldBag.AdditionalSlots)
+            return true;
 
-        return true;
+        var segmentStart = GetBagSegmentStart(bagSlotIndex);
+        var removeStart = segmentStart + newBag.AdditionalSlots;
+        var removeEnd = segmentStart + oldBag.AdditionalSlots;
+        if (inventorySlotIndex >= removeStart && inventorySlotIndex < removeEnd)
+            return false;
+
+        return AreSlotsEmptyInRange(removeStart, removeEnd);
     }
 
-    // Equips the bag stack at inventorySlotIndex into bagSlotIndex. Any bag already there is
-    // displaced into the now-vacated source slot. Rejects (no mutation) when CanEquip fails.
+    // Equips the bag stack at inventorySlotIndex into bagSlotIndex, inserting or resizing that
+    // bag's segment in place. Any bag already there is displaced into the now-vacated source
+    // slot. Rejects (no mutation) when CanEquip fails.
     public bool TryEquipBagFromInventory(int bagSlotIndex, int inventorySlotIndex)
     {
         if (!CanEquipBagFromInventory(bagSlotIndex, inventorySlotIndex))
@@ -173,21 +180,37 @@ public partial class InventoryController : Node
 
         var stackEntry = (InventoryStackEntry)_slots[inventorySlotIndex];
         var newBag = (BagItemDefinition)stackEntry.Stack.Item;
-        var displaced = _bagSlots[bagSlotIndex];
+        var oldBag = _bagSlots[bagSlotIndex];
+        var segmentStart = GetBagSegmentStart(bagSlotIndex);
 
-        _bagSlots[bagSlotIndex] = newBag;
-        _slots[inventorySlotIndex] = displaced != null
-            ? new InventoryStackEntry(new InventoryStack(displaced, 1))
-            : null;
+        if (oldBag == null)
+        {
+            // Equip into an empty slot: clear the source, then insert this bag's empty segment.
+            _slots[inventorySlotIndex] = null;
+            _bagSlots[bagSlotIndex] = newBag;
+            InsertEmptySlots(segmentStart, newBag.AdditionalSlots);
+        }
+        else
+        {
+            // Replace: the displaced bag returns to the source slot, then resize the segment at
+            // its end so the segment's existing entries keep their relative positions.
+            _slots[inventorySlotIndex] = new InventoryStackEntry(new InventoryStack(oldBag, 1));
+            _bagSlots[bagSlotIndex] = newBag;
 
-        RebuildToEffectiveCapacity(false);
+            var delta = newBag.AdditionalSlots - oldBag.AdditionalSlots;
+            if (delta > 0)
+                InsertEmptySlots(segmentStart + oldBag.AdditionalSlots, delta);
+            else if (delta < 0)
+                _slots.RemoveRange(segmentStart + newBag.AdditionalSlots, -delta);
+        }
+
         EmitInventoryChanged();
         return true;
     }
 
-    // True when the equipped bag at bagSlotIndex may be unequipped into inventorySlotIndex.
-    // The destination must be empty and remain within the reduced capacity, and the removed
-    // tail slots must all be empty.
+    // True when the equipped bag at bagSlotIndex may be unequipped into inventorySlotIndex. The
+    // destination must be empty and lie outside this bag's own segment (which is removed), and
+    // that entire segment must be empty.
     public bool CanUnequipBagToInventory(int bagSlotIndex, int inventorySlotIndex)
     {
         if (!IsValidBagIndex(bagSlotIndex))
@@ -202,14 +225,12 @@ public partial class InventoryController : Node
         if (_slots[inventorySlotIndex] != null)
             return false;
 
-        var oldCapacity = _slots.Count;
-        var newCapacity = oldCapacity - bag.AdditionalSlots;
-        if (inventorySlotIndex >= newCapacity)
-            return false;
-        if (!AreSlotsEmptyInRange(newCapacity, oldCapacity))
+        var segmentStart = GetBagSegmentStart(bagSlotIndex);
+        var segmentEnd = segmentStart + bag.AdditionalSlots;
+        if (inventorySlotIndex >= segmentStart && inventorySlotIndex < segmentEnd)
             return false;
 
-        return true;
+        return AreSlotsEmptyInRange(segmentStart, segmentEnd);
     }
 
     public bool TryUnequipBagToInventory(int bagSlotIndex, int inventorySlotIndex)
@@ -218,11 +239,27 @@ public partial class InventoryController : Node
             return false;
 
         var bag = _bagSlots[bagSlotIndex];
+        var segmentStart = GetBagSegmentStart(bagSlotIndex);
+
         _slots[inventorySlotIndex] = new InventoryStackEntry(new InventoryStack(bag, 1));
         _bagSlots[bagSlotIndex] = null;
+        _slots.RemoveRange(segmentStart, bag.AdditionalSlots);
 
-        RebuildToEffectiveCapacity(false);
         EmitInventoryChanged();
+        return true;
+    }
+
+    // Exposes the inventory index range [start, start + length) owned by an equipped bag, for the
+    // capacity-contribution hover preview. Returns false for empty or invalid bag slots.
+    public bool TryGetBagSegment(int bagSlotIndex, out int start, out int length)
+    {
+        start = 0;
+        length = 0;
+        if (!IsValidBagIndex(bagSlotIndex) || _bagSlots[bagSlotIndex] == null)
+            return false;
+
+        start = GetBagSegmentStart(bagSlotIndex);
+        length = _bagSlots[bagSlotIndex].AdditionalSlots;
         return true;
     }
 
@@ -243,18 +280,26 @@ public partial class InventoryController : Node
         return total;
     }
 
-    // Bag additional-slot total assuming bagSlotIndex were set to replacement.
-    private int GetBagAdditionalSlotTotalWith(int bagSlotIndex, BagItemDefinition replacement)
+    // First inventory index owned by bagSlotIndex: base capacity plus the slots of every equipped
+    // bag in an earlier bag slot. Empty earlier bag slots contribute nothing.
+    private int GetBagSegmentStart(int bagSlotIndex)
     {
-        var total = 0;
-        for (var i = 0; i < _bagSlots.Length; i++)
+        var start = _baseSlotCapacity;
+        for (var i = 0; i < bagSlotIndex; i++)
         {
-            var bag = i == bagSlotIndex ? replacement : _bagSlots[i];
-            if (bag != null)
-                total += bag.AdditionalSlots;
+            if (_bagSlots[i] != null)
+                start += _bagSlots[i].AdditionalSlots;
         }
 
-        return total;
+        return start;
+    }
+
+    private void InsertEmptySlots(int index, int count)
+    {
+        if (count <= 0)
+            return;
+
+        _slots.InsertRange(index, new InventoryEntry[count]);
     }
 
     private bool AreSlotsEmptyInRange(int startInclusive, int endExclusive)
@@ -857,7 +902,7 @@ public partial class InventoryController : Node
             if (_slots[i] != null)
                 continue;
 
-            var stackAmount = Math.Min(item.MaxStackSize, remaining);
+            var stackAmount = Math.Min(GetEffectiveMaxStackSize(item), remaining);
             _slots[i] = new InventoryStackEntry(new InventoryStack(item, stackAmount));
             remaining -= stackAmount;
         }
@@ -889,7 +934,7 @@ public partial class InventoryController : Node
             if (entry != null)
                 continue;
 
-            remaining -= Math.Min(item.MaxStackSize, remaining);
+            remaining -= Math.Min(GetEffectiveMaxStackSize(item), remaining);
             if (remaining == 0)
                 return 0;
         }
@@ -905,8 +950,20 @@ public partial class InventoryController : Node
         return InventoryStackEntry.DefinitionsMatch(stack.Item, item);
     }
 
-    // Resizes _slots to match base + equipped bags. Bag transactions pre-validate that any
-    // removed tail is empty; this still refuses to drop occupied slots as a safety net.
+    // Bags are a non-stackable domain invariant regardless of resource configuration: a bag
+    // entry is always quantity 1, so excess quantity spills into separate single-bag slots.
+    private static int GetEffectiveMaxStackSize(InventoryItemDefinition item)
+    {
+        if (item is BagItemDefinition)
+            return 1;
+
+        return Math.Max(1, item.MaxStackSize);
+    }
+
+    // Reconciles the flat slot count with base + equipped bags by adjusting the tail. Only used
+    // for initial sizing and BaseSlotCapacity edits, when no bags are equipped (so the tail is
+    // the base region); runtime bag equip/unequip resize their own segments precisely instead.
+    // Refuses to drop occupied slots as a safety net.
     private void RebuildToEffectiveCapacity(bool emitChanged)
     {
         var targetCapacity = Math.Max(1, EffectiveCapacity);
