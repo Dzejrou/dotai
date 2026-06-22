@@ -38,6 +38,11 @@ public sealed class DungeonRunRecordSaveData
     public float? ResistanceBonus { get; set; }
     public float? DamageBonus { get; set; }
 
+    // Additive Points-earned field. Nullable so it is simply absent from saves written before it
+    // existed (loading as an unknown award rather than a fabricated zero). A legitimate zero award
+    // is written as an explicit 0, keeping it distinct from a legacy null.
+    public int? PointsEarned { get; set; }
+
     public static DungeonRunRecordSaveData FromRecord(DungeonRunRecord record)
     {
         return new DungeonRunRecordSaveData
@@ -60,6 +65,7 @@ public sealed class DungeonRunRecordSaveData
             HealthPowerBonus = record.HealthPowerBonus,
             ResistanceBonus = record.ResistanceBonus,
             DamageBonus = record.DamageBonus,
+            PointsEarned = record.PointsEarned,
         };
     }
 
@@ -154,6 +160,14 @@ public sealed class DungeonRunRecordSaveData
             damageBonus = DamageBonus.Value;
         }
 
+        // Points earned is additive, secondary data validated on its own (not part of the score
+        // group): present and non-negative loads as a real award, while an absent or negative value
+        // loads as unknown (the legacy fallback) without dropping the record. A legitimate zero award
+        // stays distinct from a legacy record that simply has no Points data.
+        int? pointsEarned = null;
+        if (PointsEarned.HasValue && PointsEarned.Value >= 0)
+            pointsEarned = PointsEarned.Value;
+
         record = new DungeonRunRecord(
             outcome,
             finishedAt,
@@ -172,7 +186,8 @@ public sealed class DungeonRunRecordSaveData
             levelIncreasePerRoom,
             healthPowerBonus,
             resistanceBonus,
-            damageBonus);
+            damageBonus,
+            pointsEarned);
         return true;
     }
 }

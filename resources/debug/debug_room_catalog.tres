@@ -5,8 +5,8 @@
 [ext_resource type="Resource" uid="uid://ejo42lrnqa8n" path="res://resources/world/room_definitions/combat_dungeon_room_definition.tres" id="3_combat_room_definition"]
 [ext_resource type="Resource" uid="uid://bmomkkn4vlrq" path="res://resources/world/room_definitions/timed_dungeon_room_definition.tres" id="4_timed_room_definition"]
 [ext_resource type="Resource" uid="uid://c15bea7iasp0m" path="res://resources/world/room_definitions/testing_void_room_definition.tres" id="5_testing_void_room_definition"]
-[ext_resource type="Resource" path="res://resources/world/room_definitions/special_dungeon_room_definition.tres" id="6_special_room_definition"]
-[ext_resource type="Resource" path="res://resources/world/room_definitions/boss_room_definition.tres" id="7_boss_room_definition"]
+[ext_resource type="Resource" uid="uid://bwp48ltnpnc20" path="res://resources/world/room_definitions/special_dungeon_room_definition.tres" id="6_special_room_definition"]
+[ext_resource type="Resource" uid="uid://qbwt3pspahiy" path="res://resources/world/room_definitions/boss_room_definition.tres" id="7_boss_room_definition"]
 
 [sub_resource type="Resource" id="Resource_debug_room_entry_combat"]
 script = ExtResource("2_debug_room_catalog_entry_script")

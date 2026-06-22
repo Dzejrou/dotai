@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3]
+[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3 uid="uid://qbwt3pspahiy"]
 
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
+[ext_resource type="Script" uid="uid://s0jdevbppgan" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
+[ext_resource type="Script" uid="uid://bfuc2gwmlgr3m" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/rooms/boss_room.tscn" id="3_boss_room"]
 [ext_resource type="PackedScene" path="res://scenes/world/rooms/contents/demon_boss_content.tscn" id="4_demon_boss_content"]
 

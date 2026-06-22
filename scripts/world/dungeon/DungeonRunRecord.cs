@@ -13,8 +13,11 @@ public sealed class DungeonRunRecord
     // Captures a finalized run from its live stats and the instant it was finalized. Used by
     // Dungeon.FinalizeRun. A freshly finalized run always carries score: base score from the live
     // stats, the run's difficulty multiplier (1.0 when no snapshot was captured), the rounded final
-    // score, and the selected difficulty fields for history.
-    public DungeonRunRecord(DungeonRunStats stats, DungeonRunOutcome outcome, DateTimeOffset finishedAt)
+    // score, and the selected difficulty fields for history. The Points award is computed by the
+    // Dungeon from its reward rules and the outcome (zero for any non-completed run) and passed in
+    // here, so the record never depends on the reward configuration itself. It defaults to zero for
+    // synthetic construction paths (verifiers) that do not model a reward.
+    public DungeonRunRecord(DungeonRunStats stats, DungeonRunOutcome outcome, DateTimeOffset finishedAt, int pointsEarned = 0)
         : this(
             outcome,
             finishedAt,
@@ -33,7 +36,8 @@ public sealed class DungeonRunRecord
             stats.Difficulty?.LevelIncreasePerRoom,
             stats.Difficulty?.HealthPowerBonus,
             stats.Difficulty?.ResistanceBonus,
-            stats.Difficulty?.DamageBonus)
+            stats.Difficulty?.DamageBonus,
+            pointsEarned)
     {
     }
 
@@ -42,7 +46,8 @@ public sealed class DungeonRunRecord
     // is nullable because saves written before timestamps existed have none; such legacy records
     // render with a fallback rather than being dropped. The score trio is likewise nullable: a save
     // written before scoring existed (or one whose score data was malformed) loads as unknown
-    // score, distinct from a legitimate zero score.
+    // score, distinct from a legitimate zero score. PointsEarned follows the same convention: null
+    // for a legacy/malformed save, distinct from a legitimate zero award.
     public DungeonRunRecord(
         DungeonRunOutcome outcome,
         DateTimeOffset? finishedAt,
@@ -61,7 +66,8 @@ public sealed class DungeonRunRecord
         int? levelIncreasePerRoom = null,
         float? healthPowerBonus = null,
         float? resistanceBonus = null,
-        float? damageBonus = null)
+        float? damageBonus = null,
+        int? pointsEarned = null)
     {
         Outcome = outcome;
         FinishedAt = finishedAt;
@@ -81,6 +87,7 @@ public sealed class DungeonRunRecord
         HealthPowerBonus = healthPowerBonus;
         ResistanceBonus = resistanceBonus;
         DamageBonus = damageBonus;
+        PointsEarned = pointsEarned;
     }
 
     private static float ResolveMultiplier(DungeonRunStats stats)
@@ -132,4 +139,11 @@ public sealed class DungeonRunRecord
     public float? HealthPowerBonus { get; }
     public float? ResistanceBonus { get; }
     public float? DamageBonus { get; }
+
+    // Points (the player-facing "DP") this run awarded, captured at finalization. A completed run
+    // stores its exact awarded amount (which may legitimately be 0 below the score-per-point
+    // threshold); a gave-up or otherwise non-completed run stores an explicit 0. Null only for a
+    // legacy saved record written before this field existed; the History UI shows a fallback for
+    // those rather than implying a zero award.
+    public int? PointsEarned { get; }
 }

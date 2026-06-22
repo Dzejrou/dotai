@@ -1,24 +1,15 @@
-[gd_resource type="Resource" script_class="DungeonGenerationRules" format=3]
+[gd_resource type="Resource" script_class="DungeonGenerationRules" format=3 uid="uid://qi1rnxgt8887"]
 
-[ext_resource type="Script" path="res://scripts/world/dungeon/DungeonGenerationRules.cs" id="1_rules_script"]
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="2_room_template_definition_script"]
-[ext_resource type="Resource" path="res://resources/world/room_definitions/combat_dungeon_room_definition.tres" id="3_combat_definition"]
-[ext_resource type="Resource" path="res://resources/world/room_definitions/timed_dungeon_room_definition.tres" id="4_timed_definition"]
-[ext_resource type="Resource" path="res://resources/world/room_definitions/special_dungeon_room_definition.tres" id="5_special_definition"]
-[ext_resource type="Resource" path="res://resources/world/room_definitions/boss_room_definition.tres" id="6_boss_definition"]
+[ext_resource type="Script" uid="uid://bsfvobjr32a83" path="res://scripts/world/dungeon/DungeonGenerationRules.cs" id="1_rules_script"]
+[ext_resource type="Script" uid="uid://s0jdevbppgan" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="2_room_template_definition_script"]
+[ext_resource type="Resource" uid="uid://ejo42lrnqa8n" path="res://resources/world/room_definitions/combat_dungeon_room_definition.tres" id="3_combat_definition"]
+[ext_resource type="Resource" uid="uid://bmomkkn4vlrq" path="res://resources/world/room_definitions/timed_dungeon_room_definition.tres" id="4_timed_definition"]
+[ext_resource type="Resource" uid="uid://bwp48ltnpnc20" path="res://resources/world/room_definitions/special_dungeon_room_definition.tres" id="5_special_definition"]
+[ext_resource type="Resource" uid="uid://qbwt3pspahiy" path="res://resources/world/room_definitions/boss_room_definition.tres" id="6_boss_definition"]
 
 [resource]
 script = ExtResource("1_rules_script")
-OrdinaryRoomCount = 10
-StartingRoomLevel = 1
-LevelIncreasePerRoom = 1
-CombatWeight = 75.0
-TimedWeight = 15.0
-SpecialWeight = 10.0
-SpecialRoomPity = 5
 CombatRoomDefinitions = Array[ExtResource("2_room_template_definition_script")]([ExtResource("3_combat_definition")])
 TimedRoomDefinitions = Array[ExtResource("2_room_template_definition_script")]([ExtResource("4_timed_definition")])
 SpecialRoomDefinition = ExtResource("5_special_definition")
 BossRoomDefinition = ExtResource("6_boss_definition")
-PreBossContentId = &"pre_boss"
-BossContentId = &"demon_boss_content"

@@ -33,6 +33,12 @@ public partial class Dungeon : Node
     [Signal]
     public delegate void RunStateChangedEventHandler();
 
+    // Raised whenever the saved Points balance (the player-facing "DP") changes: a completed run's
+    // award, a spend, or a debug/load replacement. Carries the new total so listeners refresh
+    // without re-reading.
+    [Signal]
+    public delegate void PointsChangedEventHandler(int totalPoints);
+
     // The only generation source: the plan is produced from this resource. The legacy
     // live-random exports were removed in favor of plan-driven traversal.
     [Export]
@@ -43,6 +49,12 @@ public partial class Dungeon : Node
     // into an immutable snapshot at start.
     [Export]
     public DungeonDifficultyRules DifficultyRules { get; set; }
+
+    // Centrally inspector-editable reward tuning: how a completed run's finalized score converts into
+    // saved Points. Unassigned falls back to the shipped defaults so awarding never depends on a
+    // resource being wired up.
+    [Export]
+    public DungeonRewardRules RewardRules { get; set; }
 
     private readonly DungeonRunPlanGenerator _generator = new();
     private readonly RandomNumberGenerator _seedRng = new();
@@ -72,6 +84,11 @@ public partial class Dungeon : Node
     // Newest-first finalized-run records, in memory only for this slice. Survives subsequent runs
     // while this Dungeon node lives, but is not persisted (lost on scene reload).
     private readonly List<DungeonRunRecord> _history = new();
+
+    // Saved Points balance (the player-facing "DP"). Owned here with dungeon progression rather than
+    // in the inventory: a completed run credits it at finalization, and the save layer persists and
+    // restores it. Never negative.
+    private int _points;
 
     // Read-only run state, suitable for a future Dungeon HUB / debug display.
     public bool HasActiveRun => _activePlan != null;
@@ -109,6 +126,51 @@ public partial class Dungeon : Node
         }
 
         EmitSignal(SignalName.RunStateChanged);
+    }
+
+    // Read-only current Points balance (the player-facing "DP"). Mutated only through the award,
+    // spend and debug/load paths below.
+    public int Points => _points;
+
+    // Spends Points for a future dungeon shop purchase. A zero-cost spend always succeeds without
+    // changing the balance or emitting; a negative amount is rejected; an amount over the balance
+    // fails and leaves the balance untouched. Returns whether the spend happened.
+    public bool TrySpendPoints(int amount)
+    {
+        if (amount < 0)
+            return false;
+
+        if (amount == 0)
+            return true;
+
+        if (_points < amount)
+            return false;
+
+        _points -= amount;
+        EmitSignal(SignalName.PointsChanged, _points);
+        return true;
+    }
+
+    // Replaces the Points balance from a save load or a debug control, clamping a malformed negative
+    // value to zero. Always emits so listeners (the Dungeon HUB DP label) refresh immediately even
+    // when the value is unchanged, and never adds to the existing balance.
+    public void SetPointsForDebugOrLoad(int amount)
+    {
+        _points = Math.Max(0, amount);
+        EmitSignal(SignalName.PointsChanged, _points);
+    }
+
+    // Credits earned Points to the saved balance. Internal to the run-finalization path: the caller
+    // passes the amount computed once from the run's outcome and finalized score. A non-positive
+    // award is ignored, so a zero-Point completion (or any non-completed outcome) never emits a
+    // spurious change.
+    private void AwardPoints(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        _points += amount;
+        EmitSignal(SignalName.PointsChanged, _points);
     }
 
     public override void _Ready()
@@ -238,21 +300,43 @@ public partial class Dungeon : Node
     }
 
     // Builds exactly one immutable record for the active run, prepends it to the newest-first
-    // in-memory history (trimmed to MaxHistoryRecords), then clears the run. Idempotent: with no
-    // active run it records nothing and returns null, so repeated callbacks cannot duplicate a
-    // record. Boss death never calls this; completion is routed explicitly by World.
+    // in-memory history (trimmed to MaxHistoryRecords), credits the run's Points award, then clears
+    // the run. Idempotent: with no active run it records nothing, awards nothing and returns null, so
+    // repeated callbacks cannot duplicate a record or double-award. Boss death never calls this;
+    // completion is routed explicitly by World.
     public DungeonRunRecord FinalizeRun(DungeonRunOutcome outcome)
     {
         if (_activePlan == null || _activeStats == null)
             return null;
 
-        var record = new DungeonRunRecord(_activeStats, outcome, DateTimeOffset.Now);
+        // Compute the Points award once, here at the single authoritative finalization boundary.
+        // Only a Completed run earns Points; every other outcome earns an explicit zero. The award
+        // uses the already-finalized difficulty-adjusted final score (never the raw base score),
+        // rounded the same way the record itself rounds it so the two always agree.
+        var multiplier = _activeStats.Difficulty?.DifficultyMultiplier ?? DungeonRunRecord.UnmodifiedDifficultyMultiplier;
+        var finalScore = DungeonRunRecord.ComputeFinalScore(_activeStats.BaseScore, multiplier);
+        var pointsEarned = outcome == DungeonRunOutcome.Completed
+            ? ResolveRewardRules().PointsForScore(finalScore)
+            : 0;
+
+        var record = new DungeonRunRecord(_activeStats, outcome, DateTimeOffset.Now, pointsEarned);
         _history.Insert(0, record);
         if (_history.Count > MaxHistoryRecords)
             _history.RemoveRange(MaxHistoryRecords, _history.Count - MaxHistoryRecords);
 
+        // Credit the earned Points at the same boundary that records the run. AwardPoints ignores a
+        // zero award, so a gave-up or sub-threshold completion leaves the balance untouched.
+        AwardPoints(pointsEarned);
+
         ClearActiveRun();
         return record;
+    }
+
+    // The reward rules in effect, falling back to the shipped defaults when no resource is assigned
+    // so awarding always has a valid, non-zero-divisor configuration.
+    private DungeonRewardRules ResolveRewardRules()
+    {
+        return RewardRules ?? DungeonRewardRules.CreateDefault();
     }
 
     // Counts the active room as cleared once (used for the terminal Boss room when its completion
