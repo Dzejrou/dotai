@@ -583,7 +583,7 @@ public partial class MenuHub : Control
         _debugRoomPage?.Bind(world, roomEntered);
     }
 
-    public void BindDungeonPage(World world, Action resume, Func<ulong, int, int, string> startDungeon, Func<string> giveUp)
+    public void BindDungeonPage(World world, Action resume, Func<ulong, int, DungeonDifficultySelection, string> startDungeon, Func<string> giveUp)
     {
         _dungeonPage?.Bind(world, resume, startDungeon, giveUp);
         _dungeonPage?.SetEntranceAuthorized(_dungeonEntranceAuthorized);

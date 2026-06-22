@@ -30,6 +30,14 @@ public sealed class DungeonRunRecordSaveData
     public float? DifficultyMultiplier { get; set; }
     public int? FinalScore { get; set; }
 
+    // Selected difficulty fields (the starting room level is already StartingRoomLevel above).
+    // Nullable and treated as an all-or-nothing group: absent in legacy saves, which loads as unknown
+    // difficulty rather than fabricated zeros. A legitimate 0% bonus is written as an explicit 0.
+    public int? LevelIncreasePerRoom { get; set; }
+    public float? HealthPowerBonus { get; set; }
+    public float? ResistanceBonus { get; set; }
+    public float? DamageBonus { get; set; }
+
     public static DungeonRunRecordSaveData FromRecord(DungeonRunRecord record)
     {
         return new DungeonRunRecordSaveData
@@ -48,6 +56,10 @@ public sealed class DungeonRunRecordSaveData
             BaseScore = record.BaseScore,
             DifficultyMultiplier = record.DifficultyMultiplier,
             FinalScore = record.FinalScore,
+            LevelIncreasePerRoom = record.LevelIncreasePerRoom,
+            HealthPowerBonus = record.HealthPowerBonus,
+            ResistanceBonus = record.ResistanceBonus,
+            DamageBonus = record.DamageBonus,
         };
     }
 
@@ -121,6 +133,27 @@ public sealed class DungeonRunRecordSaveData
             finalScore = FinalScore.Value;
         }
 
+        // Difficulty selection is secondary display data, treated as an all-or-nothing group like the
+        // score trio: only when every field is present and individually valid does it load; otherwise
+        // it loads as unknown (the legacy fallback) without dropping the record. A legitimate 0% bonus
+        // stays distinct from a legacy record that simply has no difficulty data.
+        int? levelIncreasePerRoom = null;
+        float? healthPowerBonus = null;
+        float? resistanceBonus = null;
+        float? damageBonus = null;
+        if (LevelIncreasePerRoom.HasValue && HealthPowerBonus.HasValue &&
+            ResistanceBonus.HasValue && DamageBonus.HasValue &&
+            LevelIncreasePerRoom.Value >= 0 &&
+            float.IsFinite(HealthPowerBonus.Value) &&
+            float.IsFinite(ResistanceBonus.Value) &&
+            float.IsFinite(DamageBonus.Value))
+        {
+            levelIncreasePerRoom = LevelIncreasePerRoom.Value;
+            healthPowerBonus = HealthPowerBonus.Value;
+            resistanceBonus = ResistanceBonus.Value;
+            damageBonus = DamageBonus.Value;
+        }
+
         record = new DungeonRunRecord(
             outcome,
             finishedAt,
@@ -135,7 +168,11 @@ public sealed class DungeonRunRecordSaveData
             FurthestRoomLevel,
             baseScore,
             difficultyMultiplier,
-            finalScore);
+            finalScore,
+            levelIncreasePerRoom,
+            healthPowerBonus,
+            resistanceBonus,
+            damageBonus);
         return true;
     }
 }

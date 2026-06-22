@@ -6,14 +6,14 @@ using System;
 // recorded run.
 public sealed class DungeonRunRecord
 {
-    // Difficulty is not yet selectable, so every finalized run scores at this unmodified multiplier
-    // in the current slice. Captured per record so a later difficulty slice can vary it without
-    // touching the room-award lifecycle or rewriting already-recorded runs.
+    // Fallback multiplier for a run finalized without a difficulty snapshot (legacy/no-difficulty
+    // construction). A real run always carries its snapshot multiplier instead.
     public const float UnmodifiedDifficultyMultiplier = 1.0f;
 
     // Captures a finalized run from its live stats and the instant it was finalized. Used by
     // Dungeon.FinalizeRun. A freshly finalized run always carries score: base score from the live
-    // stats, the unmodified multiplier, and the rounded final score.
+    // stats, the run's difficulty multiplier (1.0 when no snapshot was captured), the rounded final
+    // score, and the selected difficulty fields for history.
     public DungeonRunRecord(DungeonRunStats stats, DungeonRunOutcome outcome, DateTimeOffset finishedAt)
         : this(
             outcome,
@@ -28,8 +28,12 @@ public sealed class DungeonRunRecord
             stats.FurthestRoomIndex,
             stats.FurthestRoomLevel,
             stats.BaseScore,
-            UnmodifiedDifficultyMultiplier,
-            ComputeFinalScore(stats.BaseScore, UnmodifiedDifficultyMultiplier))
+            ResolveMultiplier(stats),
+            ComputeFinalScore(stats.BaseScore, ResolveMultiplier(stats)),
+            stats.Difficulty?.LevelIncreasePerRoom,
+            stats.Difficulty?.HealthPowerBonus,
+            stats.Difficulty?.ResistanceBonus,
+            stats.Difficulty?.DamageBonus)
     {
     }
 
@@ -53,7 +57,11 @@ public sealed class DungeonRunRecord
         int furthestRoomLevel,
         int? baseScore = null,
         float? difficultyMultiplier = null,
-        int? finalScore = null)
+        int? finalScore = null,
+        int? levelIncreasePerRoom = null,
+        float? healthPowerBonus = null,
+        float? resistanceBonus = null,
+        float? damageBonus = null)
     {
         Outcome = outcome;
         FinishedAt = finishedAt;
@@ -69,6 +77,15 @@ public sealed class DungeonRunRecord
         BaseScore = baseScore;
         DifficultyMultiplier = difficultyMultiplier;
         FinalScore = finalScore;
+        LevelIncreasePerRoom = levelIncreasePerRoom;
+        HealthPowerBonus = healthPowerBonus;
+        ResistanceBonus = resistanceBonus;
+        DamageBonus = damageBonus;
+    }
+
+    private static float ResolveMultiplier(DungeonRunStats stats)
+    {
+        return stats?.Difficulty?.DifficultyMultiplier ?? UnmodifiedDifficultyMultiplier;
     }
 
     // Rounds a base score by a difficulty multiplier into the final score. Centralized so the
@@ -106,4 +123,13 @@ public sealed class DungeonRunRecord
     public int? BaseScore { get; }
     public float? DifficultyMultiplier { get; }
     public int? FinalScore { get; }
+
+    // Selected difficulty fields captured at finalization, shown in history details. The starting
+    // room level lives in StartingRoomLevel above; these are the remaining selections. Null only for
+    // legacy saved records written before difficulty existed (or whose saved value was malformed); the
+    // History UI shows a fallback for those rather than a fabricated value.
+    public int? LevelIncreasePerRoom { get; }
+    public float? HealthPowerBonus { get; }
+    public float? ResistanceBonus { get; }
+    public float? DamageBonus { get; }
 }

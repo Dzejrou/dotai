@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://djb1hs85i6uga" path="res://scripts/inventory/InventoryController.cs" id="14_inventory"]
 [ext_resource type="Resource" path="res://resources/inventory/inventory_item_catalog.tres" id="14b_item_catalog"]
 [ext_resource type="Resource" path="res://resources/world/dungeon/dungeon_generation_rules.tres" id="16_dungeon_generation_rules"]
+[ext_resource type="Resource" path="res://resources/world/dungeon/dungeon_difficulty_rules.tres" id="17_dungeon_difficulty_rules"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
@@ -48,3 +49,4 @@ GearGenerationRules = ExtResource("4b_gear_rules")
 [node name="Dungeon" type="Node" parent="." unique_id=894211917]
 script = ExtResource("7_dungeon")
 GenerationRules = ExtResource("16_dungeon_generation_rules")
+DifficultyRules = ExtResource("17_dungeon_difficulty_rules")

@@ -16,12 +16,33 @@ public abstract partial class ActorSpawnPoint : Marker2D
     private Node2D _currentSpawnedActor;
     private CombatCharacter _trackedCombatCharacter;
     private bool _isOccupied;
+    private DungeonActorBuff _dungeonActorBuff;
 
     public Node2D CurrentSpawnedActor => ResolveTrackedActor();
+
+    // Configures the dungeon difficulty buff stamped onto every actor this spawn point establishes.
+    // Set by Dungeon while preparing a managed room (before the room enters the tree), so the buff is
+    // in place by the time actors spawn or are adopted. Application is idempotent and unique, so it
+    // never stacks across repeated spawns, restorations or reconciliations.
+    public void SetDungeonActorBuff(DungeonActorBuff buff)
+    {
+        _dungeonActorBuff = buff;
+        // Stamp an already-live tracked actor (a spawn point configured after its actor is up); a
+        // no-op before tree entry, where the actor is not yet initialized.
+        ApplyDungeonBuffToTrackedActor(initializeHealth: true);
+    }
 
     public override void _EnterTree()
     {
         ReconcileTrackedActor();
+    }
+
+    public override void _Ready()
+    {
+        // Authored actors are adopted in _EnterTree, before their own _Ready runs. By now they are
+        // fully initialized, so a configured dungeon buff is stamped onto them here at full boosted
+        // Max Health. Spawner-driven actors are still empty at this point and are buffed on Respawn.
+        ApplyDungeonBuffToTrackedActor(initializeHealth: true);
     }
 
     public void Respawn()
@@ -38,6 +59,9 @@ public abstract partial class ActorSpawnPoint : Marker2D
         _currentSpawnedActor = actor;
         ConnectTrackedActorSignals(actor);
         SetOccupied(true);
+
+        // Freshly spawned: stamp the dungeon buff and begin at full boosted Max Health.
+        ApplyDungeonBuffToTrackedActor(initializeHealth: true);
     }
 
     public void Restore()
@@ -58,6 +82,9 @@ public abstract partial class ActorSpawnPoint : Marker2D
             }
 
             combatCharacter.RestoreCombatState();
+            // RestoreCombatState cleared all effects and healed to base full; re-stamp the dungeon buff
+            // and refill to the boosted maximum so a restored actor matches a freshly spawned one.
+            ApplyDungeonBuffToTrackedActor(initializeHealth: true);
             return;
         }
 
@@ -261,6 +288,17 @@ public abstract partial class ActorSpawnPoint : Marker2D
     private static bool IsTrackedActorDead(Node2D actor)
     {
         return actor is CombatCharacter combatCharacter && combatCharacter.IsDead;
+    }
+
+    private void ApplyDungeonBuffToTrackedActor(bool initializeHealth)
+    {
+        if (_dungeonActorBuff == null)
+            return;
+
+        // Only stamp an actor that is fully in the tree (and therefore initialized). Before tree
+        // entry the actor's status controller is not ready, so this safely skips.
+        if (ResolveTrackedActor() is CombatCharacter combatCharacter && combatCharacter.IsInsideTree())
+            _dungeonActorBuff.ApplyTo(combatCharacter, initializeHealth);
     }
 
     protected abstract Node2D SpawnActor();
