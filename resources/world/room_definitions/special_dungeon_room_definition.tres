@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3]
+[gd_resource type="Resource" script_class="RoomTemplateDefinition" format=3 uid="uid://bwp48ltnpnc20"]
 
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
-[ext_resource type="Script" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
+[ext_resource type="Script" uid="uid://s0jdevbppgan" path="res://scripts/world/rooms/RoomTemplateDefinition.cs" id="1_room_template_definition_script"]
+[ext_resource type="Script" uid="uid://bfuc2gwmlgr3m" path="res://scripts/world/rooms/RoomContentOption.cs" id="2_room_content_option_script"]
 [ext_resource type="PackedScene" uid="uid://c8qcan8jddo8k" path="res://scenes/world/rooms/special_dungeon_room.tscn" id="3_special_dungeon_room"]
 [ext_resource type="PackedScene" path="res://scenes/world/rooms/contents/dryad_rest_content.tscn" id="4_dryad_rest_content"]
 [ext_resource type="PackedScene" path="res://scenes/world/rooms/contents/merchant_shop_content.tscn" id="5_merchant_shop_content"]
@@ -12,14 +12,12 @@ script = ExtResource("2_room_content_option_script")
 Id = &"dryad_rest"
 DisplayName = "Dryad Rest"
 ContentScene = ExtResource("4_dryad_rest_content")
-CompletionPoints = 0
 
 [sub_resource type="Resource" id="Resource_merchant_shop_option"]
 script = ExtResource("2_room_content_option_script")
 Id = &"merchant_shop"
 DisplayName = "Merchant Shop"
 ContentScene = ExtResource("5_merchant_shop_content")
-CompletionPoints = 0
 
 [sub_resource type="Resource" id="Resource_pre_boss_option"]
 script = ExtResource("2_room_content_option_script")
@@ -27,7 +25,6 @@ Id = &"pre_boss"
 DisplayName = "Pre-Boss"
 ContentScene = ExtResource("6_pre_boss_content")
 Weight = 0.0
-CompletionPoints = 0
 
 [resource]
 script = ExtResource("1_room_template_definition_script")

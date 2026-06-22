@@ -17,176 +17,176 @@
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxHealth"
 Quality = 0
-MaxValue = 40
+MaxValue = 40.0
 
 [sub_resource type="Resource" id="ms_MaxHealth_Common"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxHealth"
-MaxValue = 100
+MaxValue = 100.0
 
 [sub_resource type="Resource" id="ms_MaxHealth_Uncommon"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxHealth"
 Quality = 2
-MaxValue = 200
+MaxValue = 200.0
 
 [sub_resource type="Resource" id="ms_MaxHealth_Rare"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxHealth"
 Quality = 3
-MaxValue = 350
+MaxValue = 350.0
 
 [sub_resource type="Resource" id="ms_MaxHealth_Epic"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxHealth"
 Quality = 4
-MaxValue = 500
+MaxValue = 500.0
 
 [sub_resource type="Resource" id="ms_MaxHealth_Legendary"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxHealth"
 Quality = 5
-MaxValue = 750
+MaxValue = 750.0
 
 [sub_resource type="Resource" id="ms_MaxMana_Trash"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxMana"
 Quality = 0
-MaxValue = 40
+MaxValue = 40.0
 
 [sub_resource type="Resource" id="ms_MaxMana_Common"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxMana"
-MaxValue = 100
+MaxValue = 100.0
 
 [sub_resource type="Resource" id="ms_MaxMana_Uncommon"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxMana"
 Quality = 2
-MaxValue = 200
+MaxValue = 200.0
 
 [sub_resource type="Resource" id="ms_MaxMana_Rare"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxMana"
 Quality = 3
-MaxValue = 350
+MaxValue = 350.0
 
 [sub_resource type="Resource" id="ms_MaxMana_Epic"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxMana"
 Quality = 4
-MaxValue = 500
+MaxValue = 500.0
 
 [sub_resource type="Resource" id="ms_MaxMana_Legendary"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MaxMana"
 Quality = 5
-MaxValue = 750
+MaxValue = 750.0
 
 [sub_resource type="Resource" id="ms_MP5_Trash"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MP5"
 Quality = 0
-MaxValue = 4
+MaxValue = 4.0
 
 [sub_resource type="Resource" id="ms_MP5_Common"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MP5"
-MaxValue = 10
+MaxValue = 10.0
 
 [sub_resource type="Resource" id="ms_MP5_Uncommon"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MP5"
 Quality = 2
-MaxValue = 20
+MaxValue = 20.0
 
 [sub_resource type="Resource" id="ms_MP5_Rare"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MP5"
 Quality = 3
-MaxValue = 30
+MaxValue = 30.0
 
 [sub_resource type="Resource" id="ms_MP5_Epic"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MP5"
 Quality = 4
-MaxValue = 40
+MaxValue = 40.0
 
 [sub_resource type="Resource" id="ms_MP5_Legendary"]
 script = ExtResource("g_scale_entry_script")
 StatId = "MP5"
 Quality = 5
-MaxValue = 60
+MaxValue = 60.0
 
 [sub_resource type="Resource" id="ms_Power_Trash"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Power"
 Quality = 0
-MaxValue = 10
+MaxValue = 10.0
 
 [sub_resource type="Resource" id="ms_Power_Common"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Power"
-MaxValue = 25
+MaxValue = 25.0
 
 [sub_resource type="Resource" id="ms_Power_Uncommon"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Power"
 Quality = 2
-MaxValue = 50
+MaxValue = 50.0
 
 [sub_resource type="Resource" id="ms_Power_Rare"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Power"
 Quality = 3
-MaxValue = 75
+MaxValue = 75.0
 
 [sub_resource type="Resource" id="ms_Power_Epic"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Power"
 Quality = 4
-MaxValue = 110
+MaxValue = 110.0
 
 [sub_resource type="Resource" id="ms_Power_Legendary"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Power"
 Quality = 5
-MaxValue = 160
+MaxValue = 160.0
 
 [sub_resource type="Resource" id="ms_Haste_Trash"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Haste"
 Quality = 0
-MaxValue = 40
+MaxValue = 40.0
 
 [sub_resource type="Resource" id="ms_Haste_Common"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Haste"
-MaxValue = 100
+MaxValue = 100.0
 
 [sub_resource type="Resource" id="ms_Haste_Uncommon"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Haste"
 Quality = 2
-MaxValue = 200
+MaxValue = 200.0
 
 [sub_resource type="Resource" id="ms_Haste_Rare"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Haste"
 Quality = 3
-MaxValue = 350
+MaxValue = 350.0
 
 [sub_resource type="Resource" id="ms_Haste_Epic"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Haste"
 Quality = 4
-MaxValue = 500
+MaxValue = 500.0
 
 [sub_resource type="Resource" id="ms_Haste_Legendary"]
 script = ExtResource("g_scale_entry_script")
 StatId = "Haste"
 Quality = 5
-MaxValue = 750
+MaxValue = 750.0
 
 [sub_resource type="Resource" id="ms_MovementSpeedMultiplier_Trash"]
 script = ExtResource("g_scale_entry_script")
@@ -646,27 +646,27 @@ MaxValue = 0.3
 [sub_resource type="Resource" id="sv_Trash_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
-Value = 5
+Value = 5.0
 
 [sub_resource type="Resource" id="sv_Trash_MaxMana"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxMana"
-Value = 5
+Value = 5.0
 
 [sub_resource type="Resource" id="sv_Trash_MP5"]
 script = ExtResource("g_value_entry_script")
 StatId = "MP5"
-Value = 1
+Value = 1.0
 
 [sub_resource type="Resource" id="sv_Trash_Power"]
 script = ExtResource("g_value_entry_script")
 StatId = "Power"
-Value = 1
+Value = 1.0
 
 [sub_resource type="Resource" id="sv_Trash_Haste"]
 script = ExtResource("g_value_entry_script")
 StatId = "Haste"
-Value = 5
+Value = 5.0
 
 [sub_resource type="Resource" id="sv_Trash_MovementSpeedMultiplier"]
 script = ExtResource("g_value_entry_script")
@@ -698,27 +698,27 @@ SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Tras
 [sub_resource type="Resource" id="sv_Common_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
-Value = 10
+Value = 10.0
 
 [sub_resource type="Resource" id="sv_Common_MaxMana"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxMana"
-Value = 10
+Value = 10.0
 
 [sub_resource type="Resource" id="sv_Common_MP5"]
 script = ExtResource("g_value_entry_script")
 StatId = "MP5"
-Value = 2
+Value = 2.0
 
 [sub_resource type="Resource" id="sv_Common_Power"]
 script = ExtResource("g_value_entry_script")
 StatId = "Power"
-Value = 2
+Value = 2.0
 
 [sub_resource type="Resource" id="sv_Common_Haste"]
 script = ExtResource("g_value_entry_script")
 StatId = "Haste"
-Value = 10
+Value = 10.0
 
 [sub_resource type="Resource" id="sv_Common_MovementSpeedMultiplier"]
 script = ExtResource("g_value_entry_script")
@@ -751,27 +751,27 @@ SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Comm
 [sub_resource type="Resource" id="sv_Uncommon_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
-Value = 20
+Value = 20.0
 
 [sub_resource type="Resource" id="sv_Uncommon_MaxMana"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxMana"
-Value = 20
+Value = 20.0
 
 [sub_resource type="Resource" id="sv_Uncommon_MP5"]
 script = ExtResource("g_value_entry_script")
 StatId = "MP5"
-Value = 3
+Value = 3.0
 
 [sub_resource type="Resource" id="sv_Uncommon_Power"]
 script = ExtResource("g_value_entry_script")
 StatId = "Power"
-Value = 4
+Value = 4.0
 
 [sub_resource type="Resource" id="sv_Uncommon_Haste"]
 script = ExtResource("g_value_entry_script")
 StatId = "Haste"
-Value = 20
+Value = 20.0
 
 [sub_resource type="Resource" id="sv_Uncommon_MovementSpeedMultiplier"]
 script = ExtResource("g_value_entry_script")
@@ -806,27 +806,27 @@ SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Unco
 [sub_resource type="Resource" id="sv_Rare_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
-Value = 35
+Value = 35.0
 
 [sub_resource type="Resource" id="sv_Rare_MaxMana"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxMana"
-Value = 35
+Value = 35.0
 
 [sub_resource type="Resource" id="sv_Rare_MP5"]
 script = ExtResource("g_value_entry_script")
 StatId = "MP5"
-Value = 4
+Value = 4.0
 
 [sub_resource type="Resource" id="sv_Rare_Power"]
 script = ExtResource("g_value_entry_script")
 StatId = "Power"
-Value = 6
+Value = 6.0
 
 [sub_resource type="Resource" id="sv_Rare_Haste"]
 script = ExtResource("g_value_entry_script")
 StatId = "Haste"
-Value = 35
+Value = 35.0
 
 [sub_resource type="Resource" id="sv_Rare_MovementSpeedMultiplier"]
 script = ExtResource("g_value_entry_script")
@@ -861,27 +861,27 @@ SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Rare
 [sub_resource type="Resource" id="sv_Epic_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
-Value = 50
+Value = 50.0
 
 [sub_resource type="Resource" id="sv_Epic_MaxMana"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxMana"
-Value = 50
+Value = 50.0
 
 [sub_resource type="Resource" id="sv_Epic_MP5"]
 script = ExtResource("g_value_entry_script")
 StatId = "MP5"
-Value = 6
+Value = 6.0
 
 [sub_resource type="Resource" id="sv_Epic_Power"]
 script = ExtResource("g_value_entry_script")
 StatId = "Power"
-Value = 9
+Value = 9.0
 
 [sub_resource type="Resource" id="sv_Epic_Haste"]
 script = ExtResource("g_value_entry_script")
 StatId = "Haste"
-Value = 50
+Value = 50.0
 
 [sub_resource type="Resource" id="sv_Epic_MovementSpeedMultiplier"]
 script = ExtResource("g_value_entry_script")
@@ -916,27 +916,27 @@ SubstatValues = Array[ExtResource("g_value_entry_script")]([SubResource("sv_Epic
 [sub_resource type="Resource" id="sv_Legendary_MaxHealth"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxHealth"
-Value = 75
+Value = 75.0
 
 [sub_resource type="Resource" id="sv_Legendary_MaxMana"]
 script = ExtResource("g_value_entry_script")
 StatId = "MaxMana"
-Value = 75
+Value = 75.0
 
 [sub_resource type="Resource" id="sv_Legendary_MP5"]
 script = ExtResource("g_value_entry_script")
 StatId = "MP5"
-Value = 8
+Value = 8.0
 
 [sub_resource type="Resource" id="sv_Legendary_Power"]
 script = ExtResource("g_value_entry_script")
 StatId = "Power"
-Value = 12
+Value = 12.0
 
 [sub_resource type="Resource" id="sv_Legendary_Haste"]
 script = ExtResource("g_value_entry_script")
 StatId = "Haste"
-Value = 75
+Value = 75.0
 
 [sub_resource type="Resource" id="sv_Legendary_MovementSpeedMultiplier"]
 script = ExtResource("g_value_entry_script")

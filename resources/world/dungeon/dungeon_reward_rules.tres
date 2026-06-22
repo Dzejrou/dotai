@@ -1,8 +1,6 @@
-[gd_resource type="Resource" script_class="DungeonRewardRules" format=3]
+[gd_resource type="Resource" script_class="DungeonRewardRules" format=3 uid="uid://dvxgm8qdvtorq"]
 
-[ext_resource type="Script" path="res://scripts/world/dungeon/DungeonRewardRules.cs" id="1_reward_rules"]
+[ext_resource type="Script" uid="uid://cp1vaa6cncxdk" path="res://scripts/world/dungeon/DungeonRewardRules.cs" id="1_reward_rules"]
 
 [resource]
 script = ExtResource("1_reward_rules")
-ScorePerPoint = 100
-MaximumPointsPerRun = 0

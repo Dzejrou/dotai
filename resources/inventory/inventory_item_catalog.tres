@@ -1,16 +1,17 @@
-[gd_resource type="Resource" script_class="InventoryItemCatalog" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="InventoryItemCatalog" format=3 uid="uid://dgr3mwn2bwsnq"]
 
-[ext_resource type="Script" path="res://scripts/inventory/InventoryItemCatalog.cs" id="1_catalog_script"]
-[ext_resource type="Resource" path="res://resources/inventory/items/chest_key.tres" id="2_chest_key_item"]
-[ext_resource type="Resource" path="res://resources/inventory/items/arcane_crystal.tres" id="3_arcane_crystal_item"]
-[ext_resource type="Resource" path="res://resources/inventory/items/mystic_crystal.tres" id="4_mystic_crystal_item"]
-[ext_resource type="Resource" path="res://resources/inventory/items/void_crystal.tres" id="5_void_crystal_item"]
-[ext_resource type="Resource" path="res://resources/inventory/items/pie.tres" id="6_pie_item"]
-[ext_resource type="Resource" path="res://resources/inventory/items/beer.tres" id="7_beer_item"]
+[ext_resource type="Script" uid="uid://jqiq5eawdqim" path="res://scripts/inventory/InventoryItemDefinition.cs" id="1_bu8fx"]
+[ext_resource type="Script" uid="uid://4km8rmpgygtu" path="res://scripts/inventory/InventoryItemCatalog.cs" id="1_catalog_script"]
+[ext_resource type="Resource" uid="uid://ccoijw6myf2lm" path="res://resources/inventory/items/chest_key.tres" id="2_chest_key_item"]
+[ext_resource type="Resource" uid="uid://crob7w31xg2we" path="res://resources/inventory/items/arcane_crystal.tres" id="3_arcane_crystal_item"]
+[ext_resource type="Resource" uid="uid://m8e5cgx3crbc" path="res://resources/inventory/items/mystic_crystal.tres" id="4_mystic_crystal_item"]
+[ext_resource type="Resource" uid="uid://6fjq06j0k442" path="res://resources/inventory/items/void_crystal.tres" id="5_void_crystal_item"]
+[ext_resource type="Resource" uid="uid://cy2blig0k7fue" path="res://resources/inventory/items/pie.tres" id="6_pie_item"]
+[ext_resource type="Resource" uid="uid://bvjdt8lcseefg" path="res://resources/inventory/items/beer.tres" id="7_beer_item"]
 [ext_resource type="Resource" path="res://resources/inventory/items/small_bag.tres" id="8_small_bag_item"]
 [ext_resource type="Resource" path="res://resources/inventory/items/medium_bag.tres" id="9_medium_bag_item"]
 [ext_resource type="Resource" path="res://resources/inventory/items/large_bag.tres" id="10_large_bag_item"]
 
 [resource]
 script = ExtResource("1_catalog_script")
-Items = Array[InventoryItemDefinition]([ExtResource("2_chest_key_item"), ExtResource("3_arcane_crystal_item"), ExtResource("4_mystic_crystal_item"), ExtResource("5_void_crystal_item"), ExtResource("6_pie_item"), ExtResource("7_beer_item"), ExtResource("8_small_bag_item"), ExtResource("9_medium_bag_item"), ExtResource("10_large_bag_item")])
+Items = Array[ExtResource("1_bu8fx")]([ExtResource("2_chest_key_item"), ExtResource("3_arcane_crystal_item"), ExtResource("4_mystic_crystal_item"), ExtResource("5_void_crystal_item"), ExtResource("6_pie_item"), ExtResource("7_beer_item"), ExtResource("8_small_bag_item"), ExtResource("9_medium_bag_item"), ExtResource("10_large_bag_item")])
