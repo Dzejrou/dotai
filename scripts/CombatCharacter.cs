@@ -38,11 +38,13 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public float ResolvedCritDamage =>
         Math.Max(0.0f, (StatsNode?.ResolvedCritDamage ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.CritDamage));
     public float ResolvedPower =>
-        Math.Max(0.0f, ResolveScaledBasePower(StatsNode?.ResolvedPower ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.Power));
+        Math.Max(0.0f, ApplyAdditivePercent(
+            ResolveScaledBasePower(StatsNode?.ResolvedPower ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.Power),
+            GetStatusPowerPercent()));
     public int ResolvedMP5 =>
         Math.Max(0, (StatsNode?.ResolvedMP5 ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.MP5));
     public int ResolvedHaste =>
-        Math.Max(0, (StatsNode?.ResolvedHaste ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.Haste));
+        Math.Max(0, (StatsNode?.ResolvedHaste ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.Haste) + GetStatusHasteFlat());
     public float ResolvedHastePercent => ResolvedHaste / 2000.0f;
     public float ApplyHasteToDuration(float baseSeconds)
     {
@@ -53,25 +55,19 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         return clamped / (1.0f + ResolvedHastePercent);
     }
 
-    // Adds a flat amount (may be negative) to the base Haste stat. Temporary hook for the
-    // boss Enrage transition: once a buff/status system exists, transient Haste should be
-    // an (undispellable) buff rather than a base-stat mutation. Bosses are re-instantiated
-    // per encounter, so a mutation here never leaks across encounters.
-    public void AddBaseHaste(int amount)
-    {
-        if (StatsNode == null || amount == 0)
-            return;
-
-        StatsNode.Haste = Math.Max(0, StatsNode.Haste + amount);
-    }
     public float ResolveDamageBonus(DamageSchool school) =>
         (StatsNode?.ResolveDamageBonus(school) ?? 0.0f)
         + GetEquipmentBonus(EquipmentStatIds.DamageBonusFor(school))
-        + GetEquipmentBonus(EquipmentStatIds.DamageBonus);
+        + GetEquipmentBonus(EquipmentStatIds.DamageBonus)
+        + GetStatusDamageBonusFlat();
     public float ResolveResistance(DamageSchool school) =>
-        (StatsNode?.ResolveResistance(school) ?? 0.0f) + GetEquipmentBonus(EquipmentStatIds.ResistanceFor(school));
+        (StatsNode?.ResolveResistance(school) ?? 0.0f)
+        + GetEquipmentBonus(EquipmentStatIds.ResistanceFor(school))
+        + (StatusEffectControllerNode?.GetResistanceFlatModifier(school) ?? 0.0f);
     public int ResolvedMaxHealth =>
-        Math.Max(1, ResolveScaledBaseMaxHealth(StatsNode?.ResolvedMaxHealth ?? 1) + GetEquipmentIntBonus(EquipmentStatIds.MaxHealth));
+        Math.Max(1, ApplyAdditivePercentToInt(
+            ResolveScaledBaseMaxHealth(StatsNode?.ResolvedMaxHealth ?? 1) + GetEquipmentIntBonus(EquipmentStatIds.MaxHealth),
+            GetStatusMaxHealthPercent()));
     public int ResolvedMaxMana =>
         Math.Max(0, (StatsNode?.ResolvedMaxMana ?? 0) + GetEquipmentIntBonus(EquipmentStatIds.MaxMana));
 
@@ -85,7 +81,7 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     public float BaseMovementSpeedMultiplier => StatsNode?.ResolvedMovementSpeedMultiplier ?? 1.0f;
 
     public float ResolvedGenericDamageBonus =>
-        EquipmentControllerNode?.ResolveStatBonus(EquipmentStatIds.DamageBonus) ?? 0.0f;
+        (EquipmentControllerNode?.ResolveStatBonus(EquipmentStatIds.DamageBonus) ?? 0.0f) + GetStatusDamageBonusFlat();
 
     private bool _healthStateChangedBound;
     private bool _statusEffectsChangedBound;
@@ -164,6 +160,19 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     {
         return EquipmentControllerNode?.ResolveIntBonus(statId) ?? 0;
     }
+
+    private float GetStatusMaxHealthPercent() => StatusEffectControllerNode?.GetMaxHealthPercentModifier() ?? 0.0f;
+
+    private float GetStatusPowerPercent() => StatusEffectControllerNode?.GetPowerPercentModifier() ?? 0.0f;
+
+    private int GetStatusHasteFlat() => StatusEffectControllerNode?.GetHasteFlatModifier() ?? 0;
+
+    private float GetStatusDamageBonusFlat() => StatusEffectControllerNode?.GetDamageBonusFlatModifier() ?? 0.0f;
+
+    // Folds a summed additive percent (0.2 => +20%) into an already-resolved stat value.
+    private static float ApplyAdditivePercent(float value, float percent) => value * (1.0f + percent);
+
+    private static int ApplyAdditivePercentToInt(int value, float percent) => Mathf.RoundToInt(value * (1.0f + percent));
 
     protected void ResetCombatState()
     {
@@ -322,6 +331,11 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
 
     private void HandleStatusEffectsChanged()
     {
+        // A status stat modifier may change Max Health; recompute and clamp current health.
+        // HealthState.SetMax clamps without healing and emits its own Changed so HUD/combat
+        // consumers refresh. No-op when the resolved maximum is unchanged (e.g. a Haste-only
+        // buff like Enrage), so this never grants a free heal on unrelated status changes.
+        HealthStateNode?.SetMax(ResolvedMaxHealth);
         OnStatusEffectsChanged();
     }
 

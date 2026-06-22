@@ -138,7 +138,6 @@ script = ExtResource("9_transition")
 HealthThreshold = 0.25
 TargetPhase = 3
 InvulnerableDuringTransition = false
-AnnouncementText = "Demon Boss enrages."
 
 [node name="Enrage" type="Node" parent="Behaviors/Tier05_Phase/BossPhaseController/Phase3Transition"]
 script = ExtResource("15_haste_action")

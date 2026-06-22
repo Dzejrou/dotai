@@ -95,6 +95,9 @@ public partial class StatusEffectController : Node
         }
     }
 
+    // Forced removal by status key (ignores Dispellable): removes every effect of this key
+    // regardless of whether it can be dispelled. Used by lifecycle/cleanse paths that must
+    // always succeed. Dispel spells must use TryDispelStatus instead.
     public void RemoveStatus(StringName statusKey)
     {
         var effectsToRemove = new List<(StringName StatusKey, ulong SourceId, StatusEffect Effect)>();
@@ -112,6 +115,37 @@ public partial class StatusEffectController : Node
             EmitSignal(SignalName.Changed);
     }
 
+    // Future-facing dispel entry point for dispel/cleanse spells. Unlike the forced-removal
+    // paths (RemoveStatus / ClearAllEffects) used by actor reset, encounter teardown and
+    // death cleanup, this refuses undispellable effects, so e.g. a boss's undispellable
+    // Enrage survives a dispel attempt. Returns true if at least one effect was removed.
+    public bool TryDispelStatus(StringName statusKey)
+    {
+        var effectsToRemove = new List<(StringName StatusKey, ulong SourceId, StatusEffect Effect)>();
+
+        foreach (var pair in _activeEffects)
+        {
+            if (pair.Key.StatusKey != statusKey)
+                continue;
+
+            var effect = pair.Value;
+            if (effect == null || !GodotObject.IsInstanceValid(effect) || !effect.Dispellable)
+                continue;
+
+            effectsToRemove.Add((pair.Key.StatusKey, pair.Key.SourceId, effect));
+        }
+
+        foreach (var entry in effectsToRemove)
+            RemoveEffect(entry.StatusKey, entry.SourceId, entry.Effect, expired: false);
+
+        if (effectsToRemove.Count > 0)
+            EmitSignal(SignalName.Changed);
+
+        return effectsToRemove.Count > 0;
+    }
+
+    // Forced removal of every active effect (ignores Dispellable). Used by actor reset,
+    // encounter teardown and death cleanup, which must clear undispellable effects too.
     public void ClearAllEffects()
     {
         if (_activeEffects.Count == 0)
@@ -239,6 +273,34 @@ public partial class StatusEffectController : Node
         return ResolveStatusSpeedMultiplier(effect => effect.CastSpeedMultiplier);
     }
 
+    // Aggregated stat modifiers from all active effects. Percent modifiers are summed
+    // (the caller applies the total additively); flat modifiers are summed directly.
+    // CombatCharacter folds these into its resolved stats without touching base Stats.
+    public float GetMaxHealthPercentModifier()
+    {
+        return SumStatModifier(effect => effect.MaxHealthPercentModifier);
+    }
+
+    public float GetPowerPercentModifier()
+    {
+        return SumStatModifier(effect => effect.PowerPercentModifier);
+    }
+
+    public int GetHasteFlatModifier()
+    {
+        return SumStatModifierInt(effect => effect.HasteFlatModifier);
+    }
+
+    public float GetDamageBonusFlatModifier()
+    {
+        return SumStatModifier(effect => effect.DamageBonusFlatModifier);
+    }
+
+    public float GetResistanceFlatModifier(DamageSchool school)
+    {
+        return SumStatModifier(effect => effect.ResolveResistanceFlatModifier(school));
+    }
+
     private void RemoveEffect(StringName statusKey, ulong sourceId, StatusEffect effect, bool expired)
     {
         var effectKey = (StatusKey: statusKey, SourceId: sourceId);
@@ -298,6 +360,36 @@ public partial class StatusEffectController : Node
         }
 
         return multiplier;
+    }
+
+    private float SumStatModifier(Func<StatusEffect, float> selector)
+    {
+        var total = 0.0f;
+
+        foreach (var effect in _activeEffects.Values)
+        {
+            if (effect == null || !GodotObject.IsInstanceValid(effect))
+                continue;
+
+            total += selector(effect);
+        }
+
+        return total;
+    }
+
+    private int SumStatModifierInt(Func<StatusEffect, int> selector)
+    {
+        var total = 0;
+
+        foreach (var effect in _activeEffects.Values)
+        {
+            if (effect == null || !GodotObject.IsInstanceValid(effect))
+                continue;
+
+            total += selector(effect);
+        }
+
+        return total;
     }
 
     private static RandomNumberGenerator CreateApplyChanceRng()

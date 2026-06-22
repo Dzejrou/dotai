@@ -8,9 +8,26 @@ public enum StatusCategory
     Debuff,
 }
 
+// Explicit lifetime model. Timed effects expire once their duration elapses through the
+// physics tick; Permanent effects never expire that way and only end through forced
+// removal (actor reset, encounter teardown, death cleanup) or refresh-driven replacement.
+public enum StatusLifetime
+{
+    Timed,
+    Permanent,
+}
+
 [GlobalClass]
 public abstract partial class StatusEffect : Node
 {
+    [Export]
+    public StatusLifetime Lifetime { get; set; } = StatusLifetime.Timed;
+
+    // Whether a future-facing dispel attempt may remove this effect. Undispellable effects
+    // (e.g. boss Enrage) survive dispels but are still removed by forced cleanup.
+    [Export]
+    public bool Dispellable { get; set; } = true;
+
     [Export]
     public float DurationSeconds { get; set; } = 5.0f;
 
@@ -31,11 +48,24 @@ public abstract partial class StatusEffect : Node
 
     public float ResolvedApplyChance => Math.Clamp(ApplyChance, 0.0f, 1.0f);
 
+    public bool IsPermanent => Lifetime == StatusLifetime.Permanent;
+
     public virtual bool IsUniqueByStatusKey => false;
     public virtual bool PreventsMovement => false;
     public virtual float MovementSpeedMultiplier => 1.0f;
     public virtual float AttackSpeedMultiplier => 1.0f;
     public virtual float CastSpeedMultiplier => 1.0f;
+
+    // Stat-modifier hooks. Default to no-op so ordinary statuses contribute nothing;
+    // StatModifierEffect overrides these and StatusEffectController aggregates them into
+    // CombatCharacter's resolved stats (without mutating base Stats). Percent values are
+    // additive and summed across active effects before being applied once; flat values are
+    // summed directly.
+    public virtual float MaxHealthPercentModifier => 0.0f;
+    public virtual float PowerPercentModifier => 0.0f;
+    public virtual int HasteFlatModifier => 0;
+    public virtual float DamageBonusFlatModifier => 0.0f;
+    public virtual float ResolveResistanceFlatModifier(DamageSchool school) => 0.0f;
 
     public Node2D OwnerNode { get; private set; }
     public Node2D Source { get; private set; }
@@ -68,7 +98,11 @@ public abstract partial class StatusEffect : Node
         Source = source;
         SourceInstanceId = sourceInstanceId;
 
-        _expiresAtSeconds = currentTime + Math.Max(0.0f, DurationSeconds);
+        // Honor the (possibly just-copied) lifetime: a refreshed permanent effect must not
+        // start counting toward an expiry.
+        _expiresAtSeconds = IsPermanent
+            ? float.PositiveInfinity
+            : currentTime + Math.Max(0.0f, DurationSeconds);
         NextTickSeconds = CalculateRefreshedNextTickSeconds(
             currentTime,
             previousTickInterval,
@@ -116,6 +150,8 @@ public abstract partial class StatusEffect : Node
 
     protected virtual void CopyConfigurationFrom(StatusEffect replacement)
     {
+        Lifetime = replacement.Lifetime;
+        Dispellable = replacement.Dispellable;
         DurationSeconds = replacement.DurationSeconds;
         TickIntervalSeconds = replacement.TickIntervalSeconds;
         DisplayName = replacement.DisplayName;
@@ -202,7 +238,12 @@ public abstract partial class StatusEffect : Node
     {
         ElapsedSeconds = 0.0f;
         NextTickSeconds = TickIntervalSeconds > 0.0f ? TickIntervalSeconds : float.PositiveInfinity;
-        _expiresAtSeconds = Math.Max(0.0f, DurationSeconds);
+
+        // Permanent effects never expire through the tick: an infinite expiry keeps Tick
+        // from ever reporting completion while still letting any periodic ticks run.
+        _expiresAtSeconds = IsPermanent
+            ? float.PositiveInfinity
+            : Math.Max(0.0f, DurationSeconds);
     }
 
     private float CalculateRefreshedNextTickSeconds(float currentTime, float previousTickInterval, float previousNextTickSeconds)
