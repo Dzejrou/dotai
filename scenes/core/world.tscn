@@ -16,6 +16,7 @@
 [ext_resource type="Resource" path="res://resources/inventory/inventory_item_catalog.tres" id="14b_item_catalog"]
 [ext_resource type="Resource" path="res://resources/world/dungeon/dungeon_generation_rules.tres" id="16_dungeon_generation_rules"]
 [ext_resource type="Resource" path="res://resources/world/dungeon/dungeon_difficulty_rules.tres" id="17_dungeon_difficulty_rules"]
+[ext_resource type="Resource" path="res://resources/world/dungeon/dungeon_reward_rules.tres" id="18_dungeon_reward_rules"]
 
 [node name="World" type="Node2D" unique_id=1311590009]
 script = ExtResource("2_world")
@@ -50,3 +51,4 @@ GearGenerationRules = ExtResource("4b_gear_rules")
 script = ExtResource("7_dungeon")
 GenerationRules = ExtResource("16_dungeon_generation_rules")
 DifficultyRules = ExtResource("17_dungeon_difficulty_rules")
+RewardRules = ExtResource("18_dungeon_reward_rules")

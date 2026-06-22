@@ -363,6 +363,8 @@ public partial class Main : Node2D
             // Only previously finalized history is persisted; live stats and any active plan are
             // never part of the snapshot.
             DungeonHistory = DungeonHistorySaveSerializer.CreateSnapshot(_world?.Dungeon?.History),
+            // Saved Points balance (DP). Zero when the dungeon runtime is unavailable.
+            Dungeon = new DungeonSaveData { Points = _world?.Dungeon?.Points ?? 0 },
         };
 
         if (_saveGameStore.TrySave(data, out var message))
@@ -428,6 +430,7 @@ public partial class Main : Node2D
         }
 
         ApplyLoadedDungeonHistory(data);
+        ApplyLoadedDungeonPoints(data);
 
         GD.Print($"Loaded save from {SaveGameStore.SaveFilePath}.");
         return LoadAttemptResult.Applied;
@@ -450,6 +453,19 @@ public partial class Main : Node2D
         }
 
         dungeon.ReplaceHistory(records);
+    }
+
+    // Replaces the saved Points balance (DP) from the save, leaving any active runtime run untouched
+    // (partial world-state load semantics, like history). A missing/null Dungeon section loads as
+    // zero, and the setter clamps a malformed negative value. Replacement, never addition: loading
+    // never re-runs Point awarding.
+    private void ApplyLoadedDungeonPoints(SaveGameData data)
+    {
+        var dungeon = _world?.Dungeon;
+        if (dungeon == null)
+            return;
+
+        dungeon.SetPointsForDebugOrLoad(data.Dungeon?.Points ?? 0);
     }
 
     private void OnDebugTrayPlayerStatsRequested()

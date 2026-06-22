@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/tools/DungeonRewardsVerifier.cs" id="1_rewards_verifier"]
+
+[node name="DungeonRewardsVerify" type="Node"]
+script = ExtResource("1_rewards_verifier")

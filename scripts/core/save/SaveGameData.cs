@@ -15,6 +15,19 @@ public sealed class SaveGameData
     // never fails the whole save; the load step validates and caps the entries.
     [JsonConverter(typeof(DungeonHistorySaveConverter))]
     public List<DungeonRunRecordSaveData> DungeonHistory { get; set; } = new();
+
+    // Optional, additive: dungeon-progression currency (the player-facing "DP") and other
+    // dungeon-account state. Absent in older saves, where the initialized default keeps the balance
+    // at zero. Loading replaces the live balance (never adds), clamping a malformed negative value
+    // to zero at apply time.
+    public DungeonSaveData Dungeon { get; set; } = new();
+}
+
+public sealed class DungeonSaveData
+{
+    // Saved Points balance. Defaults to zero for older saves (and an explicit null section) and is
+    // clamped to non-negative when applied on load.
+    public int Points { get; set; }
 }
 
 public sealed class PlayerSaveData

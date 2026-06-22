@@ -32,6 +32,11 @@ public partial class MenuHubDungeonPage : Control
     private const string EntranceRequiredStatusText =
         "Interact with the dungeon entrance to start, or enable Dungeon Anywhere on the Debug page.";
 
+    // Persistent DP balance label, a VBox sibling above the swapped views so it stays visible in the
+    // run-configuration, active-run and history views alike.
+    [Export]
+    public NodePath DpLabelPath { get; set; } = new("Margin/VBox/DpLabel");
+
     [Export]
     public NodePath ConfigViewPath { get; set; } = new("Margin/VBox/ConfigView");
 
@@ -100,6 +105,7 @@ public partial class MenuHubDungeonPage : Control
     [Export]
     public NodePath HistoryDetailsLabelPath { get; set; } = new("Margin/VBox/HistoryView/RightColumn/DetailsLabel");
 
+    private Label _dpLabel;
     private Control _configView;
     private SpinBox _roomsSpinBox;
     private Container _difficultyContainer;
@@ -164,6 +170,7 @@ public partial class MenuHubDungeonPage : Control
     {
         ProcessMode = ProcessModeEnum.Always;
 
+        _dpLabel = GetNodeOrNull<Label>(DpLabelPath);
         _configView = GetNodeOrNull<Control>(ConfigViewPath);
         _roomsSpinBox = GetNodeOrNull<SpinBox>(RoomsSpinBoxPath);
         _difficultyContainer = GetNodeOrNull<Container>(DifficultyContainerPath);
@@ -287,6 +294,7 @@ public partial class MenuHubDungeonPage : Control
     private void Refresh()
     {
         EnsureRulesDefaults();
+        UpdateDpLabel();
 
         var active = _world != null && GodotObject.IsInstanceValid(_world) && _world.HasActiveDungeonRun;
 
@@ -312,6 +320,17 @@ public partial class MenuHubDungeonPage : Control
             RefreshActiveView();
         else
             RefreshConfigView();
+    }
+
+    // Updates the persistent DP balance label from the dungeon's current Points. Shows zero when the
+    // dungeon runtime is unresolved so the label is never blank.
+    private void UpdateDpLabel()
+    {
+        if (_dpLabel == null)
+            return;
+
+        var points = ResolveDungeon()?.Points ?? 0;
+        _dpLabel.Text = $"DP: {points.ToString(CultureInfo.InvariantCulture)}";
     }
 
     private void RefreshConfigView()
@@ -566,6 +585,7 @@ public partial class MenuHubDungeonPage : Control
                 $"Base Score: {FormatScore(record.BaseScore)}\n" +
                 $"Difficulty Multiplier: {FormatMultiplier(record.DifficultyMultiplier)}\n" +
                 $"Final Score: {FormatScore(record.FinalScore)}\n" +
+                $"DP Earned: {FormatPointsEarned(record.PointsEarned)}\n" +
                 $"Rooms Cleared: {record.RoomsCleared}\n" +
                 $"Enemies Killed: {record.EnemiesKilled}\n" +
                 $"Player Deaths: {record.PlayerDeaths}\n" +
@@ -596,6 +616,13 @@ public partial class MenuHubDungeonPage : Control
     private static string FormatScore(int? score)
     {
         return score?.ToString(CultureInfo.InvariantCulture) ?? LegacyScoreFallback;
+    }
+
+    // DP earned for a record's details. Legacy records saved before Points existed carry none and
+    // show the fallback dash rather than a misleading 0; a real zero award shows as "0".
+    private static string FormatPointsEarned(int? pointsEarned)
+    {
+        return pointsEarned?.ToString(CultureInfo.InvariantCulture) ?? LegacyScoreFallback;
     }
 
     private static string FormatMultiplier(float? multiplier)
@@ -670,6 +697,13 @@ public partial class MenuHubDungeonPage : Control
     private void OnDungeonRunStateChanged()
     {
         Refresh();
+    }
+
+    // Drives the immediate DP label update after a completion award or a save load, without a full
+    // page refresh.
+    private void OnDungeonPointsChanged(int totalPoints)
+    {
+        UpdateDpLabel();
     }
 
     private bool HasStartAccess()
@@ -997,6 +1031,7 @@ public partial class MenuHubDungeonPage : Control
 
         _boundDungeon = dungeon;
         _boundDungeon.RunStateChanged += OnDungeonRunStateChanged;
+        _boundDungeon.PointsChanged += OnDungeonPointsChanged;
     }
 
     private void DisconnectDungeonSignal()
@@ -1005,7 +1040,10 @@ public partial class MenuHubDungeonPage : Control
             return;
 
         if (GodotObject.IsInstanceValid(_boundDungeon))
+        {
             _boundDungeon.RunStateChanged -= OnDungeonRunStateChanged;
+            _boundDungeon.PointsChanged -= OnDungeonPointsChanged;
+        }
 
         _boundDungeon = null;
     }

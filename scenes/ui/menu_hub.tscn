@@ -478,6 +478,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Dungeon"
 
+[node name="DpLabel" type="Label" parent="Root/DungeonPage/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "DP: 0"
+
 [node name="ConfigView" type="VBoxContainer" parent="Root/DungeonPage/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 12

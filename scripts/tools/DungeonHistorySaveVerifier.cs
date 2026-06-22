@@ -46,6 +46,13 @@ public partial class DungeonHistorySaveVerifier : Node
         Check("a legitimate zero score is distinct from a legacy unknown score", ZeroScoreDistinctFromLegacy());
         Check("a malformed score field degrades to unknown without dropping the record or neighbors", MalformedScoreDegradesButSurvives());
 
+        Check("PointsEarned round-trips for Completed (positive) and GaveUp (zero)", PointsEarnedRoundTrips());
+        Check("a legacy entry without PointsEarned loads with an unknown award", LegacyPointsEarnedLoadsAsUnknown());
+        Check("a legitimate zero PointsEarned is distinct from a legacy unknown award", ZeroPointsEarnedDistinctFromLegacy());
+        Check("a malformed PointsEarned degrades to unknown without dropping the record", MalformedPointsEarnedDegradesButSurvives());
+        Check("the Points balance round-trips through save/load", PointsBalanceRoundTrips());
+        Check("a legacy save without a Dungeon section defaults the Points balance to zero", LegacySaveWithoutPointsDefaultsZero());
+
         GD.Print(_failures == 0
             ? "All dungeon history save checks passed."
             : $"{_failures} dungeon history save check(s) failed.");
@@ -432,6 +439,121 @@ public partial class DungeonHistorySaveVerifier : Node
             records[0].Seed == 11UL && records[0].BaseScore == 300 &&
             records[1].Seed == 22UL && records[1].BaseScore == null && records[1].FinalScore == null &&
             records[2].Seed == 33UL && records[2].BaseScore == 0;
+    }
+
+    private static bool PointsEarnedRoundTrips()
+    {
+        // A Completed run earning 7 Points and a GaveUp run earning an explicit 0 both round-trip
+        // their award through serialization and back.
+        var history = new List<DungeonRunRecord>
+        {
+            new(DungeonRunOutcome.Completed, FirstFinishedAt, 111UL, 2, 12, 12, 40, 0, 1, 12, 13, 750, 1.0f, 750, null, null, null, null, 7),
+            new(DungeonRunOutcome.GaveUp, SecondFinishedAt, 222UL, 1, 8, 3, 10, 1, 0, 4, 4, 200, 1.0f, 200, null, null, null, null, 0),
+        };
+
+        var json = JsonSerializer.Serialize(
+            new SaveGameData { DungeonHistory = DungeonHistorySaveSerializer.CreateSnapshot(history) },
+            WriteOptions);
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+
+        return skipped == 0 &&
+            records.Count == 2 &&
+            records[0].PointsEarned == 7 &&
+            records[1].PointsEarned == 0;
+    }
+
+    private static bool LegacyPointsEarnedLoadsAsUnknown()
+    {
+        // A valid entry whose object omits PointsEarned (saved before Points existed) loads with a
+        // null award rather than a fabricated zero, and is not skipped.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""DungeonHistory"": [
+                { ""Outcome"": ""Completed"", ""Seed"": 7, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 12, ""RoomsCleared"": 12, ""EnemiesKilled"": 30, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 12, ""FurthestRoomLevel"": 12 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return skipped == 0 && records.Count == 1 && records[0].Seed == 7UL && records[0].PointsEarned == null;
+    }
+
+    private static bool ZeroPointsEarnedDistinctFromLegacy()
+    {
+        // First entry awards an explicit 0 Points; the second is a legacy run with no PointsEarned.
+        // They must load distinguishably: explicit 0 versus null.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""DungeonHistory"": [
+                { ""Outcome"": ""GaveUp"", ""Seed"": 1, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 8, ""RoomsCleared"": 0, ""EnemiesKilled"": 0, ""PlayerDeaths"": 0, ""BossesDefeated"": 0, ""FurthestRoomIndex"": 1, ""FurthestRoomLevel"": 1, ""PointsEarned"": 0 },
+                { ""Outcome"": ""Completed"", ""Seed"": 2, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 12, ""RoomsCleared"": 12, ""EnemiesKilled"": 10, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 12, ""FurthestRoomLevel"": 12 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return skipped == 0 &&
+            records.Count == 2 &&
+            records[0].Seed == 1UL && records[0].PointsEarned == 0 &&
+            records[1].Seed == 2UL && records[1].PointsEarned == null;
+    }
+
+    private static bool MalformedPointsEarnedDegradesButSurvives()
+    {
+        // A negative PointsEarned is impossible; the record's identity/progress is valid, so it
+        // survives with its award degraded to unknown rather than being dropped or skipped.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""DungeonHistory"": [
+                { ""Outcome"": ""Completed"", ""Seed"": 11, ""StartingRoomLevel"": 1, ""PlannedRunLength"": 12, ""RoomsCleared"": 12, ""EnemiesKilled"": 10, ""PlayerDeaths"": 0, ""BossesDefeated"": 1, ""FurthestRoomIndex"": 12, ""FurthestRoomLevel"": 12, ""PointsEarned"": -4 }
+            ]
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        var records = DungeonHistorySaveSerializer.FromSnapshot(parsed.DungeonHistory, out var skipped);
+        return skipped == 0 && records.Count == 1 && records[0].Seed == 11UL && records[0].PointsEarned == null;
+    }
+
+    private static bool PointsBalanceRoundTrips()
+    {
+        var json = JsonSerializer.Serialize(
+            new SaveGameData { Dungeon = new DungeonSaveData { Points = 42 } },
+            WriteOptions);
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        return parsed?.Dungeon != null && parsed.Dungeon.Points == 42;
+    }
+
+    private static bool LegacySaveWithoutPointsDefaultsZero()
+    {
+        // A save written before the Points balance existed has no Dungeon section: the balance loads
+        // as zero (the initialized default), mirroring the apply-time `data.Dungeon?.Points ?? 0`.
+        const string json = @"{
+            ""Schema"": ""dotai.savegame"",
+            ""Version"": 1,
+            ""Player"": { ""Level"": 4, ""CurrentExperience"": 10 },
+            ""Inventory"": { ""Gold"": 33, ""GearXp"": 2 },
+            ""Equipment"": {}
+        }";
+
+        var parsed = JsonSerializer.Deserialize<SaveGameData>(json);
+        if (parsed == null)
+            return false;
+
+        // Core data still survives, and the missing balance reads as zero.
+        return parsed.Inventory?.Gold == 33 && (parsed.Dungeon?.Points ?? 0) == 0;
     }
 
     private static DungeonRunRecord MakeRecord(DungeonRunOutcome outcome, ulong seed)
