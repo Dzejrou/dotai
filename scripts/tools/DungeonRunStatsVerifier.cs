@@ -160,9 +160,10 @@ public partial class DungeonRunStatsVerifier : Node
     private bool StartPopulatesIdentity(DungeonGenerationRules rules)
     {
         var dungeon = new Dungeon { GenerationRules = rules };
+        var difficulty = new DungeonDifficultySelection(5, 1, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         try
         {
-            if (!dungeon.TryStartRun(123UL, ordinaryRoomCount: 4, startingRoomLevel: 5, out var error))
+            if (!dungeon.TryStartRun(123UL, ordinaryRoomCount: 4, difficulty, out var error))
             {
                 GD.PrintErr($"  unexpected start failure: {error}");
                 return false;
@@ -174,6 +175,7 @@ public partial class DungeonRunStatsVerifier : Node
                 stats.Seed == 123UL &&
                 stats.StartingRoomLevel == 5 &&
                 stats.PlannedRunLength == 6 &&
+                ReferenceEquals(stats.Difficulty, difficulty) &&
                 dungeon.History.Count == 0;
         }
         finally

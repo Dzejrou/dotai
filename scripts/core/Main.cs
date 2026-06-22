@@ -274,12 +274,12 @@ public partial class Main : Node2D
     // Bridges the Dungeon page Start request to World. Returns null on success, or an actionable
     // error string the page shows while the HUB stays open. On success the single-use entrance
     // authorization is consumed and the HUB is closed/unpaused only after the run actually starts.
-    private string TryStartDungeonRunFromHub(ulong seed, int ordinaryRoomCount, int startingRoomLevel)
+    private string TryStartDungeonRunFromHub(ulong seed, int ordinaryRoomCount, DungeonDifficultySelection difficulty)
     {
         if (_world == null || !GodotObject.IsInstanceValid(_world))
             return "Dungeon runtime is unavailable.";
 
-        if (!_world.TryStartDungeonRun(seed, ordinaryRoomCount, startingRoomLevel, out var error))
+        if (!_world.TryStartDungeonRun(seed, ordinaryRoomCount, difficulty, out var error))
             return string.IsNullOrEmpty(error) ? "Failed to start the dungeon run." : error;
 
         _menuHubRoot?.ConsumeDungeonEntranceAuthorization();

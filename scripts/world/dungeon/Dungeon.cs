@@ -38,6 +38,12 @@ public partial class Dungeon : Node
     [Export]
     public DungeonGenerationRules GenerationRules { get; set; }
 
+    // Centrally inspector-editable difficulty tuning: option-to-reward tables and the resolved
+    // resistance cap. The HUB reads its option rows from here; a run captures the actual selections
+    // into an immutable snapshot at start.
+    [Export]
+    public DungeonDifficultyRules DifficultyRules { get; set; }
+
     private readonly DungeonRunPlanGenerator _generator = new();
     private readonly RandomNumberGenerator _seedRng = new();
 
@@ -53,6 +59,11 @@ public partial class Dungeon : Node
     // active. Rooms are counted at most once each through this set of cleared node ids.
     private DungeonRunStats _activeStats;
     private readonly HashSet<StringName> _clearedNodeIds = new();
+
+    // The active run's enemy stat buff, built from its immutable difficulty snapshot and stamped onto
+    // every managed spawn point so initial, boss, summon and respawned actors all receive it. Null
+    // when the run grants no actor buffs.
+    private DungeonActorBuff _activeActorBuff;
 
     // Spawn points in managed rooms whose TrackedActorDied signal this Dungeon is observing for
     // hostile-death counting; disconnected when the run is cleared.
@@ -104,6 +115,10 @@ public partial class Dungeon : Node
     {
         // Seed source for run seeds only; plan decisions use the per-run seed, never Randomize.
         _seedRng.Randomize();
+
+        // Apply the configured resolved-resistance cap once. Defaults to full immunity when no rules
+        // are assigned, leaving resistance behavior unchanged.
+        CombatCharacter.MaxResolvedResistance = DifficultyRules?.MaxResistance ?? CombatCharacter.DefaultMaxResolvedResistance;
     }
 
     public override void _ExitTree()
@@ -169,10 +184,11 @@ public partial class Dungeon : Node
         return false;
     }
 
-    // Run-start entry point kept structured so a future Dungeon HUB can supply the seed,
-    // ordinary-room count and starting level without changing traversal. Null overrides fall
-    // back to the configured GenerationRules defaults.
-    public bool TryStartRun(ulong seed, int? ordinaryRoomCount, int? startingRoomLevel, out string error)
+    // Run-start entry point. The HUB supplies the seed, ordinary-room count and an immutable
+    // difficulty snapshot; a null snapshot falls back to the configured difficulty/generation
+    // defaults. The snapshot's starting level and per-room increase drive plan generation, and the
+    // snapshot is stored on the run so traversal, buffs and scoring never read mutable controls again.
+    public bool TryStartRun(ulong seed, int? ordinaryRoomCount, DungeonDifficultySelection difficulty, out string error)
     {
         error = null;
         EndRun();
@@ -183,7 +199,17 @@ public partial class Dungeon : Node
             return false;
         }
 
-        var result = _generator.Generate(GenerationRules, seed, ordinaryRoomCount, startingRoomLevel);
+        var effectiveDifficulty = difficulty ?? DungeonDifficultySelection.CreateDefault(
+            DifficultyRules,
+            GenerationRules.StartingRoomLevel,
+            GenerationRules.LevelIncreasePerRoom);
+
+        var result = _generator.Generate(
+            GenerationRules,
+            seed,
+            ordinaryRoomCount,
+            effectiveDifficulty.StartingRoomLevel,
+            effectiveDifficulty.LevelIncreasePerRoom);
         if (!result.Succeeded)
         {
             error = $"{nameof(Dungeon)} run-plan generation failed: {result.Error}";
@@ -196,8 +222,9 @@ public partial class Dungeon : Node
         _clearedNodeIds.Clear();
 
         // Starting level is the first plan node's level (StartingRoomLevel before any edge delta).
-        var startingLevel = _activePlan.Length > 0 ? _activePlan.Nodes[0].Level : startingRoomLevel ?? 1;
-        _activeStats = new DungeonRunStats(seed, startingLevel, _activePlan.Length);
+        var startingLevel = _activePlan.Length > 0 ? _activePlan.Nodes[0].Level : effectiveDifficulty.StartingRoomLevel;
+        _activeStats = new DungeonRunStats(seed, startingLevel, _activePlan.Length, effectiveDifficulty);
+        _activeActorBuff = DungeonActorBuff.FromSelection(effectiveDifficulty);
 
         EmitSignal(SignalName.RunStateChanged);
         return true;
@@ -272,6 +299,7 @@ public partial class Dungeon : Node
         _activeNodeId = null;
         _runSeed = 0;
         _activeStats = null;
+        _activeActorBuff = null;
         _clearedNodeIds.Clear();
 
         if (hadActiveRun)
@@ -308,14 +336,20 @@ public partial class Dungeon : Node
         return true;
     }
 
-    // Subscribes to every ActorSpawnPoint in a freshly instantiated managed room, including boss
-    // and summon spawners that spawn their actors later, so hostile deaths are counted from the
-    // authoritative spawn lifecycle rather than per-frame tree scans.
+    // Prepares every ActorSpawnPoint in a freshly instantiated managed room, including boss and
+    // summon spawners that spawn their actors later. Each point is both subscribed for hostile-death
+    // counting and handed the active run's difficulty buff, so actors spawned now or later receive the
+    // same modifiers automatically from the authoritative spawn lifecycle rather than a one-time tree
+    // scan.
     private void TrackRoomDeaths(Node root)
     {
         var callable = new Callable(this, nameof(OnManagedActorDied));
         foreach (var spawnPoint in FindSpawnPoints(root))
         {
+            // Stamp the buff every time (idempotent on the spawn point); set even when null so a
+            // re-prepared point from a prior buffed run is cleared.
+            spawnPoint.SetDungeonActorBuff(_activeActorBuff);
+
             if (spawnPoint.IsConnected(ActorSpawnPoint.SignalName.TrackedActorDied, callable))
                 continue;
 

@@ -1,0 +1,76 @@
+[gd_resource type="Resource" script_class="DungeonDifficultyRules" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/dungeon/DungeonDifficultyRules.cs" id="1_rules"]
+[ext_resource type="Script" path="res://scripts/world/dungeon/DungeonDifficultyOption.cs" id="2_option"]
+
+[sub_resource type="Resource" id="sl_10"]
+script = ExtResource("2_option")
+Value = 10.0
+RewardAdjustment = -0.75
+
+[sub_resource type="Resource" id="sl_20"]
+script = ExtResource("2_option")
+Value = 20.0
+RewardAdjustment = -0.5
+
+[sub_resource type="Resource" id="sl_30"]
+script = ExtResource("2_option")
+Value = 30.0
+RewardAdjustment = -0.25
+
+[sub_resource type="Resource" id="sl_40"]
+script = ExtResource("2_option")
+Value = 40.0
+RewardAdjustment = 0.0
+
+[sub_resource type="Resource" id="sl_50"]
+script = ExtResource("2_option")
+Value = 50.0
+RewardAdjustment = 0.25
+
+[sub_resource type="Resource" id="sl_60"]
+script = ExtResource("2_option")
+Value = 60.0
+RewardAdjustment = 0.5
+
+[sub_resource type="Resource" id="li_1"]
+script = ExtResource("2_option")
+Value = 1.0
+RewardAdjustment = 0.0
+
+[sub_resource type="Resource" id="li_2"]
+script = ExtResource("2_option")
+Value = 2.0
+RewardAdjustment = 0.25
+
+[sub_resource type="Resource" id="li_3"]
+script = ExtResource("2_option")
+Value = 3.0
+RewardAdjustment = 0.5
+
+[sub_resource type="Resource" id="st_0"]
+script = ExtResource("2_option")
+Value = 0.0
+RewardAdjustment = 0.0
+
+[sub_resource type="Resource" id="st_20"]
+script = ExtResource("2_option")
+Value = 0.2
+RewardAdjustment = 0.25
+
+[sub_resource type="Resource" id="st_40"]
+script = ExtResource("2_option")
+Value = 0.4
+RewardAdjustment = 0.5
+
+[sub_resource type="Resource" id="st_60"]
+script = ExtResource("2_option")
+Value = 0.6
+RewardAdjustment = 0.75
+
+[resource]
+script = ExtResource("1_rules")
+StartingLevelOptions = Array[ExtResource("2_option")]([SubResource("sl_10"), SubResource("sl_20"), SubResource("sl_30"), SubResource("sl_40"), SubResource("sl_50"), SubResource("sl_60")])
+LevelIncreaseOptions = Array[ExtResource("2_option")]([SubResource("li_1"), SubResource("li_2"), SubResource("li_3")])
+EnemyStatOptions = Array[ExtResource("2_option")]([SubResource("st_0"), SubResource("st_20"), SubResource("st_40"), SubResource("st_60")])
+MaxResistance = 1.0

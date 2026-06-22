@@ -301,7 +301,7 @@ public partial class World : Node2D
     // return origin, starts the run on the requested seed/overrides, then enters plan node 0 via
     // the normal dungeon_runtime transition. The caller only closes the HUB once this returns
     // true; on failure nothing moves and no return origin is retained.
-    public bool TryStartDungeonRun(ulong seed, int ordinaryRoomCount, int startingRoomLevel, out string error)
+    public bool TryStartDungeonRun(ulong seed, int ordinaryRoomCount, DungeonDifficultySelection difficulty, out string error)
     {
         error = null;
 
@@ -314,7 +314,7 @@ public partial class World : Node2D
         // Capture the origin before any state changes so a failed launch leaves it untouched.
         var returnLocation = CaptureDungeonReturnLocation();
 
-        if (!_dungeon.TryStartRun(seed, ordinaryRoomCount, startingRoomLevel, out error))
+        if (!_dungeon.TryStartRun(seed, ordinaryRoomCount, difficulty, out error))
             return false;
 
         // Enter plan node 0 through the standard dungeon transition. TryCreateRoom reuses the run

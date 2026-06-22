@@ -8,6 +8,15 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
     [Signal]
     public delegate void DiedEventHandler();
 
+    // Default cap on resolved resistance. 1.0 keeps full immunity (100%) reachable while preventing a
+    // stacked resistance bonus from exceeding it; the dungeon-difficulty rules may override the cap.
+    public const float DefaultMaxResolvedResistance = 1.0f;
+
+    // Upper bound applied to every actor's resolved resistance per school. Configured once from the
+    // dungeon difficulty rules; defaults to full immunity so behavior is unchanged until set. The
+    // lower bound is intentionally open so negative resistance remains valid.
+    public static float MaxResolvedResistance { get; set; } = DefaultMaxResolvedResistance;
+
     private int _level = 1;
 
     [Export]
@@ -61,9 +70,11 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
         + GetEquipmentBonus(EquipmentStatIds.DamageBonus)
         + GetStatusDamageBonusFlat();
     public float ResolveResistance(DamageSchool school) =>
-        (StatsNode?.ResolveResistance(school) ?? 0.0f)
-        + GetEquipmentBonus(EquipmentStatIds.ResistanceFor(school))
-        + (StatusEffectControllerNode?.GetResistanceFlatModifier(school) ?? 0.0f);
+        Math.Min(
+            MaxResolvedResistance,
+            (StatsNode?.ResolveResistance(school) ?? 0.0f)
+            + GetEquipmentBonus(EquipmentStatIds.ResistanceFor(school))
+            + (StatusEffectControllerNode?.GetResistanceFlatModifier(school) ?? 0.0f));
     public int ResolvedMaxHealth =>
         Math.Max(1, ApplyAdditivePercentToInt(
             ResolveScaledBaseMaxHealth(StatsNode?.ResolvedMaxHealth ?? 1) + GetEquipmentIntBonus(EquipmentStatIds.MaxHealth),
@@ -195,6 +206,16 @@ public abstract partial class CombatCharacter : AnimatedCharacter, IFactionMembe
 
         if (clearStatusEffects)
             StatusEffectControllerNode?.ClearAllEffects();
+    }
+
+    // Spawn-initialization heal: fills current health to the (possibly buffed) resolved Max Health so
+    // a freshly spawned actor begins at its full boosted maximum. This is the deliberate exception to
+    // the no-free-heal behavior of status-driven Max Health changes, and is only ever invoked by the
+    // spawn lifecycle when an actor is first established - never for buffs applied during active
+    // combat.
+    public void InitializeHealthToFullBoostedMax()
+    {
+        HealthStateNode?.RestoreToFull();
     }
 
     protected virtual void OnHealthStateChanged() { }

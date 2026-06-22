@@ -38,8 +38,10 @@ public partial class MenuHubDungeonPage : Control
     [Export]
     public NodePath RoomsSpinBoxPath { get; set; } = new("Margin/VBox/ConfigView/RoomsRow/RoomsSpinBox");
 
+    // Container the difficulty rows (header, the five option rows, and the live summary) are built
+    // into programmatically from the data-driven difficulty rules.
     [Export]
-    public NodePath StartingLevelSpinBoxPath { get; set; } = new("Margin/VBox/ConfigView/StartingLevelRow/StartingLevelSpinBox");
+    public NodePath DifficultyContainerPath { get; set; } = new("Margin/VBox/ConfigView/DifficultyContainer");
 
     [Export]
     public NodePath SeedLineEditPath { get; set; } = new("Margin/VBox/ConfigView/SeedRow/SeedLineEdit");
@@ -100,7 +102,8 @@ public partial class MenuHubDungeonPage : Control
 
     private Control _configView;
     private SpinBox _roomsSpinBox;
-    private SpinBox _startingLevelSpinBox;
+    private Container _difficultyContainer;
+    private Label _difficultySummaryLabel;
     private LineEdit _seedLineEdit;
     private Button _randomizeSeedButton;
     private Button _startButton;
@@ -129,12 +132,33 @@ public partial class MenuHubDungeonPage : Control
     private Dungeon _boundDungeon;
     private Action _resume;
     // Returns null/empty on success, or an actionable error to display while the HUB stays open.
-    private Func<ulong, int, int, string> _startDungeon;
+    private Func<ulong, int, DungeonDifficultySelection, string> _startDungeon;
     // Returns null/empty on success, or an actionable error to display while the HUB stays open.
     private Func<string> _giveUp;
     private bool _entranceAuthorized;
     private bool _rulesDefaultsInitialized;
+    private bool _difficultyRowsBuilt;
     private bool _dungeonAnywhereSubscribed;
+
+    // Difficulty rows the HUB drives, in display order. Each owns its option table, mutually exclusive
+    // buttons, selection label and current selection.
+    private DungeonDifficultyRules _difficultyRules;
+    private readonly List<DifficultyRow> _difficultyRows = new();
+
+    // Reward-adjustment colors: positive green, negative red, zero neutral.
+    private static readonly Color PositiveRewardColor = new(0.40f, 0.85f, 0.45f);
+    private static readonly Color NegativeRewardColor = new(0.92f, 0.45f, 0.45f);
+    private static readonly Color NeutralRewardColor = Colors.White;
+
+    // Identifies how a difficulty row formats its option values and what gameplay field it drives.
+    private enum DifficultyRowKind
+    {
+        StartingLevel,
+        LevelIncrease,
+        HealthPower,
+        Resistance,
+        Damage,
+    }
 
     public override void _Ready()
     {
@@ -142,7 +166,7 @@ public partial class MenuHubDungeonPage : Control
 
         _configView = GetNodeOrNull<Control>(ConfigViewPath);
         _roomsSpinBox = GetNodeOrNull<SpinBox>(RoomsSpinBoxPath);
-        _startingLevelSpinBox = GetNodeOrNull<SpinBox>(StartingLevelSpinBoxPath);
+        _difficultyContainer = GetNodeOrNull<Container>(DifficultyContainerPath);
         _seedLineEdit = GetNodeOrNull<LineEdit>(SeedLineEditPath);
         _randomizeSeedButton = GetNodeOrNull<Button>(RandomizeSeedButtonPath);
         _startButton = GetNodeOrNull<Button>(StartButtonPath);
@@ -164,7 +188,6 @@ public partial class MenuHubDungeonPage : Control
         _historyDetailsLabel = GetNodeOrNull<Label>(HistoryDetailsLabelPath);
 
         ConfigureRoomsSpinBox();
-        ConfigureStartingLevelSpinBox();
 
         if (_seedLineEdit != null)
         {
@@ -235,7 +258,7 @@ public partial class MenuHubDungeonPage : Control
         DisconnectDungeonSignal();
     }
 
-    public void Bind(World world, Action resume, Func<ulong, int, int, string> startDungeon, Func<string> giveUp)
+    public void Bind(World world, Action resume, Func<ulong, int, DungeonDifficultySelection, string> startDungeon, Func<string> giveUp)
     {
         DisconnectDungeonSignal();
 
@@ -366,9 +389,9 @@ public partial class MenuHubDungeonPage : Control
         }
 
         var roomCount = ReadSpinBoxInt(_roomsSpinBox, 0);
-        var startingLevel = ReadSpinBoxInt(_startingLevelSpinBox, 1);
+        var difficulty = BuildDifficultySelection();
 
-        var error = _startDungeon.Invoke(seed, roomCount, startingLevel);
+        var error = _startDungeon.Invoke(seed, roomCount, difficulty);
         if (!string.IsNullOrEmpty(error))
         {
             // Failed launch: keep the HUB open and surface the actionable error. Authorization
@@ -535,6 +558,10 @@ public partial class MenuHubDungeonPage : Control
                 $"Finished: {FormatFinishedAt(record.FinishedAt)}\n" +
                 $"Seed: {record.Seed.ToString(CultureInfo.InvariantCulture)}\n" +
                 $"Starting Room Level: {record.StartingRoomLevel}\n" +
+                $"Level Increase: {FormatLevelIncrease(record.LevelIncreasePerRoom)}\n" +
+                $"Health / Power: {FormatBonusPercent(record.HealthPowerBonus)}\n" +
+                $"Resistance: {FormatBonusPercent(record.ResistanceBonus)}\n" +
+                $"Damage: {FormatBonusPercent(record.DamageBonus)}\n" +
                 $"Planned Run Length: {record.PlannedRunLength}\n" +
                 $"Base Score: {FormatScore(record.BaseScore)}\n" +
                 $"Difficulty Multiplier: {FormatMultiplier(record.DifficultyMultiplier)}\n" +
@@ -574,6 +601,20 @@ public partial class MenuHubDungeonPage : Control
     private static string FormatMultiplier(float? multiplier)
     {
         return multiplier?.ToString("0.00", CultureInfo.InvariantCulture) ?? LegacyScoreFallback;
+    }
+
+    // History difficulty fields. Legacy records saved before difficulty existed carry none and show
+    // the fallback dash rather than a fabricated value; a real 0% bonus shows as "0%".
+    private static string FormatLevelIncrease(int? levelIncrease)
+    {
+        return levelIncrease.HasValue
+            ? $"+{levelIncrease.Value.ToString(CultureInfo.InvariantCulture)}"
+            : LegacyScoreFallback;
+    }
+
+    private static string FormatBonusPercent(float? bonus)
+    {
+        return bonus.HasValue ? FormatSignedPercent(bonus.Value) : LegacyScoreFallback;
     }
 
     private static string OutcomeText(DungeonRunOutcome outcome)
@@ -659,20 +700,23 @@ public partial class MenuHubDungeonPage : Control
 
     private void EnsureRulesDefaults()
     {
-        if (_rulesDefaultsInitialized)
+        var dungeon = ResolveDungeon();
+        if (dungeon == null)
             return;
 
-        var rules = ResolveDungeon()?.GenerationRules;
-        if (rules == null)
-            return;
+        if (!_rulesDefaultsInitialized && dungeon.GenerationRules is { } rules)
+        {
+            if (_roomsSpinBox != null)
+                _roomsSpinBox.Value = rules.OrdinaryRoomCount;
 
-        if (_roomsSpinBox != null)
-            _roomsSpinBox.Value = rules.OrdinaryRoomCount;
+            _rulesDefaultsInitialized = true;
+        }
 
-        if (_startingLevelSpinBox != null)
-            _startingLevelSpinBox.Value = rules.StartingRoomLevel;
-
-        _rulesDefaultsInitialized = true;
+        if (!_difficultyRowsBuilt)
+        {
+            BuildDifficultyRows(dungeon.DifficultyRules ?? DungeonDifficultyRules.CreateDefault());
+            _difficultyRowsBuilt = true;
+        }
     }
 
     private void ConfigureRoomsSpinBox()
@@ -686,15 +730,233 @@ public partial class MenuHubDungeonPage : Control
         _roomsSpinBox.Rounded = true;
     }
 
-    private void ConfigureStartingLevelSpinBox()
+    // Difficulty rows -----------------------------------------------------------------------------
+
+    private const float ModifierColumnWidth = 140.0f;
+    private const float SelectionColumnWidth = 150.0f;
+
+    // Builds the header, the five mutually exclusive option rows, and the live summary from the rules
+    // tables. Selections default to the first option of every row; the summary reflects them at once.
+    private void BuildDifficultyRows(DungeonDifficultyRules rules)
     {
-        if (_startingLevelSpinBox == null)
+        _difficultyRules = rules;
+        _difficultyRows.Clear();
+
+        if (_difficultyContainer == null)
             return;
 
-        _startingLevelSpinBox.MinValue = 1;
-        _startingLevelSpinBox.MaxValue = 100;
-        _startingLevelSpinBox.Step = 1;
-        _startingLevelSpinBox.Rounded = true;
+        foreach (var child in _difficultyContainer.GetChildren())
+            child.QueueFree();
+
+        _difficultyContainer.AddChild(BuildHeaderRow());
+
+        AddDifficultyRow(DifficultyRowKind.StartingLevel, "Starting level", rules.StartingLevelOptions, DungeonDifficultyRules.DefaultStartingLevelIndex);
+        AddDifficultyRow(DifficultyRowKind.LevelIncrease, "Level increase", rules.LevelIncreaseOptions, DungeonDifficultyRules.DefaultLevelIncreaseIndex);
+        AddDifficultyRow(DifficultyRowKind.HealthPower, "Health / Power", rules.EnemyStatOptions, DungeonDifficultyRules.DefaultEnemyStatIndex);
+        AddDifficultyRow(DifficultyRowKind.Resistance, "Resistance", rules.EnemyStatOptions, DungeonDifficultyRules.DefaultEnemyStatIndex);
+        AddDifficultyRow(DifficultyRowKind.Damage, "Damage", rules.EnemyStatOptions, DungeonDifficultyRules.DefaultEnemyStatIndex);
+
+        _difficultySummaryLabel = new Label
+        {
+            CustomMinimumSize = new Vector2(480.0f, 0.0f),
+        };
+        _difficultyContainer.AddChild(_difficultySummaryLabel);
+
+        RefreshDifficultySummary();
+    }
+
+    private HBoxContainer BuildHeaderRow()
+    {
+        var header = new HBoxContainer();
+        header.AddThemeConstantOverride("separation", 8);
+        header.AddChild(BuildColumnLabel("Modifier", ModifierColumnWidth));
+        header.AddChild(BuildColumnLabel("Selection (Reward bonus)", SelectionColumnWidth));
+        header.AddChild(BuildColumnLabel("Available values", 0.0f));
+        return header;
+    }
+
+    private void AddDifficultyRow(
+        DifficultyRowKind kind,
+        string label,
+        Godot.Collections.Array<DungeonDifficultyOption> options,
+        int defaultIndex)
+    {
+        var rowBox = new HBoxContainer();
+        rowBox.AddThemeConstantOverride("separation", 8);
+        rowBox.AddChild(BuildColumnLabel(label, ModifierColumnWidth));
+
+        var selectionLabel = BuildColumnLabel(string.Empty, SelectionColumnWidth);
+        rowBox.AddChild(selectionLabel);
+
+        var buttonsBox = new HBoxContainer();
+        buttonsBox.AddThemeConstantOverride("separation", 4);
+
+        var row = new DifficultyRow(kind, options, selectionLabel);
+        var group = new ButtonGroup();
+        var optionCount = options?.Count ?? 0;
+        var initialIndex = optionCount > 0 ? Math.Clamp(defaultIndex, 0, optionCount - 1) : -1;
+
+        for (var i = 0; i < optionCount; i++)
+        {
+            var option = options[i];
+            var button = new Button
+            {
+                ToggleMode = true,
+                ButtonGroup = group,
+                Text = FormatOptionValue(kind, option?.Value ?? 0.0f),
+            };
+
+            var optionIndex = i;
+            button.Toggled += pressed => OnDifficultyOptionToggled(row, optionIndex, pressed);
+            buttonsBox.AddChild(button);
+            row.Buttons.Add(button);
+        }
+
+        rowBox.AddChild(buttonsBox);
+        _difficultyContainer.AddChild(rowBox);
+        _difficultyRows.Add(row);
+
+        row.SelectedIndex = initialIndex;
+        if (initialIndex >= 0)
+            row.Buttons[initialIndex].ButtonPressed = true;
+
+        UpdateRowSelectionLabel(row);
+    }
+
+    private void OnDifficultyOptionToggled(DifficultyRow row, int optionIndex, bool pressed)
+    {
+        // A mutually exclusive group reports the newly pressed button; ignore the matching release of
+        // the previously selected one.
+        if (!pressed)
+            return;
+
+        row.SelectedIndex = optionIndex;
+        UpdateRowSelectionLabel(row);
+        RefreshDifficultySummary();
+    }
+
+    private void UpdateRowSelectionLabel(DifficultyRow row)
+    {
+        var option = row.SelectedOption;
+        if (option == null)
+        {
+            row.SelectionLabel.Text = "-";
+            row.SelectionLabel.Modulate = NeutralRewardColor;
+            return;
+        }
+
+        row.SelectionLabel.Text = $"{FormatOptionValue(row.Kind, option.Value)} ({FormatSignedPercent(option.RewardAdjustment)})";
+        row.SelectionLabel.Modulate = RewardColor(option.RewardAdjustment);
+    }
+
+    private void RefreshDifficultySummary()
+    {
+        if (_difficultySummaryLabel == null)
+            return;
+
+        var selection = BuildDifficultySelection();
+        if (selection == null)
+        {
+            _difficultySummaryLabel.Text = string.Empty;
+            return;
+        }
+
+        var total = selection.TotalRewardAdjustment;
+        _difficultySummaryLabel.Text =
+            $"Reward bonus: {FormatSignedPercent(total)} ({selection.DifficultyMultiplier.ToString("0.00", CultureInfo.InvariantCulture)}x)";
+        _difficultySummaryLabel.Modulate = RewardColor(total);
+    }
+
+    // Resolves the current selections into an immutable snapshot. Falls back to the rules defaults
+    // when the rows have not been built yet (e.g. an early Start before the page is shown).
+    private DungeonDifficultySelection BuildDifficultySelection()
+    {
+        var rules = _difficultyRules ?? ResolveDungeon()?.DifficultyRules ?? DungeonDifficultyRules.CreateDefault();
+
+        if (_difficultyRows.Count == 0)
+            return DungeonDifficultySelection.CreateDefault(rules);
+
+        return DungeonDifficultySelection.FromIndices(
+            rules,
+            SelectedIndex(DifficultyRowKind.StartingLevel),
+            SelectedIndex(DifficultyRowKind.LevelIncrease),
+            SelectedIndex(DifficultyRowKind.HealthPower),
+            SelectedIndex(DifficultyRowKind.Resistance),
+            SelectedIndex(DifficultyRowKind.Damage));
+    }
+
+    private int SelectedIndex(DifficultyRowKind kind)
+    {
+        foreach (var row in _difficultyRows)
+        {
+            if (row.Kind == kind)
+                return Math.Max(0, row.SelectedIndex);
+        }
+
+        return 0;
+    }
+
+    private static Label BuildColumnLabel(string text, float minWidth)
+    {
+        return new Label
+        {
+            Text = text,
+            CustomMinimumSize = new Vector2(minWidth, 0.0f),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+    }
+
+    private static Color RewardColor(float rewardAdjustment)
+    {
+        if (rewardAdjustment > 0.0f)
+            return PositiveRewardColor;
+
+        return rewardAdjustment < 0.0f ? NegativeRewardColor : NeutralRewardColor;
+    }
+
+    // Formats an option's gameplay value for its row: an absolute starting level ("50"), a per-room
+    // increase ("+2"), or a signed actor-bonus percent ("+40%").
+    private static string FormatOptionValue(DifficultyRowKind kind, float value)
+    {
+        return kind switch
+        {
+            DifficultyRowKind.StartingLevel => Mathf.RoundToInt(value).ToString(CultureInfo.InvariantCulture),
+            DifficultyRowKind.LevelIncrease => $"+{Mathf.RoundToInt(value).ToString(CultureInfo.InvariantCulture)}",
+            _ => FormatSignedPercent(value),
+        };
+    }
+
+    // Formats an additive fraction as a signed percent: "+25%", "-75%", or "0%" for zero.
+    private static string FormatSignedPercent(float fraction)
+    {
+        var percent = Mathf.RoundToInt(fraction * 100.0f);
+        if (percent > 0)
+            return $"+{percent.ToString(CultureInfo.InvariantCulture)}%";
+
+        return percent < 0
+            ? $"{percent.ToString(CultureInfo.InvariantCulture)}%"
+            : "0%";
+    }
+
+    // One difficulty row's live UI state: its kind, option table, mutually exclusive buttons, the
+    // selection label, and the currently selected option index.
+    private sealed class DifficultyRow
+    {
+        public DifficultyRow(DifficultyRowKind kind, Godot.Collections.Array<DungeonDifficultyOption> options, Label selectionLabel)
+        {
+            Kind = kind;
+            Options = options;
+            SelectionLabel = selectionLabel;
+        }
+
+        public DifficultyRowKind Kind { get; }
+        public Godot.Collections.Array<DungeonDifficultyOption> Options { get; }
+        public Label SelectionLabel { get; }
+        public List<Button> Buttons { get; } = new();
+        public int SelectedIndex { get; set; } = -1;
+
+        public DungeonDifficultyOption SelectedOption =>
+            Options != null && SelectedIndex >= 0 && SelectedIndex < Options.Count ? Options[SelectedIndex] : null;
     }
 
     private void SetStatus(string text, bool isError)

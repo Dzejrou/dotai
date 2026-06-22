@@ -22,14 +22,15 @@ public sealed class DungeonRunPlanGenerator
         DungeonGenerationRules rules,
         ulong seed,
         int? ordinaryRoomCountOverride = null,
-        int? startingRoomLevelOverride = null)
+        int? startingRoomLevelOverride = null,
+        int? levelIncreasePerRoomOverride = null)
     {
         if (rules == null)
             return DungeonRunPlanResult.Failure($"{nameof(DungeonGenerationRules)} is null.");
 
         var ordinaryRoomCount = Math.Max(0, ordinaryRoomCountOverride ?? rules.OrdinaryRoomCount);
         var startingLevel = Math.Max(1, startingRoomLevelOverride ?? rules.StartingRoomLevel);
-        var levelDelta = Math.Max(0, rules.LevelIncreasePerRoom);
+        var levelDelta = Math.Max(0, levelIncreasePerRoomOverride ?? rules.LevelIncreasePerRoom);
 
         var errors = new List<string>();
         ValidatePreBossRequirements(rules, errors);

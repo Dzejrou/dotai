@@ -497,22 +497,9 @@ layout_mode = 2
 max_value = 100.0
 rounded = true
 
-[node name="StartingLevelRow" type="HBoxContainer" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
+[node name="DifficultyContainer" type="VBoxContainer" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
 layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="StartingLevelLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/ConfigView/StartingLevelRow"]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-text = "Starting Level"
-
-[node name="StartingLevelSpinBox" type="SpinBox" parent="Root/DungeonPage/Margin/VBox/ConfigView/StartingLevelRow"]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-min_value = 1.0
-max_value = 100.0
-value = 1.0
-rounded = true
+theme_override_constants/separation = 6
 
 [node name="SeedRow" type="HBoxContainer" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
 layout_mode = 2

@@ -5,17 +5,23 @@
 // into an immutable DungeonRunRecord and this instance is discarded.
 public sealed class DungeonRunStats
 {
-    public DungeonRunStats(ulong seed, int startingRoomLevel, int plannedRunLength)
+    public DungeonRunStats(ulong seed, int startingRoomLevel, int plannedRunLength, DungeonDifficultySelection difficulty = null)
     {
         Seed = seed;
         StartingRoomLevel = startingRoomLevel;
         PlannedRunLength = plannedRunLength;
+        Difficulty = difficulty;
     }
 
     // Run identity and plan shape, fixed at run start.
     public ulong Seed { get; }
     public int StartingRoomLevel { get; }
     public int PlannedRunLength { get; }
+
+    // Immutable difficulty snapshot captured when the run started. Drives the difficulty multiplier
+    // at finalization and the selected fields persisted to history. Null only for legacy/no-difficulty
+    // construction paths, which finalize at the unmodified 1.0 multiplier.
+    public DungeonDifficultySelection Difficulty { get; }
 
     // Accumulated live counters.
     public int RoomsCleared { get; private set; }
