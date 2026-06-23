@@ -26,6 +26,7 @@ public partial class Main : Node2D
     private bool _gameOverActive;
     private bool _restartingFromGameOver;
     private bool _menuHubOpen;
+    private bool _merchantOpen;
     private CastBar _castBar;
     private PlayerSpellBar _spellBar;
     private PlayerDebugStatsWindow _playerDebugStatsWindow;
@@ -171,6 +172,10 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_spellBar) &&
             _spellBar.IsConnected(PlayerSpellBar.SignalName.MenuRequested, new Callable(this, nameof(OnSpellBarMenuRequested))))
             _spellBar.Disconnect(PlayerSpellBar.SignalName.MenuRequested, new Callable(this, nameof(OnSpellBarMenuRequested)));
+
+        if (GodotObject.IsInstanceValid(_merchantWindow) &&
+            _merchantWindow.IsConnected(MerchantWindow.SignalName.CloseRequested, new Callable(this, nameof(OnMerchantCloseRequested))))
+            _merchantWindow.Disconnect(MerchantWindow.SignalName.CloseRequested, new Callable(this, nameof(OnMerchantCloseRequested)));
     }
 
     public override void _Input(InputEvent @event)
@@ -185,6 +190,14 @@ public partial class Main : Node2D
             if (@event is InputEventKey keyEvent && keyEvent.Pressed)
                 RestartFromGameOver();
 
+            return;
+        }
+
+        // The full-screen merchant page owns input while open: Esc leaves (and unpauses) and every
+        // other gameplay/menu shortcut is swallowed so nothing leaks through to the paused world.
+        if (_merchantOpen)
+        {
+            TryHandleMerchantInput(@event);
             return;
         }
 
@@ -232,7 +245,7 @@ public partial class Main : Node2D
         UpdateInteractionPrompt(false);
         _gameOverActive = true;
         _playerDebugStatsWindow?.CloseWindow();
-        _merchantWindow?.CloseWindow();
+        CloseMerchantUi();
         GetTree().Paused = true;
 
         if (_gameOverRoot == null)
@@ -248,6 +261,8 @@ public partial class Main : Node2D
 
     private void OnMerchantInteractionRequested(MerchantStock stock, Player player)
     {
+        if (_gameOverActive)
+            return;
         if (_merchantWindow == null || !GodotObject.IsInstanceValid(_merchantWindow))
             return;
         if (stock == null || !GodotObject.IsInstanceValid(stock))
@@ -257,7 +272,36 @@ public partial class Main : Node2D
         if (_inventoryController == null || !GodotObject.IsInstanceValid(_inventoryController))
             return;
 
+        // Full-screen, paused commerce mirroring the MenuHub lifecycle. Pause is owned here so every
+        // close path (Esc, the page's close button, or any HUB/debug flow) unpauses consistently.
         _merchantWindow.Open(_inventoryController, stock);
+        _merchantOpen = true;
+        GetTree().Paused = true;
+    }
+
+    private void OnMerchantCloseRequested()
+    {
+        CloseMerchant();
+    }
+
+    // Full close from a player-driven leave (Esc or the page's close button): tear down the page
+    // and return to gameplay.
+    private void CloseMerchant()
+    {
+        CloseMerchantUi();
+
+        if (!_gameOverActive)
+            GetTree().Paused = false;
+    }
+
+    // Closes the merchant page without touching pause, for callers that own the pause state
+    // themselves (opening the MenuHub/DebugTray, or game over). Keeps merchant UI from lingering.
+    private void CloseMerchantUi()
+    {
+        if (_merchantWindow != null && GodotObject.IsInstanceValid(_merchantWindow))
+            _merchantWindow.CloseWindow();
+
+        _merchantOpen = false;
     }
 
     private void OnDungeonEntranceInteractionRequested(Player player)
@@ -517,7 +561,19 @@ public partial class Main : Node2D
         if (merchantWindowScene?.Instantiate<MerchantWindow>() is MerchantWindow merchantWindow)
         {
             _merchantWindow = merchantWindow;
-            hudCanvas.AddChild(_merchantWindow);
+
+            // Own CanvasLayer above the world HUD (layer 100) and below the MenuHub (layer 200) so
+            // the opaque full-screen commerce page covers all gameplay HUD while shopping. The
+            // merchant page is mutually exclusive with the MenuHub/DebugTray, which force-close it.
+            var merchantCanvas = new CanvasLayer
+            {
+                Name = "MerchantLayer",
+                Layer = 150,
+            };
+            AddChild(merchantCanvas);
+            merchantCanvas.AddChild(_merchantWindow);
+
+            _merchantWindow.Connect(MerchantWindow.SignalName.CloseRequested, new Callable(this, nameof(OnMerchantCloseRequested)));
         }
 
         var countdownHudScene = ResourceLoader.Load<PackedScene>(CountdownHudScenePath);
@@ -567,6 +623,20 @@ public partial class Main : Node2D
         }
 
         _interactionPrompt.GlobalPosition = promptPosition;
+    }
+
+    // Esc leaves the merchant page and unpauses; all other keys are consumed so they cannot reach
+    // gameplay/menu shortcuts while the page is open.
+    private void TryHandleMerchantInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+            return;
+
+        if (keyEvent.PhysicalKeycode == Key.Escape)
+        {
+            CloseMerchant();
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     private bool TryHandleMenuHubInput(InputEvent @event, bool textFieldFocused)
@@ -713,7 +783,7 @@ public partial class Main : Node2D
     private void OpenMenuHub(MenuHubPage page = MenuHubPage.GameMenu)
     {
         CloseDebugTray();
-        _merchantWindow?.CloseWindow();
+        CloseMerchantUi();
         _menuHubOpen = true;
         if (_menuHubRoot != null)
             _menuHubRoot.Open(page);
@@ -733,7 +803,7 @@ public partial class Main : Node2D
 
     private void OpenDebugTray()
     {
-        _merchantWindow?.CloseWindow();
+        CloseMerchantUi();
 
         if (_debugTrayRoot != null)
             _debugTrayRoot.Open();
