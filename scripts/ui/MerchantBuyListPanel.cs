@@ -7,6 +7,7 @@ public partial class MerchantBuyListPanel : VBoxContainer
 {
     private InventoryController _inventory;
     private MerchantStock _stock;
+    private ICurrencyWallet _buyWallet;
     private readonly List<OfferRow> _rows = new();
 
     public override void _ExitTree()
@@ -14,10 +15,11 @@ public partial class MerchantBuyListPanel : VBoxContainer
         Unbind();
     }
 
-    public void Bind(InventoryController inventory, MerchantStock stock)
+    public void Bind(InventoryController inventory, MerchantStock stock, ICurrencyWallet buyWallet)
     {
         _inventory = inventory;
         _stock = stock;
+        _buyWallet = buyWallet;
     }
 
     // Drops references to the inventory/stock and tears down any rendered rows.
@@ -29,6 +31,7 @@ public partial class MerchantBuyListPanel : VBoxContainer
         ClearRows();
         _inventory = null;
         _stock = null;
+        _buyWallet = null;
     }
 
     public void Refresh()
@@ -77,7 +80,7 @@ public partial class MerchantBuyListPanel : VBoxContainer
         {
             VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = Control.MouseFilterEnum.Ignore,
-            Text = $"{offer.Price}g",
+            Text = $"{offer.Price}{_buyWallet?.Suffix ?? "g"}",
         };
         root.AddChild(priceLabel);
 
@@ -88,9 +91,7 @@ public partial class MerchantBuyListPanel : VBoxContainer
         };
         root.AddChild(buyButton);
 
-        var canAfford = _inventory != null &&
-            GodotObject.IsInstanceValid(_inventory) &&
-            _inventory.Gold >= offer.Price;
+        var canAfford = _buyWallet != null && _buyWallet.CanAfford(offer.Price);
         var canAccept = _stock != null && _stock.CanInventoryAccept(offer, _inventory);
         buyButton.Disabled = offer.Purchased || !canAfford || !canAccept;
 
@@ -155,9 +156,9 @@ public partial class MerchantBuyListPanel : VBoxContainer
 
     private void OnBuyPressed(OfferRow row)
     {
-        if (_stock == null || _inventory == null)
+        if (_stock == null || _inventory == null || _buyWallet == null)
             return;
-        _stock.TryPurchase(row.OfferIndex, _inventory);
+        _stock.TryPurchase(row.OfferIndex, _inventory, _buyWallet);
     }
 
     private static string BuildOfferLabel(MerchantOffer offer)

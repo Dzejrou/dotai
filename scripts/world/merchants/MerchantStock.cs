@@ -75,9 +75,15 @@ public partial class MerchantStock : Node
         EmitSignal(SignalName.StockChanged);
     }
 
-    public bool TryPurchase(int offerIndex, InventoryController inventory)
+    // Buys the offer at offerIndex, paying through buyWallet. The wallet abstracts the Buy currency
+    // (Gold for ordinary merchants, a future currency such as Dungeon Points elsewhere); item
+    // delivery still goes through the InventoryController. Capacity is preflighted before any spend,
+    // and a delivery failure after payment refunds through the same wallet.
+    public bool TryPurchase(int offerIndex, InventoryController inventory, ICurrencyWallet buyWallet)
     {
         if (inventory == null || !GodotObject.IsInstanceValid(inventory))
+            return false;
+        if (buyWallet == null)
             return false;
         if (offerIndex < 0 || offerIndex >= _offers.Count)
             return false;
@@ -89,22 +95,26 @@ public partial class MerchantStock : Node
         if (!CanInventoryAccept(offer, inventory))
             return false;
 
-        if (inventory.Gold < offer.Price)
+        if (!buyWallet.CanAfford(offer.Price))
             return false;
 
-        if (!inventory.TrySpendGold(offer.Price))
+        if (!buyWallet.TrySpend(offer.Price))
             return false;
 
         var added = AddOfferToInventory(offer, inventory);
         if (!added)
         {
             // Capacity check passed but add failed (e.g. slot vacated between check and add).
-            // Refund defensively so the player isn't out of gold for nothing.
-            inventory.AddGold(offer.Price);
+            // Refund defensively so the player isn't out of currency for nothing.
+            buyWallet.Refund(offer.Price);
             return false;
         }
 
-        offer.Purchased = true;
+        // Limited offers sell out until the next refresh rebuilds stock; unlimited offers stay
+        // buyable and are never marked purchased.
+        if (offer.StockMode == MerchantOfferStockMode.Limited)
+            offer.Purchased = true;
+
         EmitSignal(SignalName.StockChanged);
         return true;
     }
@@ -175,6 +185,7 @@ public partial class MerchantStock : Node
                 {
                     Kind = MerchantOfferKind.StackItem,
                     Origin = origin,
+                    StockMode = rule.StockMode,
                     Price = rule.Price,
                     StackItem = rule.StackItem,
                     StackQuantity = rule.StackQuantity,
@@ -198,6 +209,7 @@ public partial class MerchantStock : Node
                 {
                     Kind = MerchantOfferKind.GeneratedGear,
                     Origin = origin,
+                    StockMode = rule.StockMode,
                     Price = rule.Price,
                     Gear = gear,
                     RevealedSubstatCount = rule.RevealedSubstatCount,

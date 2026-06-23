@@ -9,6 +9,11 @@ public sealed class MerchantOffer
     // Provenance: which list in MerchantDefinition produced this offer.
     public MerchantOfferOrigin Origin { get; init; }
 
+    // Limited offers are marked Purchased (sold out) on a successful buy until the next
+    // RebuildStock; Unlimited offers are never marked and stay buyable. Defaults to Limited so an
+    // offer built without an explicit mode preserves the historical sell-out behavior.
+    public MerchantOfferStockMode StockMode { get; init; } = MerchantOfferStockMode.Limited;
+
     public int Price { get; init; }
 
     // Populated when Kind == StackItem.
