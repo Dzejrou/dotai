@@ -5,15 +5,17 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class MerchantWindow : Control
 {
+    // Raised when the player asks to leave the page (its close button). Pause ownership lives in
+    // Main, so the page never unpauses itself; Main listens and runs the close+unpause sequence.
+    [Signal]
+    public delegate void CloseRequestedEventHandler();
+
     private enum Mode
     {
         Buy,
         Sell,
         Buyback,
     }
-
-    [Export]
-    public NodePath WindowPanelPath { get; set; } = new("Panel");
 
     [Export]
     public NodePath TitleLabelPath { get; set; } = new("Panel/Margin/VBox/Header/Title");
@@ -51,7 +53,6 @@ public partial class MerchantWindow : Control
     private InventoryController _inventory;
     private ICurrencyWallet _buyWallet;
     private MerchantStock _stock;
-    private Control _windowPanel;
     private Label _titleLabel;
     private Button _closeButton;
     private Label _goldLabel;
@@ -63,8 +64,6 @@ public partial class MerchantWindow : Control
     private MerchantBuybackListPanel _buybackListPanel;
     private Button _refreshButton;
     private Button _sellModeButton;
-    private WindowDragger _windowDragger;
-    private bool _panelPositioned;
     private Mode _mode = Mode.Buy;
     private MerchantSellQuantityMode _sellQuantityMode = MerchantSellQuantityMode.One;
     private readonly List<MerchantBuybackEntry> _buybackEntries = new();
@@ -74,7 +73,6 @@ public partial class MerchantWindow : Control
         ProcessMode = ProcessModeEnum.Always;
         Visible = false;
 
-        _windowPanel = GetNodeOrNull<Control>(WindowPanelPath);
         _titleLabel = GetNodeOrNull<Label>(TitleLabelPath);
         _closeButton = GetNodeOrNull<Button>(CloseButtonPath);
         _goldLabel = GetNodeOrNull<Label>(GoldLabelPath);
@@ -90,16 +88,8 @@ public partial class MerchantWindow : Control
         if (_sellListPanel != null)
             _sellListPanel.OnItemSold = OnItemSold;
 
-        if (_windowPanel != null)
-        {
-            _windowDragger = new WindowDragger(this, _windowPanel)
-            {
-                BringToFront = FocusWindow,
-            };
-        }
-
         if (_closeButton != null)
-            _closeButton.Pressed += CloseWindow;
+            _closeButton.Pressed += OnCloseButtonPressed;
 
         if (_refreshButton != null)
             _refreshButton.Pressed += OnRefreshPressed;
@@ -122,7 +112,7 @@ public partial class MerchantWindow : Control
     public override void _ExitTree()
     {
         if (_closeButton != null)
-            _closeButton.Pressed -= CloseWindow;
+            _closeButton.Pressed -= OnCloseButtonPressed;
 
         if (_refreshButton != null)
             _refreshButton.Pressed -= OnRefreshPressed;
@@ -142,7 +132,6 @@ public partial class MerchantWindow : Control
         if (_sellListPanel != null)
             _sellListPanel.OnItemSold = null;
 
-        _windowDragger?.Detach();
         _buyListPanel?.Unbind();
         _sellListPanel?.Unbind();
         _buybackListPanel?.Unbind();
@@ -162,9 +151,6 @@ public partial class MerchantWindow : Control
         BindStock(stock);
 
         Visible = true;
-        CenterPanelOnce();
-        _windowDragger?.ClampToViewport();
-        FocusWindow();
 
         _stock?.EnsureStockBuilt();
         Refresh();
@@ -191,9 +177,9 @@ public partial class MerchantWindow : Control
         UnbindStock();
     }
 
-    public void FocusWindow()
+    private void OnCloseButtonPressed()
     {
-        MoveToFront();
+        EmitSignal(SignalName.CloseRequested);
     }
 
     private void OnInventoryChanged()
@@ -388,20 +374,6 @@ public partial class MerchantWindow : Control
             _buybackListPanel.Bind(_inventory, _buybackEntries, OnBuybackPressed);
             _buybackListPanel.Refresh();
         }
-    }
-
-    private void CenterPanelOnce()
-    {
-        if (_panelPositioned || _windowPanel == null || !GodotObject.IsInstanceValid(_windowPanel))
-            return;
-
-        var size = _windowPanel.Size;
-        if (size == Vector2.Zero)
-            size = _windowPanel.GetCombinedMinimumSize();
-
-        var viewportSize = GetViewportRect().Size;
-        _windowPanel.GlobalPosition = (viewportSize - size) * 0.5f;
-        _panelPositioned = true;
     }
 
     // Lazily builds the Gold buy wallet over the bound inventory, cached until the inventory
