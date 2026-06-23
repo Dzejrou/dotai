@@ -49,6 +49,7 @@ public partial class MerchantWindow : Control
     public NodePath SellModeButtonPath { get; set; } = new("Panel/Margin/VBox/Footer/SellModeButton");
 
     private InventoryController _inventory;
+    private ICurrencyWallet _buyWallet;
     private MerchantStock _stock;
     private Control _windowPanel;
     private Label _titleLabel;
@@ -369,7 +370,9 @@ public partial class MerchantWindow : Control
 
         if (_buyListPanel != null)
         {
-            _buyListPanel.Bind(_inventory, _stock);
+            // Ordinary merchants buy with Gold. Sell/Buyback below stay Gold-based through the
+            // InventoryController directly and are never handed this buy wallet.
+            _buyListPanel.Bind(_inventory, _stock, ResolveBuyWallet());
             _buyListPanel.Refresh();
         }
 
@@ -401,6 +404,16 @@ public partial class MerchantWindow : Control
         _panelPositioned = true;
     }
 
+    // Lazily builds the Gold buy wallet over the bound inventory, cached until the inventory
+    // unbinds. Returns null when no valid inventory is bound so the buy panel renders disabled.
+    private ICurrencyWallet ResolveBuyWallet()
+    {
+        if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
+            return null;
+
+        return _buyWallet ??= new GoldWallet(_inventory);
+    }
+
     private void BindInventory(InventoryController inventory)
     {
         if (ReferenceEquals(_inventory, inventory))
@@ -421,6 +434,9 @@ public partial class MerchantWindow : Control
 
     private void UnbindInventory()
     {
+        // Drop the cached buy wallet so a rebind to a different inventory builds a fresh one.
+        _buyWallet = null;
+
         if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
         {
             _inventory = null;

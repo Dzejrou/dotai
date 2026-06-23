@@ -8,6 +8,11 @@ public partial class MerchantOfferRule : Resource
     [Export]
     public MerchantOfferKind Kind { get; set; } = MerchantOfferKind.StackItem;
 
+    // Limited by default so existing ordinary merchant offers keep selling out on purchase and
+    // reappearing on refresh. Unlimited offers stay repeatedly purchasable.
+    [Export]
+    public MerchantOfferStockMode StockMode { get; set; } = MerchantOfferStockMode.Limited;
+
     [Export]
     public InventoryItemDefinition StackItem { get; set; }
 
