@@ -36,13 +36,16 @@ public partial class MerchantWindow : Control
     public NodePath BuybackTabButtonPath { get; set; } = new("Panel/Margin/VBox/ModeBar/BuybackTabButton");
 
     [Export]
-    public NodePath BuyListPanelPath { get; set; } = new("Panel/Margin/VBox/Offers");
+    public NodePath ListScrollPath { get; set; } = new("Panel/Margin/VBox/ListScroll");
 
     [Export]
-    public NodePath SellListPanelPath { get; set; } = new("Panel/Margin/VBox/SellList");
+    public NodePath BuyListPanelPath { get; set; } = new("Panel/Margin/VBox/ListScroll/ListHost/Offers");
 
     [Export]
-    public NodePath BuybackListPanelPath { get; set; } = new("Panel/Margin/VBox/BuybackList");
+    public NodePath SellListPanelPath { get; set; } = new("Panel/Margin/VBox/ListScroll/ListHost/SellList");
+
+    [Export]
+    public NodePath BuybackListPanelPath { get; set; } = new("Panel/Margin/VBox/ListScroll/ListHost/BuybackList");
 
     [Export]
     public NodePath RefreshButtonPath { get; set; } = new("Panel/Margin/VBox/Footer/RefreshButton");
@@ -62,6 +65,7 @@ public partial class MerchantWindow : Control
     private MerchantBuyListPanel _buyListPanel;
     private MerchantSellListPanel _sellListPanel;
     private MerchantBuybackListPanel _buybackListPanel;
+    private ScrollContainer _listScroll;
     private Button _refreshButton;
     private Button _sellModeButton;
     private Mode _mode = Mode.Buy;
@@ -82,6 +86,7 @@ public partial class MerchantWindow : Control
         _buyListPanel = GetNodeOrNull<MerchantBuyListPanel>(BuyListPanelPath);
         _sellListPanel = GetNodeOrNull<MerchantSellListPanel>(SellListPanelPath);
         _buybackListPanel = GetNodeOrNull<MerchantBuybackListPanel>(BuybackListPanelPath);
+        _listScroll = GetNodeOrNull<ScrollContainer>(ListScrollPath);
         _refreshButton = GetNodeOrNull<Button>(RefreshButtonPath);
         _sellModeButton = GetNodeOrNull<Button>(SellModeButtonPath);
 
@@ -312,6 +317,11 @@ public partial class MerchantWindow : Control
         _mode = mode;
         ApplyModeVisibility();
         Refresh();
+
+        // The three lists share one ScrollContainer, so start the newly shown tab at the top
+        // instead of inheriting a stale scroll offset from the previous (possibly longer) list.
+        if (_listScroll != null)
+            _listScroll.ScrollVertical = 0;
     }
 
     private void ApplyModeVisibility()

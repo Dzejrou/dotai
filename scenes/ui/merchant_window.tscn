@@ -104,7 +104,18 @@ size_flags_horizontal = 3
 toggle_mode = true
 text = "Buyback"
 
-[node name="Offers" type="VBoxContainer" parent="Panel/Margin/VBox"]
+[node name="ListScroll" type="ScrollContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ListHost" type="VBoxContainer" parent="Panel/Margin/VBox/ListScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Offers" type="VBoxContainer" parent="Panel/Margin/VBox/ListScroll/ListHost"]
 layout_mode = 2
 mouse_filter = 2
 size_flags_horizontal = 3
@@ -112,7 +123,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 6
 script = ExtResource("2_merchant_buy_list_panel_script")
 
-[node name="SellList" type="VBoxContainer" parent="Panel/Margin/VBox"]
+[node name="SellList" type="VBoxContainer" parent="Panel/Margin/VBox/ListScroll/ListHost"]
 visible = false
 layout_mode = 2
 mouse_filter = 2
@@ -121,7 +132,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 6
 script = ExtResource("3_merchant_sell_list_panel_script")
 
-[node name="BuybackList" type="VBoxContainer" parent="Panel/Margin/VBox"]
+[node name="BuybackList" type="VBoxContainer" parent="Panel/Margin/VBox/ListScroll/ListHost"]
 visible = false
 layout_mode = 2
 mouse_filter = 2
