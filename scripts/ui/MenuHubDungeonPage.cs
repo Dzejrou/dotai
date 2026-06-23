@@ -85,6 +85,9 @@ public partial class MenuHubDungeonPage : Control
     public NodePath ActiveStatusLabelPath { get; set; } = new("Margin/VBox/ActiveView/ActiveStatusLabel");
 
     [Export]
+    public NodePath ShopButtonPath { get; set; } = new("Margin/VBox/ShopButton");
+
+    [Export]
     public NodePath HistoryButtonPath { get; set; } = new("Margin/VBox/HistoryButton");
 
     [Export]
@@ -129,8 +132,18 @@ public partial class MenuHubDungeonPage : Control
     private Label _historyEmptyLabel;
     private Label _historyOutcomeLabel;
     private Label _historyDetailsLabel;
+    private Button _shopButton;
+
+    // Shared commerce surface hosted as a nested Dungeon Shop subview, plus its own stock built from
+    // the centrally editable definition resource. Created once in _Ready and reused; the surface
+    // stays hidden until Shop is opened. Buy uses Dungeon Points; Sell/Buyback stay Gold-based.
+    private const string CommerceScenePath = "res://scenes/ui/merchant_window.tscn";
+    private const string DungeonShopDefinitionPath = "res://resources/merchants/dungeon_shop.tres";
+    private MerchantWindow _shopCommerce;
+    private MerchantStock _shopStock;
 
     private bool _historyOpen;
+    private bool _shopOpen;
     private DungeonRunRecord _selectedRecord;
 
     private readonly RandomNumberGenerator _seedRng = new();
@@ -186,6 +199,7 @@ public partial class MenuHubDungeonPage : Control
         _resumeButton = GetNodeOrNull<Button>(ResumeButtonPath);
         _giveUpButton = GetNodeOrNull<Button>(GiveUpButtonPath);
         _activeStatusLabel = GetNodeOrNull<Label>(ActiveStatusLabelPath);
+        _shopButton = GetNodeOrNull<Button>(ShopButtonPath);
         _historyButton = GetNodeOrNull<Button>(HistoryButtonPath);
         _historyView = GetNodeOrNull<Control>(HistoryViewPath);
         _historyBackButton = GetNodeOrNull<Button>(HistoryBackButtonPath);
@@ -215,6 +229,9 @@ public partial class MenuHubDungeonPage : Control
         if (_giveUpButton != null)
             _giveUpButton.Pressed += OnGiveUpPressed;
 
+        if (_shopButton != null)
+            _shopButton.Pressed += OnShopPressed;
+
         if (_historyButton != null)
             _historyButton.Pressed += OnHistoryPressed;
 
@@ -226,6 +243,8 @@ public partial class MenuHubDungeonPage : Control
 
         GameSettings.DungeonAnywhereChanged += OnDungeonAnywhereChanged;
         _dungeonAnywhereSubscribed = true;
+
+        CreateShop();
 
         Refresh();
     }
@@ -246,6 +265,13 @@ public partial class MenuHubDungeonPage : Control
 
         if (_giveUpButton != null)
             _giveUpButton.Pressed -= OnGiveUpPressed;
+
+        if (_shopButton != null)
+            _shopButton.Pressed -= OnShopPressed;
+
+        if (_shopCommerce != null && GodotObject.IsInstanceValid(_shopCommerce) &&
+            _shopCommerce.IsConnected(MerchantWindow.SignalName.CloseRequested, new Callable(this, nameof(OnShopCloseRequested))))
+            _shopCommerce.Disconnect(MerchantWindow.SignalName.CloseRequested, new Callable(this, nameof(OnShopCloseRequested)));
 
         if (_historyButton != null)
             _historyButton.Pressed -= OnHistoryPressed;
@@ -298,17 +324,28 @@ public partial class MenuHubDungeonPage : Control
 
         var active = _world != null && GodotObject.IsInstanceValid(_world) && _world.HasActiveDungeonRun;
 
+        // History and the Dungeon Shop are nested subviews: while either is open the normal page
+        // content and its entry buttons are hidden (the Shop surface is an opaque overlay child).
+        var nestedOpen = _historyOpen || _shopOpen;
+
         if (_configView != null)
-            _configView.Visible = !_historyOpen && !active;
+            _configView.Visible = !nestedOpen && !active;
 
         if (_activeView != null)
-            _activeView.Visible = !_historyOpen && active;
+            _activeView.Visible = !nestedOpen && active;
 
         if (_historyButton != null)
-            _historyButton.Visible = !_historyOpen;
+            _historyButton.Visible = !nestedOpen;
+
+        if (_shopButton != null)
+            _shopButton.Visible = !nestedOpen;
 
         if (_historyView != null)
             _historyView.Visible = _historyOpen;
+
+        // The Shop surface manages its own content; nothing else to refresh while it owns the page.
+        if (_shopOpen)
+            return;
 
         if (_historyOpen)
         {
@@ -451,14 +488,100 @@ public partial class MenuHubDungeonPage : Control
         Refresh();
     }
 
+    // Dungeon Shop (nested commerce subview) ------------------------------------------------------
+
+    public bool IsShopOpen => _shopOpen;
+
+    // Builds the Dungeon Shop's stock from the centrally editable definition resource and an instance
+    // of the shared commerce surface, both hosted as children of this page. Created once and reused;
+    // the surface stays hidden until Shop is opened. Stack-only stock needs no World/gear rules, so
+    // hosting it under the HUB (outside the World tree) is fine.
+    private void CreateShop()
+    {
+        var definition = GD.Load<MerchantDefinition>(DungeonShopDefinitionPath);
+        if (definition == null)
+        {
+            GD.PushWarning($"{nameof(MenuHubDungeonPage)}: failed to load Dungeon Shop definition at '{DungeonShopDefinitionPath}'.");
+            return;
+        }
+
+        _shopStock = new MerchantStock
+        {
+            Name = "DungeonShopStock",
+            Definition = definition,
+        };
+        AddChild(_shopStock);
+
+        var commerceScene = ResourceLoader.Load<PackedScene>(CommerceScenePath);
+        if (commerceScene?.Instantiate<MerchantWindow>() is not MerchantWindow commerce)
+        {
+            GD.PushWarning($"{nameof(MenuHubDungeonPage)}: failed to instantiate commerce surface at '{CommerceScenePath}'.");
+            return;
+        }
+
+        _shopCommerce = commerce;
+        AddChild(_shopCommerce);
+        _shopCommerce.Connect(MerchantWindow.SignalName.CloseRequested, new Callable(this, nameof(OnShopCloseRequested)));
+    }
+
+    private void OnShopPressed()
+    {
+        if (_shopOpen || _shopCommerce == null || _shopStock == null)
+            return;
+
+        var inventory = _world != null && GodotObject.IsInstanceValid(_world)
+            ? _world.ResolveInventoryController()
+            : null;
+        var dungeon = ResolveDungeon();
+        if (inventory == null || dungeon == null)
+        {
+            GD.PushWarning($"{nameof(MenuHubDungeonPage)}: cannot open Dungeon Shop; inventory or dungeon runtime is unavailable.");
+            return;
+        }
+
+        // Buy spends Dungeon Points; Sell/Buyback stay Gold-based inside the commerce surface.
+        _shopOpen = true;
+        _shopCommerce.Open(inventory, _shopStock, new DungeonPointsWallet(dungeon));
+
+        // Lock HUB navigation and hide the nav row exactly like History does.
+        EmitSignal(SignalName.NestedViewChanged, true);
+        Refresh();
+    }
+
+    private void OnShopCloseRequested()
+    {
+        CloseShop();
+    }
+
+    // Closes the nested Dungeon Shop subview and returns to the Dungeon page, mirroring CloseHistory.
+    // The MenuHub stays open/paused; only this nested view is dismissed. Also called when the HUB
+    // closes so reopening Dungeon shows its normal configuration/active view.
+    public void CloseShop()
+    {
+        if (!_shopOpen)
+            return;
+
+        _shopOpen = false;
+        _shopCommerce?.CloseWindow();
+        EmitSignal(SignalName.NestedViewChanged, false);
+        Refresh();
+    }
+
     // History (nested secondary view) -------------------------------------------------------------
 
     public bool IsHistoryOpen => _historyOpen;
 
-    // Page-level escape hook used by the HUB/Main: while History is open, Esc steps back to the
-    // ordinary Dungeon view instead of closing the HUB. Returns true when it consumed the event.
+    // Page-level escape hook used by the HUB/Main: while a nested view (Shop or History) is open,
+    // Esc steps back to the ordinary Dungeon view instead of closing the HUB. Returns true when it
+    // consumed the event.
     public bool TryHandleEscape()
     {
+        if (_shopOpen)
+        {
+            CloseShop();
+            return true;
+        }
+
         if (!_historyOpen)
             return false;
 

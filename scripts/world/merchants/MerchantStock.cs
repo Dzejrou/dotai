@@ -28,6 +28,48 @@ public partial class MerchantStock : Node
 
     public int RefreshCost => Definition?.RefreshCost ?? 0;
 
+    // Whether a Refresh action is meaningful for this stock, so the UI can show or hide the button
+    // without hardcoding by shop type. True when the definition has any dynamic (rerolled) offer, or
+    // any limited static offer that can sell out and be restored. A definition of only unlimited
+    // static offers (e.g. the Dungeon Shop) never changes on refresh. Derived from the definition's
+    // rules rather than the current rolled offers, so it stays stable across refreshes and rolls.
+    public bool SupportsRefresh
+    {
+        get
+        {
+            if (Definition == null)
+                return false;
+
+            if (HasAnyRule(Definition.DynamicOffers))
+                return true;
+
+            if (Definition.StaticOffers != null)
+            {
+                foreach (var rule in Definition.StaticOffers)
+                {
+                    if (rule != null && rule.StockMode == MerchantOfferStockMode.Limited)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    private static bool HasAnyRule(Godot.Collections.Array<MerchantOfferRule> rules)
+    {
+        if (rules == null)
+            return false;
+
+        foreach (var rule in rules)
+        {
+            if (rule != null)
+                return true;
+        }
+
+        return false;
+    }
+
     public override void _Ready()
     {
         EnsureStockBuilt();

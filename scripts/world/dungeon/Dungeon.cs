@@ -151,6 +151,19 @@ public partial class Dungeon : Node
         return true;
     }
 
+    // Credits Points back to the saved balance, rolling back a Dungeon Shop purchase whose delivery
+    // failed after the spend (capacity preflight passed but the inventory add did not). Mirrors the
+    // merchant Gold refund so a DP purchase can never leave the player short. A non-positive amount
+    // is ignored.
+    public void RefundPoints(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        _points += amount;
+        EmitSignal(SignalName.PointsChanged, _points);
+    }
+
     // Replaces the Points balance from a save load or a debug control, clamping a malformed negative
     // value to zero. Always emits so listeners (the Dungeon HUB DP label) refresh immediately even
     // when the value is unchanged, and never adds to the existing balance.

@@ -504,7 +504,9 @@ public partial class MenuHub : Control
         Visible = false;
         _inventoryPage?.OnHubClosed();
 
-        // Reset any nested Dungeon History view so reopening the HUB shows the normal Dungeon view.
+        // Reset any nested Dungeon subview (Shop or History) so reopening the HUB shows the normal
+        // Dungeon view.
+        _dungeonPage?.CloseShop();
         _dungeonPage?.CloseHistory();
 
         // Closing the HUB without starting clears entrance authorization, so reopening it
