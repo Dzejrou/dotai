@@ -55,6 +55,7 @@ public partial class MerchantWindow : Control
 
     private InventoryController _inventory;
     private ICurrencyWallet _buyWallet;
+    private ICurrencyWallet _buyWalletOverride;
     private MerchantStock _stock;
     private Label _titleLabel;
     private Button _closeButton;
@@ -145,7 +146,10 @@ public partial class MerchantWindow : Control
         UnbindStock();
     }
 
-    public void Open(InventoryController inventory, MerchantStock stock)
+    // buyWallet selects the Buy currency: null falls back to Gold (ordinary merchants), or an
+    // injected wallet such as Dungeon Points for the Dungeon Shop. Sell and Buyback always use Gold
+    // through the InventoryController regardless of this wallet.
+    public void Open(InventoryController inventory, MerchantStock stock, ICurrencyWallet buyWallet = null)
     {
         if (inventory == null || !GodotObject.IsInstanceValid(inventory))
             return;
@@ -154,10 +158,14 @@ public partial class MerchantWindow : Control
 
         BindInventory(inventory);
         BindStock(stock);
+        _buyWalletOverride = buyWallet;
 
         Visible = true;
 
         _stock?.EnsureStockBuilt();
+        // Re-evaluate per-mode + stock-driven visibility (e.g. the Refresh button) now that the
+        // stock is bound, then push the data into the panels.
+        ApplyModeVisibility();
         Refresh();
     }
 
@@ -176,6 +184,8 @@ public partial class MerchantWindow : Control
         // Buyback is session-local to one merchant interaction. Wipe so that reopening
         // (the same or a different merchant) starts with an empty buyback list.
         _buybackEntries.Clear();
+        // Drop any injected Buy wallet so a reopen as an ordinary merchant defaults back to Gold.
+        _buyWalletOverride = null;
         _mode = Mode.Buy;
         ApplyModeVisibility();
         UnbindInventory();
@@ -339,8 +349,11 @@ public partial class MerchantWindow : Control
             _sellListPanel.Visible = _mode == Mode.Sell;
         if (_buybackListPanel != null)
             _buybackListPanel.Visible = _mode == Mode.Buyback;
+        // Refresh is conditional on the bound stock, not the shop type: shown only for stock that
+        // can change on refresh (limited/dynamic offers). Unlimited-only stock (the Dungeon Shop)
+        // hides it. Applied here so it tracks both the active tab and the bound stock.
         if (_refreshButton != null)
-            _refreshButton.Visible = _mode == Mode.Buy;
+            _refreshButton.Visible = _mode == Mode.Buy && (_stock?.SupportsRefresh ?? false);
         if (_sellModeButton != null)
             _sellModeButton.Visible = _mode == Mode.Sell;
     }
@@ -350,12 +363,21 @@ public partial class MerchantWindow : Control
         if (_titleLabel != null)
             _titleLabel.Text = _stock?.DisplayName ?? "Merchant";
 
+        var buyWallet = ResolveBuyWallet();
         var gold = _inventory != null && GodotObject.IsInstanceValid(_inventory) ? _inventory.Gold : 0;
         if (_goldLabel != null)
-            _goldLabel.Text = $"Gold: {gold}";
+        {
+            // Show the currency relevant to the active tab: the Buy wallet on Buy (Gold for ordinary
+            // merchants, DP for the Dungeon Shop), Gold on Sell/Buyback which are always Gold-based.
+            _goldLabel.Text = _mode == Mode.Buy && buyWallet != null
+                ? $"{buyWallet.Label}: {buyWallet.Balance}"
+                : $"Gold: {gold}";
+        }
 
         if (_refreshButton != null)
         {
+            // Visibility is owned by ApplyModeVisibility (stock-aware); here we only keep the
+            // cost/disabled state current. Refresh always costs Gold.
             var cost = _stock?.RefreshCost ?? 0;
             _refreshButton.Text = cost > 0 ? $"Refresh ({cost}g)" : "Refresh";
             _refreshButton.Disabled = _stock == null || _inventory == null || gold < cost;
@@ -366,9 +388,9 @@ public partial class MerchantWindow : Control
 
         if (_buyListPanel != null)
         {
-            // Ordinary merchants buy with Gold. Sell/Buyback below stay Gold-based through the
-            // InventoryController directly and are never handed this buy wallet.
-            _buyListPanel.Bind(_inventory, _stock, ResolveBuyWallet());
+            // The Buy panel uses the Buy wallet (Gold or DP). Sell/Buyback below stay Gold-based
+            // through the InventoryController directly and are never handed this wallet.
+            _buyListPanel.Bind(_inventory, _stock, buyWallet);
             _buyListPanel.Refresh();
         }
 
@@ -390,6 +412,11 @@ public partial class MerchantWindow : Control
     // unbinds. Returns null when no valid inventory is bound so the buy panel renders disabled.
     private ICurrencyWallet ResolveBuyWallet()
     {
+        // An injected wallet (e.g. Dungeon Points) wins; otherwise fall back to the cached Gold
+        // wallet over the bound inventory (ordinary merchants).
+        if (_buyWalletOverride != null)
+            return _buyWalletOverride;
+
         if (_inventory == null || !GodotObject.IsInstanceValid(_inventory))
             return null;
 

@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="MerchantDefinition" format=3 uid="uid://dngeonshop2160"]
+
+[ext_resource type="Script" uid="uid://mkei3m50g1tr" path="res://scripts/world/merchants/MerchantDefinition.cs" id="1_dungeon_shop_definition"]
+[ext_resource type="Script" uid="uid://dwv88tg75medu" path="res://scripts/world/merchants/MerchantOfferRule.cs" id="2_dungeon_shop_offer_rule"]
+[ext_resource type="Resource" path="res://resources/inventory/items/small_bag.tres" id="3_small_bag"]
+[ext_resource type="Resource" path="res://resources/inventory/items/medium_bag.tres" id="4_medium_bag"]
+[ext_resource type="Resource" path="res://resources/inventory/items/large_bag.tres" id="5_large_bag"]
+[ext_resource type="Resource" path="res://resources/inventory/items/arcane_crystal.tres" id="6_arcane_crystal"]
+[ext_resource type="Resource" path="res://resources/inventory/items/mystic_crystal.tres" id="7_mystic_crystal"]
+[ext_resource type="Resource" path="res://resources/inventory/items/void_crystal.tres" id="8_void_crystal"]
+
+[sub_resource type="Resource" id="Resource_offer_small_bag"]
+script = ExtResource("2_dungeon_shop_offer_rule")
+StockMode = 1
+StackItem = ExtResource("3_small_bag")
+StackQuantity = 1
+Price = 5
+
+[sub_resource type="Resource" id="Resource_offer_medium_bag"]
+script = ExtResource("2_dungeon_shop_offer_rule")
+StockMode = 1
+StackItem = ExtResource("4_medium_bag")
+StackQuantity = 1
+Price = 15
+
+[sub_resource type="Resource" id="Resource_offer_large_bag"]
+script = ExtResource("2_dungeon_shop_offer_rule")
+StockMode = 1
+StackItem = ExtResource("5_large_bag")
+StackQuantity = 1
+Price = 30
+
+[sub_resource type="Resource" id="Resource_offer_arcane_crystal"]
+script = ExtResource("2_dungeon_shop_offer_rule")
+StockMode = 1
+StackItem = ExtResource("6_arcane_crystal")
+StackQuantity = 100
+Price = 5
+
+[sub_resource type="Resource" id="Resource_offer_mystic_crystal"]
+script = ExtResource("2_dungeon_shop_offer_rule")
+StockMode = 1
+StackItem = ExtResource("7_mystic_crystal")
+StackQuantity = 50
+Price = 13
+
+[sub_resource type="Resource" id="Resource_offer_void_crystal"]
+script = ExtResource("2_dungeon_shop_offer_rule")
+StockMode = 1
+StackItem = ExtResource("8_void_crystal")
+StackQuantity = 10
+Price = 10
+
+[resource]
+script = ExtResource("1_dungeon_shop_definition")
+DisplayName = "Dungeon Shop"
+RefreshCost = 0
+StaticOffers = Array[ExtResource("2_dungeon_shop_offer_rule")]([SubResource("Resource_offer_small_bag"), SubResource("Resource_offer_medium_bag"), SubResource("Resource_offer_large_bag"), SubResource("Resource_offer_arcane_crystal"), SubResource("Resource_offer_mystic_crystal"), SubResource("Resource_offer_void_crystal")])
