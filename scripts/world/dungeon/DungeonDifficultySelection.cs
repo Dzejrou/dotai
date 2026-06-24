@@ -20,7 +20,8 @@ public sealed class DungeonDifficultySelection
         float levelIncreaseRewardAdjustment,
         float healthPowerRewardAdjustment,
         float resistanceRewardAdjustment,
-        float damageRewardAdjustment)
+        float damageRewardAdjustment,
+        bool hardcore = false)
     {
         StartingRoomLevel = Math.Max(1, startingRoomLevel);
         LevelIncreasePerRoom = Math.Max(0, levelIncreasePerRoom);
@@ -32,6 +33,7 @@ public sealed class DungeonDifficultySelection
         HealthPowerRewardAdjustment = healthPowerRewardAdjustment;
         ResistanceRewardAdjustment = resistanceRewardAdjustment;
         DamageRewardAdjustment = damageRewardAdjustment;
+        Hardcore = hardcore;
     }
 
     // Selected gameplay values.
@@ -40,6 +42,11 @@ public sealed class DungeonDifficultySelection
     public float HealthPowerBonus { get; }
     public float ResistanceBonus { get; }
     public float DamageBonus { get; }
+
+    // Whether this run is hardcore: a player death during the run finalizes it as Failed instead of
+    // opening the softcore death/retry page. Captured at run start and read by the death flow; it
+    // carries no reward adjustment and never affects the difficulty multiplier.
+    public bool Hardcore { get; }
 
     // Per-selection reward adjustments that sum into the multiplier.
     public float StartingLevelRewardAdjustment { get; }
@@ -73,10 +80,11 @@ public sealed class DungeonDifficultySelection
         int resistanceIndex,
         int damageIndex,
         int fallbackStartingLevel = 1,
-        int fallbackLevelIncrease = 1)
+        int fallbackLevelIncrease = 1,
+        bool hardcore = false)
     {
         if (rules == null)
-            return CreateDefault(null, fallbackStartingLevel, fallbackLevelIncrease);
+            return CreateDefault(null, fallbackStartingLevel, fallbackLevelIncrease, hardcore);
 
         ResolveOption(rules.StartingLevelOptions, startingLevelIndex, fallbackStartingLevel, 0.0f, out var startingLevel, out var startingLevelReward);
         ResolveOption(rules.LevelIncreaseOptions, levelIncreaseIndex, fallbackLevelIncrease, 0.0f, out var levelIncrease, out var levelIncreaseReward);
@@ -94,7 +102,8 @@ public sealed class DungeonDifficultySelection
             levelIncreaseReward,
             healthPowerReward,
             resistanceReward,
-            damageReward);
+            damageReward,
+            hardcore);
     }
 
     // Default selection: the first option of every row (or the supplied fallbacks when a table is
@@ -102,7 +111,8 @@ public sealed class DungeonDifficultySelection
     public static DungeonDifficultySelection CreateDefault(
         DungeonDifficultyRules rules,
         int fallbackStartingLevel = 1,
-        int fallbackLevelIncrease = 1)
+        int fallbackLevelIncrease = 1,
+        bool hardcore = false)
     {
         if (rules == null)
         {
@@ -110,7 +120,8 @@ public sealed class DungeonDifficultySelection
                 fallbackStartingLevel,
                 fallbackLevelIncrease,
                 0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+                0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                hardcore);
         }
 
         return FromIndices(
@@ -121,7 +132,8 @@ public sealed class DungeonDifficultySelection
             DungeonDifficultyRules.DefaultEnemyStatIndex,
             DungeonDifficultyRules.DefaultEnemyStatIndex,
             fallbackStartingLevel,
-            fallbackLevelIncrease);
+            fallbackLevelIncrease,
+            hardcore);
     }
 
     private static void ResolveOption(

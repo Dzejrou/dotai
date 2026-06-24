@@ -76,6 +76,11 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
     private float _spellCastPushbackPercent = 0.10f;
     private float _spellCastPushbackInternalCooldownSeconds = 0.5f;
     private bool _isDead;
+
+    // One-shot: when set, the next death keeps the body alive (downed) instead of freeing it. World
+    // sets it while handling PlayerDied for a death inside an active dungeon run, so the run's death
+    // flow can revive the player for a retry or return it outside the dungeon.
+    private bool _suppressDeathDespawn;
     private readonly Dictionary<StringName, Spell> _spellsByAction = new();
     private PendingPlayerCast _pendingCast;
     private IPlacementSpell _pendingPlacementSpell;
@@ -350,14 +355,53 @@ public partial class Player : CombatCharacter, IAttackable, ITargetable, ISpellC
         if (HealthStateNode.IsDead)
         {
             _isDead = true;
+            Velocity = Vector2.Zero;
             ResetCombatState();
             Targeting.ClearAllTargets();
             CancelPendingCast();
             ClearPendingPlacementSpell();
             UpdateTargetHudVisibility();
             EmitSignal(SignalName.PlayerDied);
-            QueueFree();
+
+            // A death the World resolves in-place (an active dungeon run's death flow) keeps the body
+            // alive so it can be revived via ReviveToFull; World sets the one-shot suppression
+            // synchronously while handling PlayerDied above. Every other death is terminal and frees
+            // the body — the game-over flow then reloads the scene.
+            if (_suppressDeathDespawn)
+                _suppressDeathDespawn = false;
+            else
+                QueueFree();
         }
+    }
+
+    // Set by World while handling PlayerDied for a death inside an active dungeon run, so the next
+    // death keeps the body (downed) instead of freeing it. One-shot: consumed by the death it guards.
+    public void SuppressNextDeathDespawn()
+    {
+        _suppressDeathDespawn = true;
+    }
+
+    // Brings a downed player (kept alive by SuppressNextDeathDespawn) back to a clean, full state for
+    // a dungeon retry or post-failure return: full health and mana, cleared status effects, out of
+    // combat, idle. Harmless on an already-living player.
+    public void ReviveToFull()
+    {
+        _isDead = false;
+
+        HealthStateNode?.RestoreToFull();
+        if (ManaStateNode != null)
+        {
+            ManaStateNode.SetCurrent(ManaStateNode.Max);
+            NotifyManaChanged();
+        }
+
+        StatusEffectControllerNode?.ClearAllEffects();
+        ResetCombatState();
+
+        Velocity = Vector2.Zero;
+        SetState(CombatUnitState.Idle);
+        SetAnimationSafe(GetIdleAnimationName());
+        UpdateTargetHudVisibility();
     }
 
     public override void ApplyHealing(Healing healing)

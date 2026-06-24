@@ -20,9 +20,11 @@ public partial class MenuHubDungeonPage : Control
     [Signal]
     public delegate void NestedViewChangedEventHandler(bool open);
 
-    // Outcome row/detail colors. Red is intentionally reserved for a future failed/death outcome.
+    // Outcome row/detail colors. Failed runs are shown in red so they read distinctly from a green
+    // Completed run and an amber Gave Up run in history and the end-of-run summary.
     private static readonly Color CompletedOutcomeColor = new(0.40f, 0.85f, 0.45f);
     private static readonly Color GaveUpOutcomeColor = new(0.95f, 0.65f, 0.25f);
+    private static readonly Color FailedOutcomeColor = new(0.92f, 0.30f, 0.30f);
 
     // Shown for a record's score fields when it has no score data (a legacy run finalized before
     // scoring existed), so old entries read clearly instead of pretending their score was 0.
@@ -53,6 +55,9 @@ public partial class MenuHubDungeonPage : Control
 
     [Export]
     public NodePath RandomizeSeedButtonPath { get; set; } = new("Margin/VBox/ConfigView/SeedButtonsRow/RandomizeSeedButton");
+
+    [Export]
+    public NodePath HardcoreTogglePath { get; set; } = new("Margin/VBox/ConfigView/HardcoreToggle");
 
     [Export]
     public NodePath StartButtonPath { get; set; } = new("Margin/VBox/ConfigView/StartButton");
@@ -112,6 +117,9 @@ public partial class MenuHubDungeonPage : Control
     public NodePath SummaryViewPath { get; set; } = new("Margin/VBox/SummaryView");
 
     [Export]
+    public NodePath SummaryTitleLabelPath { get; set; } = new("Margin/VBox/SummaryView/TitleLabel");
+
+    [Export]
     public NodePath SummaryOutcomeLabelPath { get; set; } = new("Margin/VBox/SummaryView/OutcomeLabel");
 
     [Export]
@@ -120,6 +128,18 @@ public partial class MenuHubDungeonPage : Control
     [Export]
     public NodePath SummaryCloseButtonPath { get; set; } = new("Margin/VBox/SummaryView/CloseButton");
 
+    [Export]
+    public NodePath DeathViewPath { get; set; } = new("Margin/VBox/DeathView");
+
+    [Export]
+    public NodePath DeathStatusLabelPath { get; set; } = new("Margin/VBox/DeathView/StatusLabel");
+
+    [Export]
+    public NodePath DeathContinueButtonPath { get; set; } = new("Margin/VBox/DeathView/ContinueButton");
+
+    [Export]
+    public NodePath DeathGiveUpButtonPath { get; set; } = new("Margin/VBox/DeathView/GiveUpButton");
+
     private Label _dpLabel;
     private Control _configView;
     private SpinBox _roomsSpinBox;
@@ -127,6 +147,7 @@ public partial class MenuHubDungeonPage : Control
     private Label _difficultySummaryLabel;
     private LineEdit _seedLineEdit;
     private Button _randomizeSeedButton;
+    private CheckBox _hardcoreToggle;
     private Button _startButton;
     private Label _statusLabel;
     private Control _activeView;
@@ -145,9 +166,14 @@ public partial class MenuHubDungeonPage : Control
     private Label _historyOutcomeLabel;
     private Label _historyDetailsLabel;
     private Control _summaryView;
+    private Label _summaryTitleLabel;
     private Label _summaryOutcomeLabel;
     private Label _summaryDetailsLabel;
     private Button _summaryCloseButton;
+    private Control _deathView;
+    private Label _deathStatusLabel;
+    private Button _deathContinueButton;
+    private Button _deathGiveUpButton;
     private Button _shopButton;
 
     // Shared commerce surface hosted as a nested Dungeon Shop subview, plus its own stock built from
@@ -161,6 +187,7 @@ public partial class MenuHubDungeonPage : Control
     private bool _historyOpen;
     private bool _shopOpen;
     private bool _summaryOpen;
+    private bool _deathOpen;
     private DungeonRunRecord _selectedRecord;
     private DungeonRunRecord _summaryRecord;
 
@@ -172,6 +199,10 @@ public partial class MenuHubDungeonPage : Control
     private Func<ulong, int, DungeonDifficultySelection, string> _startDungeon;
     // Returns null/empty on success, or an actionable error to display while the HUB stays open.
     private Func<string> _giveUp;
+    // Death/retry view callbacks (softcore death). Each returns null/empty on success, or an
+    // actionable error shown in the death view while it stays open.
+    private Func<string> _continueAfterDeath;
+    private Func<string> _giveUpAfterDeath;
     private bool _entranceAuthorized;
     private bool _rulesDefaultsInitialized;
     private bool _difficultyRowsBuilt;
@@ -207,6 +238,7 @@ public partial class MenuHubDungeonPage : Control
         _difficultyContainer = GetNodeOrNull<Container>(DifficultyContainerPath);
         _seedLineEdit = GetNodeOrNull<LineEdit>(SeedLineEditPath);
         _randomizeSeedButton = GetNodeOrNull<Button>(RandomizeSeedButtonPath);
+        _hardcoreToggle = GetNodeOrNull<CheckBox>(HardcoreTogglePath);
         _startButton = GetNodeOrNull<Button>(StartButtonPath);
         _statusLabel = GetNodeOrNull<Label>(StatusLabelPath);
         _activeView = GetNodeOrNull<Control>(ActiveViewPath);
@@ -226,9 +258,14 @@ public partial class MenuHubDungeonPage : Control
         _historyOutcomeLabel = GetNodeOrNull<Label>(HistoryOutcomeLabelPath);
         _historyDetailsLabel = GetNodeOrNull<Label>(HistoryDetailsLabelPath);
         _summaryView = GetNodeOrNull<Control>(SummaryViewPath);
+        _summaryTitleLabel = GetNodeOrNull<Label>(SummaryTitleLabelPath);
         _summaryOutcomeLabel = GetNodeOrNull<Label>(SummaryOutcomeLabelPath);
         _summaryDetailsLabel = GetNodeOrNull<Label>(SummaryDetailsLabelPath);
         _summaryCloseButton = GetNodeOrNull<Button>(SummaryCloseButtonPath);
+        _deathView = GetNodeOrNull<Control>(DeathViewPath);
+        _deathStatusLabel = GetNodeOrNull<Label>(DeathStatusLabelPath);
+        _deathContinueButton = GetNodeOrNull<Button>(DeathContinueButtonPath);
+        _deathGiveUpButton = GetNodeOrNull<Button>(DeathGiveUpButtonPath);
 
         ConfigureRoomsSpinBox();
 
@@ -265,6 +302,12 @@ public partial class MenuHubDungeonPage : Control
 
         if (_summaryCloseButton != null)
             _summaryCloseButton.Pressed += OnSummaryClosePressed;
+
+        if (_deathContinueButton != null)
+            _deathContinueButton.Pressed += OnDeathContinuePressed;
+
+        if (_deathGiveUpButton != null)
+            _deathGiveUpButton.Pressed += OnDeathGiveUpPressed;
 
         GameSettings.DungeonAnywhereChanged += OnDungeonAnywhereChanged;
         _dungeonAnywhereSubscribed = true;
@@ -310,6 +353,12 @@ public partial class MenuHubDungeonPage : Control
         if (_summaryCloseButton != null)
             _summaryCloseButton.Pressed -= OnSummaryClosePressed;
 
+        if (_deathContinueButton != null)
+            _deathContinueButton.Pressed -= OnDeathContinuePressed;
+
+        if (_deathGiveUpButton != null)
+            _deathGiveUpButton.Pressed -= OnDeathGiveUpPressed;
+
         if (_dungeonAnywhereSubscribed)
         {
             GameSettings.DungeonAnywhereChanged -= OnDungeonAnywhereChanged;
@@ -319,7 +368,13 @@ public partial class MenuHubDungeonPage : Control
         DisconnectDungeonSignal();
     }
 
-    public void Bind(World world, Action resume, Func<ulong, int, DungeonDifficultySelection, string> startDungeon, Func<string> giveUp)
+    public void Bind(
+        World world,
+        Action resume,
+        Func<ulong, int, DungeonDifficultySelection, string> startDungeon,
+        Func<string> giveUp,
+        Func<string> continueAfterDeath,
+        Func<string> giveUpAfterDeath)
     {
         DisconnectDungeonSignal();
 
@@ -327,6 +382,8 @@ public partial class MenuHubDungeonPage : Control
         _resume = resume;
         _startDungeon = startDungeon;
         _giveUp = giveUp;
+        _continueAfterDeath = continueAfterDeath;
+        _giveUpAfterDeath = giveUpAfterDeath;
 
         ConnectDungeonSignal();
         Refresh();
@@ -352,10 +409,10 @@ public partial class MenuHubDungeonPage : Control
 
         var active = _world != null && GodotObject.IsInstanceValid(_world) && _world.HasActiveDungeonRun;
 
-        // History, the Dungeon Shop and the end-of-run summary are nested subviews: while any is open
-        // the normal page content and its entry buttons are hidden (the Shop surface is an opaque
-        // overlay child).
-        var nestedOpen = _historyOpen || _shopOpen || _summaryOpen;
+        // History, the Dungeon Shop, the end-of-run summary and the softcore death/retry view are
+        // nested subviews: while any is open the normal page content and its entry buttons are hidden
+        // (the Shop surface is an opaque overlay child).
+        var nestedOpen = _historyOpen || _shopOpen || _summaryOpen || _deathOpen;
 
         if (_configView != null)
             _configView.Visible = !nestedOpen && !active;
@@ -375,8 +432,16 @@ public partial class MenuHubDungeonPage : Control
         if (_summaryView != null)
             _summaryView.Visible = _summaryOpen;
 
+        if (_deathView != null)
+            _deathView.Visible = _deathOpen;
+
         // The Shop surface manages its own content; nothing else to refresh while it owns the page.
         if (_shopOpen)
+            return;
+
+        // The death/retry view owns the page until the player chooses Continue or Give Up; nothing
+        // else to refresh, and a routine refresh (e.g. the DP label) must never swap it away.
+        if (_deathOpen)
             return;
 
         // The summary shows a single immutable finalized record; populate it and stop so a routine
@@ -652,6 +717,13 @@ public partial class MenuHubDungeonPage : Control
         if (_summaryRecord == null)
             return;
 
+        // The summary is shared by completed and failed runs, so the title and outcome color reflect
+        // the actual outcome rather than always reading "Run Complete".
+        if (_summaryTitleLabel != null)
+            _summaryTitleLabel.Text = _summaryRecord.Outcome == DungeonRunOutcome.Failed
+                ? "Run Failed"
+                : "Run Complete";
+
         if (_summaryOutcomeLabel != null)
         {
             _summaryOutcomeLabel.Text = $"Outcome: {OutcomeText(_summaryRecord.Outcome)}";
@@ -660,6 +732,87 @@ public partial class MenuHubDungeonPage : Control
 
         if (_summaryDetailsLabel != null)
             _summaryDetailsLabel.Text = FormatRecordDetails(_summaryRecord);
+    }
+
+    // Softcore death/retry (nested view) ----------------------------------------------------------
+
+    public bool IsDeathOpen => _deathOpen;
+
+    // Opens the softcore death/retry view as a nested subview, mirroring Summary/History/Shop: the
+    // normal page content and entry buttons hide while it owns the page, and HUB navigation locks.
+    // Main calls this when a softcore dungeon death occurs; the run is still active and the player is
+    // downed until Continue or Give Up resolves it.
+    public void ShowDungeonDeathRetry()
+    {
+        _deathOpen = true;
+        SetDeathStatus(string.Empty, isError: false);
+
+        // Lock HUB navigation and hide the nav row exactly like Summary/History/Shop do.
+        EmitSignal(SignalName.NestedViewChanged, true);
+        Refresh();
+    }
+
+    // Closes the death/retry view and returns to the normal Dungeon page. Used by the Give Up button
+    // (the run is finalized, so this lands on the outside-run configuration view) and when the HUB
+    // closes after a successful Continue. A failed Continue/Give Up keeps the view open instead.
+    public void CloseDeath()
+    {
+        if (!_deathOpen)
+            return;
+
+        _deathOpen = false;
+        EmitSignal(SignalName.NestedViewChanged, false);
+        Refresh();
+    }
+
+    private void OnDeathContinuePressed()
+    {
+        if (_continueAfterDeath == null)
+        {
+            SetDeathStatus("Continue is unavailable.", isError: true);
+            return;
+        }
+
+        var error = _continueAfterDeath.Invoke();
+        if (!string.IsNullOrEmpty(error))
+        {
+            // Failed retry: keep the death view open and surface the error. World left the run active
+            // and the player downed, so the player is not stranded.
+            SetDeathStatus(error, isError: true);
+            return;
+        }
+
+        // Success: World rebuilt the room and revived the player; Main closes the HUB and unpauses,
+        // which also resets this view. Nothing else to do here.
+    }
+
+    private void OnDeathGiveUpPressed()
+    {
+        if (_giveUpAfterDeath == null)
+        {
+            SetDeathStatus("Give Up is unavailable.", isError: true);
+            return;
+        }
+
+        var error = _giveUpAfterDeath.Invoke();
+        if (!string.IsNullOrEmpty(error))
+        {
+            SetDeathStatus(error, isError: true);
+            return;
+        }
+
+        // Success: the run is finalized as GaveUp and the player revived outside. Step back to the
+        // normal outside-run Dungeon view (now the configuration view), keeping the HUB open.
+        CloseDeath();
+    }
+
+    private void SetDeathStatus(string text, bool isError)
+    {
+        if (_deathStatusLabel == null)
+            return;
+
+        _deathStatusLabel.Text = text ?? string.Empty;
+        _deathStatusLabel.Modulate = isError ? new Color(1.0f, 0.6f, 0.6f) : Colors.White;
     }
 
     // History (nested secondary view) -------------------------------------------------------------
@@ -671,6 +824,12 @@ public partial class MenuHubDungeonPage : Control
     // consumed the event.
     public bool TryHandleEscape()
     {
+        // The softcore death view is a hard modal: Esc must never resolve it, because closing back to
+        // gameplay would strand a dead player in an unresolved death state. Consume the event without
+        // closing so the player can only leave it through Continue or Give Up.
+        if (_deathOpen)
+            return true;
+
         if (_summaryOpen)
         {
             CloseSummary();
@@ -881,6 +1040,7 @@ public partial class MenuHubDungeonPage : Control
         {
             DungeonRunOutcome.Completed => "Completed",
             DungeonRunOutcome.GaveUp => "Gave Up",
+            DungeonRunOutcome.Failed => "Failed",
             _ => outcome.ToString(),
         };
     }
@@ -891,6 +1051,7 @@ public partial class MenuHubDungeonPage : Control
         {
             DungeonRunOutcome.Completed => CompletedOutcomeColor,
             DungeonRunOutcome.GaveUp => GaveUpOutcomeColor,
+            DungeonRunOutcome.Failed => FailedOutcomeColor,
             _ => Colors.White,
         };
     }
@@ -1137,9 +1298,10 @@ public partial class MenuHubDungeonPage : Control
     private DungeonDifficultySelection BuildDifficultySelection()
     {
         var rules = _difficultyRules ?? ResolveDungeon()?.DifficultyRules ?? DungeonDifficultyRules.CreateDefault();
+        var hardcore = _hardcoreToggle?.ButtonPressed ?? false;
 
         if (_difficultyRows.Count == 0)
-            return DungeonDifficultySelection.CreateDefault(rules);
+            return DungeonDifficultySelection.CreateDefault(rules, hardcore: hardcore);
 
         return DungeonDifficultySelection.FromIndices(
             rules,
@@ -1147,7 +1309,8 @@ public partial class MenuHubDungeonPage : Control
             SelectedIndex(DifficultyRowKind.LevelIncrease),
             SelectedIndex(DifficultyRowKind.HealthPower),
             SelectedIndex(DifficultyRowKind.Resistance),
-            SelectedIndex(DifficultyRowKind.Damage));
+            SelectedIndex(DifficultyRowKind.Damage),
+            hardcore: hardcore);
     }
 
     private int SelectedIndex(DifficultyRowKind kind)

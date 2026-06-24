@@ -97,6 +97,11 @@ public partial class Dungeon : Node
     public ulong RunSeed => _runSeed;
     public DungeonRoomNode ActiveNode => _activePlan?.GetNodeById(_activeNodeId);
 
+    // True when the active run was started with hardcore enabled, read from its immutable difficulty
+    // snapshot. Drives the death flow: a hardcore death finalizes the run as Failed, while a softcore
+    // death opens the retry page. False when no run is active or the run carried no snapshot.
+    public bool ActiveRunIsHardcore => _activeStats?.Difficulty?.Hardcore ?? false;
+
     // Read-only live statistics for the active run (null when no run is active).
     public DungeonRunStats ActiveStats => _activeStats;
 
@@ -371,6 +376,42 @@ public partial class Dungeon : Node
         EmitSignal(SignalName.RunStateChanged);
     }
 
+    // Discards the cached room instance for the active node and rebuilds it from scratch through the
+    // planned-room path (fresh content, doors and spawn-death tracking), returning the new instance.
+    // Used by the softcore death/retry flow so a retry resets the whole room rather than only its
+    // content. The active node, plan, seed, score and counters are all left untouched. The previously
+    // cached instance is detached from the run's cache (with its death tracking removed) but not freed
+    // here: it is the room World still has attached, which World frees when it swaps in the returned
+    // room.
+    public bool TryRecreateActiveRoom(out Room room)
+    {
+        room = null;
+
+        var node = ActiveNode;
+        if (node == null)
+        {
+            GD.PushError($"{nameof(Dungeon)} cannot recreate the active room without an active node.");
+            return false;
+        }
+
+        if (_roomsByNodeId.TryGetValue(node.Id, out var cached))
+        {
+            if (cached != null && GodotObject.IsInstanceValid(cached))
+                UntrackRoomDeaths(cached);
+
+            _roomsByNodeId.Remove(node.Id);
+        }
+
+        if (!TryInstantiatePlanRoom(node, out var created))
+            return false;
+
+        _roomsByNodeId[node.Id] = created;
+        ConfigureRoomDoors(created, node);
+        room = created;
+        EmitSignal(SignalName.RunStateChanged);
+        return true;
+    }
+
     private void ClearActiveRun()
     {
         var hadActiveRun = _activePlan != null;
@@ -452,6 +493,25 @@ public partial class Dungeon : Node
 
             spawnPoint.Connect(ActorSpawnPoint.SignalName.TrackedActorDied, callable);
             _deathTrackedSpawnPoints.Add(spawnPoint);
+        }
+    }
+
+    // Stops observing the spawn-point deaths of a single room whose instances are about to be
+    // discarded (the softcore retry rebuild), mirroring DisconnectDeathTracking but scoped to one
+    // room's spawn points so the rest of the run's tracking is left intact.
+    private void UntrackRoomDeaths(Node root)
+    {
+        var callable = new Callable(this, nameof(OnManagedActorDied));
+        foreach (var spawnPoint in FindSpawnPoints(root))
+        {
+            if (spawnPoint != null &&
+                GodotObject.IsInstanceValid(spawnPoint) &&
+                spawnPoint.IsConnected(ActorSpawnPoint.SignalName.TrackedActorDied, callable))
+            {
+                spawnPoint.Disconnect(ActorSpawnPoint.SignalName.TrackedActorDied, callable);
+            }
+
+            _deathTrackedSpawnPoints.Remove(spawnPoint);
         }
     }
 

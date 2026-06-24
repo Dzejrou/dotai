@@ -12,4 +12,9 @@ public enum DungeonRunOutcome
 
     // The run was abandoned: the HUB Give Up button, or an ordinary return/abandonment door.
     GaveUp,
+
+    // The player died during the run with hardcore enabled, so the run ended in failure. Terminal
+    // and finalized like the others, but awards no DP. Only ever produced by the hardcore death
+    // path; a softcore death that is then abandoned finalizes as GaveUp instead.
+    Failed,
 }
