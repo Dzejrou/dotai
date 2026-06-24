@@ -504,11 +504,12 @@ public partial class MenuHub : Control
         Visible = false;
         _inventoryPage?.OnHubClosed();
 
-        // Reset any nested Dungeon subview (Shop, History or the end-of-run summary) so reopening the
-        // HUB shows the normal Dungeon view.
+        // Reset any nested Dungeon subview (Shop, History, the end-of-run summary or the death/retry
+        // view) so reopening the HUB shows the normal Dungeon view.
         _dungeonPage?.CloseShop();
         _dungeonPage?.CloseHistory();
         _dungeonPage?.CloseSummary();
+        _dungeonPage?.CloseDeath();
 
         // Closing the HUB without starting clears entrance authorization, so reopening it
         // elsewhere (e.g. via Esc) never carries stale permission to start.
@@ -548,6 +549,16 @@ public partial class MenuHub : Control
     {
         SwitchTo(MenuHubPage.Dungeon);
         _dungeonPage?.ShowRunSummary(record);
+    }
+
+    // Opens the Dungeon page's softcore death/retry view as a nested subview, mirroring
+    // ShowDungeonRunSummary: switches to the Dungeon page first so the view owns it, then asks the
+    // page to present its Continue/Give Up choices. Called by Main when a softcore dungeon death
+    // occurs.
+    public void ShowDungeonDeathRetry()
+    {
+        SwitchTo(MenuHubPage.Dungeon);
+        _dungeonPage?.ShowDungeonDeathRetry();
     }
 
     // Page-level escape hook used by Main: forwards Esc to the active page's nested subview (only
@@ -595,9 +606,15 @@ public partial class MenuHub : Control
         _debugRoomPage?.Bind(world, roomEntered);
     }
 
-    public void BindDungeonPage(World world, Action resume, Func<ulong, int, DungeonDifficultySelection, string> startDungeon, Func<string> giveUp)
+    public void BindDungeonPage(
+        World world,
+        Action resume,
+        Func<ulong, int, DungeonDifficultySelection, string> startDungeon,
+        Func<string> giveUp,
+        Func<string> continueAfterDeath,
+        Func<string> giveUpAfterDeath)
     {
-        _dungeonPage?.Bind(world, resume, startDungeon, giveUp);
+        _dungeonPage?.Bind(world, resume, startDungeon, giveUp, continueAfterDeath, giveUpAfterDeath);
         _dungeonPage?.SetEntranceAuthorized(_dungeonEntranceAuthorized);
     }
 

@@ -506,6 +506,10 @@ rounded = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
+[node name="HardcoreToggle" type="CheckBox" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
+layout_mode = 2
+text = "Hardcore (death ends the run)"
+
 [node name="SeedRow" type="HBoxContainer" parent="Root/DungeonPage/Margin/VBox/ConfigView"]
 layout_mode = 2
 theme_override_constants/separation = 8
@@ -654,6 +658,35 @@ theme_override_font_sizes/font_size = 16
 [node name="CloseButton" type="Button" parent="Root/DungeonPage/Margin/VBox/SummaryView"]
 layout_mode = 2
 text = "Close"
+
+[node name="DeathView" type="VBoxContainer" parent="Root/DungeonPage/Margin/VBox"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/DeathView"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "You Died"
+
+[node name="MessageLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/DeathView"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Continue to retry this room with full health, or give up the run."
+
+[node name="ContinueButton" type="Button" parent="Root/DungeonPage/Margin/VBox/DeathView"]
+layout_mode = 2
+text = "Continue"
+
+[node name="GiveUpButton" type="Button" parent="Root/DungeonPage/Margin/VBox/DeathView"]
+layout_mode = 2
+text = "Give Up"
+
+[node name="StatusLabel" type="Label" parent="Root/DungeonPage/Margin/VBox/DeathView"]
+custom_minimum_size = Vector2(480, 0)
+layout_mode = 2
+autowrap_mode = 3
 
 [node name="LogPage" type="Control" parent="Root"]
 visible = false

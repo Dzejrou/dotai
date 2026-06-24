@@ -68,6 +68,20 @@ public partial class World : Node2D
     [Signal]
     public delegate void DungeonRunCompletedEventHandler();
 
+    // Raised once when a hardcore dungeon run is finalized as Failed by a player death, after the
+    // player has been returned outside the dungeon, revived, and the run recorded (awarding no DP).
+    // Main reacts by opening the Dungeon page's end-of-run summary, reusing the completion summary.
+    // Parameterless for the same reason as DungeonRunCompleted: the record is read from
+    // LastFailedRunRecord.
+    [Signal]
+    public delegate void DungeonRunFailedEventHandler();
+
+    // Raised once when a player dies during a non-hardcore (softcore) dungeon run. The run is left
+    // active and unfinalized and the player body is kept alive (downed); Main reacts by opening the
+    // Dungeon page's death/retry view so the player can Continue (retry the room) or Give Up.
+    [Signal]
+    public delegate void DungeonSoftcoreDeathEventHandler();
+
     public void RequestMerchantInteraction(MerchantStock stock, Player player)
     {
         if (stock == null || !GodotObject.IsInstanceValid(stock))
@@ -117,6 +131,12 @@ public partial class World : Node2D
     // finalization never sets it. It is the same immutable record now stored newest-first in history.
     private DungeonRunRecord _lastCompletedRunRecord;
 
+    // The most recently failed run's finalized record, captured when a hardcore death finalizes a run
+    // as Failed so the Dungeon page can present its end-of-run summary. Replaced on each failure; a
+    // Completed or GaveUp finalization never sets it. It is the same immutable record now stored
+    // newest-first in history.
+    private DungeonRunRecord _lastFailedRunRecord;
+
     public Room ActiveRoom => GodotObject.IsInstanceValid(_activeRoom) ? _activeRoom : null;
 
     // Read-only access for the Dungeon HUB page (run state, current node, generation defaults).
@@ -127,6 +147,10 @@ public partial class World : Node2D
     // The finalized record of the run that most recently completed through the boss-room exit, for the
     // Dungeon page's end-of-run summary. Null until a run has completed in this session.
     public DungeonRunRecord LastCompletedRunRecord => _lastCompletedRunRecord;
+
+    // The finalized record of the run that most recently failed through a hardcore death, for the
+    // Dungeon page's end-of-run summary. Null until a run has failed in this session.
+    public DungeonRunRecord LastFailedRunRecord => _lastFailedRunRecord;
 
     public bool IsDebugRoomSessionActive =>
         _debugRoom != null && GodotObject.IsInstanceValid(_debugRoom) && _activeRoom == _debugRoom;
@@ -231,11 +255,48 @@ public partial class World : Node2D
         if (_isGameOver)
             return;
 
-        // Count the death for the active run before the game-over/reload flow may discard it.
+        // Count the death for the active run before any flow may discard it.
         _dungeon?.RegisterPlayerDeath();
+
+        // A death inside an active dungeon run never falls into the normal game-over flow. Keep the
+        // player body alive (the Player consumes this one-shot suppression as it processes the same
+        // PlayerDied emission) and resolve the dungeon death — hardcore fail or softcore retry — on
+        // the next idle frame, once we are off the damage-application call stack.
+        if (HasActiveDungeonRun)
+        {
+            _player?.SuppressNextDeathDespawn();
+            Callable.From(ResolveDungeonRunDeath).CallDeferred();
+            return;
+        }
 
         _isGameOver = true;
         EmitSignal(SignalName.PlayerDied);
+    }
+
+    // Resolves a player death that happened inside an active dungeon run, deferred one frame off the
+    // damage call stack. Hardcore finalizes the run as Failed and returns the player outside; softcore
+    // surfaces the death/retry view, leaving the run active and the player downed. A run torn down
+    // between the death and this call (e.g. scene exit) is a safe no-op.
+    private void ResolveDungeonRunDeath()
+    {
+        if (_dungeon == null || !GodotObject.IsInstanceValid(_dungeon) || !_dungeon.HasActiveRun)
+            return;
+
+        if (_dungeon.ActiveRunIsHardcore)
+            ResolveHardcoreDungeonDeath();
+        else
+            EmitSignal(SignalName.DungeonSoftcoreDeath);
+    }
+
+    // Hardcore death: finalize the run as Failed through the captured-origin return (records history,
+    // awards no DP, surfaces the summary via DungeonRunFailed), then revive the kept-alive body
+    // outside the dungeon. On a failed return the run stays active and the body stays downed.
+    private void ResolveHardcoreDungeonDeath()
+    {
+        if (!TryFinishDungeonRun(DungeonRunOutcome.Failed))
+            return;
+
+        ReviveDungeonPlayer();
     }
 
     private CorpseManager ResolveCorpseManager()
@@ -294,6 +355,16 @@ public partial class World : Node2D
         if (nextRoom == null)
             return false;
 
+        SwapActiveRoom(nextRoom, entryExitId);
+        return true;
+    }
+
+    // Tears down the current active room and installs an already-instantiated next room: disconnect,
+    // exit and detach/free the old one, then attach the new one, place the player at its entry, apply
+    // camera bounds and run OnEnter. Shared by ordinary transitions and the softcore retry rebuild,
+    // which supplies a room directly rather than resolving one by screen id.
+    private void SwapActiveRoom(Room nextRoom, StringName entryExitId)
+    {
         var leavingDebugSession = IsDebugRoomSessionActive;
 
         DisconnectActiveRoom();
@@ -311,7 +382,6 @@ public partial class World : Node2D
         PlacePlayerAtRoomEntry(_activeRoom, entryExitId);
         ApplyRoomCameraBounds(_activeRoom);
         _activeRoom.OnEnter();
-        return true;
     }
 
     // Launches a plan-driven dungeon run from the HUB. Captures the current room/position as the
@@ -406,17 +476,91 @@ public partial class World : Node2D
         var record = _dungeon?.FinalizeRun(outcome);
         _dungeonReturnLocation = null;
 
-        // A completed run surfaces its end-of-run summary: capture the finalized record and notify
-        // Main, which opens the Dungeon page to it. DP was already awarded inside FinalizeRun, so this
-        // is purely presentational and never re-awards. FinalizeRun returns null for a stray repeat
-        // (no active run), so the summary opens exactly once. GaveUp returns without notifying.
-        if (outcome == DungeonRunOutcome.Completed && record != null)
+        // A completed or failed run surfaces its end-of-run summary: capture the finalized record and
+        // notify Main, which opens the Dungeon page to it. DP was already awarded inside FinalizeRun
+        // (zero for a failed run), so this is purely presentational and never re-awards. FinalizeRun
+        // returns null for a stray repeat (no active run), so the summary opens exactly once. GaveUp
+        // returns without notifying.
+        if (record != null && outcome == DungeonRunOutcome.Completed)
         {
             _lastCompletedRunRecord = record;
             EmitSignal(SignalName.DungeonRunCompleted);
         }
+        else if (record != null && outcome == DungeonRunOutcome.Failed)
+        {
+            _lastFailedRunRecord = record;
+            EmitSignal(SignalName.DungeonRunFailed);
+        }
 
         return true;
+    }
+
+    // Softcore death/retry: rebuilds the active node's room from scratch through the planned-room
+    // path and drops the revived player at its spawn, keeping the run active. Preserves the plan,
+    // active node, seed, difficulty, score and counters (the death was already counted); only the
+    // failed room is reset. On failure the run and player are left as they were so the caller can keep
+    // the death/retry view open and surface the error.
+    public bool TryContinueDungeonRunAfterDeath(out string error)
+    {
+        error = null;
+
+        if (_dungeon == null || !GodotObject.IsInstanceValid(_dungeon) || !_dungeon.HasActiveRun)
+        {
+            error = "There is no active dungeon run to continue.";
+            return false;
+        }
+
+        if (_player == null || !GodotObject.IsInstanceValid(_player))
+        {
+            error = "The player is unavailable.";
+            return false;
+        }
+
+        // Rebuild the whole room (fresh enemies/chests/timers/doors/encounter state), not just its
+        // content, so the room must be cleared again.
+        if (!_dungeon.TryRecreateActiveRoom(out var freshRoom) || freshRoom == null)
+        {
+            error = "Could not rebuild the dungeon room for a retry.";
+            return false;
+        }
+
+        // Swap in the fresh instance (the old active room is the discarded one, now unmanaged, so the
+        // swap frees it) and place the player at the room's spawn marker.
+        SwapActiveRoom(freshRoom, default);
+
+        // Revive into the fresh room at full health and mana for the retry.
+        ReviveDungeonPlayer();
+        return true;
+    }
+
+    // Softcore death give-up: the same captured-origin return and GaveUp finalization as a HUB
+    // give-up (records history, awards 0 DP), but the body was kept alive by the death flow, so it is
+    // revived outside the dungeon afterward. On a failed return the run stays active and the body
+    // stays downed so the caller can keep the death/retry view open.
+    public bool TryGiveUpDungeonRunAfterDeath(out string error)
+    {
+        error = null;
+
+        if (_dungeon == null || !GodotObject.IsInstanceValid(_dungeon) || !_dungeon.HasActiveRun)
+        {
+            error = "There is no active dungeon run to give up.";
+            return false;
+        }
+
+        if (!TryFinishDungeonRun(DungeonRunOutcome.GaveUp))
+        {
+            error = "Could not return from the dungeon; the run is still active.";
+            return false;
+        }
+
+        ReviveDungeonPlayer();
+        return true;
+    }
+
+    private void ReviveDungeonPlayer()
+    {
+        if (_player != null && GodotObject.IsInstanceValid(_player))
+            _player.ReviveToFull();
     }
 
     private RoomReturnLocation CaptureDungeonReturnLocation()

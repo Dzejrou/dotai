@@ -62,6 +62,8 @@ public partial class Main : Node2D
             _world.Connect(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested)));
             _world.Connect(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested)));
             _world.Connect(World.SignalName.DungeonRunCompleted, new Callable(this, nameof(OnDungeonRunCompleted)));
+            _world.Connect(World.SignalName.DungeonRunFailed, new Callable(this, nameof(OnDungeonRunFailed)));
+            _world.Connect(World.SignalName.DungeonSoftcoreDeath, new Callable(this, nameof(OnDungeonSoftcoreDeath)));
         }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
@@ -123,7 +125,13 @@ public partial class Main : Node2D
             _menuHubRoot.BindCharacterPage(_player, equipmentController);
             _menuHubRoot.BindSpellBookPage(_player);
             _menuHubRoot.BindDebugRoomPage(_world, CloseMenuHub);
-            _menuHubRoot.BindDungeonPage(_world, CloseMenuHub, TryStartDungeonRunFromHub, TryGiveUpDungeonRunFromHub);
+            _menuHubRoot.BindDungeonPage(
+                _world,
+                CloseMenuHub,
+                TryStartDungeonRunFromHub,
+                TryGiveUpDungeonRunFromHub,
+                TryContinueDungeonRunAfterDeathFromHub,
+                TryGiveUpDungeonRunAfterDeathFromHub);
         }
 
         TryLoadFromSave();
@@ -149,6 +157,14 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_world) &&
             _world.IsConnected(World.SignalName.DungeonRunCompleted, new Callable(this, nameof(OnDungeonRunCompleted))))
             _world.Disconnect(World.SignalName.DungeonRunCompleted, new Callable(this, nameof(OnDungeonRunCompleted)));
+
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.DungeonRunFailed, new Callable(this, nameof(OnDungeonRunFailed))))
+            _world.Disconnect(World.SignalName.DungeonRunFailed, new Callable(this, nameof(OnDungeonRunFailed)));
+
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.DungeonSoftcoreDeath, new Callable(this, nameof(OnDungeonSoftcoreDeath))))
+            _world.Disconnect(World.SignalName.DungeonSoftcoreDeath, new Callable(this, nameof(OnDungeonSoftcoreDeath)));
 
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
@@ -336,6 +352,36 @@ public partial class Main : Node2D
         _menuHubRoot?.ShowDungeonRunSummary(record);
     }
 
+    // A hardcore dungeon run failed by a player death. World has already returned the player outside,
+    // revived them and recorded the run (awarding no DP); here we surface its end-of-run summary by
+    // opening the HUB straight to the Dungeon page's summary view, reusing the completion summary. No
+    // run is started, finalized or awarded here.
+    private void OnDungeonRunFailed()
+    {
+        if (_gameOverActive)
+            return;
+
+        var record = _world?.LastFailedRunRecord;
+        if (record == null)
+            return;
+
+        OpenMenuHub(MenuHubPage.Dungeon);
+        _menuHubRoot?.ShowDungeonRunSummary(record);
+    }
+
+    // A softcore dungeon run's player died: the run is still active and the player body is downed.
+    // Open the HUB to the Dungeon page's death/retry view (Continue/Give Up). The HUB pause keeps the
+    // downed player frozen and its navigation lock plus safe Esc prevent leaking back to gameplay
+    // before the player resolves the death.
+    private void OnDungeonSoftcoreDeath()
+    {
+        if (_gameOverActive)
+            return;
+
+        OpenMenuHub(MenuHubPage.Dungeon);
+        _menuHubRoot?.ShowDungeonDeathRetry();
+    }
+
     // Bridges the Dungeon page Start request to World. Returns null on success, or an actionable
     // error string the page shows while the HUB stays open. On success the single-use entrance
     // authorization is consumed and the HUB is closed/unpaused only after the run actually starts.
@@ -364,6 +410,36 @@ public partial class Main : Node2D
             return string.IsNullOrEmpty(error) ? "Failed to give up the dungeon run." : error;
 
         CloseMenuHub();
+        return null;
+    }
+
+    // Bridges the Dungeon death/retry page's Continue request to World. Returns null on success, or an
+    // actionable error the page shows while the death view stays open. On success the room was rebuilt
+    // and the player revived into it, so the HUB is closed/unpaused and play resumes in the fresh room.
+    private string TryContinueDungeonRunAfterDeathFromHub()
+    {
+        if (_world == null || !GodotObject.IsInstanceValid(_world))
+            return "Dungeon runtime is unavailable.";
+
+        if (!_world.TryContinueDungeonRunAfterDeath(out var error))
+            return string.IsNullOrEmpty(error) ? "Failed to continue the dungeon run." : error;
+
+        CloseMenuHub();
+        return null;
+    }
+
+    // Bridges the Dungeon death/retry page's Give Up request to World. Returns null on success, or an
+    // actionable error the page shows while the death view stays open. On success the run is finalized
+    // as GaveUp and the player revived outside; the page itself steps back to the outside-run Dungeon
+    // view, deliberately leaving the HUB open (and paused) rather than closing it.
+    private string TryGiveUpDungeonRunAfterDeathFromHub()
+    {
+        if (_world == null || !GodotObject.IsInstanceValid(_world))
+            return "Dungeon runtime is unavailable.";
+
+        if (!_world.TryGiveUpDungeonRunAfterDeath(out var error))
+            return string.IsNullOrEmpty(error) ? "Failed to give up the dungeon run." : error;
+
         return null;
     }
 
