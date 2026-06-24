@@ -61,6 +61,7 @@ public partial class Main : Node2D
             _world.Connect(World.SignalName.PlayerDied, new Callable(this, nameof(OnPlayerDied)));
             _world.Connect(World.SignalName.MerchantInteractionRequested, new Callable(this, nameof(OnMerchantInteractionRequested)));
             _world.Connect(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested)));
+            _world.Connect(World.SignalName.DungeonRunCompleted, new Callable(this, nameof(OnDungeonRunCompleted)));
         }
 
         _gameOverRoot = GetNodeOrNull<Control>(GameOverPath);
@@ -144,6 +145,10 @@ public partial class Main : Node2D
         if (GodotObject.IsInstanceValid(_world) &&
             _world.IsConnected(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested))))
             _world.Disconnect(World.SignalName.DungeonEntranceInteractionRequested, new Callable(this, nameof(OnDungeonEntranceInteractionRequested)));
+
+        if (GodotObject.IsInstanceValid(_world) &&
+            _world.IsConnected(World.SignalName.DungeonRunCompleted, new Callable(this, nameof(OnDungeonRunCompleted))))
+            _world.Disconnect(World.SignalName.DungeonRunCompleted, new Callable(this, nameof(OnDungeonRunCompleted)));
 
         if (GodotObject.IsInstanceValid(_player) &&
             _player.IsConnected(Player.SignalName.InteractionAvailabilityChanged, new Callable(this, nameof(OnPlayerInteractionAvailabilityChanged))))
@@ -313,6 +318,22 @@ public partial class Main : Node2D
         // for this HUB session. No run is started here.
         OpenMenuHub(MenuHubPage.Dungeon);
         _menuHubRoot?.GrantDungeonEntranceAuthorization();
+    }
+
+    // A completed dungeon run (boss-room completion exit) has already returned the player to the world
+    // and recorded/awarded the run inside World; here we surface its end-of-run summary by opening the
+    // HUB straight to the Dungeon page's summary view. No run is started, finalized or re-awarded here.
+    private void OnDungeonRunCompleted()
+    {
+        if (_gameOverActive)
+            return;
+
+        var record = _world?.LastCompletedRunRecord;
+        if (record == null)
+            return;
+
+        OpenMenuHub(MenuHubPage.Dungeon);
+        _menuHubRoot?.ShowDungeonRunSummary(record);
     }
 
     // Bridges the Dungeon page Start request to World. Returns null on success, or an actionable

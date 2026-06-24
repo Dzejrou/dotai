@@ -504,10 +504,11 @@ public partial class MenuHub : Control
         Visible = false;
         _inventoryPage?.OnHubClosed();
 
-        // Reset any nested Dungeon subview (Shop or History) so reopening the HUB shows the normal
-        // Dungeon view.
+        // Reset any nested Dungeon subview (Shop, History or the end-of-run summary) so reopening the
+        // HUB shows the normal Dungeon view.
         _dungeonPage?.CloseShop();
         _dungeonPage?.CloseHistory();
+        _dungeonPage?.CloseSummary();
 
         // Closing the HUB without starting clears entrance authorization, so reopening it
         // elsewhere (e.g. via Esc) never carries stale permission to start.
@@ -538,6 +539,15 @@ public partial class MenuHub : Control
             return;
 
         ShowPage(page);
+    }
+
+    // Opens the Dungeon page's end-of-run summary for a freshly completed run. Switches to the Dungeon
+    // page first so the summary owns it, then hands the finalized record to the page. Called by Main
+    // right after it opens the HUB on a completion.
+    public void ShowDungeonRunSummary(DungeonRunRecord record)
+    {
+        SwitchTo(MenuHubPage.Dungeon);
+        _dungeonPage?.ShowRunSummary(record);
     }
 
     // Page-level escape hook used by Main: forwards Esc to the active page's nested subview (only

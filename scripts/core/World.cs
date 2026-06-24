@@ -60,6 +60,14 @@ public partial class World : Node2D
     [Signal]
     public delegate void DungeonEntranceInteractionRequestedEventHandler(Player player);
 
+    // Raised once when an active run is finalized as Completed through the boss-room completion exit,
+    // after the player has returned to the game world and the run has been recorded and its DP
+    // awarded. Main reacts by opening the Dungeon page directly to the end-of-run summary. A GaveUp
+    // finalization never raises it. Parameterless because the finalized DungeonRunRecord is a plain
+    // C# object (not Variant-marshalable), so listeners read it from LastCompletedRunRecord.
+    [Signal]
+    public delegate void DungeonRunCompletedEventHandler();
+
     public void RequestMerchantInteraction(MerchantStock stock, Player player)
     {
         if (stock == null || !GodotObject.IsInstanceValid(stock))
@@ -104,12 +112,21 @@ public partial class World : Node2D
     // completing the run restores the exact room/position the player started from.
     private RoomReturnLocation _dungeonReturnLocation;
 
+    // The most recently completed run's finalized record, captured at the boss-room completion exit so
+    // the Dungeon page can present its end-of-run summary. Replaced on each completion; a GaveUp
+    // finalization never sets it. It is the same immutable record now stored newest-first in history.
+    private DungeonRunRecord _lastCompletedRunRecord;
+
     public Room ActiveRoom => GodotObject.IsInstanceValid(_activeRoom) ? _activeRoom : null;
 
     // Read-only access for the Dungeon HUB page (run state, current node, generation defaults).
     public Dungeon Dungeon => _dungeon != null && GodotObject.IsInstanceValid(_dungeon) ? _dungeon : null;
 
     public bool HasActiveDungeonRun => Dungeon?.HasActiveRun == true;
+
+    // The finalized record of the run that most recently completed through the boss-room exit, for the
+    // Dungeon page's end-of-run summary. Null until a run has completed in this session.
+    public DungeonRunRecord LastCompletedRunRecord => _lastCompletedRunRecord;
 
     public bool IsDebugRoomSessionActive =>
         _debugRoom != null && GodotObject.IsInstanceValid(_debugRoom) && _activeRoom == _debugRoom;
@@ -386,8 +403,19 @@ public partial class World : Node2D
 
         // Record exactly one finalized run and clear it. FinalizeRun is idempotent, so a stray
         // repeat (e.g. cooldown race) cannot append a duplicate.
-        _dungeon?.FinalizeRun(outcome);
+        var record = _dungeon?.FinalizeRun(outcome);
         _dungeonReturnLocation = null;
+
+        // A completed run surfaces its end-of-run summary: capture the finalized record and notify
+        // Main, which opens the Dungeon page to it. DP was already awarded inside FinalizeRun, so this
+        // is purely presentational and never re-awards. FinalizeRun returns null for a stray repeat
+        // (no active run), so the summary opens exactly once. GaveUp returns without notifying.
+        if (outcome == DungeonRunOutcome.Completed && record != null)
+        {
+            _lastCompletedRunRecord = record;
+            EmitSignal(SignalName.DungeonRunCompleted);
+        }
+
         return true;
     }
 
