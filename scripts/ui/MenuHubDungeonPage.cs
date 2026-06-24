@@ -108,6 +108,18 @@ public partial class MenuHubDungeonPage : Control
     [Export]
     public NodePath HistoryDetailsLabelPath { get; set; } = new("Margin/VBox/HistoryView/RightColumn/DetailsLabel");
 
+    [Export]
+    public NodePath SummaryViewPath { get; set; } = new("Margin/VBox/SummaryView");
+
+    [Export]
+    public NodePath SummaryOutcomeLabelPath { get; set; } = new("Margin/VBox/SummaryView/OutcomeLabel");
+
+    [Export]
+    public NodePath SummaryDetailsLabelPath { get; set; } = new("Margin/VBox/SummaryView/DetailsLabel");
+
+    [Export]
+    public NodePath SummaryCloseButtonPath { get; set; } = new("Margin/VBox/SummaryView/CloseButton");
+
     private Label _dpLabel;
     private Control _configView;
     private SpinBox _roomsSpinBox;
@@ -132,6 +144,10 @@ public partial class MenuHubDungeonPage : Control
     private Label _historyEmptyLabel;
     private Label _historyOutcomeLabel;
     private Label _historyDetailsLabel;
+    private Control _summaryView;
+    private Label _summaryOutcomeLabel;
+    private Label _summaryDetailsLabel;
+    private Button _summaryCloseButton;
     private Button _shopButton;
 
     // Shared commerce surface hosted as a nested Dungeon Shop subview, plus its own stock built from
@@ -144,7 +160,9 @@ public partial class MenuHubDungeonPage : Control
 
     private bool _historyOpen;
     private bool _shopOpen;
+    private bool _summaryOpen;
     private DungeonRunRecord _selectedRecord;
+    private DungeonRunRecord _summaryRecord;
 
     private readonly RandomNumberGenerator _seedRng = new();
     private World _world;
@@ -207,6 +225,10 @@ public partial class MenuHubDungeonPage : Control
         _historyEmptyLabel = GetNodeOrNull<Label>(HistoryEmptyLabelPath);
         _historyOutcomeLabel = GetNodeOrNull<Label>(HistoryOutcomeLabelPath);
         _historyDetailsLabel = GetNodeOrNull<Label>(HistoryDetailsLabelPath);
+        _summaryView = GetNodeOrNull<Control>(SummaryViewPath);
+        _summaryOutcomeLabel = GetNodeOrNull<Label>(SummaryOutcomeLabelPath);
+        _summaryDetailsLabel = GetNodeOrNull<Label>(SummaryDetailsLabelPath);
+        _summaryCloseButton = GetNodeOrNull<Button>(SummaryCloseButtonPath);
 
         ConfigureRoomsSpinBox();
 
@@ -240,6 +262,9 @@ public partial class MenuHubDungeonPage : Control
 
         if (_historyList != null)
             _historyList.ItemSelected += OnHistoryItemSelected;
+
+        if (_summaryCloseButton != null)
+            _summaryCloseButton.Pressed += OnSummaryClosePressed;
 
         GameSettings.DungeonAnywhereChanged += OnDungeonAnywhereChanged;
         _dungeonAnywhereSubscribed = true;
@@ -281,6 +306,9 @@ public partial class MenuHubDungeonPage : Control
 
         if (_historyList != null)
             _historyList.ItemSelected -= OnHistoryItemSelected;
+
+        if (_summaryCloseButton != null)
+            _summaryCloseButton.Pressed -= OnSummaryClosePressed;
 
         if (_dungeonAnywhereSubscribed)
         {
@@ -324,9 +352,10 @@ public partial class MenuHubDungeonPage : Control
 
         var active = _world != null && GodotObject.IsInstanceValid(_world) && _world.HasActiveDungeonRun;
 
-        // History and the Dungeon Shop are nested subviews: while either is open the normal page
-        // content and its entry buttons are hidden (the Shop surface is an opaque overlay child).
-        var nestedOpen = _historyOpen || _shopOpen;
+        // History, the Dungeon Shop and the end-of-run summary are nested subviews: while any is open
+        // the normal page content and its entry buttons are hidden (the Shop surface is an opaque
+        // overlay child).
+        var nestedOpen = _historyOpen || _shopOpen || _summaryOpen;
 
         if (_configView != null)
             _configView.Visible = !nestedOpen && !active;
@@ -343,9 +372,20 @@ public partial class MenuHubDungeonPage : Control
         if (_historyView != null)
             _historyView.Visible = _historyOpen;
 
+        if (_summaryView != null)
+            _summaryView.Visible = _summaryOpen;
+
         // The Shop surface manages its own content; nothing else to refresh while it owns the page.
         if (_shopOpen)
             return;
+
+        // The summary shows a single immutable finalized record; populate it and stop so a routine
+        // refresh (e.g. the DP label above) never swaps back to the config/active view.
+        if (_summaryOpen)
+        {
+            RefreshSummary();
+            return;
+        }
 
         if (_historyOpen)
         {
@@ -567,6 +607,61 @@ public partial class MenuHubDungeonPage : Control
         Refresh();
     }
 
+    // Run summary (nested end-of-run view) --------------------------------------------------------
+
+    public bool IsSummaryOpen => _summaryOpen;
+
+    // Opens the end-of-run summary for a freshly completed run as a nested subview, mirroring History/
+    // Shop: the normal page content and entry buttons hide while it owns the page. The record is the
+    // immutable finalized one (also the newest history entry), so the summary shows exactly the data
+    // that will persist on save. Main calls this right after a completion opens the HUB.
+    public void ShowRunSummary(DungeonRunRecord record)
+    {
+        if (record == null)
+            return;
+
+        _summaryRecord = record;
+        _summaryOpen = true;
+
+        // Lock HUB navigation and hide the nav row exactly like History/Shop do.
+        EmitSignal(SignalName.NestedViewChanged, true);
+        Refresh();
+    }
+
+    // Closes the nested summary view (via its Close button, Esc, or when the HUB closes) and returns
+    // to the normal Dungeon page. The run is already finalized and cleared, so that is the no-run
+    // configuration view, satisfying the "back to outside-run state" requirement.
+    public void CloseSummary()
+    {
+        if (!_summaryOpen)
+            return;
+
+        _summaryOpen = false;
+        _summaryRecord = null;
+        EmitSignal(SignalName.NestedViewChanged, false);
+        Refresh();
+    }
+
+    private void OnSummaryClosePressed()
+    {
+        CloseSummary();
+    }
+
+    private void RefreshSummary()
+    {
+        if (_summaryRecord == null)
+            return;
+
+        if (_summaryOutcomeLabel != null)
+        {
+            _summaryOutcomeLabel.Text = $"Outcome: {OutcomeText(_summaryRecord.Outcome)}";
+            _summaryOutcomeLabel.Modulate = OutcomeColor(_summaryRecord.Outcome);
+        }
+
+        if (_summaryDetailsLabel != null)
+            _summaryDetailsLabel.Text = FormatRecordDetails(_summaryRecord);
+    }
+
     // History (nested secondary view) -------------------------------------------------------------
 
     public bool IsHistoryOpen => _historyOpen;
@@ -576,6 +671,12 @@ public partial class MenuHubDungeonPage : Control
     // consumed the event.
     public bool TryHandleEscape()
     {
+        if (_summaryOpen)
+        {
+            CloseSummary();
+            return true;
+        }
+
         if (_shopOpen)
         {
             CloseShop();
@@ -695,27 +796,34 @@ public partial class MenuHubDungeonPage : Control
         }
 
         if (_historyDetailsLabel != null)
-        {
-            _historyDetailsLabel.Text =
-                $"Finished: {FormatFinishedAt(record.FinishedAt)}\n" +
-                $"Seed: {record.Seed.ToString(CultureInfo.InvariantCulture)}\n" +
-                $"Starting Room Level: {record.StartingRoomLevel}\n" +
-                $"Level Increase: {FormatLevelIncrease(record.LevelIncreasePerRoom)}\n" +
-                $"Health / Power: {FormatBonusPercent(record.HealthPowerBonus)}\n" +
-                $"Resistance: {FormatBonusPercent(record.ResistanceBonus)}\n" +
-                $"Damage: {FormatBonusPercent(record.DamageBonus)}\n" +
-                $"Planned Run Length: {record.PlannedRunLength}\n" +
-                $"Base Score: {FormatScore(record.BaseScore)}\n" +
-                $"Difficulty Multiplier: {FormatMultiplier(record.DifficultyMultiplier)}\n" +
-                $"Final Score: {FormatScore(record.FinalScore)}\n" +
-                $"DP Earned: {FormatPointsEarned(record.PointsEarned)}\n" +
-                $"Rooms Cleared: {record.RoomsCleared}\n" +
-                $"Enemies Killed: {record.EnemiesKilled}\n" +
-                $"Player Deaths: {record.PlayerDeaths}\n" +
-                $"Bosses Defeated: {record.BossesDefeated}\n" +
-                $"Furthest Room Reached: {record.FurthestRoomIndex}\n" +
-                $"Furthest Room Level: {record.FurthestRoomLevel}";
-        }
+            _historyDetailsLabel.Text = FormatRecordDetails(record);
+    }
+
+    // Multi-line run detail text shared by the History details panel and the end-of-run summary, so
+    // both always present the same fields formatted identically from one finalized record. Covers the
+    // run identity, the difficulty breakdown and aggregate multiplier, the base/final score, the DP
+    // awarded, and the run statistics. Legacy-null fields render through the same dash fallbacks.
+    private static string FormatRecordDetails(DungeonRunRecord record)
+    {
+        return
+            $"Finished: {FormatFinishedAt(record.FinishedAt)}\n" +
+            $"Seed: {record.Seed.ToString(CultureInfo.InvariantCulture)}\n" +
+            $"Starting Room Level: {record.StartingRoomLevel}\n" +
+            $"Level Increase: {FormatLevelIncrease(record.LevelIncreasePerRoom)}\n" +
+            $"Health / Power: {FormatBonusPercent(record.HealthPowerBonus)}\n" +
+            $"Resistance: {FormatBonusPercent(record.ResistanceBonus)}\n" +
+            $"Damage: {FormatBonusPercent(record.DamageBonus)}\n" +
+            $"Planned Run Length: {record.PlannedRunLength}\n" +
+            $"Base Score: {FormatScore(record.BaseScore)}\n" +
+            $"Difficulty Multiplier: {FormatMultiplier(record.DifficultyMultiplier)}\n" +
+            $"Final Score: {FormatScore(record.FinalScore)}\n" +
+            $"DP Earned: {FormatPointsEarned(record.PointsEarned)}\n" +
+            $"Rooms Cleared: {record.RoomsCleared}\n" +
+            $"Enemies Killed: {record.EnemiesKilled}\n" +
+            $"Player Deaths: {record.PlayerDeaths}\n" +
+            $"Bosses Defeated: {record.BossesDefeated}\n" +
+            $"Furthest Room Reached: {record.FurthestRoomIndex}\n" +
+            $"Furthest Room Level: {record.FurthestRoomLevel}";
     }
 
     private static string FormatHistoryRow(DungeonRunRecord record)
